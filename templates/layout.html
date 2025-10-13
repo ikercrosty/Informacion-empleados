@@ -8,16 +8,19 @@
           integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" 
           crossorigin="anonymous">
     <!-- CUSTOM CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   </head>
   <body>
 
     <!-- NAVBAR -->
     <nav class="navbar navbar-dark bg-dark">
-      <!-- Logo en lugar de texto -->
-      <a class="navbar-brand" href="{{ url_for('home') }}">
-        <img src="{{ url_for('static', filename='imagenes/logo.png') }}" alt="Empaquetex" height="40">
-      </a>
+     
+<a class="navbar-brand" href="{{ url_for('home') }}">
+  <img src="{{ url_for('static', filename='imagenes/logo.png') }}" 
+       alt="Empaquetex" 
+       class="logo-navbar">
+</a>
+
 
       <!-- Botón de 3 barritas -->
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" 

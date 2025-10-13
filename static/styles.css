@@ -6,6 +6,14 @@ body {
   color: #333;
 }
 
+.logo-navbar {
+  height: 60px;          /* más grande que antes (puedes subir a 70 u 80) */
+  width: 60px;           /* ancho igual para mantener proporción */
+  border-radius: 50%;    /* hace que el borde sea circular */
+  object-fit: cover;     /* recorta la imagen para que se ajuste al círculo */
+}
+
+
 /* Navbar */
 .navbar {
   background-color: #0B486B !important; /* azul oscuro */
