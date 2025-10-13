@@ -33,7 +33,6 @@ def login():
 
         if usuario in USUARIOS and USUARIOS[usuario] == password:
             session["usuario"] = usuario
-            flash(f"Bienvenido {usuario}", "success")
             return redirect(url_for("home"))
         else:
             flash("Usuario o contraseña incorrectos", "danger")
