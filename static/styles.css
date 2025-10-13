@@ -1,52 +1,93 @@
 /* Fondo general */
 body {
-  background: #F5E6CC; /* kraft */
-  margin: 0;
-  font-family: Arial, sans-serif;
-  color: #333;
+    background: #F5E6CC;
+    /* kraft */
+    margin: 0;
+    font-family: Arial, sans-serif;
+    color: #333;
 }
 
 .logo-navbar {
-  height: 60px;          /* más grande que antes (puedes subir a 70 u 80) */
-  width: 60px;           /* ancho igual para mantener proporción */
-  border-radius: 50%;    /* hace que el borde sea circular */
-  object-fit: cover;     /* recorta la imagen para que se ajuste al círculo */
+    height: 60px;
+    /* más grande que antes (puedes subir a 70 u 80) */
+    width: 60px;
+    /* ancho igual para mantener proporción */
+    border-radius: 50%;
+    /* hace que el borde sea circular */
+    object-fit: cover;
+    /* recorta la imagen para que se ajuste al círculo */
 }
 
 
 /* Navbar */
 .navbar {
-  background-color: #0B486B !important; /* azul oscuro */
+    background-color: #0B486B !important;
+    /* azul oscuro */
 }
 
-.navbar-brand, .nav-link {
-  color: #FFFFFF !important;
+.navbar-brand,
+.nav-link {
+    color: #FFFFFF !important;
 }
 
 .nav-link:hover {
-  color: #F56217 !important; /* naranja */
+    color: #F56217 !important;
+    /* naranja */
 }
 
 /* Botones */
 .btn-primary {
-  background-color: #F56217;
-  border-color: #F56217;
+    background-color: #F56217;
+    border-color: #F56217;
 }
 
 .btn-primary:hover {
-  background-color: #d94e12;
-  border-color: #d94e12;
+    background-color: #d94e12;
+    border-color: #d94e12;
 }
 
 /* Contenedor */
 .container {
-  background: #FFFFFF;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
+    background: #FFFFFF;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* Títulos */
-h1, h2, h3 {
-  color: #0B486B;
+h1,
+h2,
+h3 {
+    color: #0B486B;
+}
+
+/* Menú hamburguesa personalizado */
+.custom-collapse {
+    justify-content: flex-end;
+    /* alinea el menú a la derecha */
+}
+
+.custom-collapse .navbar-nav {
+    background-color: #0B486B;
+    /* color de fondo del menú desplegado */
+    border-radius: 8px;
+    /* bordes redondeados */
+    padding: 10px;
+    width: auto;
+    /* no ocupa todo el ancho */
+    min-width: 180px;
+    /* ancho mínimo del panel */
+    max-width: 250px;
+    /* ancho máximo */
+    margin-left: auto;
+    /* empuja el bloque hacia la derecha */
+}
+
+.custom-collapse .nav-link {
+    color: #fff !important;
+}
+
+.custom-collapse .nav-link:hover {
+    color: #F56217 !important;
+    /* hover naranja */
 }
