@@ -1,37 +1,46 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response
 
 app = Flask(__name__)
-app.secret_key = "clave-secreta"  # Necesaria para sesiones y mensajes flash
+app.secret_key = "clave-secreta"
 
-# Diccionario de usuarios válidos (usuario: contraseña)
-USUARIOS = {
-    "iker": "1234",
-    "admin": "adminpass",
-    "juan": "juanpass",
-    "maria": "mariapass"
-}
+# Lista de usuarios válidos
+USUARIOS = ["iker", "admin", "juan", "maria"]
+
+# Contraseña única para todos
+PASSWORD_GLOBAL = "Empaquetex25"
+
+# 1) Forzar login en rutas protegidas
+@app.before_request
+def requerir_login():
+    rutas_publicas = {"login", "static"}  # permite login y archivos estáticos
+    endpoint = request.endpoint or ""
+    if ("usuario" not in session) and (endpoint.split(".")[0] not in rutas_publicas):
+        return redirect(url_for("login"))
+
+# 2) Desactivar caché en todas las respuestas
+@app.after_request
+def no_cache(response):
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 @app.route("/")
 def home():
-    if "usuario" in session:
-        return render_template("home.html", usuario=session["usuario"])
-    else:
-        return redirect(url_for("login"))
+    return render_template("home.html", usuario=session.get("usuario"))
 
 @app.route("/about")
 def about():
-    if "usuario" in session:
-        return render_template("about.html", usuario=session["usuario"])
-    else:
-        return redirect(url_for("login"))
+    return render_template("about.html", usuario=session.get("usuario"))
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        usuario = request.form["usuario"]
-        password = request.form["password"]
+        usuario = request.form.get("usuario", "").strip()
+        password = request.form.get("password", "")
 
-        if usuario in USUARIOS and USUARIOS[usuario] == password:
+        # Validación: usuario válido + contraseña global correcta
+        if usuario in USUARIOS and password == PASSWORD_GLOBAL:
             session["usuario"] = usuario
             return redirect(url_for("home"))
         else:
@@ -42,9 +51,12 @@ def login():
 
 @app.route("/logout")
 def logout():
-    session.pop("usuario", None)
-    flash("Sesión cerrada", "info")
-    return redirect(url_for("login"))
+    session.clear()  # borra toda la sesión
+    resp = make_response(redirect(url_for("login")))
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    return resp
 
 if __name__ == "__main__":
     app.run(debug=True)
