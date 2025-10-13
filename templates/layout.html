@@ -7,22 +7,23 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" 
           integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" 
           crossorigin="anonymous">
+    <!-- FONT AWESOME para íconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- CUSTOM CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
   </head>
   <body>
 
     <!-- NAVBAR -->
-    <nav class="navbar navbar-dark bg-dark">
-      <!-- Logo en lugar de texto -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <!-- Logo -->
       <a class="navbar-brand" href="{{ url_for('home') }}">
-  <img src="{{ url_for('static', filename='imagenes/logo.png') }}" 
-       alt="Empaquetex" 
-       class="logo-navbar">
-</a>
+        <img src="{{ url_for('static', filename='imagenes/logo.png') }}" 
+             alt="Empaquetex" 
+             class="logo-navbar">
+      </a>
 
-
-      <!-- Botón de 3 barritas -->
+      <!-- Botón hamburguesa -->
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" 
               aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -32,14 +33,20 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ml-auto">
           <li class="nav-item {% if request.path == '/' %}active{% endif %}">
-            <a class="nav-link" href="{{ url_for('home') }}">Home</a>
+            <a class="nav-link" href="{{ url_for('home') }}">
+              <i class="fas fa-home"></i> Home
+            </a>
           </li>
           <li class="nav-item {% if request.path == '/about' %}active{% endif %}">
-            <a class="nav-link" href="{{ url_for('about') }}">About</a>
+            <a class="nav-link" href="{{ url_for('about') }}">
+              <i class="fas fa-info-circle"></i> About
+            </a>
           </li>
           {% if 'usuario' in session %}
           <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+            <a class="nav-link" href="{{ url_for('logout') }}">
+              <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
           </li>
           {% endif %}
         </ul>
@@ -62,7 +69,7 @@
       {% endblock %}
     </div>
 
-    <!-- BOOTSTRAP JS (necesario para el menú hamburguesa) -->
+    <!-- BOOTSTRAP JS -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" 
             integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" 
             crossorigin="anonymous"></script>
