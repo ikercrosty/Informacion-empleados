@@ -50,25 +50,3 @@ body {
 h1, h2, h3 {
   color: #0B486B;
 }
-/* Menú hamburguesa personalizado */
-.custom-collapse {
-  justify-content: flex-end;   /* alinea el menú a la derecha */
-}
-
-.custom-collapse .navbar-nav {
-  background-color: #0B486B;   /* color de fondo del menú desplegado */
-  border-radius: 8px;          /* bordes redondeados */
-  padding: 10px;
-  width: auto;                 /* no ocupa todo el ancho */
-  min-width: 180px;            /* ancho mínimo del panel */
-  max-width: 250px;            /* ancho máximo */
-  margin-left: auto;           /* empuja el bloque hacia la derecha */
-}
-
-.custom-collapse .nav-link {
-  color: #fff !important;
-}
-
-.custom-collapse .nav-link:hover {
-  color: #F56217 !important;   /* hover naranja */
-}
