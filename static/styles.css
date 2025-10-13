@@ -50,3 +50,27 @@ body {
 h1, h2, h3 {
   color: #0B486B;
 }
+/* Hace que el contenedor principal sea blanco y con sombra */
+.container {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Ajusta el jumbotron para que se vea integrado */
+.jumbotron {
+  background-color: #f8f9fa;
+  padding: 2rem 2rem;
+  margin-bottom: 2rem;
+  border-radius: 8px;
+}
+
+/* La tabla se adapta al ancho y no se desborda */
+.table-responsive {
+  margin-top: 20px;
+}
+.table-active {
+  background-color: #8dc4ff !important; /* azul claro */
+}
+
