@@ -13,10 +13,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   </head>
   <body>
-    
-<!-- NAVBAR -->
+ <!-- NAVBAR -->
 <nav class="navbar navbar-dark bg-dark">
-  <!-- Logo + Nombre de la empresa -->
+  <!-- Logo + Nombre -->
   <a class="navbar-brand d-flex align-items-center" href="{{ url_for('home') }}">
     <img src="{{ url_for('static', filename='imagenes/logo.png') }}" 
          alt="Empaquetex" 
@@ -24,35 +23,37 @@
     <span class="text-white font-weight-bold">Empaquetex</span>
   </a>
 
-  <!-- Botón hamburguesa (siempre visible) -->
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" 
-          aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+  <!-- Botón hamburguesa -->
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#sidebarMenu" 
+          aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
+</nav>
 
-  <!-- Opciones del menú (colapsables) -->
-  <div class="collapse navbar-collapse" id="navbarNav">
-    <ul class="navbar-nav ml-auto">
+<!-- PANEL LATERAL -->
+<div class="collapse bg-dark" id="sidebarMenu" style="position: fixed; top: 0; right: 0; height: 100%; width: 250px; z-index: 1050;">
+  <div class="p-4">
+    <ul class="navbar-nav">
       <li class="nav-item {% if request.path == '/' %}active{% endif %}">
-        <a class="nav-link" href="{{ url_for('home') }}">
+        <a class="nav-link text-white" href="{{ url_for('home') }}">
           <i class="fas fa-home"></i> Home
         </a>
       </li>
       <li class="nav-item {% if request.path == '/about' %}active{% endif %}">
-        <a class="nav-link" href="{{ url_for('about') }}">
+        <a class="nav-link text-white" href="{{ url_for('about') }}">
           <i class="fas fa-info-circle"></i> About
         </a>
       </li>
       {% if 'usuario' in session %}
       <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('logout') }}">
+        <a class="nav-link text-white" href="{{ url_for('logout') }}">
           <i class="fas fa-sign-out-alt"></i> Logout
         </a>
       </li>
       {% endif %}
     </ul>
   </div>
-</nav>
+</div>
 
   
     <!-- CONTENIDO -->
