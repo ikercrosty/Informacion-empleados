@@ -5,66 +5,93 @@
   <p class="lead">Información general de los empleados</p>
 </div>
 
-<div class="mb-3">
-  <button id="btnAgregar" type="button" class="btn btn-success btn-sm">Agregar</button>
-  <button id="btnEditar" type="button" class="btn btn-primary btn-sm" disabled>Editar</button>
-  <button id="btnGuardar" type="button" class="btn btn-success btn-sm" disabled>Guardar</button>
-  <button id="btnCancelar" type="button" class="btn btn-secondary btn-sm" disabled>Cancelar</button>
-</div>
+<div class="row">
+  <!-- Columna izquierda: tabla -->
+  <div class="col-md-8">
+    <div class="mb-3">
+      <button id="btnAgregar" type="button" class="btn btn-success btn-sm">Agregar</button>
+      <button id="btnEditar" type="button" class="btn btn-primary btn-sm" disabled>Editar</button>
+      <button id="btnGuardar" type="button" class="btn btn-success btn-sm" disabled>Guardar</button>
+      <button id="btnCancelar" type="button" class="btn btn-secondary btn-sm" disabled>Cancelar</button>
+    </div>
 
-<div class="table-responsive">
-  <table id="tablaEmpleados" class="table table-bordered table-striped table-hover table-sm">
-    <thead class="thead-dark">
-      <tr>
-        <th>DPI</th>
-        <th>Nombre</th>
-        <th>Apellidos</th>
-        <th>Apellidos de casada</th>
-        <th>Estado Civil</th>
-        <th>Nacionalidad</th>
-        <th>Departamento</th>
-        <th>Fecha de nacimiento</th>
-        <th>Lugar de nacimiento</th>
-        <th>Afiliación IGGS</th>
-        <th>Dirección</th>
-        <th>Teléfono</th>
-        <th>Religión</th>
-        <th>Correo</th>
-        <th>Puesto</th>
-        <th>Tipo de contrato</th>
-        <th>Jornada</th>
-        <th>Duración</th>
-        <th>Inicio laboral</th>
-        <th>Días laborales</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for e in empleados %}
-      <tr>
-        <td>{{ e['Numero de DPI'] }}</td>
-        <td>{{ e['Nombre'] }}</td>
-        <td>{{ e['Apellidos'] }}</td>
-        <td>{{ e['Apellidos de casada'] }}</td>
-        <td>{{ e['Estado Civil'] }}</td>
-        <td>{{ e['Nacionalidad'] }}</td>
-        <td>{{ e['Departamento'] }}</td>
-        <td>{{ e['Fecha de nacimiento'] }}</td>
-        <td>{{ e['Lugar de nacimiento'] }}</td>
-        <td>{{ e['Numero de Afiliación del IGGS'] }}</td>
-        <td>{{ e['Dirección del Domicilio'] }}</td>
-        <td>{{ e['Numero de Telefono'] }}</td>
-        <td>{{ e['Religión'] }}</td>
-        <td>{{ e['Correo Electronico'] }}</td>
-        <td>{{ e['Puesto de trabajo'] }}</td>
-        <td>{{ e['Tipo de contrato'] }}</td>
-        <td>{{ e['Jornada laboral'] }}</td>
-        <td>{{ e['Duración del trabajo'] }}</td>
-        <td>{{ e['Fecha de inicio laboral'] }}</td>
-        <td>{{ e['Dias Laborales'] }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    <div class="table-responsive">
+      <table id="tablaEmpleados" class="table table-bordered table-striped table-hover table-sm">
+        <thead class="thead-dark">
+          <tr>
+            <th>DPI</th>
+            <th>Nombre</th>
+            <th>Apellidos</th>
+            <th>Apellidos de casada</th>
+            <th>Estado Civil</th>
+            <th>Nacionalidad</th>
+            <th>Departamento</th>
+            <th>Fecha de nacimiento</th>
+            <th>Lugar de nacimiento</th>
+            <th>Afiliación IGGS</th>
+            <th>Dirección</th>
+            <th>Teléfono</th>
+            <th>Religión</th>
+            <th>Correo</th>
+            <th>Puesto</th>
+            <th>Tipo de contrato</th>
+            <th>Jornada</th>
+            <th>Duración</th>
+            <th>Inicio laboral</th>
+            <th>Días laborales</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in empleados %}
+          <tr>
+            <td>{{ e['Numero de DPI'] }}</td>
+            <td>{{ e['Nombre'] }}</td>
+            <td>{{ e['Apellidos'] }}</td>
+            <td>{{ e['Apellidos de casada'] }}</td>
+            <td>{{ e['Estado Civil'] }}</td>
+            <td>{{ e['Nacionalidad'] }}</td>
+            <td>{{ e['Departamento'] }}</td>
+            <td>{{ e['Fecha de nacimiento'] }}</td>
+            <td>{{ e['Lugar de nacimiento'] }}</td>
+            <td>{{ e['Numero de Afiliación del IGGS'] }}</td>
+            <td>{{ e['Dirección del Domicilio'] }}</td>
+            <td>{{ e['Numero de Telefono'] }}</td>
+            <td>{{ e['Religión'] }}</td>
+            <td>{{ e['Correo Electronico'] }}</td>
+            <td>{{ e['Puesto de trabajo'] }}</td>
+            <td>{{ e['Tipo de contrato'] }}</td>
+            <td>{{ e['Jornada laboral'] }}</td>
+            <td>{{ e['Duración del trabajo'] }}</td>
+            <td>{{ e['Fecha de inicio laboral'] }}</td>
+            <td>{{ e['Dias Laborales'] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Columna derecha: recuadro de foto -->
+  <div class="col-md-4 mt-3 mt-md-0">
+    <div class="card">
+      <div class="card-header bg-dark text-white">
+        Foto del Empleado
+      </div>
+      <div class="card-body text-center">
+        <img id="fotoEmpleado"
+             src="{{ url_for('static', filename='imagenes/default.png') }}"
+             alt="Foto empleado"
+             class="img-fluid rounded mb-3"
+             style="max-height: 250px; object-fit: cover;">
+
+        <!-- Formulario para subir foto si no existe -->
+        <form id="formSubirFoto" method="POST" enctype="multipart/form-data" style="display:none;">
+          <input type="file" name="foto" class="form-control mb-2" accept="image/*" required>
+          <button type="submit" class="btn btn-primary btn-sm btn-block">Subir Foto</button>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="{{ url_for('static', filename='main.js') }}"></script>
