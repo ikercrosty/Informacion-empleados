@@ -113,14 +113,6 @@ h1, h2, h3 {
   padding: 12px 20px;
 }
 
-/* Contenedor del login */
-.login-container {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  place-items: center;
-}
-
 /* Tarjeta del login */
 .login-card {
   background-color: #ffffff;
