@@ -73,4 +73,43 @@ h1, h2, h3 {
 .table-active {
   background-color: #8dc4ff !important; /* azul claro */
 }
+/* Panel lateral */
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: -250px; /* oculto inicialmente */
+  width: 250px;
+  height: 100%;
+  background-color: #343a40; /* mismo color que navbar (bg-dark) */
+  transition: right 0.3s ease;
+  z-index: 1051;
+  padding-top: 60px;
+}
+
+/* Overlay */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5); /* fondo semitransparente */
+  display: none;
+  z-index: 1050;
+}
+
+/* Mostrar panel y overlay */
+.sidebar.active {
+  right: 0;
+}
+.overlay.active {
+  display: block;
+}
+
+/* Separadores entre opciones */
+.sidebar .nav-link {
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  padding: 12px 20px;
+}
+
 
