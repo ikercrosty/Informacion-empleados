@@ -1,66 +1,34 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="jumbotron">
-  <h1 class="display-4">Datos Personales</h1>
-  <p class="lead">Información general de los empleados</p>
+  <h1 class="display-4">Información Académica</h1>
+  <p class="lead">Datos académicos de los empleados</p>
 </div>
 
 <div class="mb-3">
   <button id="btnAgregar" type="button" class="btn btn-success">Agregar</button>
-  <button id="btnEditar"type="button" class="btn btn-primary" disabled>Editar</button>
+  <button id="btnEditar" type="button" class="btn btn-primary" disabled>Editar</button>
   <button id="btnGuardar" type="button" class="btn btn-success" disabled>Guardar</button>
   <button id="btnCancelar" type="button" class="btn btn-secondary" disabled>Cancelar</button>
 </div>
 
 <div class="table-responsive">
-  <table id="tablaEmpleados" class="table table-bordered table-striped table-hover table-sm">
-    <thead class = "thead-dark">
-  <tr>
-    <th>Nombre</th>
-    <th>Apellidos</th>
-    <th>Apellidos de casada</th>
-    <th>Estado Civil</th>
-    <th>Nacionalidad</th>
-    <th>DPI</th>
-    <th>Departamento</th>
-    <th>Fecha de nacimiento</th>
-    <th>Lugar de nacimiento</th>
-    <th>Afiliación IGGS</th>
-    <th>Dirección</th>
-    <th>Teléfono</th>
-    <th>Religión</th>
-    <th>Correo</th>
-    <th>Puesto</th>
-    <th>Tipo de contrato</th>
-    <th>Jornada</th>
-    <th>Duración</th>
-    <th>Inicio laboral</th>
-    <th>Días laborales</th>
-  </tr>
-</thead>
-
+  <table id="tablaAcademico" class="table table-bordered table-striped table-hover table-sm">
+    <thead class="thead-dark">
+      <tr>
+        <th>Nivel de estudios</th>
+        <th>Profesión u Oficio</th>
+        <th>Colegio o establecimiento</th>
+        <th>Cursos o títulos adicionales</th>
+      </tr>
+    </thead>
+    <tbody>
       {% for e in empleados %}
       <tr>
-        <td>{{ e['Nombre'] }}</td>
-        <td>{{ e['Apellidos'] }}</td>
-        <td>{{ e['Apellidos de casada'] }}</td>
-        <td>{{ e['Estado Civil'] }}</td>
-        <td>{{ e['Nacionalidad'] }}</td>
-        <td>{{ e['Numero de DPI'] }}</td>
-        <td>{{ e['Departamento'] }}</td>
-        <td>{{ e['Fecha de nacimiento'] }}</td>
-        <td>{{ e['Lugar de nacimiento'] }}</td>
-        <td>{{ e['Numero de Afiliación del IGGS'] }}</td>
-        <td>{{ e['Dirección del Domicilio'] }}</td>
-        <td>{{ e['Numero de Telefono'] }}</td>
-        <td>{{ e['Religión'] }}</td>
-        <td>{{ e['Correo Electronico'] }}</td>
-        <td>{{ e['Puesto de trabajo'] }}</td>
-        <td>{{ e['Tipo de contrato'] }}</td>
-        <td>{{ e['Jornada laboral'] }}</td>
-        <td>{{ e['Duración del trabajo'] }}</td>
-        <td>{{ e['Fecha de inicio laboral'] }}</td>
-        <td>{{ e['Dias Laborales'] }}</td>
+        <td>{{ e['Nivel de estudios'] }}</td>
+        <td>{{ e['Profesión u Oficio'] }}</td>
+        <td>{{ e['Colegio o establecimiento'] }}</td>
+        <td>{{ e['Cursos o titulos adicionales'] }}</td>
       </tr>
       {% endfor %}
     </tbody>
