@@ -1,11 +1,10 @@
 {% extends "layout.html" %}
-
 {% block title %}Login{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-center align-items-center" style="min-height: 100vh;">
-  <div class="card p-4 shadow" style="width: 350px;">
-    <h2 class="text-center mb-4">Iniciar sesión</h2>
+<div class="login-container">
+  <div class="login-card">
+    <h2 class="text-center login-title mb-4">Iniciar sesión</h2>
 
     <form method="POST" action="{{ url_for('login') }}">
       <div class="form-group">
