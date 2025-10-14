@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response, jsonify
-import mysql.connector   # 👈 Conector MySQL
+import os
+import pymysql
+from urllib.parse import urlparse
 
 app = Flask(__name__)
 app.secret_key = "clave-secreta"
@@ -14,12 +16,28 @@ PASSWORD_GLOBAL = "Empaquetex25"
 # Conexión a la base de datos
 # ---------------------------
 def get_db_connection():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="Minicrosty21",
-        database="empleados"
-    )
+    url = os.environ.get("DATABASE_URL")  # Heroku o externo
+    if url:
+        result = urlparse(url)
+        return pymysql.connect(
+            host=result.hostname,
+            user=result.username,
+            password=result.password,
+            database=result.path[1:],
+            port=result.port or 3306,
+            charset="utf8mb4",
+            cursorclass=pymysql.cursors.DictCursor
+        )
+    else:
+        # Fallback local
+        return pymysql.connect(
+            host="localhost",
+            user="root",
+            password="Minicrosty21",
+            database="empleados",
+            charset="utf8mb4",
+            cursorclass=pymysql.cursors.DictCursor
+        )
 
 # 1) Forzar login en rutas protegidas
 @app.before_request
@@ -43,7 +61,7 @@ def no_cache(response):
 @app.route("/")
 def home():
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
     cursor.execute("""
         SELECT 
             `Nombre`,
@@ -83,7 +101,6 @@ def login():
         usuario = request.form.get("usuario", "").strip()
         password = request.form.get("password", "")
 
-        # Validación: usuario válido + contraseña global correcta
         if usuario in USUARIOS and password == PASSWORD_GLOBAL:
             session["usuario"] = usuario
             return redirect(url_for("home"))
@@ -95,7 +112,7 @@ def login():
 
 @app.route("/logout")
 def logout():
-    session.clear()  # borra toda la sesión
+    session.clear()
     resp = make_response(redirect(url_for("login")))
     resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     resp.headers["Pragma"] = "no-cache"
