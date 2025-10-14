@@ -74,7 +74,8 @@ def about():
     cursor = conn.cursor()
     cursor.execute("""
         SELECT
-            `Numero de DPI`, `Nivel de estudios`, `Profesión u Oficio`,
+            `Numero de DPI`, `Nombre`, `Apellidos`,
+            `Nivel de estudios`, `Profesión u Oficio`,
             `Colegio o establecimiento`, `Cursos o titulos adicionales`
         FROM empleados_info
     """)
