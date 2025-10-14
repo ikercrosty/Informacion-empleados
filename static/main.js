@@ -1,9 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // Estado global
   let tablaActiva = null;
   let filaActiva = null;
   let copiaOriginal = [];
   let esNuevo = false;
 
+  // Botones globales
   const btnAgregar = document.getElementById("btnAgregar");
   const btnEditar  = document.getElementById("btnEditar");
   const btnGuardar = document.getElementById("btnGuardar");
@@ -18,13 +20,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   resetBotones();
 
+  // Registro de tablas
   const tablas = {};
 
-  function registrarTabla(idTabla, columnas, endpoint, campos) {
+  // Registrar tabla con soporte de columnas bloqueadas (no editables)
+  function registrarTabla(idTabla, columnas, endpoint, campos, bloqueadas = []) {
     const tabla = document.getElementById(idTabla);
     if (!tabla) return;
-    tablas[idTabla] = { tabla, columnas, endpoint, campos };
+    tablas[idTabla] = { tabla, columnas, endpoint, campos, bloqueadas };
 
+    // Selección por doble click
     tabla.addEventListener("dblclick", (e) => {
       const tr = e.target.closest("tr");
       if (!tr || tr.parentElement.tagName !== "TBODY") return;
@@ -43,6 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Obtener primera tabla visible si no hay activa al agregar
   function obtenerPrimeraTablaVisible() {
     const entries = Object.values(tablas);
     for (let i = 0; i < entries.length; i++) {
@@ -52,6 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return null;
   }
 
+  // Agregar fila nueva (sin necesidad de seleccionar antes)
   function agregarFila() {
     if (!tablaActiva) {
       const primera = obtenerPrimeraTablaVisible();
@@ -64,7 +71,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const info = Object.values(tablas).find(t => t.tabla === tablaActiva);
     if (!info) return;
-    const { columnas } = info;
+    const { columnas, bloqueadas } = info;
+
     const tbody = tablaActiva.querySelector("tbody");
     if (!tbody) return;
 
@@ -72,8 +80,11 @@ document.addEventListener("DOMContentLoaded", () => {
     for (let i = 0; i < columnas; i++) {
       const td = document.createElement("td");
       td.innerText = "";
-      td.contentEditable = true;
-      td.style.backgroundColor = "#fff3cd";
+      // Si la columna está bloqueada, no permitir edición aquí
+      if (!bloqueadas.includes(i)) {
+        td.contentEditable = true;
+        td.style.backgroundColor = "#fff3cd";
+      }
       nueva.appendChild(td);
     }
     tbody.insertBefore(nueva, tbody.firstChild);
@@ -88,20 +99,30 @@ document.addEventListener("DOMContentLoaded", () => {
     btnCancelar.disabled = false;
   }
 
+  // Editar fila seleccionada (respeta columnas bloqueadas)
   function editarFila() {
     if (!filaActiva) return;
+    const info = Object.values(tablas).find(t => t.tabla === tablaActiva);
+    if (!info) return;
+    const bloqueadas = info.bloqueadas || [];
+
     const celdas = Array.from(filaActiva.querySelectorAll("td"));
     copiaOriginal = celdas.map(td => td.innerText);
-    celdas.forEach(td => {
-      td.contentEditable = true;
-      td.style.backgroundColor = "#fff3cd";
+
+    celdas.forEach((td, i) => {
+      if (!bloqueadas.includes(i)) {
+        td.contentEditable = true;
+        td.style.backgroundColor = "#fff3cd";
+      }
     });
+
     esNuevo = false;
     btnEditar.disabled = true;
     btnGuardar.disabled = false;
     btnCancelar.disabled = false;
   }
 
+  // Cancelar edición o eliminar fila nueva
   function cancelarEdicion() {
     if (!filaActiva) return;
     if (esNuevo) {
@@ -122,8 +143,9 @@ document.addEventListener("DOMContentLoaded", () => {
     resetBotones();
   }
 
+  // Guardar edición (INSERT/UPDATE)
   function guardarEdicion() {
-    if (!filaActiva) return;
+    if (!filaActiva || !tablaActiva) return;
     const info = Object.values(tablas).find(t => t.tabla === tablaActiva);
     if (!info) return;
     const { campos, endpoint, columnas } = info;
@@ -145,6 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     payload["nuevo"] = esNuevo;
 
+    // Validación de DPI cuando aplique
     if (campos.includes("Numero de DPI") && !payload["Numero de DPI"]) {
       alert("El campo Numero de DPI es obligatorio.");
       return;
@@ -178,44 +201,47 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Conectar botones
   if (btnAgregar) btnAgregar.addEventListener("click", agregarFila);
   if (btnEditar)  btnEditar.addEventListener("click", editarFila);
   if (btnCancelar) btnCancelar.addEventListener("click", cancelarEdicion);
   if (btnGuardar) btnGuardar.addEventListener("click", guardarEdicion);
 
+  // Exponer registrarTabla
   window.registrarTabla = registrarTabla;
 
-  // --- Tablas registradas ---
+  // --- Registro de tablas ---
 
-  // Datos personales (DPI primero)
+  // Datos personales (DPI primero, todo editable aquí)
   registrarTabla("tablaEmpleados", 20, "/guardar_empleado", [
     "Numero de DPI","Nombre","Apellidos","Apellidos de casada","Estado Civil","Nacionalidad",
     "Departamento","Fecha de nacimiento","Lugar de nacimiento","Numero de Afiliación del IGGS",
     "Dirección del Domicilio","Numero de Telefono","Religión","Correo Electronico","Puesto de trabajo",
     "Tipo de contrato","Jornada laboral","Duración del trabajo","Fecha de inicio laboral","Dias Laborales"
-  ]);
+  ]); // sin columnas bloqueadas
 
-  // Académico
-  registrarTabla("tablaAcademico", 5, "/guardar_academico", [
-    "Numero de DPI","Nivel de estudios","Profesión u Oficio","Colegio o establecimiento","Cursos o titulos adicionales"
-  ]);
+  // Información Académica (7 columnas: 3 bloqueadas + 4 editables)
+  registrarTabla("tablaAcademico", 7, "/guardar_academico", [
+    "Numero de DPI","Nombre","Apellidos",
+    "Nivel de estudios","Profesión u Oficio","Colegio o establecimiento","Cursos o titulos adicionales"
+  ], [0,1,2]); // bloquear DPI, Nombre, Apellidos
 
-  // Cónyuge
+  // Cónyuge (DPI + 5)
   registrarTabla("tablaConyugue", 6, "/guardar_conyugue", [
     "Numero de DPI","Nombres del conyugue","Apellidos del conyugue","Direccion del conyugue","Numero de teléfono del conyugue","Correo electronico del conyugue"
   ]);
 
-  // Emergencia
+  // Emergencia (DPI + 3)
   registrarTabla("tablaEmergencia", 4, "/guardar_emergencia", [
     "Numero de DPI","Nombre del contacto de emergencia","Apellidos del contacto de emergencia","Numero de telefono de emergencia"
   ]);
 
-  // Laboral
+  // Laboral (DPI + 6)
   registrarTabla("tablaLaboral", 7, "/guardar_laboral", [
     "Numero de DPI","Nombre de la Empresa (Ultimo Trabajo)","Direccion de la empresa","Inicio laboral en la empresa","Fin Laboral en la empresa","Motivo del retiro","Nombre del Jefe Imediato"
   ]);
 
-  // Médica
+  // Médica (DPI + 7)
   registrarTabla("tablaMedica", 8, "/guardar_medica", [
     "Numero de DPI","Padece alguna enfermedad","Tipo de enfermedad","Recibe tratamiento medico","Nombre del tratamiento","Es alergico a algun medicamento","Nombre del medico Tratante","Tipo de sangre"
   ]);

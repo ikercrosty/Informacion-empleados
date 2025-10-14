@@ -16,17 +16,21 @@
   <table id="tablaAcademico" class="table table-bordered table-striped table-hover table-sm">
     <thead class="thead-dark">
       <tr>
-        <th style="display:none">Numero de DPI</th>
+        <th>DPI</th>
+        <th>Nombre</th>
+        <th>Apellidos</th>
         <th>Nivel de estudios</th>
         <th>Profesión u Oficio</th>
         <th>Colegio o establecimiento</th>
-        <th>Cursos o titulos adicionales</th>
+        <th>Cursos o títulos adicionales</th>
       </tr>
     </thead>
     <tbody>
       {% for e in empleados %}
       <tr>
-        <td style="display:none">{{ e['Numero de DPI'] }}</td>
+        <td>{{ e['Numero de DPI'] }}</td>
+        <td>{{ e['Nombre'] }}</td>
+        <td>{{ e['Apellidos'] }}</td>
         <td>{{ e['Nivel de estudios'] }}</td>
         <td>{{ e['Profesión u Oficio'] }}</td>
         <td>{{ e['Colegio o establecimiento'] }}</td>
