@@ -80,7 +80,7 @@ h1, h2, h3 {
   right: -250px; /* oculto inicialmente */
   width: 250px;
   height: 100%;
-  background-color: #343a40 !important; /* mismo color exacto que navbar */
+  background-color: #0b486bba  !important; /* mismo color exacto que navbar */
   transition: right 0.3s ease;
   z-index: 1051;
   padding-top: 60px;
