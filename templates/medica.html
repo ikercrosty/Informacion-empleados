@@ -2,12 +2,8 @@
 {% block content %}
 <div class="jumbotron">
   <h1 class="display-4">Referencias Médicas</h1>
-  <p class="lead">Información médica del empleado</p>
+  <p class="lead">Información médica relevante</p>
 </div>
-
-{% if empleados is not none %}
-  <div class="mb-2 text-muted">Registros recibidos: {{ empleados|length }}</div>
-{% endif %}
 
 <div class="mb-3">
   <button id="btnAgregar" type="button" class="btn btn-success">Agregar</button>
@@ -20,27 +16,31 @@
   <table id="tablaMedica" class="table table-bordered table-striped table-hover table-sm">
     <thead class="thead-dark">
       <tr>
-        <th style="display:none">Numero de DPI</th>
+        <th>DPI</th>
+        <th>Nombre</th>
+        <th>Apellidos</th>
         <th>Padece alguna enfermedad</th>
         <th>Tipo de enfermedad</th>
-        <th>Recibe tratamiento medico</th>
+        <th>Recibe tratamiento</th>
         <th>Nombre del tratamiento</th>
-        <th>Es alergico a algun medicamento</th>
-        <th>Nombre del medico Tratante</th>
+        <th>Es alérgico a algún medicamento</th>
+        <th>Nombre del médico tratante</th>
         <th>Tipo de sangre</th>
       </tr>
     </thead>
     <tbody>
       {% for e in empleados %}
       <tr>
-        <td style="display:none">{{ e['Numero de DPI'] }}</td>
-        <td>{{ e['Padece alguna enfermedad'] }}</td>
-        <td>{{ e['Tipo de enfermedad'] }}</td>
-        <td>{{ e['Recibe tratamiento medico'] }}</td>
-        <td>{{ e['Nombre del tratamiento'] }}</td>
-        <td>{{ e['Es alergico a algun medicamento'] }}</td>
-        <td>{{ e['Nombre del medico Tratante'] }}</td>
-        <td>{{ e['Tipo de sangre'] }}</td>
+        <td>{{ e['Numero de DPI'] }}</td>
+        <td>{{ e['Nombre'] }}</td>
+        <td>{{ e['Apellidos'] }}</td>
+        <td>{{ e.get('Padece alguna enfermedad') }}</td>
+        <td>{{ e.get('Tipo de enfermedad') }}</td>
+        <td>{{ e.get('Recibe tratamiento medico') }}</td>
+        <td>{{ e.get('Nombre del tratamiento') }}</td>
+        <td>{{ e.get('Es alergico a algun medicamento') }}</td>
+        <td>{{ e.get('Nombre del medico Tratante') }}</td>
+        <td>{{ e.get('Tipo de sangre') }}</td>
       </tr>
       {% endfor %}
     </tbody>

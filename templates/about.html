@@ -31,10 +31,10 @@
         <td>{{ e['Numero de DPI'] }}</td>
         <td>{{ e['Nombre'] }}</td>
         <td>{{ e['Apellidos'] }}</td>
-        <td>{{ e['Nivel de estudios'] }}</td>
-        <td>{{ e['Profesión u Oficio'] }}</td>
-        <td>{{ e['Colegio o establecimiento'] }}</td>
-        <td>{{ e['Cursos o titulos adicionales'] }}</td>
+        <td>{{ e.get('Nivel de estudios') }}</td>
+        <td>{{ e.get('Profesión u Oficio') }}</td>
+        <td>{{ e.get('Colegio o establecimiento') }}</td>
+        <td>{{ e.get('Cursos o titulos adicionales') }}</td>
       </tr>
       {% endfor %}
     </tbody>

@@ -5,7 +5,6 @@ from urllib.parse import urlparse
 
 app = Flask(__name__)
 app.secret_key = "clave-secreta"
-
 app.config["SESSION_PERMANENT"] = False
 
 USUARIOS = ["iker", "admin", "juan", "maria"]
@@ -55,8 +54,8 @@ def home():
     cursor = conn.cursor()
     cursor.execute("""
         SELECT 
-            `Nombre`, `Apellidos`, `Apellidos de casada`, `Estado Civil`,
-            `Nacionalidad`, `Numero de DPI`, `Departamento`, `Fecha de nacimiento`,
+            `Numero de DPI`, `Nombre`, `Apellidos`, `Apellidos de casada`, `Estado Civil`,
+            `Nacionalidad`, `Departamento`, `Fecha de nacimiento`,
             `Lugar de nacimiento`, `Numero de Afiliación del IGGS`, `Dirección del Domicilio`,
             `Numero de Telefono`, `Religión`, `Correo Electronico`, `Puesto de trabajo`,
             `Tipo de contrato`, `Jornada laboral`, `Duración del trabajo`,
@@ -90,7 +89,8 @@ def conyugue():
     cursor = conn.cursor()
     cursor.execute("""
         SELECT 
-            `Numero de DPI`, `Nombres del conyugue`, `Apellidos del conyugue`,
+            `Numero de DPI`, `Nombre`, `Apellidos`,
+            `Nombres del conyugue`, `Apellidos del conyugue`,
             `Direccion del conyugue`, `Numero de teléfono del conyugue`, `Correo electronico del conyugue`
         FROM empleados_info
     """)
@@ -105,7 +105,8 @@ def emergencia():
     cursor = conn.cursor()
     cursor.execute("""
         SELECT 
-            `Numero de DPI`, `Nombre del contacto de emergencia`, `Apellidos del contacto de emergencia`,
+            `Numero de DPI`, `Nombre`, `Apellidos`,
+            `Nombre del contacto de emergencia`, `Apellidos del contacto de emergencia`,
             `Numero de telefono de emergencia`
         FROM empleados_info
     """)
@@ -120,7 +121,8 @@ def laboral():
     cursor = conn.cursor()
     cursor.execute("""
         SELECT 
-            `Numero de DPI`, `Nombre de la Empresa (Ultimo Trabajo)`, `Direccion de la empresa`,
+            `Numero de DPI`, `Nombre`, `Apellidos`,
+            `Nombre de la Empresa (Ultimo Trabajo)`, `Direccion de la empresa`,
             `Inicio laboral en la empresa`, `Fin Laboral en la empresa`, `Motivo del retiro`,
             `Nombre del Jefe Imediato`
         FROM empleados_info
@@ -136,7 +138,8 @@ def medica():
     cursor = conn.cursor()
     cursor.execute("""
         SELECT
-            `Numero de DPI`, `Padece alguna enfermedad`, `Tipo de enfermedad`, `Recibe tratamiento medico`,
+            `Numero de DPI`, `Nombre`, `Apellidos`,
+            `Padece alguna enfermedad`, `Tipo de enfermedad`, `Recibe tratamiento medico`,
             `Nombre del tratamiento`, `Es alergico a algun medicamento`, `Nombre del medico Tratante`, `Tipo de sangre`
         FROM empleados_info
     """)
@@ -185,7 +188,7 @@ def db_test():
 def guardar_empleado():
     data = request.get_json() or {}
 
-    dpi_val = data.get("dpi") or data.get("Numero de DPI") or data.get("Numero_de_DPI") or data.get("NumeroDeDPI") or data.get("NumeroDeDpi")
+    dpi_val = data.get("Numero de DPI") or data.get("dpi") or data.get("Numero_de_DPI") or data.get("NumeroDeDPI") or data.get("NumeroDeDpi")
     if not dpi_val:
         return jsonify({"mensaje": "El campo DPI es obligatorio"}), 400
 
@@ -216,16 +219,16 @@ def guardar_empleado():
         if data.get("nuevo"):
             cursor.execute("""
                 INSERT INTO empleados_info (
-                    `Nombre`, `Apellidos`, `Apellidos de casada`, `Estado Civil`,
-                    `Nacionalidad`, `Numero de DPI`, `Departamento`, `Fecha de nacimiento`,
+                    `Numero de DPI`, `Nombre`, `Apellidos`, `Apellidos de casada`, `Estado Civil`,
+                    `Nacionalidad`, `Departamento`, `Fecha de nacimiento`,
                     `Lugar de nacimiento`, `Numero de Afiliación del IGGS`, `Dirección del Domicilio`,
                     `Numero de Telefono`, `Religión`, `Correo Electronico`, `Puesto de trabajo`,
                     `Tipo de contrato`, `Jornada laboral`, `Duración del trabajo`,
                     `Fecha de inicio laboral`, `Dias Laborales`
                 ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             """, (
-                nombre, apellidos, apellidos_casada, estado_civil,
-                nacionalidad, dpi_val, departamento, fecha_nacimiento,
+                dpi_val, nombre, apellidos, apellidos_casada, estado_civil,
+                nacionalidad, departamento, fecha_nacimiento,
                 lugar_nacimiento, iggs, direccion,
                 telefono, religion, correo, puesto,
                 contrato, jornada, duracion,

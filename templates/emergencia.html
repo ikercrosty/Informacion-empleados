@@ -2,12 +2,8 @@
 {% block content %}
 <div class="jumbotron">
   <h1 class="display-4">Contacto de Emergencia</h1>
-  <p class="lead">Información del contacto de emergencia</p>
+  <p class="lead">Personas a contactar en caso de emergencia</p>
 </div>
-
-{% if empleados is not none %}
-  <div class="mb-2 text-muted">Registros recibidos: {{ empleados|length }}</div>
-{% endif %}
 
 <div class="mb-3">
   <button id="btnAgregar" type="button" class="btn btn-success">Agregar</button>
@@ -20,19 +16,23 @@
   <table id="tablaEmergencia" class="table table-bordered table-striped table-hover table-sm">
     <thead class="thead-dark">
       <tr>
-        <th style="display:none">Numero de DPI</th>
-        <th>Nombre del contacto de emergencia</th>
-        <th>Apellidos del contacto de emergencia</th>
-        <th>Numero de telefono de emergencia</th>
+        <th>DPI</th>
+        <th>Nombre</th>
+        <th>Apellidos</th>
+        <th>Nombre contacto</th>
+        <th>Apellidos contacto</th>
+        <th>Teléfono de emergencia</th>
       </tr>
     </thead>
     <tbody>
       {% for e in empleados %}
       <tr>
-        <td style="display:none">{{ e['Numero de DPI'] }}</td>
-        <td>{{ e['Nombre del contacto de emergencia'] }}</td>
-        <td>{{ e['Apellidos del contacto de emergencia'] }}</td>
-        <td>{{ e['Numero de telefono de emergencia'] }}</td>
+        <td>{{ e['Numero de DPI'] }}</td>
+        <td>{{ e['Nombre'] }}</td>
+        <td>{{ e['Apellidos'] }}</td>
+        <td>{{ e.get('Nombre del contacto de emergencia') }}</td>
+        <td>{{ e.get('Apellidos del contacto de emergencia') }}</td>
+        <td>{{ e.get('Numero de telefono de emergencia') }}</td>
       </tr>
       {% endfor %}
     </tbody>
