@@ -53,7 +53,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function agregarFila() {
-    // Si no hay tabla activa, tomar la primera tabla registrada y visible
     if (!tablaActiva) {
       const primera = obtenerPrimeraTablaVisible();
       if (!primera) {
@@ -156,7 +155,10 @@ document.addEventListener("DOMContentLoaded", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     })
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) return res.json().then(j => Promise.reject(j));
+      return res.json();
+    })
     .then(json => {
       if (json.mensaje) alert(json.mensaje);
       celdas.forEach(td => {
@@ -171,7 +173,8 @@ document.addEventListener("DOMContentLoaded", () => {
       resetBotones();
     })
     .catch(err => {
-      alert("Error al guardar: " + err);
+      const msg = (err && err.mensaje) ? err.mensaje : String(err);
+      alert("Error al guardar: " + msg);
     });
   }
 
@@ -182,7 +185,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.registrarTabla = registrarTabla;
 
-  // Registrar tablas (mantén los ids exactamente como tus plantillas)
+  // Registrar todas las tablas
   registrarTabla("tablaEmpleados", 20, "/guardar_empleado", [
     "Nombre","Apellidos","Apellidos de casada","Estado Civil","Nacionalidad",
     "Numero de DPI","Departamento","Fecha de nacimiento","Lugar de nacimiento","Numero de Afiliación del IGGS",
