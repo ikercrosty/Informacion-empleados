@@ -6,6 +6,9 @@ from urllib.parse import urlparse
 app = Flask(__name__)
 app.secret_key = "clave-secreta"
 
+# 🔑 Configuración: sesiones siempre temporales
+app.config["SESSION_PERMANENT"] = False
+
 # Lista de usuarios válidos
 USUARIOS = ["iker", "admin", "juan", "maria"]
 
@@ -39,7 +42,9 @@ def get_db_connection():
             cursorclass=pymysql.cursors.DictCursor
         )
 
-# 1) Forzar login en rutas protegidas
+# ---------------------------
+# Middleware de login
+# ---------------------------
 @app.before_request
 def requerir_login():
     rutas_publicas = {"login", "static", "db_test", "guardar_empleado"}  
@@ -47,7 +52,6 @@ def requerir_login():
     if ("usuario" not in session) and (endpoint.split(".")[0] not in rutas_publicas):
         return redirect(url_for("login"))
 
-# 2) Desactivar caché en todas las respuestas
 @app.after_request
 def no_cache(response):
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
@@ -103,6 +107,8 @@ def login():
 
         if usuario in USUARIOS and password == PASSWORD_GLOBAL:
             session["usuario"] = usuario
+            # 👇 Importante: nunca marcar como permanente
+            session.permanent = False
             return redirect(url_for("home"))
         else:
             flash("Usuario o contraseña incorrectos", "danger")
