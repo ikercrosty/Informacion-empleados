@@ -2,9 +2,14 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 import os
 import pymysql
 from urllib.parse import urlparse
+from datetime import timedelta
 
 app = Flask(__name__)
 app.secret_key = "clave-secreta"
+
+# Configuración de duración de sesión
+app.config["SESSION_PERMANENT"] = False
+app.permanent_session_lifetime = timedelta(days=7)  # si marcan "Recuérdame", dura 7 días
 
 # Lista de usuarios válidos
 USUARIOS = ["iker", "admin", "juan", "maria"]
@@ -100,9 +105,11 @@ def login():
     if request.method == "POST":
         usuario = request.form.get("usuario", "").strip()
         password = request.form.get("password", "")
+        remember = request.form.get("remember")  # None si no lo marcaron
 
         if usuario in USUARIOS and password == PASSWORD_GLOBAL:
             session["usuario"] = usuario
+            session.permanent = bool(remember)  # True si marcaron "Recuérdame"
             return redirect(url_for("home"))
         else:
             flash("Usuario o contraseña incorrectos", "danger")
@@ -202,7 +209,4 @@ def guardar_empleado():
         return jsonify({"mensaje": f"Error: {e}"}), 500
 
 # ---------------------------
-# Main
-# ---------------------------
-if __name__ == "__main__":
-    app.run(debug=True)
+#
