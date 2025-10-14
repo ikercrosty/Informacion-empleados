@@ -2,8 +2,13 @@
 {% block content %}
 <div class="jumbotron">
   <h1 class="display-4">Datos del Cónyuge</h1>
-  <p class="lead">Información del cónyuge</p>
+  <p class="lead">Información del cónyuge de los empleados</p>
+  
 </div>
+
+{% if empleados is not none %}
+  <div class="mb-2 text-muted">Registros recibidos: {{ empleados|length }}</div>
+{% endif %}
 
 <div class="mb-3">
   <button id="btnAgregar" type="button" class="btn btn-success">Agregar</button>
@@ -16,27 +21,23 @@
   <table id="tablaConyugue" class="table table-bordered table-striped table-hover table-sm">
     <thead class="thead-dark">
       <tr>
-        <th>DPI</th>
-        <th>Nombre</th>
-        <th>Apellidos</th>
-        <th>Nombres del cónyuge</th>
-        <th>Apellidos del cónyuge</th>
-        <th>Dirección del cónyuge</th>
-        <th>Teléfono del cónyuge</th>
-        <th>Correo del cónyuge</th>
+        <th style="display:none">Numero de DPI</th>
+        <th>Nombres del conyugue</th>
+        <th>Apellidos del conyugue</th>
+        <th>Direccion del conyugue</th>
+        <th>Numero de teléfono del conyugue</th>
+        <th>Correo electronico del conyugue</th>
       </tr>
     </thead>
     <tbody>
       {% for e in empleados %}
       <tr>
-        <td>{{ e['Numero de DPI'] }}</td>
-        <td>{{ e['Nombre'] }}</td>
-        <td>{{ e['Apellidos'] }}</td>
-        <td>{{ e.get('Nombres del conyugue') }}</td>
-        <td>{{ e.get('Apellidos del conyugue') }}</td>
-        <td>{{ e.get('Direccion del conyugue') }}</td>
-        <td>{{ e.get('Numero de teléfono del conyugue') }}</td>
-        <td>{{ e.get('Correo electronico del conyugue') }}</td>
+        <td style="display:none">{{ e['Numero de DPI'] }}</td>
+        <td>{{ e['Nombres del conyugue'] }}</td>
+        <td>{{ e['Apellidos del conyugue'] }}</td>
+        <td>{{ e['Direccion del conyugue'] }}</td>
+        <td>{{ e['Numero de teléfono del conyugue'] }}</td>
+        <td>{{ e['Correo electronico del conyugue'] }}</td>
       </tr>
       {% endfor %}
     </tbody>
