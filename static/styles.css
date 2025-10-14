@@ -113,13 +113,20 @@ h1, h2, h3 {
   padding: 12px 20px;
 }
 /* Fondo general */
+/* Fondo general */
 body {
   background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
   min-height: 100vh;
+}
+
+/* Contenedor del login (solo afecta al login) */
+.login-container {
+  min-height: calc(100vh - 56px); /* resta la altura del navbar */
   display: flex;
   justify-content: center;
   align-items: center;
 }
+
 
 /* Contenedor del login */
 .login-container {
