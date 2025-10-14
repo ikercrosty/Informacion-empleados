@@ -178,3 +178,24 @@ h1, h2, h3 {
   transform: scale(1.05);
 }
 
+/* Ajustes para pantallas pequeñas */
+@media (max-width: 576px) {
+  .login-card {
+    padding: 20px;
+    max-width: 95%;
+  }
+
+  .login-title {
+    font-size: 1.2rem;
+  }
+
+  .table {
+    font-size: 0.85rem;
+  }
+}
+.login-card {
+  max-width: 400px; /* en escritorio */
+  width: 95%;       /* en móviles */
+}
+
+
