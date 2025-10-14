@@ -5,6 +5,13 @@
   <p class="lead">Datos académicos de los empleados</p>
 </div>
 
+<!-- Debug: muestra número de filas recibidas -->
+{% if empleados is not none %}
+  <div class="mb-2 text-muted">Registros recibidos: {{ empleados|length }}</div>
+{% else %}
+  <div class="mb-2 text-danger">Variable empleados no definida</div>
+{% endif %}
+
 <div class="mb-3">
   <button id="btnAgregar" type="button" class="btn btn-success">Agregar</button>
   <button id="btnEditar" type="button" class="btn btn-primary" disabled>Editar</button>
@@ -16,15 +23,17 @@
   <table id="tablaAcademico" class="table table-bordered table-striped table-hover table-sm">
     <thead class="thead-dark">
       <tr>
+        <th style="display:none">Numero de DPI</th>
         <th>Nivel de estudios</th>
         <th>Profesión u Oficio</th>
         <th>Colegio o establecimiento</th>
-        <th>Cursos o títulos adicionales</th>
+        <th>Cursos o titulos adicionales</th>
       </tr>
     </thead>
     <tbody>
       {% for e in empleados %}
       <tr>
+        <td style="display:none">{{ e['Numero de DPI'] }}</td>
         <td>{{ e['Nivel de estudios'] }}</td>
         <td>{{ e['Profesión u Oficio'] }}</td>
         <td>{{ e['Colegio o establecimiento'] }}</td>
