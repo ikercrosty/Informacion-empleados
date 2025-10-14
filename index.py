@@ -60,8 +60,10 @@ def no_cache(response):
     return response
 
 # ---------------------------
-# Rutas principales
+# Rutas principales por sección
 # ---------------------------
+
+# Home: Datos personales (incluye Tiene hijos y Cuantos hijos)
 @app.route("/")
 def home():
     conn = get_db_connection()
@@ -72,6 +74,8 @@ def home():
             `Apellidos`,
             `Apellidos de casada`,
             `Estado Civil`,
+            `Tiene hijos`,
+            `Cuantos hijos`,
             `Nacionalidad`,
             `Numero de DPI`,
             `Departamento`,
@@ -95,10 +99,104 @@ def home():
     conn.close()
     return render_template("home.html", empleados=empleados, usuario=session.get("usuario"))
 
+# About: Información académica
 @app.route("/about")
 def about():
-    return render_template("about.html", usuario=session.get("usuario"))
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT 
+            `Nivel de estudios`,
+            `Profesión u Oficio`,
+            `Colegio o establecimiento`,
+            `Cursos o titulos adicionales`
+        FROM empleados_info
+    """)
+    empleados = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template("about.html", empleados=empleados, usuario=session.get("usuario"))
 
+# Datos del cónyuge
+@app.route("/conyugue")
+def conyugue():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT 
+            `Nombres del conyugue`,
+            `Apellidos del conyugue`,
+            `Direccion del conyugue`,
+            `Numero de teléfono del conyugue`,
+            `Correo electronico del conyugue`
+        FROM empleados_info
+    """)
+    empleados = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template("conyugue.html", empleados=empleados, usuario=session.get("usuario"))
+
+# Contacto de emergencia
+@app.route("/emergencia")
+def emergencia():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT 
+            `Nombre del contacto de emergencia`,
+            `Apellidos del contacto de emergencia`,
+            `Numero de telefono de emergencia`
+        FROM empleados_info
+    """)
+    empleados = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template("emergencia.html", empleados=empleados, usuario=session.get("usuario"))
+
+# Referencias laborales
+@app.route("/laboral")
+def laboral():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT 
+            `Nombre de la Empresa (Ultimo Trabajo)`,
+            `Direccion de la empresa`,
+            `Inicio laboral en la empresa`,
+            `Fin Laboral en la empresa`,
+            `Motivo del retiro`,
+            `Nombre del Jefe Imediato`
+        FROM empleados_info
+    """)
+    empleados = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template("laboral.html", empleados=empleados, usuario=session.get("usuario"))
+
+# Referencias médicas
+@app.route("/medica")
+def medica():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT 
+            `Padece alguna enfermedad`,
+            `Tipo de enfermedad`,
+            `Recibe tratamiento medico`,
+            `Nombre del tratamiento`,
+            `Es alergico a algun medicamento`,
+            `Nombre del medico Tratante`,
+            `Tipo de sangre`
+        FROM empleados_info
+    """)
+    empleados = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template("medica.html", empleados=empleados, usuario=session.get("usuario"))
+
+# ---------------------------
+# Login / Logout
+# ---------------------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -107,7 +205,6 @@ def login():
 
         if usuario in USUARIOS and password == PASSWORD_GLOBAL:
             session["usuario"] = usuario
-            # 👇 Importante: nunca marcar como permanente
             session.permanent = False
             return redirect(url_for("home"))
         else:
@@ -159,43 +256,72 @@ def guardar_empleado():
             cursor.execute("""
                 INSERT INTO empleados_info (
                     Nombre, Apellidos, `Apellidos de casada`, `Estado Civil`,
+                    `Tiene hijos`, `Cuantos hijos`,
                     Nacionalidad, `Numero de DPI`, Departamento, `Fecha de nacimiento`,
                     `Lugar de nacimiento`, `Numero de Afiliación del IGGS`, `Dirección del Domicilio`,
                     `Numero de Telefono`, Religión, `Correo Electronico`, `Puesto de trabajo`,
                     `Tipo de contrato`, `Jornada laboral`, `Duración del trabajo`,
                     `Fecha de inicio laboral`, `Dias Laborales`
-                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                          %s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                ) VALUES (
+                    %s, %s, %s, %s,
+                    %s, %s,
+                    %s, %s, %s, %s,
+                    %s, %s, %s,
+                    %s, %s, %s, %s,
+                    %s, %s, %s,
+                    %s, %s
+                )
             """, (
                 data.get("nombre"), data.get("apellidos"), data.get("apellidos_casada"),
-                data.get("estado_civil"), data.get("nacionalidad"), data.get("dpi"),
-                data.get("departamento"), data.get("fecha_nacimiento"),
+                data.get("estado_civil"),
+                data.get("tiene_hijos"), data.get("cuantos_hijos"),
+                data.get("nacionalidad"), data.get("dpi"), data.get("departamento"),
+                data.get("fecha_nacimiento"),
                 data.get("lugar_nacimiento"), data.get("iggs"), data.get("direccion"),
                 data.get("telefono"), data.get("religion"), data.get("correo"),
-                data.get("puesto"), data.get("contrato"), data.get("jornada"),
-                data.get("duracion"), data.get("inicio"), data.get("dias")
+                data.get("puesto"),
+                data.get("contrato"), data.get("jornada"), data.get("duracion"),
+                data.get("inicio"), data.get("dias")
             ))
             mensaje = "Empleado agregado correctamente"
 
         else:  # UPDATE
             cursor.execute("""
                 UPDATE empleados_info
-                SET Nombre=%s, Apellidos=%s, `Apellidos de casada`=%s, `Estado Civil`=%s,
-                    Nacionalidad=%s, Departamento=%s, `Fecha de nacimiento`=%s,
-                    `Lugar de nacimiento`=%s, `Numero de Afiliación del IGGS`=%s,
-                    `Dirección del Domicilio`=%s, `Numero de Telefono`=%s, Religión=%s,
-                    `Correo Electronico`=%s, `Puesto de trabajo`=%s, `Tipo de contrato`=%s,
-                    `Jornada laboral`=%s, `Duración del trabajo`=%s,
-                    `Fecha de inicio laboral`=%s, `Dias Laborales`=%s
+                SET Nombre=%s,
+                    Apellidos=%s,
+                    `Apellidos de casada`=%s,
+                    `Estado Civil`=%s,
+                    `Tiene hijos`=%s,
+                    `Cuantos hijos`=%s,
+                    Nacionalidad=%s,
+                    Departamento=%s,
+                    `Fecha de nacimiento`=%s,
+                    `Lugar de nacimiento`=%s,
+                    `Numero de Afiliación del IGGS`=%s,
+                    `Dirección del Domicilio`=%s,
+                    `Numero de Telefono`=%s,
+                    Religión=%s,
+                    `Correo Electronico`=%s,
+                    `Puesto de trabajo`=%s,
+                    `Tipo de contrato`=%s,
+                    `Jornada laboral`=%s,
+                    `Duración del trabajo`=%s,
+                    `Fecha de inicio laboral`=%s,
+                    `Dias Laborales`=%s
                 WHERE `Numero de DPI`=%s
             """, (
                 data.get("nombre"), data.get("apellidos"), data.get("apellidos_casada"),
-                data.get("estado_civil"), data.get("nacionalidad"), data.get("departamento"),
-                data.get("fecha_nacimiento"), data.get("lugar_nacimiento"), data.get("iggs"),
+                data.get("estado_civil"),
+                data.get("tiene_hijos"), data.get("cuantos_hijos"),
+                data.get("nacionalidad"),
+                data.get("departamento"), data.get("fecha_nacimiento"),
+                data.get("lugar_nacimiento"), data.get("iggs"),
                 data.get("direccion"), data.get("telefono"), data.get("religion"),
-                data.get("correo"), data.get("puesto"), data.get("contrato"),
-                data.get("jornada"), data.get("duracion"), data.get("inicio"),
-                data.get("dias"), data.get("dpi")
+                data.get("correo"), data.get("puesto"),
+                data.get("contrato"), data.get("jornada"), data.get("duracion"),
+                data.get("inicio"), data.get("dias"),
+                data.get("dpi")
             ))
             mensaje = "Empleado actualizado correctamente"
 
