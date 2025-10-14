@@ -35,28 +35,60 @@
 <!-- PANEL LATERAL -->
 <div id="sidebarMenu" class="sidebar bg-dark">
   <ul class="navbar-nav">
+
+    <!-- Datos Personales -->
     <li class="nav-item {% if request.path == '/' %}active{% endif %}">
       <a class="nav-link text-white border-bottom" href="{{ url_for('home') }}">
-        <i class="fas fa-home"></i> Home
+        <i class="fas fa-id-card"></i> Datos Personales
       </a>
     </li>
+
+    <!-- Información Académica -->
     <li class="nav-item {% if request.path == '/about' %}active{% endif %}">
       <a class="nav-link text-white border-bottom" href="{{ url_for('about') }}">
-        <i class="fas fa-info-circle"></i> About
+        <i class="fas fa-graduation-cap"></i> Información Académica
       </a>
     </li>
+
+    <!-- Datos del Cónyuge -->
+    <li class="nav-item {% if request.path == '/conyugue' %}active{% endif %}">
+      <a class="nav-link text-white border-bottom" href="{{ url_for('conyugue') }}">
+        <i class="fas fa-user-friends"></i> Datos del Cónyuge
+      </a>
+    </li>
+
+    <!-- Contacto de Emergencia -->
+    <li class="nav-item {% if request.path == '/emergencia' %}active{% endif %}">
+      <a class="nav-link text-white border-bottom" href="{{ url_for('emergencia') }}">
+        <i class="fas fa-phone-alt"></i> Contacto de Emergencia
+      </a>
+    </li>
+
+    <!-- Referencias Laborales -->
+    <li class="nav-item {% if request.path == '/laboral' %}active{% endif %}">
+      <a class="nav-link text-white border-bottom" href="{{ url_for('laboral') }}">
+        <i class="fas fa-briefcase"></i> Referencias Laborales
+      </a>
+    </li>
+
+    <!-- Referencias Médicas -->
+    <li class="nav-item {% if request.path == '/medica' %}active{% endif %}">
+      <a class="nav-link text-white border-bottom" href="{{ url_for('medica') }}">
+        <i class="fas fa-notes-medical"></i> Referencias Médicas
+      </a>
+    </li>
+
     {% if 'usuario' in session %}
+    <!-- Logout -->
     <li class="nav-item">
       <a class="nav-link text-white border-bottom" href="{{ url_for('logout') }}">
-        <i class="fas fa-sign-out-alt"></i> Logout
+        <i class="fas fa-sign-out-alt"></i> Salir
       </a>
     </li>
     {% endif %}
   </ul>
 </div>
 
-
-  
     <!-- CONTENIDO -->
     <div class="container p-4">
       {% with messages = get_flashed_messages(with_categories=true) %}
@@ -98,7 +130,6 @@
     overlay.classList.remove('active');
   });
 </script>
-
 
   </body>
 </html>
