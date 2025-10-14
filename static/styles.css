@@ -113,17 +113,13 @@ h1, h2, h3 {
   padding: 12px 20px;
 }
 
-
-/* Contenedor del login (solo afecta al login) */
+/* Contenedor del login */
 .login-container {
-  min-height: calc(100vh - 56px); /* resta la altura del navbar */
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
 }
-
-
-
 
 /* Tarjeta del login */
 .login-card {
