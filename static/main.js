@@ -185,30 +185,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.registrarTabla = registrarTabla;
 
-  // Registrar todas las tablas
+  // --- Tablas registradas ---
+
+  // Datos personales (DPI primero)
   registrarTabla("tablaEmpleados", 20, "/guardar_empleado", [
-    "Nombre","Apellidos","Apellidos de casada","Estado Civil","Nacionalidad",
-    "Numero de DPI","Departamento","Fecha de nacimiento","Lugar de nacimiento","Numero de Afiliación del IGGS",
+    "Numero de DPI","Nombre","Apellidos","Apellidos de casada","Estado Civil","Nacionalidad",
+    "Departamento","Fecha de nacimiento","Lugar de nacimiento","Numero de Afiliación del IGGS",
     "Dirección del Domicilio","Numero de Telefono","Religión","Correo Electronico","Puesto de trabajo",
     "Tipo de contrato","Jornada laboral","Duración del trabajo","Fecha de inicio laboral","Dias Laborales"
   ]);
 
+  // Académico
   registrarTabla("tablaAcademico", 5, "/guardar_academico", [
     "Numero de DPI","Nivel de estudios","Profesión u Oficio","Colegio o establecimiento","Cursos o titulos adicionales"
   ]);
 
+  // Cónyuge
   registrarTabla("tablaConyugue", 6, "/guardar_conyugue", [
     "Numero de DPI","Nombres del conyugue","Apellidos del conyugue","Direccion del conyugue","Numero de teléfono del conyugue","Correo electronico del conyugue"
   ]);
 
+  // Emergencia
   registrarTabla("tablaEmergencia", 4, "/guardar_emergencia", [
     "Numero de DPI","Nombre del contacto de emergencia","Apellidos del contacto de emergencia","Numero de telefono de emergencia"
   ]);
 
+  // Laboral
   registrarTabla("tablaLaboral", 7, "/guardar_laboral", [
     "Numero de DPI","Nombre de la Empresa (Ultimo Trabajo)","Direccion de la empresa","Inicio laboral en la empresa","Fin Laboral en la empresa","Motivo del retiro","Nombre del Jefe Imediato"
   ]);
 
+  // Médica
   registrarTabla("tablaMedica", 8, "/guardar_medica", [
     "Numero de DPI","Padece alguna enfermedad","Tipo de enfermedad","Recibe tratamiento medico","Nombre del tratamiento","Es alergico a algun medicamento","Nombre del medico Tratante","Tipo de sangre"
   ]);

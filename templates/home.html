@@ -37,33 +37,56 @@
     <th>Inicio laboral</th>
     <th>Días laborales</th>
   </tr>
+<thead class="thead-dark">
+  <tr>
+    <th>DPI</th>
+    <th>Nombre</th>
+    <th>Apellidos</th>
+    <th>Apellidos de casada</th>
+    <th>Estado Civil</th>
+    <th>Nacionalidad</th>
+    <th>Departamento</th>
+    <th>Fecha de nacimiento</th>
+    <th>Lugar de nacimiento</th>
+    <th>Afiliación IGGS</th>
+    <th>Dirección</th>
+    <th>Teléfono</th>
+    <th>Religión</th>
+    <th>Correo</th>
+    <th>Puesto</th>
+    <th>Tipo de contrato</th>
+    <th>Jornada</th>
+    <th>Duración</th>
+    <th>Inicio laboral</th>
+    <th>Días laborales</th>
+  </tr>
 </thead>
-
-      {% for e in empleados %}
-      <tr>
-        <td>{{ e['Nombre'] }}</td>
-        <td>{{ e['Apellidos'] }}</td>
-        <td>{{ e['Apellidos de casada'] }}</td>
-        <td>{{ e['Estado Civil'] }}</td>
-        <td>{{ e['Nacionalidad'] }}</td>
-        <td>{{ e['Numero de DPI'] }}</td>
-        <td>{{ e['Departamento'] }}</td>
-        <td>{{ e['Fecha de nacimiento'] }}</td>
-        <td>{{ e['Lugar de nacimiento'] }}</td>
-        <td>{{ e['Numero de Afiliación del IGGS'] }}</td>
-        <td>{{ e['Dirección del Domicilio'] }}</td>
-        <td>{{ e['Numero de Telefono'] }}</td>
-        <td>{{ e['Religión'] }}</td>
-        <td>{{ e['Correo Electronico'] }}</td>
-        <td>{{ e['Puesto de trabajo'] }}</td>
-        <td>{{ e['Tipo de contrato'] }}</td>
-        <td>{{ e['Jornada laboral'] }}</td>
-        <td>{{ e['Duración del trabajo'] }}</td>
-        <td>{{ e['Fecha de inicio laboral'] }}</td>
-        <td>{{ e['Dias Laborales'] }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
+<tbody>
+  {% for e in empleados %}
+  <tr>
+    <td>{{ e['Numero de DPI'] }}</td>
+    <td>{{ e['Nombre'] }}</td>
+    <td>{{ e['Apellidos'] }}</td>
+    <td>{{ e['Apellidos de casada'] }}</td>
+    <td>{{ e['Estado Civil'] }}</td>
+    <td>{{ e['Nacionalidad'] }}</td>
+    <td>{{ e['Departamento'] }}</td>
+    <td>{{ e['Fecha de nacimiento'] }}</td>
+    <td>{{ e['Lugar de nacimiento'] }}</td>
+    <td>{{ e['Numero de Afiliación del IGGS'] }}</td>
+    <td>{{ e['Dirección del Domicilio'] }}</td>
+    <td>{{ e['Numero de Telefono'] }}</td>
+    <td>{{ e['Religión'] }}</td>
+    <td>{{ e['Correo Electronico'] }}</td>
+    <td>{{ e['Puesto de trabajo'] }}</td>
+    <td>{{ e['Tipo de contrato'] }}</td>
+    <td>{{ e['Jornada laboral'] }}</td>
+    <td>{{ e['Duración del trabajo'] }}</td>
+    <td>{{ e['Fecha de inicio laboral'] }}</td>
+    <td>{{ e['Dias Laborales'] }}</td>
+  </tr>
+  {% endfor %}
+</tbody>
   </table>
 </div>
 
