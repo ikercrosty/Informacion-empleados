@@ -2,24 +2,21 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 import os
 import pymysql
 from urllib.parse import urlparse
-from datetime import timedelta
 
 app = Flask(__name__)
 app.secret_key = "clave-secreta"
 
-# Config de sesión
-app.config["SESSION_PERMANENT"] = False
-app.permanent_session_lifetime = timedelta(days=7)  # duración si "Recuérdame" está activo
-
-# Usuarios y contraseña
+# Lista de usuarios válidos
 USUARIOS = ["iker", "admin", "juan", "maria"]
+
+# Contraseña única para todos
 PASSWORD_GLOBAL = "Empaquetex25"
 
 # ---------------------------
 # Conexión a la base de datos
 # ---------------------------
 def get_db_connection():
-    url = os.environ.get("DATABASE_URL")
+    url = os.environ.get("DATABASE_URL")  # Heroku o externo
     if url:
         result = urlparse(url)
         return pymysql.connect(
@@ -32,6 +29,7 @@ def get_db_connection():
             cursorclass=pymysql.cursors.DictCursor
         )
     else:
+        # Fallback local
         return pymysql.connect(
             host="localhost",
             user="root",
@@ -41,17 +39,15 @@ def get_db_connection():
             cursorclass=pymysql.cursors.DictCursor
         )
 
-# ---------------------------
-# Protección de rutas
-# ---------------------------
+# 1) Forzar login en rutas protegidas
 @app.before_request
 def requerir_login():
-    rutas_publicas = {"login", "static", "db_test", "guardar_empleado", "auto_logout"}
-    endpoint = (request.endpoint or "").split(".")[0]
-    if ("usuario" not in session) and (endpoint not in rutas_publicas):
+    rutas_publicas = {"login", "static", "db_test", "guardar_empleado"}  
+    endpoint = request.endpoint or ""
+    if ("usuario" not in session) and (endpoint.split(".")[0] not in rutas_publicas):
         return redirect(url_for("login"))
 
-# Desactivar caché
+# 2) Desactivar caché en todas las respuestas
 @app.after_request
 def no_cache(response):
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
@@ -93,26 +89,20 @@ def home():
     empleados = cursor.fetchall()
     cursor.close()
     conn.close()
-    return render_template("home.html", empleados=empleados, usuario=session.get("usuario"), remember=session.get("remember"))
+    return render_template("home.html", empleados=empleados, usuario=session.get("usuario"))
 
 @app.route("/about")
 def about():
-    return render_template("about.html", usuario=session.get("usuario"), remember=session.get("remember"))
+    return render_template("about.html", usuario=session.get("usuario"))
 
-# ---------------------------
-# Login / Logout
-# ---------------------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         usuario = request.form.get("usuario", "").strip()
         password = request.form.get("password", "")
-        remember = bool(request.form.get("remember"))  # True si marcaron el checkbox
 
         if usuario in USUARIOS and password == PASSWORD_GLOBAL:
             session["usuario"] = usuario
-            session["remember"] = remember
-            session.permanent = remember  # cookie persistente solo si "Recuérdame" = True
             return redirect(url_for("home"))
         else:
             flash("Usuario o contraseña incorrectos", "danger")
@@ -128,15 +118,6 @@ def logout():
     resp.headers["Pragma"] = "no-cache"
     resp.headers["Expires"] = "0"
     return resp
-
-# Auto-logout al reabrir navegador si no hay "Recuérdame"
-@app.route("/auto-logout", methods=["POST"])
-def auto_logout():
-    # Si NO marcaron "Recuérdame", cerrar sesión cuando el cliente lo solicite al reabrir
-    if not session.get("remember"):
-        session.clear()
-        return jsonify({"status": "logged_out"})
-    return jsonify({"status": "kept"})
 
 # ---------------------------
 # Ruta de prueba de conexión
