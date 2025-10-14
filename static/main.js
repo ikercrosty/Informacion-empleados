@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!tabla) return;
     tablas[idTabla] = { tabla, columnas, endpoint, campos, bloqueadas };
 
-    // Selección por doble click
+    // Selección por doble click (para edición)
     tabla.addEventListener("dblclick", (e) => {
       const tr = e.target.closest("tr");
       if (!tr || tr.parentElement.tagName !== "TBODY") return;
@@ -46,6 +46,42 @@ document.addEventListener("DOMContentLoaded", () => {
       btnGuardar.disabled = true;
       btnCancelar.disabled = false;
     });
+
+    // Si es la tabla de empleados, al hacer click actualizamos la foto
+    if (idTabla === "tablaEmpleados") {
+      tabla.addEventListener("click", (e) => {
+        const tr = e.target.closest("tr");
+        if (!tr || tr.parentElement.tagName !== "TBODY") return;
+
+        const dpiCell = tr.cells[0];
+        if (!dpiCell) return;
+        const dpi = dpiCell.innerText.trim();
+        if (!dpi) return;
+
+        const foto = document.getElementById("fotoEmpleado");
+        const formSubir = document.getElementById("formSubirFoto");
+        if (!foto || !formSubir) return;
+
+        fetch(`/api/foto/${dpi}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.foto) {
+              foto.src = `/static/fotos/${data.foto}`;
+              formSubir.style.display = "none";
+            } else {
+              foto.src = "/static/imagenes/default.png";
+              formSubir.action = `/subir_foto/${dpi}`;
+              formSubir.style.display = "block";
+            }
+          })
+          .catch(() => {
+            // Fallback en caso de error
+            foto.src = "/static/imagenes/default.png";
+            formSubir.action = `/subir_foto/${dpi}`;
+            formSubir.style.display = "block";
+          });
+      });
+    }
   }
 
   // Obtener primera tabla visible si no hay activa al agregar
