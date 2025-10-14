@@ -1,9 +1,49 @@
-<!DOCTYPE html>
 {% extends "layout.html" %}
-
-
-
 {% block content %}
+<div class="jumbotron">
+  <h1 class="display-4">Referencias Laborales</h1>
+  <p class="lead">Historial laboral y referencias</p>
+</div>
 
+{% if empleados is not none %}
+  <div class="mb-2 text-muted">Registros recibidos: {{ empleados|length }}</div>
+{% endif %}
 
-{% endblock%}
+<div class="mb-3">
+  <button id="btnAgregar" type="button" class="btn btn-success">Agregar</button>
+  <button id="btnEditar" type="button" class="btn btn-primary" disabled>Editar</button>
+  <button id="btnGuardar" type="button" class="btn btn-success" disabled>Guardar</button>
+  <button id="btnCancelar" type="button" class="btn btn-secondary" disabled>Cancelar</button>
+</div>
+
+<div class="table-responsive">
+  <table id="tablaLaboral" class="table table-bordered table-striped table-hover table-sm">
+    <thead class="thead-dark">
+      <tr>
+        <th style="display:none">Numero de DPI</th>
+        <th>Nombre de la Empresa (Ultimo Trabajo)</th>
+        <th>Direccion de la empresa</th>
+        <th>Inicio laboral en la empresa</th>
+        <th>Fin Laboral en la empresa</th>
+        <th>Motivo del retiro</th>
+        <th>Nombre del Jefe Imediato</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in empleados %}
+      <tr>
+        <td style="display:none">{{ e['Numero de DPI'] }}</td>
+        <td>{{ e['Nombre de la Empresa (Ultimo Trabajo)'] }}</td>
+        <td>{{ e['Direccion de la empresa'] }}</td>
+        <td>{{ e['Inicio laboral en la empresa'] }}</td>
+        <td>{{ e['Fin Laboral en la empresa'] }}</td>
+        <td>{{ e['Motivo del retiro'] }}</td>
+        <td>{{ e['Nombre del Jefe Imediato'] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script src="{{ url_for('static', filename='main.js') }}"></script>
+{% endblock %}

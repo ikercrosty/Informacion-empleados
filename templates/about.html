@@ -5,13 +5,6 @@
   <p class="lead">Datos académicos de los empleados</p>
 </div>
 
-<!-- Debug: muestra número de filas recibidas -->
-{% if empleados is not none %}
-  <div class="mb-2 text-muted">Registros recibidos: {{ empleados|length }}</div>
-{% else %}
-  <div class="mb-2 text-danger">Variable empleados no definida</div>
-{% endif %}
-
 <div class="mb-3">
   <button id="btnAgregar" type="button" class="btn btn-success">Agregar</button>
   <button id="btnEditar" type="button" class="btn btn-primary" disabled>Editar</button>

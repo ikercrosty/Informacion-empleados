@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="jumbotron">
+  <h1 class="display-4">Contacto de Emergencia</h1>
+  <p class="lead">Información del contacto de emergencia</p>
+</div>
+
+{% if empleados is not none %}
+  <div class="mb-2 text-muted">Registros recibidos: {{ empleados|length }}</div>
+{% endif %}
+
+<div class="mb-3">
+  <button id="btnAgregar" type="button" class="btn btn-success">Agregar</button>
+  <button id="btnEditar" type="button" class="btn btn-primary" disabled>Editar</button>
+  <button id="btnGuardar" type="button" class="btn btn-success" disabled>Guardar</button>
+  <button id="btnCancelar" type="button" class="btn btn-secondary" disabled>Cancelar</button>
+</div>
+
+<div class="table-responsive">
+  <table id="tablaEmergencia" class="table table-bordered table-striped table-hover table-sm">
+    <thead class="thead-dark">
+      <tr>
+        <th style="display:none">Numero de DPI</th>
+        <th>Nombre del contacto de emergencia</th>
+        <th>Apellidos del contacto de emergencia</th>
+        <th>Numero de telefono de emergencia</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in empleados %}
+      <tr>
+        <td style="display:none">{{ e['Numero de DPI'] }}</td>
+        <td>{{ e['Nombre del contacto de emergencia'] }}</td>
+        <td>{{ e['Apellidos del contacto de emergencia'] }}</td>
+        <td>{{ e['Numero de telefono de emergencia'] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script src="{{ url_for('static', filename='main.js') }}"></script>
+{% endblock %}
