@@ -22,15 +22,14 @@
 <body>
   <!-- NAVBAR
        - Brand (logo + Empaquetex) links to planilla.
-       - In /planilla: show Planilla links (inline on wide screens, collapsed on small).
-       - The "Información de empleados" panel toggle (menu de 3 barras) must ALWAYS be visible as a hamburger
-         and open the sidebarMenu; it does not disappear on wide screens.
-       - Other pages keep the sidebar toggle behavior for employee info only.
+       - On /planilla: show Planilla links inline on wide screens (no collapse); on small screens they wrap naturally.
+       - A single hamburger (menuInfoToggle) is always visible on the right; it opens the sidebarMenu.
+       - SidebarMenu content adapts by route: on /planilla it shows planilla-related links + logout; on employee-info pages it shows the full employee menu.
   -->
-  <nav class="navbar navbar-dark bg-dark navbar-expand-lg">
+  <nav class="navbar navbar-dark bg-dark">
     <div class="container-fluid d-flex align-items-center">
       <div class="d-flex align-items-center">
-        <!-- Back button (only on employee info pages) -->
+        <!-- Back button (only on employee-info pages) -->
         {% if 'usuario' in session and request.path in ['/', '/about', '/conyugue', '/emergencia', '/laboral', '/medica'] %}
         <a href="{{ url_for('planilla') }}" id="btnBackToPlanilla" class="btn btn-back mr-2" title="Regresar a Planilla">
           <i class="fas fa-arrow-left"></i>
@@ -42,107 +41,115 @@
           <img src="{{ url_for('static', filename='imagenes/logo.png') }}" alt="Empaquetex" class="logo-navbar" />
           <span class="brand-title ml-2">Empaquetex</span>
         </a>
+
+        <!-- If we're on planilla, show the three options inline (visible on wide screens;
+             on small screens they will wrap to next line but hamburger remains single control) -->
+        {% if 'usuario' in session and request.path == '/planilla' %}
+        <div class="navbar-left-links d-none d-md-flex ml-4">
+          <a class="nav-link text-white" href="{{ url_for('planilla') }}"><i class="fas fa-list mr-1"></i> Planilla</a>
+          <a class="nav-link text-white" href="#"><i class="fas fa-file-invoice-dollar mr-1"></i> Recibo del pago</a>
+          <a class="nav-link text-white" href="#"><i class="fas fa-id-badge mr-1"></i> Ficha de empleados</a>
+          <a class="nav-link text-white" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt mr-1"></i> Cerrar sesión</a>
+        </div>
+        {% endif %}
       </div>
 
-      <!-- Planilla links: collapse on small screens (uses Bootstrap collapse) -->
-      {% if 'usuario' in session and request.path == '/planilla' %}
-      <button class="navbar-toggler ml-3" type="button" data-toggle="collapse" data-target="#planillaNav"
-              aria-controls="planillaNav" aria-expanded="false" aria-label="Mostrar opciones de planilla">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-
-      <div class="collapse navbar-collapse justify-content-start ml-4" id="planillaNav">
-        <ul class="navbar-nav navbar-left-links">
-          <li class="nav-item"><a class="nav-link text-white" href="{{ url_for('planilla') }}"><i class="fas fa-list mr-1"></i> Planilla</a></li>
-          <li class="nav-item"><a class="nav-link text-white" href="#"><i class="fas fa-file-invoice-dollar mr-1"></i> Recibo del pago</a></li>
-          <li class="nav-item"><a class="nav-link text-white" href="#"><i class="fas fa-id-badge mr-1"></i> Ficha de empleados</a></li>
-          <li class="nav-item"><a class="nav-link text-white" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt mr-1"></i> Cerrar sesión</a></li>
-        </ul>
-      </div>
-      {% endif %}
-
-      <!-- Fixed Información de empleados hamburger: always visible, opens sidebarMenu -->
+      <!-- SINGLE hamburger always visible (opens sidebarMenu) -->
       {% if 'usuario' in session %}
-      <button id="menuInfoToggle" class="btn btn-info-hamburger ml-auto ml-lg-3" type="button" aria-label="Información de empleados" title="Información de empleados">
-        <span class="navbar-toggler-icon" style="color:transparent"></span>
-        <i class="fas fa-bars" style="font-size:1.05rem; color:#fff;"></i>
+      <button id="menuInfoToggle" class="btn btn-hamburger ml-auto" type="button" aria-label="Abrir menú">
+        <i class="fas fa-bars" style="font-size:1.1rem; color:#fff;"></i>
       </button>
       {% endif %}
     </div>
   </nav>
 
   {% if 'usuario' in session %}
-  <!-- OVERLAY (global) -->
+  <!-- OVERLAY -->
   <div id="overlay" class="overlay"></div>
 
-  <!-- SIDEBAR GLOBAL (Información de empleados) -->
+  <!-- SIDEBAR GLOBAL (Contenido varía por ruta) -->
   <div id="sidebarMenu" class="sidebar bg-dark" aria-hidden="true">
     <ul class="navbar-nav">
       {% if request.path == '/planilla' %}
-      <!-- If opened on planilla, keep logout available -->
-      <li class="nav-item">
-        <a class="nav-link text-white border-bottom" href="{{ url_for('logout') }}">
-          <i class="fas fa-sign-out-alt"></i> Salir
-        </a>
-      </li>
+        <!-- En /planilla: mostrar las opciones de planilla dentro del sidebar (además de las inline en desktop) -->
+        <li class="nav-item">
+          <a class="nav-link text-white border-bottom" href="{{ url_for('planilla') }}">
+            <i class="fas fa-list"></i> Planilla
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white border-bottom" href="#">
+            <i class="fas fa-file-invoice-dollar"></i> Recibo del pago
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white border-bottom" href="#">
+            <i class="fas fa-id-badge"></i> Ficha de empleados
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white border-bottom" href="{{ url_for('logout') }}">
+            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+          </a>
+        </li>
       {% else %}
-      <!-- Full employee info menu for the employee pages -->
-      <li class="nav-item {% if request.path == '/' %}active{% endif %}">
-        <a class="nav-link text-white border-bottom" href="{{ url_for('home') }}">
-          <i class="fas fa-id-card"></i> Datos Personales
-        </a>
-      </li>
+        <!-- En páginas de información de empleados: menú completo de navegación -->
+        <li class="nav-item {% if request.path == '/' %}active{% endif %}">
+          <a class="nav-link text-white border-bottom" href="{{ url_for('home') }}">
+            <i class="fas fa-id-card"></i> Datos Personales
+          </a>
+        </li>
 
-      <li class="nav-item {% if request.path == '/about' %}active{% endif %}">
-        <a class="nav-link text-white border-bottom" href="{{ url_for('about') }}">
-          <i class="fas fa-graduation-cap"></i> Información Académica
-        </a>
-      </li>
+        <li class="nav-item {% if request.path == '/about' %}active{% endif %}">
+          <a class="nav-link text-white border-bottom" href="{{ url_for('about') }}">
+            <i class="fas fa-graduation-cap"></i> Información Académica
+          </a>
+        </li>
 
-      <li class="nav-item {% if request.path == '/conyugue' %}active{% endif %}">
-        <a class="nav-link text-white border-bottom" href="{{ url_for('conyugue') }}">
-          <i class="fas fa-user-friends"></i> Datos del Cónyuge
-        </a>
-      </li>
+        <li class="nav-item {% if request.path == '/conyugue' %}active{% endif %}">
+          <a class="nav-link text-white border-bottom" href="{{ url_for('conyugue') }}">
+            <i class="fas fa-user-friends"></i> Datos del Cónyuge
+          </a>
+        </li>
 
-      <li class="nav-item {% if request.path == '/emergencia' %}active{% endif %}">
-        <a class="nav-link text-white border-bottom" href="{{ url_for('emergencia') }}">
-          <i class="fas fa-phone-alt"></i> Contacto de Emergencia
-        </a>
-      </li>
+        <li class="nav-item {% if request.path == '/emergencia' %}active{% endif %}">
+          <a class="nav-link text-white border-bottom" href="{{ url_for('emergencia') }}">
+            <i class="fas fa-phone-alt"></i> Contacto de Emergencia
+          </a>
+        </li>
 
-      <li class="nav-item {% if request.path == '/laboral' %}active{% endif %}">
-        <a class="nav-link text-white border-bottom" href="{{ url_for('laboral') }}">
-          <i class="fas fa-briefcase"></i> Referencias Laborales
-        </a>
-      </li>
+        <li class="nav-item {% if request.path == '/laboral' %}active{% endif %}">
+          <a class="nav-link text-white border-bottom" href="{{ url_for('laboral') }}">
+            <i class="fas fa-briefcase"></i> Referencias Laborales
+          </a>
+        </li>
 
-      <li class="nav-item {% if request.path == '/medica' %}active{% endif %}">
-        <a class="nav-link text-white border-bottom" href="{{ url_for('medica') }}">
-          <i class="fas fa-notes-medical"></i> Referencias Médicas
-        </a>
-      </li>
+        <li class="nav-item {% if request.path == '/medica' %}active{% endif %}">
+          <a class="nav-link text-white border-bottom" href="{{ url_for('medica') }}">
+            <i class="fas fa-notes-medical"></i> Referencias Médicas
+          </a>
+        </li>
 
-      <li class="nav-item">
-        <a class="nav-link text-white border-bottom" href="{{ url_for('logout') }}">
-          <i class="fas fa-sign-out-alt"></i> Salir
-        </a>
-      </li>
+        <li class="nav-item">
+          <a class="nav-link text-white border-bottom" href="{{ url_for('logout') }}">
+            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+          </a>
+        </li>
       {% endif %}
     </ul>
   </div>
   {% endif %}
 
-  <!-- CONTENT -->
+  <!-- CONTENIDO -->
   <div class="container p-4">
     {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    <div>
-      {% for category, message in messages %}
-      <div class="alert alert-{{ category }}">{{ message }}</div>
-      {% endfor %}
-    </div>
-    {% endif %}
+      {% if messages %}
+        <div>
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
     {% endwith %}
 
     {% block content %}{% endblock %}
@@ -163,7 +170,7 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      // Fixed info-employees hamburger opens the sidebarMenu (always visible)
+      // Single hamburger opens the sidebar menu
       const infoToggle = document.getElementById('menuInfoToggle');
       const sidebar = document.getElementById('sidebarMenu');
       const overlay = document.getElementById('overlay');
@@ -180,12 +187,24 @@
         });
       }
 
-      // Back button: close sidebar before navigating back to planilla
+      // Close sidebar on ESC
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          if (sidebar && sidebar.classList.contains('active')) {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+          }
+        }
+      });
+
+      // Back button closes sidebar before navigating
       const backBtn = document.getElementById('btnBackToPlanilla');
       if (backBtn) {
         backBtn.addEventListener('click', () => {
-          if (sidebar && sidebar.classList.contains('active')) sidebar.classList.remove('active');
-          if (overlay && overlay.classList.contains('active')) overlay.classList.remove('active');
+          if (sidebar && sidebar.classList.contains('active')) {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+          }
         });
       }
     });
