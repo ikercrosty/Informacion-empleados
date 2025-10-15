@@ -159,14 +159,14 @@ document.addEventListener("DOMContentLoaded", () => {
       inputDpiUpload.value = dpi;
       inputDpiDelete.value = dpi;
 
-      // Llamar API para validar si existe foto y que el archivo realmente exista
+      // Llamar API para validar si existe foto y que el archivo realmente exista.
+      // La API retorna { foto: ..., url: ... } y, para BLOBs, url apuntará a /foto/<dpi>.
       fetch(`/api/foto/${encodeURIComponent(dpi)}`)
         .then(r => r.json())
         .then(j => {
-          // API antigua puede devolver {foto: filename} o nueva versión {foto,url}
-          const url = j && (j.url || (j.foto ? `/static/fotos/${j.foto}` : null));
+          const url = j && j.url;
           if (url) {
-            // Añadimos una cache-busting query con timestamp para evitar mostrar icono roto por cached 404
+            // Añadimos cache-busting para evitar imágenes rotas por cached 404
             fotoEmpleado.src = `${url}?t=${Date.now()}`;
             uploadControls.style.display = "none";
             deleteControl.style.display = "block";
@@ -199,4 +199,3 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 {% endblock %}
-
