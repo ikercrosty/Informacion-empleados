@@ -37,10 +37,25 @@
   </div>
 
   {% if 'usuario' in session %}
-  <!-- Botón hamburguesa global -->
-  <button class="navbar-toggler" type="button" id="menuToggle" aria-label="Abrir menú">
-    <span class="navbar-toggler-icon"></span>
-  </button>
+    {% if request.path == '/planilla' %}
+      <!-- En /planilla mostramos opciones directamente en el navbar (NO hamburguesa) -->
+      <div class="d-flex align-items-center">
+        <a class="nav-link text-white mr-3" href="{{ url_for('planilla') }}">
+          <i class="fas fa-list mr-1"></i> Planilla
+        </a>
+        <a class="nav-link text-white mr-3" href="#">
+          <i class="fas fa-file-invoice-dollar mr-1"></i> Recibo del pago
+        </a>
+        <a class="nav-link text-white mr-3" href="#">
+          <i class="fas fa-id-badge mr-1"></i> Ficha de empleados
+        </a>
+      </div>
+    {% else %}
+      <!-- En las demás páginas (información del empleado) mostramos la hamburguesa que abre el sidebar -->
+      <button class="navbar-toggler" type="button" id="menuToggle" aria-label="Abrir menú">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+    {% endif %}
   {% endif %}
 </nav>
 
@@ -48,34 +63,18 @@
 <!-- OVERLAY (global) -->
 <div id="overlay" class="overlay"></div>
 
-<!-- PANEL LATERAL GLOBAL: su contenido cambia si estamos en /planilla -->
+<!-- PANEL LATERAL GLOBAL -->
 <div id="sidebarMenu" class="sidebar bg-dark" aria-hidden="true">
   <ul class="navbar-nav">
     {% if request.path == '/planilla' %}
-      <!-- En la página Planilla mostrar solo opciones cortas en navbar (panel mantiene Logout) -->
-      <li class="nav-item">
-        <a class="nav-link text-white border-bottom" href="{{ url_for('planilla') }}">
-          <i class="fas fa-list"></i> Planilla
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link text-white border-bottom" href="#">
-          <i class="fas fa-file-invoice-dollar"></i> Recibo del pago
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link text-white border-bottom" href="#">
-          <i class="fas fa-id-badge"></i> Ficha de empleados
-        </a>
-      </li>
-
+      <!-- Si por alguna razón se abre el panel en /planilla, mantenemos Logout -->
       <li class="nav-item">
         <a class="nav-link text-white border-bottom" href="{{ url_for('logout') }}">
           <i class="fas fa-sign-out-alt"></i> Salir
         </a>
       </li>
     {% else %}
-      <!-- En cualquier otra página mostrar el menú completo -->
+      <!-- Menú completo para páginas de información de empleados -->
       <li class="nav-item {% if request.path == '/' %}active{% endif %}">
         <a class="nav-link text-white border-bottom" href="{{ url_for('home') }}">
           <i class="fas fa-id-card"></i> Datos Personales
