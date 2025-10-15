@@ -17,13 +17,11 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 # Extensiones permitidas
 ALLOWED_EXT = {"png", "jpg", "jpeg", "gif", "webp"}
 
-
 def allowed_file(filename):
     if "." not in filename:
         return False
     ext = filename.rsplit(".", 1)[1].lower()
     return ext in ALLOWED_EXT
-
 
 def get_db_connection():
     url = os.environ.get("DATABASE_URL")
@@ -48,7 +46,6 @@ def get_db_connection():
             cursorclass=pymysql.cursors.DictCursor
         )
 
-
 @app.before_request
 def requerir_login():
     # Rutas públicas (no requieren sesión)
@@ -62,7 +59,6 @@ def requerir_login():
     if ("usuario" not in session) and (endpoint.split(".")[0] not in rutas_publicas):
         return redirect(url_for("login"))
 
-
 @app.after_request
 def no_cache(response):
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
@@ -70,7 +66,7 @@ def no_cache(response):
     response.headers["Expires"] = "0"
     return response
 
-
+# ---------------- Páginas principales ----------------
 @app.route("/")
 def home():
     conn = get_db_connection()
@@ -90,7 +86,6 @@ def home():
     conn.close()
     return render_template("home.html", empleados=empleados, usuario=session.get("usuario"))
 
-
 @app.route("/about")
 def about():
     conn = get_db_connection()
@@ -106,7 +101,6 @@ def about():
     cursor.close()
     conn.close()
     return render_template("about.html", empleados=empleados, usuario=session.get("usuario"))
-
 
 @app.route("/conyugue")
 def conyugue():
@@ -124,7 +118,6 @@ def conyugue():
     conn.close()
     return render_template("conyugue.html", empleados=empleados, usuario=session.get("usuario"))
 
-
 @app.route("/emergencia")
 def emergencia():
     conn = get_db_connection()
@@ -140,7 +133,6 @@ def emergencia():
     cursor.close()
     conn.close()
     return render_template("emergencia.html", empleados=empleados, usuario=session.get("usuario"))
-
 
 @app.route("/laboral")
 def laboral():
@@ -159,7 +151,6 @@ def laboral():
     conn.close()
     return render_template("laboral.html", empleados=empleados, usuario=session.get("usuario"))
 
-
 @app.route("/medica")
 def medica():
     conn = get_db_connection()
@@ -176,8 +167,7 @@ def medica():
     conn.close()
     return render_template("medica.html", empleados=empleados, usuario=session.get("usuario"))
 
-
-# ---------------- Login usando tabla Usuarios (redirige a /planilla) ----------------
+# ---------------- Login ----------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """
@@ -229,7 +219,6 @@ def login():
 
     return render_template("login.html")
 
-
 @app.route("/logout")
 def logout():
     session.clear()
@@ -239,14 +228,12 @@ def logout():
     resp.headers["Expires"] = "0"
     return resp
 
-
-# ---------------- Página Planilla (nuevo punto de entrada después del login) ----------------
+# ---------------- Página Planilla ----------------
 @app.route("/planilla")
 def planilla():
     if "usuario" not in session:
         return redirect(url_for("login"))
     return render_template("planilla.html", usuario=session.get("usuario"))
-
 
 @app.route("/db-test")
 def db_test():
@@ -260,7 +247,6 @@ def db_test():
         return f"Conexión OK. Resultado: {result}"
     except Exception as e:
         return f"Error de conexión: {e}"
-
 
 # ---------------- Guardados (POST JSON) ----------------
 @app.route("/guardar_empleado", methods=["POST"])
@@ -343,7 +329,6 @@ def guardar_empleado():
     except Exception as e:
         return jsonify({"mensaje": f"Error: {e}"}), 500
 
-
 @app.route("/guardar_academico", methods=["POST"])
 def guardar_academico():
     data = request.get_json() or {}
@@ -398,7 +383,6 @@ def guardar_academico():
     except Exception as e:
         return jsonify({"mensaje": f"Error: {e}"}), 500
 
-
 @app.route("/guardar_conyugue", methods=["POST"])
 def guardar_conyugue():
     data = request.get_json() or {}
@@ -452,7 +436,6 @@ def guardar_conyugue():
     except Exception as e:
         return jsonify({"mensaje": f"Error: {e}"}), 500
 
-
 @app.route("/guardar_emergencia", methods=["POST"])
 def guardar_emergencia():
     data = request.get_json() or {}
@@ -500,7 +483,6 @@ def guardar_emergencia():
         return jsonify({"mensaje": mensaje})
     except Exception as e:
         return jsonify({"mensaje": f"Error: {e}"}), 500
-
 
 @app.route("/guardar_laboral", methods=["POST"])
 def guardar_laboral():
@@ -555,7 +537,6 @@ def guardar_laboral():
         return jsonify({"mensaje": mensaje})
     except Exception as e:
         return jsonify({"mensaje": f"Error: {e}"}), 500
-
 
 @app.route("/guardar_medica", methods=["POST"])
 def guardar_medica():
@@ -612,9 +593,7 @@ def guardar_medica():
     except Exception as e:
         return jsonify({"mensaje": f"Error: {e}"}), 500
 
-
 # ---------------- Fotos: API, subida y eliminación ----------------
-
 @app.route("/api/foto/<dpi>")
 def api_foto(dpi):
     """
@@ -631,14 +610,17 @@ def api_foto(dpi):
     except Exception as e:
         return jsonify({"foto": None, "error": str(e)}), 500
 
+@app.route("/subir_foto", methods=["POST"])
+def subir_foto():
+    """
+    Sube la foto para el DPI proporcionado (enviado por formulario).
+    Guarda con nombre único: DPI_timestamp.ext, limpia versiones antiguas y actualiza la BD.
+    """
+    dpi = request.form.get("dpi")
+    if not dpi:
+        flash("No se recibió DPI", "danger")
+        return redirect(url_for("home"))
 
-@app.route("/subir_foto/<dpi>", methods=["POST"])
-def subir_foto(dpi):
-    """
-    Sube la foto para el DPI proporcionado. Guarda con nombre único: DPI_timestamp.ext
-    Elimina versiones antiguas que empiecen con DPI_ para evitar acumulación (opcional).
-    Actualiza la columna foto en la BD con el nombre del archivo guardado.
-    """
     if "foto" not in request.files:
         flash("No se seleccionó archivo", "danger")
         return redirect(url_for("home"))
@@ -652,7 +634,6 @@ def subir_foto(dpi):
         flash("Tipo de archivo no permitido", "danger")
         return redirect(url_for("home"))
 
-    # Nombre seguro y único
     original = secure_filename(file.filename)
     _, ext = os.path.splitext(original)
     ts = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
@@ -663,7 +644,7 @@ def subir_foto(dpi):
         # Guardar nuevo archivo
         file.save(filepath)
 
-        # Eliminar archivos antiguos del mismo DPI (opcional)
+        # Eliminar archivos antiguos del mismo DPI
         try:
             for f in os.listdir(app.config["UPLOAD_FOLDER"]):
                 if f.startswith(f"{dpi}_") and f != final_name:
@@ -681,18 +662,23 @@ def subir_foto(dpi):
         conn.commit()
         cursor.close()
         conn.close()
+
         flash("Foto del empleado actualizada correctamente", "success")
     except Exception as e:
         flash(f"Error al guardar foto: {e}", "danger")
 
     return redirect(url_for("home"))
 
+@app.route("/eliminar_foto", methods=["POST"])
+def eliminar_foto():
+    """
+    Elimina la foto registrada (archivo y referencia en BD) para el DPI indicado (formulario).
+    """
+    dpi = request.form.get("dpi")
+    if not dpi:
+        flash("No se recibió DPI", "danger")
+        return redirect(url_for("home"))
 
-@app.route("/eliminar_foto/<dpi>", methods=["POST"])
-def eliminar_foto(dpi):
-    """
-    Elimina la foto registrada (archivo y referencia en BD) para el DPI indicado.
-    """
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -715,8 +701,8 @@ def eliminar_foto(dpi):
         conn.close()
     except Exception as e:
         flash(f"Error al eliminar foto: {e}", "danger")
-    return redirect(url_for("home"))
 
+    return redirect(url_for("home"))
 
 if __name__ == "__main__":
     app.run(debug=True)
