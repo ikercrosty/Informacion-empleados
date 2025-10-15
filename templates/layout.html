@@ -52,7 +52,23 @@
 <div id="sidebarMenu" class="sidebar bg-dark" aria-hidden="true">
   <ul class="navbar-nav">
     {% if request.path == '/planilla' %}
-      <!-- En la página Planilla sólo mostrar Logout -->
+      <!-- En la página Planilla mostrar solo opciones cortas en navbar (panel mantiene Logout) -->
+      <li class="nav-item">
+        <a class="nav-link text-white border-bottom" href="{{ url_for('planilla') }}">
+          <i class="fas fa-list"></i> Planilla
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link text-white border-bottom" href="#">
+          <i class="fas fa-file-invoice-dollar"></i> Recibo del pago
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link text-white border-bottom" href="#">
+          <i class="fas fa-id-badge"></i> Ficha de empleados
+        </a>
+      </li>
+
       <li class="nav-item">
         <a class="nav-link text-white border-bottom" href="{{ url_for('logout') }}">
           <i class="fas fa-sign-out-alt"></i> Salir
@@ -136,7 +152,6 @@
 <script src="{{ url_for('static', filename='main.js') }}"></script>
 
 <script>
-  // Solo conectar el menú si los elementos existen (no habrá menu en login)
   document.addEventListener("DOMContentLoaded", () => {
     const menuToggle = document.getElementById('menuToggle');
     const sidebar = document.getElementById('sidebarMenu');

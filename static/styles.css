@@ -217,3 +217,44 @@ h1, h2, h3 {
 }
 
 /* End of styles */
+/* Planilla card title (dentro del contenedor blanco, arriba izquierda) */
+.planilla-title {
+  font-size: 2.0rem; /* más grande */
+  color: #0B486B;
+  font-weight: 700;
+}
+
+/* Ajuste del card para que el título quede arriba-izquierda y botón abajo-derecha */
+.card.p-4 {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Botón naranja pequeño en la esquina inferior derecha del card */
+.btn-naranja.btn-sm {
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  border-radius: 8px;
+  position: relative;
+}
+
+/* Asegurar separación del borde del contenedor */
+.card .d-flex.justify-content-end {
+  padding-top: 12px;
+}
+
+/* Navbar: en /planilla se muestran 3 enlaces en el sidebar global (ya manejado en layout),
+   si quieres estilo específico para esos enlaces puedes aplicar aquí */
+.sidebar .nav-link i { width: 20px; }
+
+/* Mantener estilos existentes para btn-naranja */
+.btn-naranja {
+  background: #F56217;
+  border-color: #F56217;
+  color: #fff;
+}
+.btn-naranja:hover {
+  background: #d94e12;
+  border-color: #d94e12;
+}

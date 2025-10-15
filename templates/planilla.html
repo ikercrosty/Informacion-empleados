@@ -2,34 +2,30 @@
 {% block title %}Planilla{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-center align-items-center" style="min-height:70vh;">
-  <div class="text-center">
-    <h1 class="mb-3">Bienvenido a Planilla</h1>
-    <p class="lead mb-4">Hola, {{ usuario }}. Usa el botón para ver la información de empleados.</p>
+<div class="card p-4 mb-4">
+  <div class="d-flex align-items-start">
+    <h1 class="planilla-title mb-0">Planilla</h1>
+  </div>
 
-    <a href="{{ url_for('home') }}" id="btnAbrirInfo" class="btn btn-naranja btn-lg" role="button" style="padding:14px 24px; border-radius:10px;">
+  <p class="text-muted mt-3"> </p>
+
+  <div class="d-flex justify-content-end align-items-end" style="min-height:220px;">
+    <a href="{{ url_for('home') }}" id="btnAbrirInfo" class="btn btn-naranja btn-sm">
       Abrir Información empleados
     </a>
-
-    <div class="mt-4">
-      <a href="{{ url_for('logout') }}" class="btn btn-outline-secondary">Cerrar sesión</a>
-    </div>
   </div>
 </div>
 
-<style>
-/* botón naranja local: override pequeño para garantizar hover */
-.btn-naranja {
-  background: #F56217;
-  border-color: #F56217;
-  color: #fff;
-  text-transform: uppercase;
-  font-weight: 600;
-}
-.btn-naranja:hover {
-  background: #d94e12;
-  border-color: #d94e12;
-  text-decoration: none;
-}
-</style>
+<script>
+  // Si quieres que al hacer click se añada query para abrir sidebar automáticamente:
+  document.addEventListener("DOMContentLoaded", () => {
+    const btn = document.getElementById('btnAbrirInfo');
+    if (btn) {
+      btn.addEventListener('click', (e) => {
+        // navegar normalmente; si prefieres abrir sidebar al llegar a home,
+        // cambia el href en la plantilla a "{{ url_for('home') }}?from=planilla"
+      });
+    }
+  });
+</script>
 {% endblock %}
