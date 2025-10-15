@@ -1,104 +1,95 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
   <title>{% block title %}{% endblock %}</title>
 
   <!-- BOOTSTRAP 4 CDN -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" 
-        integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" 
+  <link rel="stylesheet"
+        href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+        integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
         crossorigin="anonymous">
 
   <!-- FONT AWESOME para íconos -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
   <!-- CUSTOM CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-
-  <!-- Ajustes específicos para el layout (tamaño del título y separación) -->
-  <style>
-    .brand-title {
-      font-size: 1.45rem;
-      font-weight: 700;
-      color: #FFFFFF;
-      text-decoration: none;
-    }
-    .navbar-left-links {
-      margin-left: 1.75rem; /* separación considerable desde Empaquetex */
-      display: flex;
-      gap: 1.25rem;
-      align-items: center;
-    }
-    .navbar-left-links .nav-link {
-      color: #FFFFFF;
-      padding: 0.25rem 0.5rem;
-    }
-    .navbar-left-links .nav-link i { margin-right: 6px; }
-    /* Asegurar que el logo y título actúen como un solo control clickable */
-    .brand-link { display: inline-flex; align-items: center; gap: 0.6rem; text-decoration: none; }
-    .brand-link img { height: 64px; width: 64px; object-fit: cover; border-radius: 6px; }
-    @media (max-width: 576px) {
-      .brand-title { font-size: 1.15rem; }
-      .navbar-left-links { margin-left: 0.75rem; gap: 0.6rem; }
-      .brand-link img { height: 50px; width: 50px; }
-    }
-  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
 </head>
 
 <body>
- <!-- NAVBAR -->
-<nav class="navbar navbar-dark bg-dark">
-  <div class="d-flex align-items-center">
-    <!-- Botón volver a Planilla (aparece solo en páginas de información del empleado) -->
-    {% if 'usuario' in session and request.path in ['/', '/about', '/conyugue', '/emergencia', '/laboral', '/medica'] %}
-    <a href="{{ url_for('planilla') }}" id="btnBackToPlanilla" class="btn btn-back mr-2" title="Regresar a Planilla">
-      <i class="fas fa-arrow-left"></i>
-    </a>
-    {% endif %}
+  <!-- NAVBAR
+       Implementación responsive:
+       - El bloque marca (logo + Empaquetex) siempre visible y apunta a planilla.
+       - En /planilla mostramos las 3 opciones en la izquierda; en pantallas pequeñas se colapsan
+         usando el colapso de Bootstrap y aparecen detrás de un botón hamburguesa (dentro del navbar).
+       - En el resto de páginas mostramos el toggler que abre el sidebarMenu (panel lateral).
+  -->
+  <nav class="navbar navbar-dark bg-dark navbar-expand-lg">
+    <div class="container-fluid d-flex align-items-center">
+      <div class="d-flex align-items-center">
+        <!-- Volver (solo en pantallas donde corresponde) -->
+        {% if 'usuario' in session and request.path in ['/', '/about', '/conyugue', '/emergencia', '/laboral', '/medica'] %}
+        <a href="{{ url_for('planilla') }}" id="btnBackToPlanilla" class="btn btn-back mr-2" title="Regresar a Planilla">
+          <i class="fas fa-arrow-left"></i>
+        </a>
+        {% endif %}
 
-    <!-- Logo + Nombre (ahora enlazan a planilla) -->
-    <a class="brand-link" href="{{ url_for('planilla') }}" aria-label="Ir a Planilla">
-      <img src="{{ url_for('static', filename='imagenes/logo.png') }}" alt="Empaquetex" class="logo-navbar">
-      <span class="brand-title">Empaquetex</span>
-    </a>
-
-    <!-- En /planilla mostrar las opciones directamente a la izquierda con separación -->
-    {% if 'usuario' in session and request.path == '/planilla' %}
-      <div class="navbar-left-links">
-        <a class="nav-link" href="{{ url_for('planilla') }}"><i class="fas fa-list"></i>Planilla</a>
-        <a class="nav-link" href="#"><i class="fas fa-file-invoice-dollar"></i>Recibo del pago</a>
-        <a class="nav-link" href="#"><i class="fas fa-id-badge"></i>Ficha de empleados</a>
+        <!-- Logo + Nombre (ahora enlazan a planilla) -->
+        <a class="brand-link d-flex align-items-center" href="{{ url_for('planilla') }}" aria-label="Ir a Planilla">
+          <img src="{{ url_for('static', filename='imagenes/logo.png') }}" alt="Empaquetex" class="logo-navbar" />
+          <span class="brand-title ml-2">Empaquetex</span>
+        </a>
       </div>
-    {% endif %}
-  </div>
 
-  {% if 'usuario' in session %}
-    {% if request.path != '/planilla' %}
-      <!-- En las demás páginas (información del empleado) mostramos la hamburguesa que abre el sidebar -->
-      <button class="navbar-toggler" type="button" id="menuToggle" aria-label="Abrir menú">
+      <!-- Desktop / Planilla links placed to the left visually by using ml-4 on the collapse -->
+      {% if 'usuario' in session and request.path == '/planilla' %}
+      <!-- Usamos el collapse de Bootstrap para que en móviles se transforme en hamburguesa -->
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#planillaNav"
+              aria-controls="planillaNav" aria-expanded="false" aria-label="Mostrar opciones">
         <span class="navbar-toggler-icon"></span>
       </button>
-    {% endif %}
-  {% endif %}
-</nav>
 
-{% if 'usuario' in session %}
-<!-- OVERLAY (global) -->
-<div id="overlay" class="overlay"></div>
+      <div class="collapse navbar-collapse justify-content-start ml-4" id="planillaNav">
+        <ul class="navbar-nav navbar-left-links">
+          <li class="nav-item">
+            <a class="nav-link text-white" href="{{ url_for('planilla') }}"><i class="fas fa-list mr-1"></i> Planilla</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-white" href="#"><i class="fas fa-file-invoice-dollar mr-1"></i> Recibo del pago</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-white" href="#"><i class="fas fa-id-badge mr-1"></i> Ficha de empleados</a>
+          </li>
+        </ul>
+      </div>
+      {% else %}
+      <!-- En las demás rutas (información de empleados) no mostramos esas 3 links aquí.
+           En pantallas grandes mostramos el botón toggler que abre el sidebar lateral. -->
+      <button class="navbar-toggler d-lg-none" type="button" id="menuToggle" aria-label="Abrir menú">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      {% endif %}
+    </div>
+  </nav>
 
-<!-- PANEL LATERAL GLOBAL -->
-<div id="sidebarMenu" class="sidebar bg-dark" aria-hidden="true">
-  <ul class="navbar-nav">
-    {% if request.path == '/planilla' %}
-      <!-- Si se abre el panel en /planilla, mantenemos Logout -->
+  {% if 'usuario' in session %}
+  <!-- OVERLAY (global) -->
+  <div id="overlay" class="overlay"></div>
+
+  <!-- PANEL LATERAL GLOBAL -->
+  <div id="sidebarMenu" class="sidebar bg-dark" aria-hidden="true">
+    <ul class="navbar-nav">
+      {% if request.path == '/planilla' %}
+      <!-- Si por alguna razón se abre el panel en /planilla, mantenemos Logout -->
       <li class="nav-item">
         <a class="nav-link text-white border-bottom" href="{{ url_for('logout') }}">
           <i class="fas fa-sign-out-alt"></i> Salir
         </a>
       </li>
-    {% else %}
+      {% else %}
       <!-- Menú completo para páginas de información de empleados -->
       <li class="nav-item {% if request.path == '/' %}active{% endif %}">
         <a class="nav-link text-white border-bottom" href="{{ url_for('home') }}">
@@ -141,59 +132,61 @@
           <i class="fas fa-sign-out-alt"></i> Salir
         </a>
       </li>
-    {% endif %}
-  </ul>
-</div>
-{% endif %}
+      {% endif %}
+    </ul>
+  </div>
+  {% endif %}
 
-<!-- CONTENIDO -->
-<div class="container p-4">
-  {% with messages = get_flashed_messages(with_categories=true) %}
+  <!-- CONTENIDO -->
+  <div class="container p-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-      <div>
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }}">{{ message }}</div>
-        {% endfor %}
-      </div>
+    <div>
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
     {% endif %}
-  {% endwith %}
-  
-  {% block content %}
-  {% endblock %}
-</div>
+    {% endwith %}
 
-<!-- BOOTSTRAP JS -->
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" 
-        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" 
-        crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" 
-        integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" 
-        crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" 
-        integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" 
-        crossorigin="anonymous"></script>
+    {% block content %}{% endblock %}
+  </div>
 
-<script src="{{ url_for('static', filename='main.js') }}"></script>
+  <!-- BOOTSTRAP JS -->
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+          integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+          crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+          integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+          crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+          integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+          crossorigin="anonymous"></script>
 
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.getElementById('sidebarMenu');
-    const overlay = document.getElementById('overlay');
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
 
-    if (menuToggle && sidebar && overlay) {
-      menuToggle.addEventListener('click', () => {
-        sidebar.classList.add('active');
-        overlay.classList.add('active');
-      });
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Sidebar toggle (se usa en páginas distintas a /planilla)
+      const menuToggle = document.getElementById('menuToggle');
+      const sidebar = document.getElementById('sidebarMenu');
+      const overlay = document.getElementById('overlay');
 
-      overlay.addEventListener('click', () => {
-        sidebar.classList.remove('active');
-        overlay.classList.remove('active');
-      });
-    }
-  });
-</script>
+      if (menuToggle && sidebar && overlay) {
+        menuToggle.addEventListener('click', () => {
+          sidebar.classList.add('active');
+          overlay.classList.add('active');
+        });
 
+        overlay.addEventListener('click', () => {
+          sidebar.classList.remove('active');
+          overlay.classList.remove('active');
+        });
+      }
+
+      // Si estamos en /planilla y llegamos en móvil, el botón navbar-toggler colapsa las 3 opciones (Bootstrap lo maneja).
+      // No se necesita JS adicional para el collapse de Bootstrap cuando se usa data-toggle/data-target.
+    });
+  </script>
 </body>
 </html>
