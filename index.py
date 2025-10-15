@@ -2,19 +2,16 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 import os
 import pymysql
 from urllib.parse import urlparse
-from werkzeug.utils import secure_filename  # NUEVO: para nombres seguros de archivos
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = "clave-secreta"
 app.config["SESSION_PERMANENT"] = False
 
-# NUEVO: carpeta de subida de fotos
+# Carpeta para fotos
 UPLOAD_FOLDER = os.path.join("static", "fotos")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-
-USUARIOS = ["iker", "admin", "juan", "maria"]
-PASSWORD_GLOBAL = "Empaquetex25"
 
 def get_db_connection():
     url = os.environ.get("DATABASE_URL")
@@ -43,7 +40,6 @@ def get_db_connection():
 def requerir_login():
     rutas_publicas = {"login", "static", "db_test", "guardar_empleado", "guardar_academico",
                       "guardar_conyugue", "guardar_emergencia", "guardar_laboral", "guardar_medica"}
-    # Nota: dejamos /api_foto, /subir_foto y /eliminar_foto protegidos (requieren login), porque se usan dentro de home ya autenticado.
     endpoint = request.endpoint or ""
     if ("usuario" not in session) and (endpoint.split(".")[0] not in rutas_publicas):
         return redirect(url_for("login"))
@@ -155,18 +151,56 @@ def medica():
     conn.close()
     return render_template("medica.html", empleados=empleados, usuario=session.get("usuario"))
 
+# ---------------- Login usando tabla Usuarios ----------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    """
+    Autenticación contra la tabla Usuarios de la BD.
+    Se permite usar como identificador el campo Usuarios o el Correo Electronico.
+    La columna de contraseña en la tabla debe llamarse exactamente 'Constraseña'.
+    """
     if request.method == "POST":
-        usuario = request.form.get("usuario", "").strip()
+        identificador = request.form.get("usuario", "").strip()
         password = request.form.get("password", "")
-        if usuario in USUARIOS and password == PASSWORD_GLOBAL:
-            session["usuario"] = usuario
-            session.permanent = False
-            return redirect(url_for("home"))
-        else:
-            flash("Usuario o contraseña incorrectos", "danger")
+
+        if not identificador or not password:
+            flash("Usuario/Correo y contraseña son obligatorios", "danger")
             return redirect(url_for("login"))
+
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT `Usuarios`, `Nombres`, `Correo Electronico`, `Constraseña`
+                FROM Usuarios
+                WHERE `Usuarios` = %s OR `Correo Electronico` = %s
+                LIMIT 1
+            """, (identificador, identificador))
+            user_row = cursor.fetchone()
+            cursor.close()
+            conn.close()
+
+            if not user_row:
+                flash("Usuario o correo no encontrado", "danger")
+                return redirect(url_for("login"))
+
+            stored_password = user_row.get("Constraseña")
+            if stored_password is None:
+                flash("Sin contraseña registrada para este usuario", "danger")
+                return redirect(url_for("login"))
+
+            # Comparación directa; si usas hashes reemplaza aquí la comparación (bcrypt.checkpw)
+            if password == stored_password:
+                session["usuario"] = user_row.get("Usuarios") or user_row.get("Correo Electronico")
+                session.permanent = False
+                return redirect(url_for("home"))
+            else:
+                flash("Contraseña incorrecta", "danger")
+                return redirect(url_for("login"))
+        except Exception as e:
+            flash(f"Error en autenticación: {e}", "danger")
+            return redirect(url_for("login"))
+
     return render_template("login.html")
 
 @app.route("/logout")
@@ -541,7 +575,6 @@ def guardar_medica():
 
 @app.route("/api/foto/<dpi>")
 def api_foto(dpi):
-    """Devuelve la ruta de la foto guardada (archivo) para el DPI dado."""
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -555,7 +588,6 @@ def api_foto(dpi):
 
 @app.route("/subir_foto/<dpi>", methods=["POST"])
 def subir_foto(dpi):
-    """Sube una imagen y actualiza la columna `foto` con el nombre del archivo."""
     if "foto" not in request.files:
         flash("No se seleccionó archivo", "danger")
         return redirect(url_for("home"))
@@ -565,7 +597,6 @@ def subir_foto(dpi):
         flash("Archivo vacío", "danger")
         return redirect(url_for("home"))
 
-    # nombre: DPI_original.ext para evitar colisiones
     filename = secure_filename(f"{dpi}_{file.filename}")
     filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
     try:
@@ -584,7 +615,6 @@ def subir_foto(dpi):
 
 @app.route("/eliminar_foto/<dpi>", methods=["POST"])
 def eliminar_foto(dpi):
-    """Elimina la foto del empleado: borra el archivo físico y limpia la columna en BD."""
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
