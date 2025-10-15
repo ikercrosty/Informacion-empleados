@@ -21,29 +21,30 @@
 
 <body>
   <!-- NAVBAR
-       - Brand (logo + Empaquetex) links to planilla.
-       - On /planilla: show Planilla links inline on wide screens (no collapse); on small screens they wrap naturally.
-       - A single hamburger (menuInfoToggle) is always visible on the right; it opens the sidebarMenu.
-       - SidebarMenu content adapts by route: on /planilla it shows planilla-related links + logout; on employee-info pages it shows the full employee menu.
+       Comportamiento deseado (solo en /planilla):
+       - En pantallas anchas (md+) el navbar muestra las opciones: Planilla, Recibo del pago, Ficha de empleados, Cerrar sesión.
+       - En pantallas pequeñas (< md) el navbar queda despejado y esas opciones no se muestran ahí; en su lugar aparecen dentro del panel lateral.
+       - El panel lateral (sidebarMenu) muestra Siempre Cerrar sesión; además muestra las otras opciones SOLO en pantallas pequeñas (d-md-none).
+       - El botón hamburguesa que abre el panel lateral (menuInfoToggle) está siempre visible y funciona como único control para desplegar el panel.
+       - En páginas de información de empleados (no /planilla) el panel lateral contiene el menú completo como antes; el navbar muestra flecha de regreso y logo.
   -->
   <nav class="navbar navbar-dark bg-dark">
     <div class="container-fluid d-flex align-items-center">
       <div class="d-flex align-items-center">
-        <!-- Back button (only on employee-info pages) -->
+        <!-- Back button: aparece solo en páginas de información de empleados -->
         {% if 'usuario' in session and request.path in ['/', '/about', '/conyugue', '/emergencia', '/laboral', '/medica'] %}
         <a href="{{ url_for('planilla') }}" id="btnBackToPlanilla" class="btn btn-back mr-2" title="Regresar a Planilla">
           <i class="fas fa-arrow-left"></i>
         </a>
         {% endif %}
 
-        <!-- Logo + Brand (link to Planilla) -->
+        <!-- Logo + Marca: ahora enlazan a planilla -->
         <a class="brand-link d-flex align-items-center" href="{{ url_for('planilla') }}" aria-label="Ir a Planilla">
           <img src="{{ url_for('static', filename='imagenes/logo.png') }}" alt="Empaquetex" class="logo-navbar" />
           <span class="brand-title ml-2">Empaquetex</span>
         </a>
 
-        <!-- If we're on planilla, show the three options inline (visible on wide screens;
-             on small screens they will wrap to next line but hamburger remains single control) -->
+        <!-- Opciones visibles en navbar SOLO en /planilla y SOLO en pantallas md+ -->
         {% if 'usuario' in session and request.path == '/planilla' %}
         <div class="navbar-left-links d-none d-md-flex ml-4">
           <a class="nav-link text-white" href="{{ url_for('planilla') }}"><i class="fas fa-list mr-1"></i> Planilla</a>
@@ -54,7 +55,9 @@
         {% endif %}
       </div>
 
-      <!-- SINGLE hamburger always visible (opens sidebarMenu) -->
+      <!-- Único botón hamburguesa (si el usuario está autenticado) que abre el panel lateral.
+           El usuario lo verá en todas las páginas; en pantallas pequeñas servirá para mostrar las mismas opciones
+           que estaban en el navbar en desktop (porque esas opciones están duplicadas dentro del panel con d-md-none). -->
       {% if 'usuario' in session %}
       <button id="menuInfoToggle" class="btn btn-hamburger ml-auto" type="button" aria-label="Abrir menú">
         <i class="fas fa-bars" style="font-size:1.1rem; color:#fff;"></i>
@@ -67,33 +70,39 @@
   <!-- OVERLAY -->
   <div id="overlay" class="overlay"></div>
 
-  <!-- SIDEBAR GLOBAL (Contenido varía por ruta) -->
+  <!-- SIDEBAR GLOBAL (Contenido adaptativo) -->
   <div id="sidebarMenu" class="sidebar bg-dark" aria-hidden="true">
     <ul class="navbar-nav">
+
       {% if request.path == '/planilla' %}
-        <!-- En /planilla: mostrar las opciones de planilla dentro del sidebar (además de las inline en desktop) -->
-        <li class="nav-item">
+        <!-- En planilla: mostrar opciones adicionales SOLO en pantallas pequeñas (d-md-none).
+             En pantallas anchas esas opciones ya están en el navbar y aquí solo se muestra Cerrar sesión. -->
+        <li class="nav-item d-md-none">
           <a class="nav-link text-white border-bottom" href="{{ url_for('planilla') }}">
             <i class="fas fa-list"></i> Planilla
           </a>
         </li>
-        <li class="nav-item">
+
+        <li class="nav-item d-md-none">
           <a class="nav-link text-white border-bottom" href="#">
             <i class="fas fa-file-invoice-dollar"></i> Recibo del pago
           </a>
         </li>
-        <li class="nav-item">
+
+        <li class="nav-item d-md-none">
           <a class="nav-link text-white border-bottom" href="#">
             <i class="fas fa-id-badge"></i> Ficha de empleados
           </a>
         </li>
+
+        <!-- Cerrar sesión siempre visible en el sidebar -->
         <li class="nav-item">
           <a class="nav-link text-white border-bottom" href="{{ url_for('logout') }}">
             <i class="fas fa-sign-out-alt"></i> Cerrar sesión
           </a>
         </li>
       {% else %}
-        <!-- En páginas de información de empleados: menú completo de navegación -->
+        <!-- En páginas de información de empleados mostrar el menú completo (como antes) -->
         <li class="nav-item {% if request.path == '/' %}active{% endif %}">
           <a class="nav-link text-white border-bottom" href="{{ url_for('home') }}">
             <i class="fas fa-id-card"></i> Datos Personales
@@ -170,7 +179,6 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      // Single hamburger opens the sidebar menu
       const infoToggle = document.getElementById('menuInfoToggle');
       const sidebar = document.getElementById('sidebarMenu');
       const overlay = document.getElementById('overlay');
@@ -187,7 +195,7 @@
         });
       }
 
-      // Close sidebar on ESC
+      // Cerrar sidebar con ESC
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
           if (sidebar && sidebar.classList.contains('active')) {
@@ -197,7 +205,7 @@
         }
       });
 
-      // Back button closes sidebar before navigating
+      // Si hacemos click en el botón Back (volver a planilla), cerramos sidebar antes de navegar
       const backBtn = document.getElementById('btnBackToPlanilla');
       if (backBtn) {
         backBtn.addEventListener('click', () => {
@@ -211,3 +219,4 @@
   </script>
 </body>
 </html>
+```
