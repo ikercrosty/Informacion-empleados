@@ -7,15 +7,15 @@ body {
 }
 
 .logo-navbar {
-  height: 60px;          /* más grande que antes (puedes subir a 70 u 80) */
-  width: 60px;           /* ancho igual para mantener proporción */
-  border-radius: 50%;    /* hace que el borde sea circular */
-  object-fit: cover;     /* recorta la imagen para que se ajuste al círculo */
+  height: 60px;
+  width: 60px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 /* Navbar */
 .navbar {
-  background-color: #0B486B !important; /* azul oscuro */
+  background-color: #0B486B !important;
 }
 
 .navbar-brand, .nav-link {
@@ -23,7 +23,7 @@ body {
 }
 
 .nav-link:hover {
-  color: #F56217 !important; /* naranja */
+  color: #F56217 !important;
 }
 
 /* Botones */
@@ -50,15 +50,6 @@ h1, h2, h3 {
   color: #0B486B;
 }
 
-/* Hace que el contenedor principal sea blanco y con sombra (duplicado intencionalmente mantenido) */
-.container {
-  background: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-/* Ajusta el jumbotron para que se vea integrado */
 .jumbotron {
   background-color: #f8f9fa;
   padding: 2rem 2rem;
@@ -66,22 +57,21 @@ h1, h2, h3 {
   border-radius: 8px;
 }
 
-/* La tabla se adapta al ancho y no se desborda */
 .table-responsive {
   margin-top: 20px;
 }
 .table-active {
-  background-color: #8dc4ff !important; /* azul claro */
+  background-color: #8dc4ff !important;
 }
 
 /* Panel lateral global (sidebar) */
 .sidebar {
   position: fixed;
   top: 0;
-  right: -250px; /* oculto inicialmente */
+  right: -250px;
   width: 250px;
   height: 100%;
-  background-color: #0b486bba !important; /* mismo color exacto que navbar */
+  background-color: #0b486bba !important;
   transition: right 0.3s ease;
   z-index: 1051;
   padding-top: 60px;
@@ -94,12 +84,11 @@ h1, h2, h3 {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.5); /* fondo semitransparente */
+  background: rgba(0,0,0,0.5);
   display: none;
   z-index: 1050;
 }
 
-/* Mostrar panel y overlay global */
 .sidebar.active {
   right: 0;
 }
@@ -107,7 +96,6 @@ h1, h2, h3 {
   display: block;
 }
 
-/* Separadores entre opciones global */
 .sidebar .nav-link {
   border-bottom: 1px solid rgba(255,255,255,0.2);
   padding: 12px 20px;
@@ -116,11 +104,11 @@ h1, h2, h3 {
 /* Contenedor del login */
 .login-container {
   width: 100%;
-  min-height: calc(100vh - 56px); /* ocupa toda la pantalla menos el navbar */
+  min-height: calc(100vh - 56px);
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #203a43, #2c5364, #ff7e5f); /* azul oscuro → azul claro → naranja */
+  background: linear-gradient(135deg, #203a43, #2c5364, #ff7e5f);
   padding: 20px;
 }
 
@@ -132,25 +120,22 @@ h1, h2, h3 {
   width: 100%;
   max-width: 400px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-  border-top: 6px solid #ff7e5f; /* franja naranja arriba */
+  border-top: 6px solid #ff7e5f;
   animation: fadeIn 0.8s ease;
 }
 
-/* Animación de entrada */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-20px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Título */
 .login-title {
   font-weight: bold;
-  color: #203a43; /* azul oscuro */
+  color: #203a43;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
-/* Inputs */
 .login-card .form-control {
   border-radius: 8px;
   border: 1px solid #ccc;
@@ -159,11 +144,10 @@ h1, h2, h3 {
 }
 
 .login-card .form-control:focus {
-  border-color: #ff7e5f; /* naranja */
+  border-color: #ff7e5f;
   box-shadow: 0 0 8px rgba(255,126,95,0.5);
 }
 
-/* Botón */
 .login-card .btn-primary {
   background: linear-gradient(90deg, #203a43, #2c5364);
   border: none;
@@ -175,116 +159,61 @@ h1, h2, h3 {
 }
 
 .login-card .btn-primary:hover {
-  background: linear-gradient(90deg, #ff7e5f, #feb47b); /* naranja degradado */
+  background: linear-gradient(90deg, #ff7e5f, #feb47b);
   transform: scale(1.05);
 }
 
-/* Ajustes para pantallas pequeñas */
 @media (max-width: 576px) {
-  .login-card {
-    padding: 20px;
-    max-width: 95%;
-  }
-
-  .login-title {
-    font-size: 1.2rem;
-  }
-
-  .table {
-    font-size: 0.85rem;
-  }
+  .login-card { padding: 20px; max-width: 95%; }
+  .login-title { font-size: 1.2rem; }
+  .table { font-size: 0.85rem; }
 }
-.login-card {
-  max-width: 400px; /* en escritorio */
-  width: 95%;       /* en móviles */
-}
+.login-card { max-width: 400px; width: 95%; }
 
-/* ---------- Planilla sidebar styles (reutilizables, moved from template) ---------- */
-
-/* Overlay específico de Planilla */
-#planillaOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  z-index: 1040;
-  display: none;
-}
-
-/* Sidebar específico de Planilla */
-#planillaSidebar {
-  position: fixed;
-  top: 0;
-  left: -320px; /* escondido inicialmente a la izquierda */
-  width: 320px;
-  height: 100%;
-  background: #212529; /* bg-dark */
+/* Botón flecha volver a Planilla (navbar) */
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
   color: #fff;
-  z-index: 1050;
-  transition: left .25s ease;
-  overflow-y: auto;
-  padding-top: 1rem;
-  box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background .15s ease, transform .12s ease;
+  font-size: 18px;
 }
 
-/* Mostrar/ocultar planilla sidebar */
-#planillaSidebar.active { left: 0; }
-#planillaOverlay.active { display: block; }
-
-/* Links y estilo interno */
-#planillaSidebar .nav-link { color: #fff; }
-#planillaSidebar .nav-link:hover { background: rgba(255,255,255,0.03); }
-
-/* Botón de cerrar */
-.planilla-toggle {
-  border: none;
-  background: transparent;
-  color: #fff;
-  font-size: 1.1rem;
+.btn-back:hover {
+  background: rgba(255,255,255,0.12);
+  transform: translateX(-2px);
 }
 
-/* Accesos rápidos dentro del panel */
-#planillaSidebar .btn-sm.btn-outline-light {
-  color: #fff;
-  border-color: rgba(255,255,255,0.2);
-}
-
-/* Pequeñas utilidades para el panel (texto y separación) */
-#planillaSidebar .small { color: rgba(255,255,255,0.7); }
-#planillaSidebar hr { border-color: rgba(255,255,255,0.08); }
-
-/* Responsive: ajustar ancho en pantallas pequeñas */
-@media (max-width: 576px) {
-  #planillaSidebar { width: 280px; }
-}
-
-/* Evitar solapamiento con overlay global: el planillaOverlay tiene z-index inferior al global sidebar si es necesario */
-
-/* ---------- Utility buttons con tu paleta (café, naranja, azul) ---------- */
-.btn-cafe {
-  background: #6b4f3a;
-  border-color: #6b4f3a;
-  color: #fff;
-}
-.btn-cafe:hover { background: #57412f; border-color: #57412f; }
-
+/* Botón naranja principal (planilla) */
 .btn-naranja {
   background: #F56217;
   border-color: #F56217;
   color: #fff;
-}
-.btn-naranja:hover { background: #d94e12; border-color: #d94e12; }
-
-.btn-azul {
-  background: #0B486B;
-  border-color: #0B486B;
-  color: #fff;
-}
-.btn-azul:hover { background: #093948; border-color: #093948; }
-
-/* ---------- Small polish: ensure images in sidebar are rounded and aligned ---------- */
-#planillaSidebar img {
-  border-radius: 6px;
-  object-fit: cover;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 14px 24px;
+  border-radius: 10px;
+  display: inline-block;
 }
 
-/* ---------- End of styles ---------- */
+.btn-naranja:hover {
+  background: #d94e12;
+  border-color: #d94e12;
+  text-decoration: none;
+}
+
+/* ---------- Planilla specific styles removed (planilla uses global sidebar) ---------- */
+
+/* Small polish */
+@media (max-width: 576px) {
+  .btn-back { width: 38px; height: 38px; font-size: 16px; margin-right: 8px; }
+}
+
+/* End of styles */

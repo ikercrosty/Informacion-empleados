@@ -1,11 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Estado global
+  // Estado global para tablas y edición
   let tablaActiva = null;
   let filaActiva = null;
   let copiaOriginal = [];
   let esNuevo = false;
 
-  // Botones globales
+  // Botones globales (pueden no existir en algunas páginas)
   const btnAgregar = document.getElementById("btnAgregar");
   const btnEditar  = document.getElementById("btnEditar");
   const btnGuardar = document.getElementById("btnGuardar");
@@ -14,9 +14,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function resetBotones() {
     if (!btnAgregar) return;
     btnAgregar.disabled = false;
-    btnEditar.disabled = true;
-    btnGuardar.disabled = true;
-    btnCancelar.disabled = true;
+    if (btnEditar) btnEditar.disabled = true;
+    if (btnGuardar) btnGuardar.disabled = true;
+    if (btnCancelar) btnCancelar.disabled = true;
   }
   resetBotones();
 
@@ -42,9 +42,9 @@ document.addEventListener("DOMContentLoaded", () => {
       copiaOriginal = Array.from(filaActiva.querySelectorAll("td")).map(td => td.innerText);
       esNuevo = false;
 
-      btnEditar.disabled = false;
-      btnGuardar.disabled = true;
-      btnCancelar.disabled = false;
+      if (btnEditar) btnEditar.disabled = false;
+      if (btnGuardar) btnGuardar.disabled = true;
+      if (btnCancelar) btnCancelar.disabled = false;
     });
 
     // Si es la tabla de empleados, al hacer click actualizamos la foto y controles
@@ -63,7 +63,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const formEliminar = document.getElementById("formEliminarFoto");
         if (!foto || !formSubir || !formEliminar) return;
 
-        // Primero ocultar ambos hasta saber el estado
         formSubir.style.display = "none";
         formEliminar.style.display = "none";
 
@@ -137,9 +136,9 @@ document.addEventListener("DOMContentLoaded", () => {
     filaActiva.classList.add("table-active");
     esNuevo = true;
 
-    btnEditar.disabled = true;
-    btnGuardar.disabled = false;
-    btnCancelar.disabled = false;
+    if (btnEditar) btnEditar.disabled = true;
+    if (btnGuardar) btnGuardar.disabled = false;
+    if (btnCancelar) btnCancelar.disabled = false;
   }
 
   // Editar fila seleccionada (respeta columnas bloqueadas)
@@ -160,9 +159,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     esNuevo = false;
-    btnEditar.disabled = true;
-    btnGuardar.disabled = false;
-    btnCancelar.disabled = false;
+    if (btnEditar) btnEditar.disabled = true;
+    if (btnGuardar) btnGuardar.disabled = false;
+    if (btnCancelar) btnCancelar.disabled = false;
   }
 
   // Cancelar edición o eliminar fila nueva
@@ -252,8 +251,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Exponer registrarTabla
   window.registrarTabla = registrarTabla;
 
-  // --- Registro de tablas ---
-
+  // --- Registro de tablas (llama estas funciones desde tus plantillas) ---
   registrarTabla("tablaEmpleados", 20, "/guardar_empleado", [
     "Numero de DPI","Nombre","Apellidos","Apellidos de casada","Estado Civil","Nacionalidad",
     "Departamento","Fecha de nacimiento","Lugar de nacimiento","Numero de Afiliación del IGGS",
@@ -282,38 +280,46 @@ document.addEventListener("DOMContentLoaded", () => {
     "Numero de DPI","Padece alguna enfermedad","Tipo de enfermedad","Recibe tratamiento medico","Nombre del tratamiento","Es alergico a algun medicamento","Nombre del medico Tratante","Tipo de sangre"
   ]);
 
-  // ---------------- Planilla sidebar logic integrated here ----------------
-  const planillaToggle = document.getElementById("planillaToggle");
-  const planillaSidebar = document.getElementById("planillaSidebar");
-  const planillaOverlay = document.getElementById("planillaOverlay");
-  const planillaClose = document.getElementById("planillaClose");
+  // ---------------- Comportamiento del sidebar global (menuToggle / overlay) ----------------
+  const menuToggle = document.getElementById('menuToggle');
+  const sidebar = document.getElementById('sidebarMenu');
+  const overlay = document.getElementById('overlay');
 
-  function openPlanillaSidebar() {
-    if (!planillaSidebar || !planillaOverlay) return;
-    planillaSidebar.classList.add("active");
-    planillaOverlay.classList.add("active");
-    const globalOverlay = document.getElementById('overlay');
-    if (globalOverlay) globalOverlay.style.display = 'none';
+  if (menuToggle && sidebar && overlay) {
+    menuToggle.addEventListener('click', () => {
+      sidebar.classList.add('active');
+      overlay.classList.add('active');
+    });
+
+    overlay.addEventListener('click', () => {
+      sidebar.classList.remove('active');
+      overlay.classList.remove('active');
+    });
   }
 
-  function closePlanillaSidebar() {
-    if (!planillaSidebar || !planillaOverlay) return;
-    planillaSidebar.classList.remove("active");
-    planillaOverlay.classList.remove("active");
-    const globalOverlay = document.getElementById('overlay');
-    if (globalOverlay) globalOverlay.style.display = '';
+  // ---------------- Botón volver a Planilla (cierra sidebar si está abierto) ----------------
+  const backBtn = document.getElementById('btnBackToPlanilla');
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      if (sidebar && sidebar.classList.contains('active')) sidebar.classList.remove('active');
+      if (overlay && overlay.classList.contains('active')) overlay.classList.remove('active');
+      // navegación por href del enlace
+    });
   }
 
-  if (planillaToggle) planillaToggle.addEventListener("click", openPlanillaSidebar);
-  if (planillaClose) planillaClose.addEventListener("click", closePlanillaSidebar);
-  if (planillaOverlay) planillaOverlay.addEventListener("click", closePlanillaSidebar);
+  // ---------------- Abrir Información empleados desde Planilla ----------------
+  const abrirInfoBtn = document.getElementById('btnAbrirInfo'); // botón en planilla.html
+  if (abrirInfoBtn) {
+    abrirInfoBtn.addEventListener('click', () => {
+      // No previene navegación; si quieres abrir sidebar automáticamente al llegar a home,
+      // puedes agregar un query string ?open=1 al enlace y aquí gestionar su lectura en home.
+      // Ejemplo: href="{{ url_for('home') }}?open=1" y en home template leer window.location.search
+    });
+  }
 
+  // ---------------- Tecla ESC cierra sidebar global ----------------
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
-      if (planillaSidebar && planillaSidebar.classList.contains("active")) closePlanillaSidebar();
-      // keep existing behavior for global sidebar if present
-      const sidebar = document.getElementById('sidebarMenu');
-      const overlay = document.getElementById('overlay');
       if (sidebar && overlay && sidebar.classList.contains('active')) {
         sidebar.classList.remove('active');
         overlay.classList.remove('active');
