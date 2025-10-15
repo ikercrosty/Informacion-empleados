@@ -9,8 +9,8 @@ app = Flask(__name__)
 app.secret_key = "clave-secreta"
 app.config["SESSION_PERMANENT"] = False
 
-# Carpeta para fotos
-UPLOAD_FOLDER = os.path.join("static", "fotos")
+# Carpeta para fotos (asegura path absoluto dentro de la app)
+UPLOAD_FOLDER = os.path.join(app.root_path, "static", "fotos")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
@@ -18,10 +18,7 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 ALLOWED_EXT = {"png", "jpg", "jpeg", "gif", "webp"}
 
 def allowed_file(filename):
-    if "." not in filename:
-        return False
-    ext = filename.rsplit(".", 1)[1].lower()
-    return ext in ALLOWED_EXT
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXT
 
 def get_db_connection():
     url = os.environ.get("DATABASE_URL")
@@ -170,11 +167,6 @@ def medica():
 # ---------------- Login ----------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    """
-    Autenticación contra la tabla Usuarios de la BD.
-    Se permite usar como identificador el campo Usuarios o el Correo Electronico.
-    La columna de contraseña en la tabla debe llamarse exactamente 'Constraseña'.
-    """
     if request.method == "POST":
         identificador = request.form.get("usuario", "").strip()
         password = request.form.get("password", "")
@@ -205,11 +197,10 @@ def login():
                 flash("Sin contraseña registrada para este usuario", "danger")
                 return redirect(url_for("login"))
 
-            # Comparación directa; si usas hashes reemplaza aquí la comparación (bcrypt.checkpw)
             if password == stored_password:
                 session["usuario"] = user_row.get("Usuarios") or user_row.get("Correo Electronico")
                 session.permanent = False
-                return redirect(url_for("planilla"))  # <-- REDIRECT A /planilla
+                return redirect(url_for("planilla"))
             else:
                 flash("Contraseña incorrecta", "danger")
                 return redirect(url_for("login"))
@@ -228,7 +219,6 @@ def logout():
     resp.headers["Expires"] = "0"
     return resp
 
-# ---------------- Página Planilla ----------------
 @app.route("/planilla")
 def planilla():
     if "usuario" not in session:
@@ -597,7 +587,8 @@ def guardar_medica():
 @app.route("/api/foto/<dpi>")
 def api_foto(dpi):
     """
-    Devuelve el nombre del archivo de la foto guardada para ese DPI o null.
+    Devuelve: {"foto": filename or None, "url": url or None}
+    Si el archivo no existe en disk limpiamos la referencia en BD para evitar imágenes rotas.
     """
     try:
         conn = get_db_connection()
@@ -606,9 +597,29 @@ def api_foto(dpi):
         row = cursor.fetchone()
         cursor.close()
         conn.close()
-        return jsonify({"foto": (row.get("foto") if row and row.get("foto") else None)})
+
+        if not row or not row.get("foto"):
+            return jsonify({"foto": None, "url": None})
+
+        filename = row["foto"]
+        filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        if os.path.exists(filepath):
+            url = url_for('static', filename=f"fotos/{filename}")
+            return jsonify({"foto": filename, "url": url})
+        else:
+            # Archivo referido no existe en disco: limpiar referencia en BD
+            try:
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                cursor.execute("UPDATE empleados_info SET `foto`=NULL WHERE `Numero de DPI`=%s", (dpi,))
+                conn.commit()
+                cursor.close()
+                conn.close()
+            except Exception:
+                pass
+            return jsonify({"foto": None, "url": None})
     except Exception as e:
-        return jsonify({"foto": None, "error": str(e)}), 500
+        return jsonify({"foto": None, "url": None, "error": str(e)}), 500
 
 @app.route("/subir_foto", methods=["POST"])
 def subir_foto():
@@ -618,16 +629,16 @@ def subir_foto():
     """
     dpi = request.form.get("dpi")
     if not dpi:
-        flash("No se recibió DPI", "danger")
+        flash("Debe seleccionar un empleado (DPI)", "warning")
         return redirect(url_for("home"))
 
     if "foto" not in request.files:
-        flash("No se seleccionó archivo", "danger")
+        flash("No se seleccionó archivo", "warning")
         return redirect(url_for("home"))
 
     file = request.files.get("foto")
     if not file or file.filename.strip() == "":
-        flash("Archivo vacío", "danger")
+        flash("Archivo vacío", "warning")
         return redirect(url_for("home"))
 
     if not allowed_file(file.filename):
@@ -638,13 +649,12 @@ def subir_foto():
     _, ext = os.path.splitext(original)
     ts = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
     final_name = f"{dpi}_{ts}{ext}"
-    filepath = os.path.join(app.config["UPLOAD_FOLDER"], final_name)
+    save_path = os.path.join(app.config["UPLOAD_FOLDER"], final_name)
 
     try:
-        # Guardar nuevo archivo
-        file.save(filepath)
+        file.save(save_path)
 
-        # Eliminar archivos antiguos del mismo DPI
+        # eliminar versiones antiguas del mismo DPI
         try:
             for f in os.listdir(app.config["UPLOAD_FOLDER"]):
                 if f.startswith(f"{dpi}_") and f != final_name:
@@ -655,7 +665,7 @@ def subir_foto():
         except Exception:
             pass
 
-        # Actualizar BD con el nombre final
+        # actualizar BD
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("UPDATE empleados_info SET `foto`=%s WHERE `Numero de DPI`=%s", (final_name, dpi))
@@ -663,7 +673,7 @@ def subir_foto():
         cursor.close()
         conn.close()
 
-        flash("Foto del empleado actualizada correctamente", "success")
+        flash("Foto subida correctamente", "success")
     except Exception as e:
         flash(f"Error al guardar foto: {e}", "danger")
 
@@ -676,7 +686,7 @@ def eliminar_foto():
     """
     dpi = request.form.get("dpi")
     if not dpi:
-        flash("No se recibió DPI", "danger")
+        flash("Debe seleccionar un empleado (DPI)", "warning")
         return redirect(url_for("home"))
 
     try:
@@ -684,6 +694,7 @@ def eliminar_foto():
         cursor = conn.cursor()
         cursor.execute("SELECT `foto` FROM empleados_info WHERE `Numero de DPI`=%s", (dpi,))
         row = cursor.fetchone()
+
         if row and row.get("foto"):
             filename = row["foto"]
             filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
@@ -694,9 +705,10 @@ def eliminar_foto():
                     pass
             cursor.execute("UPDATE empleados_info SET `foto`=NULL WHERE `Numero de DPI`=%s", (dpi,))
             conn.commit()
-            flash("Foto eliminada correctamente", "success")
+            flash("Foto eliminada", "success")
         else:
-            flash("El empleado no tiene foto registrada", "warning")
+            flash("No existe foto para ese empleado", "info")
+
         cursor.close()
         conn.close()
     except Exception as e:

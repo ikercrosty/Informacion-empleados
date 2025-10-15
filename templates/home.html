@@ -17,7 +17,6 @@
       <button id="btnCancelar" type="button" class="btn btn-secondary btn-sm mb-2" disabled>Cancelar</button>
     </div>
 
-    <!-- scroll horizontal y encabezados compactos -->
     <div class="table-responsive">
       <table id="tablaEmpleados" class="table table-bordered table-striped table-hover table-sm">
         <thead class="thead-dark table-compact">
@@ -80,81 +79,124 @@
       <h5 class="mb-3">Datos personales del empleado</h5>
 
       <div class="text-center mb-3">
-        {% set inicial = empleados[0]['foto'] if empleados and empleados[0]['foto'] else None %}
-        {% if inicial %}
-          <img id="fotoEmpleado" src="{{ url_for('static', filename='fotos/' ~ inicial) }}"
-               alt="Foto empleado" class="img-fluid rounded-circle"
-               style="width:160px;height:160px;object-fit:cover;">
-        {% else %}
-          <img id="fotoEmpleado" src="{{ url_for('static', filename='imagenes/default.png') }}"
-               alt="Foto empleado" class="img-fluid rounded-circle"
-               style="width:160px;height:160px;object-fit:cover;">
-        {% endif %}
+        <img id="fotoEmpleado"
+             src="{{ url_for('static', filename='imagenes/default.png') }}"
+             alt="Foto empleado"
+             class="img-fluid rounded-circle"
+             style="width:160px;height:160px;object-fit:cover;">
       </div>
 
-      <form id="formSubirFoto" method="post" action="{{ url_for('subir_foto') }}" enctype="multipart/form-data">
-        <input type="hidden" name="dpi" id="inputDpiForUpload" value="{{ empleados[0]['Numero de DPI'] if empleados else '' }}">
-        <div class="form-group">
-          <input id="fileFoto" name="foto" type="file" accept="image/*" class="form-control-file">
-        </div>
-        <button id="btnSubirFoto" type="submit" class="btn btn-primary btn-block">Subir Foto</button>
-      </form>
+      <!-- Upload controls (ocultos por defecto) -->
+      <div id="uploadControls" style="display:none;">
+        <form id="formSubirFoto" method="post" action="{{ url_for('subir_foto') }}" enctype="multipart/form-data">
+          <input type="hidden" name="dpi" id="inputDpiForUpload" value="">
+          <div class="form-group">
+            <input id="fileFoto" name="foto" type="file" accept="image/*" class="form-control-file">
+          </div>
+          <button id="btnSubirFoto" type="submit" class="btn btn-primary btn-block">Subir Foto</button>
+        </form>
+      </div>
 
-      <form id="formEliminarFoto" method="post" action="{{ url_for('eliminar_foto') }}" class="mt-2">
-        <input type="hidden" name="dpi" id="inputDpiForDelete" value="{{ empleados[0]['Numero de DPI'] if empleados else '' }}">
-        <button id="btnEliminarFoto" type="submit" class="btn btn-outline-danger btn-block">Eliminar Foto</button>
-      </form>
+      <!-- Delete control (oculto por defecto) -->
+      <div id="deleteControl" style="display:none;">
+        <form id="formEliminarFoto" method="post" action="{{ url_for('eliminar_foto') }}">
+          <input type="hidden" name="dpi" id="inputDpiForDelete" value="">
+          <button id="btnEliminarFoto" type="submit" class="btn btn-outline-danger btn-block">Eliminar Foto</button>
+        </form>
+      </div>
 
       <small class="text-muted mt-3 d-block">
-        Selecciona una fila de la tabla para cargar/actualizar la foto del DPI correspondiente.
+        Selecciona una fila de la tabla para gestionar la foto del empleado.
       </small>
     </div>
   </div>
 </div>
 
-<script src="{{ url_for('static', filename='main.js') }}"></script>
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const tabla = document.getElementById('tablaEmpleados');
-    const fotoEmpleado = document.getElementById('fotoEmpleado');
-    const inputDpiUpload = document.getElementById('inputDpiForUpload');
-    const inputDpiDelete = document.getElementById('inputDpiForDelete');
-    const fileFoto = document.getElementById('fileFoto');
+document.addEventListener("DOMContentLoaded", () => {
+  const tabla = document.getElementById('tablaEmpleados');
+  const fotoEmpleado = document.getElementById('fotoEmpleado');
+  const inputDpiUpload = document.getElementById('inputDpiForUpload');
+  const inputDpiDelete = document.getElementById('inputDpiForDelete');
+  const uploadControls = document.getElementById('uploadControls');
+  const deleteControl = document.getElementById('deleteControl');
+  const fileFoto = document.getElementById('fileFoto');
 
-    if (fileFoto && fotoEmpleado) {
-      fileFoto.addEventListener('change', (e) => {
-        const f = e.target.files[0];
-        if (!f || !f.type.startsWith('image/')) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => { fotoEmpleado.src = ev.target.result; };
-        reader.readAsDataURL(f);
-      });
-    }
+  const DEFAULT_SRC = "{{ url_for('static', filename='imagenes/default.png') }}";
 
-    if (tabla && fotoEmpleado && inputDpiUpload && inputDpiDelete) {
-      tabla.addEventListener('click', (ev) => {
-        const tr = ev.target.closest('tr');
-        if (!tr || !tr.cells.length) return;
-        const dpi = tr.cells[0].innerText.trim();
-        if (!dpi) return;
+  function resetPanelToDefault() {
+    fotoEmpleado.src = DEFAULT_SRC;
+    inputDpiUpload.value = "";
+    inputDpiDelete.value = "";
+    uploadControls.style.display = "none";
+    deleteControl.style.display = "none";
+    if (fileFoto) fileFoto.value = "";
+  }
 
-        inputDpiUpload.value = dpi;
-        inputDpiDelete.value = dpi;
+  // Estado inicial: no fila seleccionada
+  resetPanelToDefault();
 
-        fetch(`/api/foto/${encodeURIComponent(dpi)}`)
-          .then(r => r.json())
-          .then(j => {
-            if (j && j.foto) {
-              fotoEmpleado.src = `/static/fotos/${j.foto}`;
-            } else {
-              fotoEmpleado.src = `{{ url_for('static', filename='imagenes/default.png') }}`;
-            }
-          })
-          .catch(() => {
-            fotoEmpleado.src = `{{ url_for('static', filename='imagenes/default.png') }}`;
-          });
-      });
+  // Preview local cuando el usuario selecciona archivo para subir
+  if (fileFoto) {
+    fileFoto.addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if (!f || !f.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => { fotoEmpleado.src = ev.target.result; };
+      reader.readAsDataURL(f);
+    });
+  }
+
+  // Manejo de selección de fila
+  if (tabla) {
+    tabla.addEventListener('click', (ev) => {
+      const tr = ev.target.closest('tr');
+      if (!tr || !tr.cells.length) return;
+      const dpi = tr.cells[0].innerText.trim();
+      if (!dpi) return;
+
+      // Set hidden inputs DPI
+      inputDpiUpload.value = dpi;
+      inputDpiDelete.value = dpi;
+
+      // Llamar API para validar si existe foto y que el archivo realmente exista
+      fetch(`/api/foto/${encodeURIComponent(dpi)}`)
+        .then(r => r.json())
+        .then(j => {
+          // API antigua puede devolver {foto: filename} o nueva versión {foto,url}
+          const url = j && (j.url || (j.foto ? `/static/fotos/${j.foto}` : null));
+          if (url) {
+            // Añadimos una cache-busting query con timestamp para evitar mostrar icono roto por cached 404
+            fotoEmpleado.src = `${url}?t=${Date.now()}`;
+            uploadControls.style.display = "none";
+            deleteControl.style.display = "block";
+          } else {
+            // No hay foto registrada o no existe en disco
+            fotoEmpleado.src = DEFAULT_SRC;
+            uploadControls.style.display = "block";
+            deleteControl.style.display = "none";
+            if (fileFoto) fileFoto.value = "";
+          }
+        })
+        .catch(() => {
+          // En caso de error tratamos como sin foto
+          fotoEmpleado.src = DEFAULT_SRC;
+          uploadControls.style.display = "block";
+          deleteControl.style.display = "none";
+          if (fileFoto) fileFoto.value = "";
+        });
+    });
+  }
+
+  // Si el usuario hace click fuera de la tabla y fuera de controles, reestablecer estado por defecto
+  document.addEventListener('click', (e) => {
+    const insideTable = e.target.closest('#tablaEmpleados');
+    const insideControls = e.target.closest('#uploadControls') || e.target.closest('#deleteControl');
+    if (!insideTable && !insideControls) {
+      resetPanelToDefault();
     }
   });
+});
 </script>
 {% endblock %}
+
