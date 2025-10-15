@@ -1,52 +1,43 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
   <title>{% block title %}{% endblock %}</title>
 
   <!-- BOOTSTRAP 4 CDN -->
-  <link rel="stylesheet"
-        href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
         integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
         crossorigin="anonymous">
 
-  <!-- FONT AWESOME para íconos -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- FONT AWESOME -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <!-- CUSTOM CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 
 <body>
-  <!-- NAVBAR
-       Implementación responsive:
-       - El bloque marca (logo + Empaquetex) siempre visible y apunta a planilla.
-       - En /planilla mostramos las 3 opciones en la izquierda; en pantallas pequeñas se colapsan
-         usando el colapso de Bootstrap y aparecen detrás de un botón hamburguesa (dentro del navbar).
-       - En el resto de páginas mostramos el toggler que abre el sidebarMenu (panel lateral).
-  -->
+  <!-- NAVBAR -->
   <nav class="navbar navbar-dark bg-dark navbar-expand-lg">
     <div class="container-fluid d-flex align-items-center">
       <div class="d-flex align-items-center">
-        <!-- Volver (solo en pantallas donde corresponde) -->
         {% if 'usuario' in session and request.path in ['/', '/about', '/conyugue', '/emergencia', '/laboral', '/medica'] %}
         <a href="{{ url_for('planilla') }}" id="btnBackToPlanilla" class="btn btn-back mr-2" title="Regresar a Planilla">
           <i class="fas fa-arrow-left"></i>
         </a>
         {% endif %}
 
-        <!-- Logo + Nombre (ahora enlazan a planilla) -->
+        <!-- Logo + Nombre (enlazan a Planilla) -->
         <a class="brand-link d-flex align-items-center" href="{{ url_for('planilla') }}" aria-label="Ir a Planilla">
           <img src="{{ url_for('static', filename='imagenes/logo.png') }}" alt="Empaquetex" class="logo-navbar" />
           <span class="brand-title ml-2">Empaquetex</span>
         </a>
       </div>
 
-      <!-- Desktop / Planilla links placed to the left visually by using ml-4 on the collapse -->
       {% if 'usuario' in session and request.path == '/planilla' %}
-      <!-- Usamos el collapse de Bootstrap para que en móviles se transforme en hamburguesa -->
+      <!-- Collapse para opciones visibles en /planilla (se convierten en hamburguesa en móvil) -->
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#planillaNav"
               aria-controls="planillaNav" aria-expanded="false" aria-label="Mostrar opciones">
         <span class="navbar-toggler-icon"></span>
@@ -63,11 +54,13 @@
           <li class="nav-item">
             <a class="nav-link text-white" href="#"><i class="fas fa-id-badge mr-1"></i> Ficha de empleados</a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link text-white" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt mr-1"></i> Cerrar sesión</a>
+          </li>
         </ul>
       </div>
       {% else %}
-      <!-- En las demás rutas (información de empleados) no mostramos esas 3 links aquí.
-           En pantallas grandes mostramos el botón toggler que abre el sidebar lateral. -->
+      <!-- En páginas de información de empleados mostrar toggler para sidebar lateral -->
       <button class="navbar-toggler d-lg-none" type="button" id="menuToggle" aria-label="Abrir menú">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -76,21 +69,19 @@
   </nav>
 
   {% if 'usuario' in session %}
-  <!-- OVERLAY (global) -->
+  <!-- OVERLAY -->
   <div id="overlay" class="overlay"></div>
 
-  <!-- PANEL LATERAL GLOBAL -->
+  <!-- SIDEBAR GLOBAL -->
   <div id="sidebarMenu" class="sidebar bg-dark" aria-hidden="true">
     <ul class="navbar-nav">
       {% if request.path == '/planilla' %}
-      <!-- Si por alguna razón se abre el panel en /planilla, mantenemos Logout -->
       <li class="nav-item">
         <a class="nav-link text-white border-bottom" href="{{ url_for('logout') }}">
           <i class="fas fa-sign-out-alt"></i> Salir
         </a>
       </li>
       {% else %}
-      <!-- Menú completo para páginas de información de empleados -->
       <li class="nav-item {% if request.path == '/' %}active{% endif %}">
         <a class="nav-link text-white border-bottom" href="{{ url_for('home') }}">
           <i class="fas fa-id-card"></i> Datos Personales
@@ -140,19 +131,19 @@
   <!-- CONTENIDO -->
   <div class="container p-4">
     {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    <div>
-      {% for category, message in messages %}
-      <div class="alert alert-{{ category }}">{{ message }}</div>
-      {% endfor %}
-    </div>
-    {% endif %}
+      {% if messages %}
+        <div>
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
     {% endwith %}
 
     {% block content %}{% endblock %}
   </div>
 
-  <!-- BOOTSTRAP JS -->
+  <!-- SCRIPTS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
           integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
           crossorigin="anonymous"></script>
@@ -167,7 +158,6 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      // Sidebar toggle (se usa en páginas distintas a /planilla)
       const menuToggle = document.getElementById('menuToggle');
       const sidebar = document.getElementById('sidebarMenu');
       const overlay = document.getElementById('overlay');
@@ -183,9 +173,6 @@
           overlay.classList.remove('active');
         });
       }
-
-      // Si estamos en /planilla y llegamos en móvil, el botón navbar-toggler colapsa las 3 opciones (Bootstrap lo maneja).
-      // No se necesita JS adicional para el collapse de Bootstrap cuando se usa data-toggle/data-target.
     });
   </script>
 </body>
