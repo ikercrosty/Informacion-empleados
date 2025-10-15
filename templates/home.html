@@ -133,8 +133,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (fileFoto) fileFoto.value = "";
   }
 
+  // Estado inicial: no fila seleccionada
   resetPanelToDefault();
 
+  // Preview local cuando el usuario selecciona archivo para subir
   if (fileFoto) {
     fileFoto.addEventListener('change', (e) => {
       const f = e.target.files[0];
@@ -145,6 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Manejo de selección de fila
   if (tabla) {
     tabla.addEventListener('click', (ev) => {
       const tr = ev.target.closest('tr');
@@ -152,19 +155,23 @@ document.addEventListener("DOMContentLoaded", () => {
       const dpi = tr.cells[0].innerText.trim();
       if (!dpi) return;
 
+      // Set hidden inputs DPI
       inputDpiUpload.value = dpi;
       inputDpiDelete.value = dpi;
 
-      // Con BLOB: la API devuelve {foto: true/false, url: "/foto/<dpi>"}
+      // Llamar API para validar si existe foto y que el archivo realmente exista
       fetch(`/api/foto/${encodeURIComponent(dpi)}`)
         .then(r => r.json())
         .then(j => {
-          const url = j && j.url; // ya viene listo para consumir el BLOB
+          // API antigua puede devolver {foto: filename} o nueva versión {foto,url}
+          const url = j && (j.url || (j.foto ? `/static/fotos/${j.foto}` : null));
           if (url) {
-            fotoEmpleado.src = `${url}?t=${Date.now()}`; // cache-busting
+            // Añadimos una cache-busting query con timestamp para evitar mostrar icono roto por cached 404
+            fotoEmpleado.src = `${url}?t=${Date.now()}`;
             uploadControls.style.display = "none";
             deleteControl.style.display = "block";
           } else {
+            // No hay foto registrada o no existe en disco
             fotoEmpleado.src = DEFAULT_SRC;
             uploadControls.style.display = "block";
             deleteControl.style.display = "none";
@@ -172,6 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         })
         .catch(() => {
+          // En caso de error tratamos como sin foto
           fotoEmpleado.src = DEFAULT_SRC;
           uploadControls.style.display = "block";
           deleteControl.style.display = "none";
@@ -180,6 +188,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Si el usuario hace click fuera de la tabla y fuera de controles, reestablecer estado por defecto
   document.addEventListener('click', (e) => {
     const insideTable = e.target.closest('#tablaEmpleados');
     const insideControls = e.target.closest('#uploadControls') || e.target.closest('#deleteControl');
@@ -190,3 +199,4 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 {% endblock %}
+
