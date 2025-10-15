@@ -43,7 +43,7 @@ def get_db_connection():
 def requerir_login():
     rutas_publicas = {"login", "static", "db_test", "guardar_empleado", "guardar_academico",
                       "guardar_conyugue", "guardar_emergencia", "guardar_laboral", "guardar_medica"}
-    # Nota: dejamos /api_foto y /subir_foto protegidos (requieren login), porque se usan dentro de home ya autenticado.
+    # Nota: dejamos /api_foto, /subir_foto y /eliminar_foto protegidos (requieren login), porque se usan dentro de home ya autenticado.
     endpoint = request.endpoint or ""
     if ("usuario" not in session) and (endpoint.split(".")[0] not in rutas_publicas):
         return redirect(url_for("login"))
@@ -537,7 +537,7 @@ def guardar_medica():
     except Exception as e:
         return jsonify({"mensaje": f"Error: {e}"}), 500
 
-# ---------------- Fotos: API y subida ----------------
+# ---------------- Fotos: API, subida y eliminación ----------------
 
 @app.route("/api/foto/<dpi>")
 def api_foto(dpi):
@@ -580,6 +580,30 @@ def subir_foto(dpi):
     except Exception as e:
         flash(f"Error al guardar foto: {e}", "danger")
 
+    return redirect(url_for("home"))
+
+@app.route("/eliminar_foto/<dpi>", methods=["POST"])
+def eliminar_foto(dpi):
+    """Elimina la foto del empleado: borra el archivo físico y limpia la columna en BD."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT `foto` FROM empleados_info WHERE `Numero de DPI`=%s", (dpi,))
+        row = cursor.fetchone()
+        if row and row.get("foto"):
+            filename = row["foto"]
+            filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+            if os.path.exists(filepath):
+                os.remove(filepath)
+            cursor.execute("UPDATE empleados_info SET `foto`=NULL WHERE `Numero de DPI`=%s", (dpi,))
+            conn.commit()
+            flash("Foto eliminada correctamente", "success")
+        else:
+            flash("El empleado no tiene foto registrada", "warning")
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        flash(f"Error al eliminar foto: {e}", "danger")
     return redirect(url_for("home"))
 
 if __name__ == "__main__":

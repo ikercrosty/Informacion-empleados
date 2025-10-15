@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
       btnCancelar.disabled = false;
     });
 
-    // Si es la tabla de empleados, al hacer click actualizamos la foto
+    // Si es la tabla de empleados, al hacer click actualizamos la foto y controles
     if (idTabla === "tablaEmpleados") {
       tabla.addEventListener("click", (e) => {
         const tr = e.target.closest("tr");
@@ -60,25 +60,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const foto = document.getElementById("fotoEmpleado");
         const formSubir = document.getElementById("formSubirFoto");
-        if (!foto || !formSubir) return;
+        const formEliminar = document.getElementById("formEliminarFoto");
+        if (!foto || !formSubir || !formEliminar) return;
 
-        fetch(`/api/foto/${dpi}`)
+        // Primero ocultar ambos hasta saber el estado
+        formSubir.style.display = "none";
+        formEliminar.style.display = "none";
+
+        fetch(`/api/foto/${encodeURIComponent(dpi)}`)
           .then(res => res.json())
           .then(data => {
             if (data && data.foto) {
               foto.src = `/static/fotos/${data.foto}`;
+              // Mostrar botón eliminar y ocultar subir
+              formEliminar.action = `/eliminar_foto/${encodeURIComponent(dpi)}`;
+              formEliminar.style.display = "block";
               formSubir.style.display = "none";
             } else {
               foto.src = "/static/imagenes/default.png";
-              formSubir.action = `/subir_foto/${dpi}`;
+              // Mostrar subir y ocultar eliminar
+              formSubir.action = `/subir_foto/${encodeURIComponent(dpi)}`;
               formSubir.style.display = "block";
+              formEliminar.style.display = "none";
             }
           })
           .catch(() => {
-            // Fallback en caso de error
+            // En caso de error mostramos el formulario de subir como fallback
             foto.src = "/static/imagenes/default.png";
-            formSubir.action = `/subir_foto/${dpi}`;
+            formSubir.action = `/subir_foto/${encodeURIComponent(dpi)}`;
             formSubir.style.display = "block";
+            formEliminar.style.display = "none";
           });
       });
     }

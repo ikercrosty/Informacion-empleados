@@ -84,10 +84,15 @@
              class="img-fluid rounded mb-3"
              style="max-height: 250px; object-fit: cover;">
 
-        <!-- Formulario para subir foto si no existe -->
+        <!-- Formulario para subir foto; action se asigna dinámicamente en main.js -->
         <form id="formSubirFoto" method="POST" enctype="multipart/form-data" style="display:none;">
           <input type="file" name="foto" class="form-control mb-2" accept="image/*" required>
           <button type="submit" class="btn btn-primary btn-sm btn-block">Subir Foto</button>
+        </form>
+
+        <!-- Formulario para eliminar foto; action se asigna dinámicamente en main.js -->
+        <form id="formEliminarFoto" method="POST" style="display:none;">
+          <button type="submit" class="btn btn-danger btn-sm btn-block">Eliminar Foto</button>
         </form>
       </div>
     </div>
