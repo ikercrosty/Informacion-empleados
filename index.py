@@ -38,8 +38,12 @@ def get_db_connection():
 
 @app.before_request
 def requerir_login():
-    rutas_publicas = {"login", "static", "db_test", "guardar_empleado", "guardar_academico",
-                      "guardar_conyugue", "guardar_emergencia", "guardar_laboral", "guardar_medica"}
+    # Rutas públicas (no requieren sesión)
+    rutas_publicas = {
+        "login", "static", "db_test",
+        "guardar_empleado", "guardar_academico", "guardar_conyugue",
+        "guardar_emergencia", "guardar_laboral", "guardar_medica"
+    }
     endpoint = request.endpoint or ""
     if ("usuario" not in session) and (endpoint.split(".")[0] not in rutas_publicas):
         return redirect(url_for("login"))
@@ -151,7 +155,7 @@ def medica():
     conn.close()
     return render_template("medica.html", empleados=empleados, usuario=session.get("usuario"))
 
-# ---------------- Login usando tabla Usuarios ----------------
+# ---------------- Login usando tabla Usuarios (redirige a /planilla) ----------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """
@@ -193,7 +197,7 @@ def login():
             if password == stored_password:
                 session["usuario"] = user_row.get("Usuarios") or user_row.get("Correo Electronico")
                 session.permanent = False
-                return redirect(url_for("home"))
+                return redirect(url_for("planilla"))  # <-- REDIRECT A /planilla
             else:
                 flash("Contraseña incorrecta", "danger")
                 return redirect(url_for("login"))
@@ -211,6 +215,13 @@ def logout():
     resp.headers["Pragma"] = "no-cache"
     resp.headers["Expires"] = "0"
     return resp
+
+# ---------------- Página Planilla (nuevo punto de entrada después del login) ----------------
+@app.route("/planilla")
+def planilla():
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+    return render_template("planilla.html", usuario=session.get("usuario"))
 
 @app.route("/db-test")
 def db_test():

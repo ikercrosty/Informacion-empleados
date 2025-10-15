@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block title %}Planilla{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center" style="min-height:70vh;">
+  <div class="text-center">
+    <h1 class="mb-2">Bienvenido a Planilla</h1>
+    <p class="lead mb-4">Hola, {{ usuario }}. Usa el botón para abrir el menú y acceder a las secciones de empleados.</p>
+
+    <div class="d-flex flex-column align-items-center">
+      <button id="btnAbrirMenu" class="btn btn-lg btn-primary mb-3">
+        <i class="fas fa-bars mr-2"></i> Abrir Menú
+      </button>
+
+      <div>
+        <a href="{{ url_for('home') }}" class="btn btn-outline-primary mr-2">Ir a Datos Personales</a>
+        <a href="{{ url_for('about') }}" class="btn btn-outline-secondary mr-2">Información Académica</a>
+        <a href="{{ url_for('conyugue') }}" class="btn btn-outline-secondary">Datos del Cónyuge</a>
+      </div>
+
+      <div class="mt-4">
+        <a href="{{ url_for('logout') }}" class="btn btn-danger">Cerrar sesión</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("btnAbrirMenu");
+  btn && btn.addEventListener("click", () => {
+    const menuToggle = document.getElementById('menuToggle');
+    const overlay = document.getElementById('overlay');
+    const sidebar = document.getElementById('sidebarMenu');
+
+    if (menuToggle) {
+      menuToggle.click();
+      return;
+    }
+
+    if (sidebar && overlay) {
+      sidebar.classList.add('active');
+      overlay.classList.add('active');
+    } else {
+      // Fallback: ir directamente a Datos Personales
+      window.location.href = "{{ url_for('home') }}";
+    }
+  });
+});
+</script>
+{% endblock %}
