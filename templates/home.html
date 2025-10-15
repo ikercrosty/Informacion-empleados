@@ -10,13 +10,14 @@
 <div class="row">
   <!-- Tabla y botones (izquierda) -->
   <div class="col-md-8">
-    <div class="mb-3">
-      <button id="btnAgregar" type="button" class="btn btn-success btn-sm">Agregar</button>
-      <button id="btnEditar" type="button" class="btn btn-primary btn-sm" disabled>Editar</button>
-      <button id="btnGuardar" type="button" class="btn btn-success btn-sm" disabled>Guardar</button>
-      <button id="btnCancelar" type="button" class="btn btn-secondary btn-sm" disabled>Cancelar</button>
+    <div class="mb-3 d-flex flex-wrap">
+      <button id="btnAgregar" type="button" class="btn btn-success btn-sm mr-2 mb-2">Agregar</button>
+      <button id="btnEditar" type="button" class="btn btn-primary btn-sm mr-2 mb-2" disabled>Editar</button>
+      <button id="btnGuardar" type="button" class="btn btn-success btn-sm mr-2 mb-2" disabled>Guardar</button>
+      <button id="btnCancelar" type="button" class="btn btn-secondary btn-sm mb-2" disabled>Cancelar</button>
     </div>
 
+    <!-- table-responsive proporciona scroll horizontal en pantallas pequeñas -->
     <div class="table-responsive">
       <table id="tablaEmpleados" class="table table-bordered table-striped table-hover table-sm">
         <thead class="thead-dark">
@@ -24,22 +25,50 @@
             <th>DPI</th>
             <th>Nombre</th>
             <th>Apellidos</th>
+            <th>Apellidos de casada</th>
             <th>Estado Civil</th>
             <th>Nacionalidad</th>
             <th>Departamento</th>
             <th>Fecha de nacimiento</th>
+            <th>Lugar de nacimiento</th>
+            <th>Numero IGSS</th>
+            <th>Dirección</th>
+            <th>Telefono</th>
+            <th>Religión</th>
+            <th>Correo</th>
+            <th>Puesto</th>
+            <th>Tipo de contrato</th>
+            <th>Jornada laboral</th>
+            <th>Duración del trabajo</th>
+            <th>Fecha de inicio laboral</th>
+            <th>Dias Laborales</th>
+            <th>Foto (archivo)</th>
           </tr>
         </thead>
         <tbody>
           {% for e in empleados %}
           <tr>
             <td>{{ e['Numero de DPI'] }}</td>
-            <td>{{ e['Nombre'] }}</td>
-            <td>{{ e['Apellidos'] }}</td>
+            <td>{{ e.get('Nombre') }}</td>
+            <td>{{ e.get('Apellidos') }}</td>
+            <td>{{ e.get('Apellidos de casada') }}</td>
             <td>{{ e.get('Estado Civil') }}</td>
             <td>{{ e.get('Nacionalidad') }}</td>
             <td>{{ e.get('Departamento') }}</td>
             <td>{{ e.get('Fecha de nacimiento') }}</td>
+            <td>{{ e.get('Lugar de nacimiento') }}</td>
+            <td>{{ e.get('Numero de Afiliación del IGGS') }}</td>
+            <td>{{ e.get('Dirección del Domicilio') }}</td>
+            <td>{{ e.get('Numero de Telefono') }}</td>
+            <td>{{ e.get('Religión') }}</td>
+            <td>{{ e.get('Correo Electronico') }}</td>
+            <td>{{ e.get('Puesto de trabajo') }}</td>
+            <td>{{ e.get('Tipo de contrato') }}</td>
+            <td>{{ e.get('Jornada laboral') }}</td>
+            <td>{{ e.get('Duración del trabajo') }}</td>
+            <td>{{ e.get('Fecha de inicio laboral') }}</td>
+            <td>{{ e.get('Dias Laborales') }}</td>
+            <td>{{ e.get('foto') }}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -65,7 +94,6 @@
         {% endif %}
       </div>
 
-      <!-- Subir foto (ruta sin parámetro, DPI via hidden) -->
       <form id="formSubirFoto" method="post" action="{{ url_for('subir_foto') }}" enctype="multipart/form-data">
         <input type="hidden" name="dpi" id="inputDpiForUpload" value="{{ empleados[0]['Numero de DPI'] if empleados else '' }}">
         <div class="form-group">
@@ -74,7 +102,6 @@
         <button id="btnSubirFoto" type="submit" class="btn btn-primary btn-block">Subir Foto</button>
       </form>
 
-      <!-- Eliminar foto -->
       <form id="formEliminarFoto" method="post" action="{{ url_for('eliminar_foto') }}" class="mt-2">
         <input type="hidden" name="dpi" id="inputDpiForDelete" value="{{ empleados[0]['Numero de DPI'] if empleados else '' }}">
         <button id="btnEliminarFoto" type="submit" class="btn btn-outline-danger btn-block">Eliminar Foto</button>
@@ -96,7 +123,6 @@
     const inputDpiDelete = document.getElementById('inputDpiForDelete');
     const fileFoto = document.getElementById('fileFoto');
 
-    // Preview inmediato al seleccionar archivo
     if (fileFoto && fotoEmpleado) {
       fileFoto.addEventListener('change', (e) => {
         const f = e.target.files[0];
@@ -107,7 +133,6 @@
       });
     }
 
-    // Al hacer click en una fila, actualiza DPI y carga foto desde API
     if (tabla && fotoEmpleado && inputDpiUpload && inputDpiDelete) {
       tabla.addEventListener('click', (ev) => {
         const tr = ev.target.closest('tr');
