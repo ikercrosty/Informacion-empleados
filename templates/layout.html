@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 
-  <body>
+<body>
  <!-- NAVBAR -->
 <nav class="navbar navbar-dark bg-dark">
   <!-- Logo + Nombre -->
@@ -29,12 +29,15 @@
     <span class="text-white font-weight-bold">Empaquetex</span>
   </a>
 
-  <!-- Botón hamburguesa -->
+  {% if 'usuario' in session %}
+  <!-- Botón hamburguesa (solo si hay usuario en sesión) -->
   <button class="navbar-toggler" type="button" id="menuToggle">
     <span class="navbar-toggler-icon"></span>
   </button>
+  {% endif %}
 </nav>
 
+{% if 'usuario' in session %}
 <!-- OVERLAY (fondo oscuro al abrir el panel) -->
 <div id="overlay" class="overlay"></div>
 
@@ -84,58 +87,61 @@
       </a>
     </li>
 
-    {% if 'usuario' in session %}
     <!-- Logout -->
     <li class="nav-item">
       <a class="nav-link text-white border-bottom" href="{{ url_for('logout') }}">
         <i class="fas fa-sign-out-alt"></i> Salir
       </a>
     </li>
-    {% endif %}
   </ul>
 </div>
+{% endif %}
 
-    <!-- CONTENIDO -->
-    <div class="container p-4">
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          <div>
-            {% for category, message in messages %}
-              <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
-          </div>
-        {% endif %}
-      {% endwith %}
-      
-      {% block content %}
-      {% endblock %}
-    </div>
+<!-- CONTENIDO -->
+<div class="container p-4">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div>
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+  
+  {% block content %}
+  {% endblock %}
+</div>
 
-    <!-- BOOTSTRAP JS -->
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" 
-            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" 
-            crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" 
-            integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" 
-            crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" 
-            integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" 
-            crossorigin="anonymous"></script>
+<!-- BOOTSTRAP JS -->
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" 
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" 
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" 
+        integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" 
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" 
+        integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" 
+        crossorigin="anonymous"></script>
+
 <script>
+  // Solo conectar el menú si los elementos existen (no habrá menu en login)
   const menuToggle = document.getElementById('menuToggle');
   const sidebar = document.getElementById('sidebarMenu');
   const overlay = document.getElementById('overlay');
 
-  menuToggle.addEventListener('click', () => {
-    sidebar.classList.add('active');
-    overlay.classList.add('active');
-  });
+  if (menuToggle && sidebar && overlay) {
+    menuToggle.addEventListener('click', () => {
+      sidebar.classList.add('active');
+      overlay.classList.add('active');
+    });
 
-  overlay.addEventListener('click', () => {
-    sidebar.classList.remove('active');
-    overlay.classList.remove('active');
-  });
+    overlay.addEventListener('click', () => {
+      sidebar.classList.remove('active');
+      overlay.classList.remove('active');
+    });
+  }
 </script>
 
-  </body>
+</body>
 </html>
