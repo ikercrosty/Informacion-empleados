@@ -1,69 +1,40 @@
 {% extends "layout.html" %}
-{% block content %}
-<div class="jumbotron">
-  <h1 class="display-4">Datos Personales</h1>
-  <p class="lead">Información general de los empleados</p>
-</div>
+{% block title %}Datos Personales{% endblock %}
 
+{% block content %}
 <div class="row">
-  <!-- Columna izquierda: tabla -->
   <div class="col-md-8">
-    <div class="mb-3">
-      <button id="btnAgregar" type="button" class="btn btn-success btn-sm">Agregar</button>
-      <button id="btnEditar" type="button" class="btn btn-primary btn-sm" disabled>Editar</button>
-      <button id="btnGuardar" type="button" class="btn btn-success btn-sm" disabled>Guardar</button>
-      <button id="btnCancelar" type="button" class="btn btn-secondary btn-sm" disabled>Cancelar</button>
+    <div class="d-flex mb-2">
+      <button id="btnAgregar" class="btn btn-primary mr-2">Agregar</button>
+      <button id="btnEditar" class="btn btn-secondary mr-2" disabled>Editar</button>
+      <button id="btnGuardar" class="btn btn-success mr-2" disabled>Guardar</button>
+      <button id="btnCancelar" class="btn btn-danger" disabled>Cancelar</button>
     </div>
 
     <div class="table-responsive">
-      <table id="tablaEmpleados" class="table table-bordered table-striped table-hover table-sm">
-        <thead class="thead-dark">
+      <table id="tablaEmpleados" class="table table-striped table-bordered">
+        <thead class="thead-light">
           <tr>
             <th>DPI</th>
             <th>Nombre</th>
             <th>Apellidos</th>
-            <th>Apellidos de casada</th>
             <th>Estado Civil</th>
             <th>Nacionalidad</th>
             <th>Departamento</th>
             <th>Fecha de nacimiento</th>
-            <th>Lugar de nacimiento</th>
-            <th>Afiliación IGGS</th>
-            <th>Dirección</th>
-            <th>Teléfono</th>
-            <th>Religión</th>
-            <th>Correo</th>
-            <th>Puesto</th>
-            <th>Tipo de contrato</th>
-            <th>Jornada</th>
-            <th>Duración</th>
-            <th>Inicio laboral</th>
-            <th>Días laborales</th>
           </tr>
         </thead>
         <tbody>
+          {# Rellena filas desde backend #}
           {% for e in empleados %}
           <tr>
-            <td>{{ e['Numero de DPI'] }}</td>
-            <td>{{ e['Nombre'] }}</td>
-            <td>{{ e['Apellidos'] }}</td>
-            <td>{{ e['Apellidos de casada'] }}</td>
-            <td>{{ e['Estado Civil'] }}</td>
-            <td>{{ e['Nacionalidad'] }}</td>
-            <td>{{ e['Departamento'] }}</td>
-            <td>{{ e['Fecha de nacimiento'] }}</td>
-            <td>{{ e['Lugar de nacimiento'] }}</td>
-            <td>{{ e['Numero de Afiliación del IGGS'] }}</td>
-            <td>{{ e['Dirección del Domicilio'] }}</td>
-            <td>{{ e['Numero de Telefono'] }}</td>
-            <td>{{ e['Religión'] }}</td>
-            <td>{{ e['Correo Electronico'] }}</td>
-            <td>{{ e['Puesto de trabajo'] }}</td>
-            <td>{{ e['Tipo de contrato'] }}</td>
-            <td>{{ e['Jornada laboral'] }}</td>
-            <td>{{ e['Duración del trabajo'] }}</td>
-            <td>{{ e['Fecha de inicio laboral'] }}</td>
-            <td>{{ e['Dias Laborales'] }}</td>
+            <td>{{ e.dpi }}</td>
+            <td>{{ e.nombre }}</td>
+            <td>{{ e.apellidos }}</td>
+            <td>{{ e.estado_civil }}</td>
+            <td>{{ e.nacionalidad }}</td>
+            <td>{{ e.departamento }}</td>
+            <td>{{ e.fecha_nacimiento }}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -71,33 +42,78 @@
     </div>
   </div>
 
-  <!-- Columna derecha: recuadro de foto -->
-  <div class="col-md-4 mt-3 mt-md-0">
-    <div class="card">
-      <div class="card-header bg-dark text-white">
-        Foto del Empleado
-      </div>
-      <div class="card-body text-center">
-        <img id="fotoEmpleado"
-             src="{{ url_for('static', filename='imagenes/default.png') }}"
-             alt="Foto empleado"
-             class="img-fluid rounded mb-3"
-             style="max-height: 250px; object-fit: cover;">
+  <div class="col-md-4">
+    <div class="card p-3">
+      <h5 class="mb-3">Foto del Empleado</h5>
 
-        <!-- Formulario para subir foto; action se asigna dinámicamente en main.js -->
-        <form id="formSubirFoto" method="POST" enctype="multipart/form-data" style="display:none;">
-          <input type="file" name="foto" class="form-control mb-2" accept="image/*" required>
-          <button type="submit" class="btn btn-primary btn-sm btn-block">Subir Foto</button>
-        </form>
-
-        <!-- Formulario para eliminar foto; action se asigna dinámicamente en main.js -->
-        <form id="formEliminarFoto" method="POST" style="display:none;">
-          <button type="submit" class="btn btn-danger btn-sm btn-block">Eliminar Foto</button>
-        </form>
+      <!-- Preview -->
+      <div class="text-center mb-3">
+        <img id="fotoEmpleado" src="{{ url_for('static', filename='imagenes/default.png') }}" 
+             alt="Foto empleado" class="img-fluid rounded-circle" style="width:160px;height:160px;object-fit:cover;">
       </div>
+
+      <!-- Formulario subir foto -->
+      <form id="formSubirFoto" method="post" action="{{ url_for('subir_foto') }}" enctype="multipart/form-data">
+        <input type="hidden" name="dpi" id="inputDpiForUpload" value="">
+        <div class="form-group">
+          <input id="fileFoto" name="foto" type="file" accept="image/*" class="form-control-file">
+        </div>
+        <button id="btnSubirFoto" type="submit" class="btn btn-primary btn-block">Subir Foto</button>
+      </form>
+
+      <!-- Formulario eliminar foto -->
+      <form id="formEliminarFoto" method="post" action="{{ url_for('eliminar_foto') }}" class="mt-2">
+        <input type="hidden" name="dpi" id="inputDpiForDelete" value="">
+        <button id="btnEliminarFoto" type="submit" class="btn btn-outline-danger btn-block">Eliminar Foto</button>
+      </form>
     </div>
   </div>
 </div>
 
-<script src="{{ url_for('static', filename='main.js') }}"></script>
+<script>
+  // Preview inmediato al seleccionar archivo
+  document.addEventListener("DOMContentLoaded", () => {
+    const fileFoto = document.getElementById('fileFoto');
+    const fotoEmpleado = document.getElementById('fotoEmpleado');
+
+    fileFoto && fileFoto.addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      if (!f.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        fotoEmpleado.src = ev.target.result;
+      };
+      reader.readAsDataURL(f);
+    });
+
+    // Cuando el usuario hace click en una fila actualizamos los inputs DPI
+    const tabla = document.getElementById('tablaEmpleados');
+    if (tabla) {
+      tabla.addEventListener('click', (ev) => {
+        const tr = ev.target.closest('tr');
+        if (!tr) return;
+        const dpi = tr.cells[0].innerText.trim();
+        if (!dpi) return;
+        // Llenamos los campos hidden para subir/eliminar
+        document.getElementById('inputDpiForUpload').value = dpi;
+        document.getElementById('inputDpiForDelete').value = dpi;
+
+        // Intentamos cargar la foto desde el servidor (API)
+        fetch(`{{ url_for('api_foto_base') }}/${encodeURIComponent(dpi)}`)
+          .then(r => r.json())
+          .then(j => {
+            if (j && j.foto) {
+              fotoEmpleado.src = `/static/fotos/${j.foto}`;
+            } else {
+              fotoEmpleado.src = `{{ url_for('static', filename='imagenes/default.png') }}`;
+            }
+          })
+          .catch(() => {
+            fotoEmpleado.src = `{{ url_for('static', filename='imagenes/default.png') }}`;
+          });
+      });
+    }
+  });
+</script>
 {% endblock %}
