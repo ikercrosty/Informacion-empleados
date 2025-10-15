@@ -2,10 +2,16 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 import os
 import pymysql
 from urllib.parse import urlparse
+from werkzeug.utils import secure_filename  # NUEVO: para nombres seguros de archivos
 
 app = Flask(__name__)
 app.secret_key = "clave-secreta"
 app.config["SESSION_PERMANENT"] = False
+
+# NUEVO: carpeta de subida de fotos
+UPLOAD_FOLDER = os.path.join("static", "fotos")
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 USUARIOS = ["iker", "admin", "juan", "maria"]
 PASSWORD_GLOBAL = "Empaquetex25"
@@ -36,7 +42,8 @@ def get_db_connection():
 @app.before_request
 def requerir_login():
     rutas_publicas = {"login", "static", "db_test", "guardar_empleado", "guardar_academico",
-                     "guardar_conyugue", "guardar_emergencia", "guardar_laboral", "guardar_medica"}
+                      "guardar_conyugue", "guardar_emergencia", "guardar_laboral", "guardar_medica"}
+    # Nota: dejamos /api_foto y /subir_foto protegidos (requieren login), porque se usan dentro de home ya autenticado.
     endpoint = request.endpoint or ""
     if ("usuario" not in session) and (endpoint.split(".")[0] not in rutas_publicas):
         return redirect(url_for("login"))
@@ -183,6 +190,8 @@ def db_test():
         return f"Conexión OK. Resultado: {result}"
     except Exception as e:
         return f"Error de conexión: {e}"
+
+# ---------------- Guardados (POST JSON) ----------------
 
 @app.route("/guardar_empleado", methods=["POST"])
 def guardar_empleado():
@@ -527,6 +536,51 @@ def guardar_medica():
         return jsonify({"mensaje": mensaje})
     except Exception as e:
         return jsonify({"mensaje": f"Error: {e}"}), 500
+
+# ---------------- Fotos: API y subida ----------------
+
+@app.route("/api/foto/<dpi>")
+def api_foto(dpi):
+    """Devuelve la ruta de la foto guardada (archivo) para el DPI dado."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT `foto` FROM empleados_info WHERE `Numero de DPI` = %s", (dpi,))
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        return jsonify({"foto": (row.get("foto") if row and row.get("foto") else None)})
+    except Exception as e:
+        return jsonify({"foto": None, "error": str(e)}), 500
+
+@app.route("/subir_foto/<dpi>", methods=["POST"])
+def subir_foto(dpi):
+    """Sube una imagen y actualiza la columna `foto` con el nombre del archivo."""
+    if "foto" not in request.files:
+        flash("No se seleccionó archivo", "danger")
+        return redirect(url_for("home"))
+
+    file = request.files.get("foto")
+    if not file or file.filename.strip() == "":
+        flash("Archivo vacío", "danger")
+        return redirect(url_for("home"))
+
+    # nombre: DPI_original.ext para evitar colisiones
+    filename = secure_filename(f"{dpi}_{file.filename}")
+    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+    try:
+        file.save(filepath)
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE empleados_info SET `foto`=%s WHERE `Numero de DPI`=%s", (filename, dpi))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        flash("Foto del empleado actualizada correctamente", "success")
+    except Exception as e:
+        flash(f"Error al guardar foto: {e}", "danger")
+
+    return redirect(url_for("home"))
 
 if __name__ == "__main__":
     app.run(debug=True)
