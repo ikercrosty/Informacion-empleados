@@ -13,7 +13,6 @@ body {
   object-fit: cover;     /* recorta la imagen para que se ajuste al círculo */
 }
 
-
 /* Navbar */
 .navbar {
   background-color: #0B486B !important; /* azul oscuro */
@@ -43,14 +42,15 @@ body {
   background: #FFFFFF;
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
 }
 
 /* Títulos */
 h1, h2, h3 {
   color: #0B486B;
 }
-/* Hace que el contenedor principal sea blanco y con sombra */
+
+/* Hace que el contenedor principal sea blanco y con sombra (duplicado intencionalmente mantenido) */
 .container {
   background: #fff;
   padding: 20px;
@@ -73,21 +73,21 @@ h1, h2, h3 {
 .table-active {
   background-color: #8dc4ff !important; /* azul claro */
 }
-/* Panel lateral */
+
+/* Panel lateral global (sidebar) */
 .sidebar {
   position: fixed;
   top: 0;
   right: -250px; /* oculto inicialmente */
   width: 250px;
   height: 100%;
-  background-color: #0b486bba  !important; /* mismo color exacto que navbar */
+  background-color: #0b486bba !important; /* mismo color exacto que navbar */
   transition: right 0.3s ease;
   z-index: 1051;
   padding-top: 60px;
 }
 
-
-/* Overlay */
+/* Overlay global */
 .overlay {
   position: fixed;
   top: 0;
@@ -99,7 +99,7 @@ h1, h2, h3 {
   z-index: 1050;
 }
 
-/* Mostrar panel y overlay */
+/* Mostrar panel y overlay global */
 .sidebar.active {
   right: 0;
 }
@@ -107,11 +107,12 @@ h1, h2, h3 {
   display: block;
 }
 
-/* Separadores entre opciones */
+/* Separadores entre opciones global */
 .sidebar .nav-link {
   border-bottom: 1px solid rgba(255,255,255,0.2);
   padding: 12px 20px;
 }
+
 /* Contenedor del login */
 .login-container {
   width: 100%;
@@ -198,4 +199,92 @@ h1, h2, h3 {
   width: 95%;       /* en móviles */
 }
 
+/* ---------- Planilla sidebar styles (reutilizables, moved from template) ---------- */
 
+/* Overlay específico de Planilla */
+#planillaOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 1040;
+  display: none;
+}
+
+/* Sidebar específico de Planilla */
+#planillaSidebar {
+  position: fixed;
+  top: 0;
+  left: -320px; /* escondido inicialmente a la izquierda */
+  width: 320px;
+  height: 100%;
+  background: #212529; /* bg-dark */
+  color: #fff;
+  z-index: 1050;
+  transition: left .25s ease;
+  overflow-y: auto;
+  padding-top: 1rem;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+}
+
+/* Mostrar/ocultar planilla sidebar */
+#planillaSidebar.active { left: 0; }
+#planillaOverlay.active { display: block; }
+
+/* Links y estilo interno */
+#planillaSidebar .nav-link { color: #fff; }
+#planillaSidebar .nav-link:hover { background: rgba(255,255,255,0.03); }
+
+/* Botón de cerrar */
+.planilla-toggle {
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+/* Accesos rápidos dentro del panel */
+#planillaSidebar .btn-sm.btn-outline-light {
+  color: #fff;
+  border-color: rgba(255,255,255,0.2);
+}
+
+/* Pequeñas utilidades para el panel (texto y separación) */
+#planillaSidebar .small { color: rgba(255,255,255,0.7); }
+#planillaSidebar hr { border-color: rgba(255,255,255,0.08); }
+
+/* Responsive: ajustar ancho en pantallas pequeñas */
+@media (max-width: 576px) {
+  #planillaSidebar { width: 280px; }
+}
+
+/* Evitar solapamiento con overlay global: el planillaOverlay tiene z-index inferior al global sidebar si es necesario */
+
+/* ---------- Utility buttons con tu paleta (café, naranja, azul) ---------- */
+.btn-cafe {
+  background: #6b4f3a;
+  border-color: #6b4f3a;
+  color: #fff;
+}
+.btn-cafe:hover { background: #57412f; border-color: #57412f; }
+
+.btn-naranja {
+  background: #F56217;
+  border-color: #F56217;
+  color: #fff;
+}
+.btn-naranja:hover { background: #d94e12; border-color: #d94e12; }
+
+.btn-azul {
+  background: #0B486B;
+  border-color: #0B486B;
+  color: #fff;
+}
+.btn-azul:hover { background: #093948; border-color: #093948; }
+
+/* ---------- Small polish: ensure images in sidebar are rounded and aligned ---------- */
+#planillaSidebar img {
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+/* ---------- End of styles ---------- */

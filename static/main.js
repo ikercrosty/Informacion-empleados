@@ -72,20 +72,17 @@ document.addEventListener("DOMContentLoaded", () => {
           .then(data => {
             if (data && data.foto) {
               foto.src = `/static/fotos/${data.foto}`;
-              // Mostrar botón eliminar y ocultar subir
               formEliminar.action = `/eliminar_foto/${encodeURIComponent(dpi)}`;
               formEliminar.style.display = "block";
               formSubir.style.display = "none";
             } else {
               foto.src = "/static/imagenes/default.png";
-              // Mostrar subir y ocultar eliminar
               formSubir.action = `/subir_foto/${encodeURIComponent(dpi)}`;
               formSubir.style.display = "block";
               formEliminar.style.display = "none";
             }
           })
           .catch(() => {
-            // En caso de error mostramos el formulario de subir como fallback
             foto.src = "/static/imagenes/default.png";
             formSubir.action = `/subir_foto/${encodeURIComponent(dpi)}`;
             formSubir.style.display = "block";
@@ -127,7 +124,6 @@ document.addEventListener("DOMContentLoaded", () => {
     for (let i = 0; i < columnas; i++) {
       const td = document.createElement("td");
       td.innerText = "";
-      // Si la columna está bloqueada, no permitir edición aquí
       if (!bloqueadas.includes(i)) {
         td.contentEditable = true;
         td.style.backgroundColor = "#fff3cd";
@@ -214,7 +210,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     payload["nuevo"] = esNuevo;
 
-    // Validación de DPI cuando aplique
     if (campos.includes("Numero de DPI") && !payload["Numero de DPI"]) {
       alert("El campo Numero de DPI es obligatorio.");
       return;
@@ -259,37 +254,70 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Registro de tablas ---
 
-  // Datos personales (DPI primero, todo editable aquí)
   registrarTabla("tablaEmpleados", 20, "/guardar_empleado", [
     "Numero de DPI","Nombre","Apellidos","Apellidos de casada","Estado Civil","Nacionalidad",
     "Departamento","Fecha de nacimiento","Lugar de nacimiento","Numero de Afiliación del IGGS",
     "Dirección del Domicilio","Numero de Telefono","Religión","Correo Electronico","Puesto de trabajo",
     "Tipo de contrato","Jornada laboral","Duración del trabajo","Fecha de inicio laboral","Dias Laborales"
-  ]); // sin columnas bloqueadas
+  ]);
 
-  // Información Académica (7 columnas: 3 bloqueadas + 4 editables)
   registrarTabla("tablaAcademico", 7, "/guardar_academico", [
     "Numero de DPI","Nombre","Apellidos",
     "Nivel de estudios","Profesión u Oficio","Colegio o establecimiento","Cursos o titulos adicionales"
-  ], [0,1,2]); // bloquear DPI, Nombre, Apellidos
+  ], [0,1,2]);
 
-  // Cónyuge (DPI + 5)
   registrarTabla("tablaConyugue", 6, "/guardar_conyugue", [
     "Numero de DPI","Nombres del conyugue","Apellidos del conyugue","Direccion del conyugue","Numero de teléfono del conyugue","Correo electronico del conyugue"
   ]);
 
-  // Emergencia (DPI + 3)
   registrarTabla("tablaEmergencia", 4, "/guardar_emergencia", [
     "Numero de DPI","Nombre del contacto de emergencia","Apellidos del contacto de emergencia","Numero de telefono de emergencia"
   ]);
 
-  // Laboral (DPI + 6)
   registrarTabla("tablaLaboral", 7, "/guardar_laboral", [
     "Numero de DPI","Nombre de la Empresa (Ultimo Trabajo)","Direccion de la empresa","Inicio laboral en la empresa","Fin Laboral en la empresa","Motivo del retiro","Nombre del Jefe Imediato"
   ]);
 
-  // Médica (DPI + 7)
   registrarTabla("tablaMedica", 8, "/guardar_medica", [
     "Numero de DPI","Padece alguna enfermedad","Tipo de enfermedad","Recibe tratamiento medico","Nombre del tratamiento","Es alergico a algun medicamento","Nombre del medico Tratante","Tipo de sangre"
   ]);
+
+  // ---------------- Planilla sidebar logic integrated here ----------------
+  const planillaToggle = document.getElementById("planillaToggle");
+  const planillaSidebar = document.getElementById("planillaSidebar");
+  const planillaOverlay = document.getElementById("planillaOverlay");
+  const planillaClose = document.getElementById("planillaClose");
+
+  function openPlanillaSidebar() {
+    if (!planillaSidebar || !planillaOverlay) return;
+    planillaSidebar.classList.add("active");
+    planillaOverlay.classList.add("active");
+    const globalOverlay = document.getElementById('overlay');
+    if (globalOverlay) globalOverlay.style.display = 'none';
+  }
+
+  function closePlanillaSidebar() {
+    if (!planillaSidebar || !planillaOverlay) return;
+    planillaSidebar.classList.remove("active");
+    planillaOverlay.classList.remove("active");
+    const globalOverlay = document.getElementById('overlay');
+    if (globalOverlay) globalOverlay.style.display = '';
+  }
+
+  if (planillaToggle) planillaToggle.addEventListener("click", openPlanillaSidebar);
+  if (planillaClose) planillaClose.addEventListener("click", closePlanillaSidebar);
+  if (planillaOverlay) planillaOverlay.addEventListener("click", closePlanillaSidebar);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      if (planillaSidebar && planillaSidebar.classList.contains("active")) closePlanillaSidebar();
+      // keep existing behavior for global sidebar if present
+      const sidebar = document.getElementById('sidebarMenu');
+      const overlay = document.getElementById('overlay');
+      if (sidebar && overlay && sidebar.classList.contains('active')) {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+      }
+    }
+  });
 });
