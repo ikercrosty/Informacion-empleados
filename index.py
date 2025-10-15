@@ -1,9 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response, jsonify, Response
 import os
 import pymysql
 from urllib.parse import urlparse
 from werkzeug.utils import secure_filename
 from datetime import datetime
+from io import BytesIO
+from PIL import Image  # requiere pillow
 
 app = Flask(__name__)
 app.secret_key = "clave-secreta"
@@ -50,7 +52,7 @@ def requerir_login():
         "login", "static", "db_test",
         "guardar_empleado", "guardar_academico", "guardar_conyugue",
         "guardar_emergencia", "guardar_laboral", "guardar_medica",
-        "api_foto", "subir_foto", "eliminar_foto"
+        "api_foto", "subir_foto", "eliminar_foto", "foto"
     }
     endpoint = request.endpoint or ""
     if ("usuario" not in session) and (endpoint.split(".")[0] not in rutas_publicas):
@@ -583,12 +585,13 @@ def guardar_medica():
     except Exception as e:
         return jsonify({"mensaje": f"Error: {e}"}), 500
 
-# ---------------- Fotos: API, subida y eliminación ----------------
+# ---------------- Fotos: API, subida y eliminación (BLOB compatible) ----------------
 @app.route("/api/foto/<dpi>")
 def api_foto(dpi):
     """
-    Devuelve: {"foto": filename or None, "url": url or None}
-    Si el archivo no existe en disk limpiamos la referencia en BD para evitar imágenes rotas.
+    Devuelve: {"foto": True/False, "url": url or None}
+    Si el registro en BD contiene un nombre de archivo (compatibilidad antigua) se verifica su existencia en disk.
+    Si contiene bytes (BLOB) la URL será la ruta /foto/<dpi> para consumir el BLOB.
     """
     try:
         conn = get_db_connection()
@@ -598,34 +601,88 @@ def api_foto(dpi):
         cursor.close()
         conn.close()
 
-        if not row or not row.get("foto"):
+        if not row or row.get("foto") is None:
             return jsonify({"foto": None, "url": None})
 
-        filename = row["foto"]
-        filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-        if os.path.exists(filepath):
-            url = url_for('static', filename=f"fotos/{filename}")
-            return jsonify({"foto": filename, "url": url})
-        else:
-            # Archivo referido no existe en disco: limpiar referencia en BD
-            try:
-                conn = get_db_connection()
-                cursor = conn.cursor()
-                cursor.execute("UPDATE empleados_info SET `foto`=NULL WHERE `Numero de DPI`=%s", (dpi,))
-                conn.commit()
-                cursor.close()
-                conn.close()
-            except Exception:
-                pass
-            return jsonify({"foto": None, "url": None})
+        foto_value = row["foto"]
+
+        # Si la columna es bytes -> es BLOB
+        if isinstance(foto_value, (bytes, bytearray)):
+            return jsonify({"foto": True, "url": url_for("foto", dpi=dpi)})
+        # Si es string asumimos nombre de archivo (compatibilidad antigua)
+        if isinstance(foto_value, str) and foto_value.strip() != "":
+            filepath = os.path.join(app.config["UPLOAD_FOLDER"], foto_value)
+            if os.path.exists(filepath):
+                return jsonify({"foto": foto_value, "url": url_for('static', filename=f"fotos/{foto_value}")})
+            else:
+                # archivo referido no existe en disco -> limpiar referencia en BD
+                try:
+                    conn = get_db_connection()
+                    cursor = conn.cursor()
+                    cursor.execute("UPDATE empleados_info SET `foto`=NULL WHERE `Numero de DPI`=%s", (dpi,))
+                    conn.commit()
+                    cursor.close()
+                    conn.close()
+                except Exception:
+                    pass
+                return jsonify({"foto": None, "url": None})
+        # Por defecto, no hay foto válida
+        return jsonify({"foto": None, "url": None})
     except Exception as e:
         return jsonify({"foto": None, "url": None, "error": str(e)}), 500
+
+@app.route("/foto/<dpi>")
+def foto(dpi):
+    """
+    Sirve la imagen desde la columna BLOB (si existe) con mimetype image/jpeg.
+    Si la columna contiene un nombre de archivo antiguo, sirve desde static/fotos/<filename>.
+    Si no existe, sirve imagen por defecto.
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT `foto` FROM empleados_info WHERE `Numero de DPI`=%s", (dpi,))
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if not row or row.get("foto") is None:
+            return redirect(url_for("static", filename="imagenes/default.png"))
+
+        foto_value = row["foto"]
+
+        # BLOB bytes -> devolver directamente
+        if isinstance(foto_value, (bytes, bytearray)):
+            return Response(foto_value, mimetype="image/jpeg")
+
+        # Si es string suponemos archivo en disco (compatibilidad hacia atrás)
+        if isinstance(foto_value, str) and foto_value.strip() != "":
+            filepath = os.path.join(app.config["UPLOAD_FOLDER"], foto_value)
+            if os.path.exists(filepath):
+                return redirect(url_for('static', filename=f"fotos/{foto_value}"))
+            else:
+                # limpiar referencia en BD (no crítico)
+                try:
+                    conn = get_db_connection()
+                    cursor = conn.cursor()
+                    cursor.execute("UPDATE empleados_info SET `foto`=NULL WHERE `Numero de DPI`=%s", (dpi,))
+                    conn.commit()
+                    cursor.close()
+                    conn.close()
+                except Exception:
+                    pass
+                return redirect(url_for("static", filename="imagenes/default.png"))
+
+        return redirect(url_for("static", filename="imagenes/default.png"))
+    except Exception:
+        return redirect(url_for("static", filename="imagenes/default.png"))
 
 @app.route("/subir_foto", methods=["POST"])
 def subir_foto():
     """
-    Sube la foto para el DPI proporcionado (enviado por formulario).
-    Guarda con nombre único: DPI_timestamp.ext, limpia versiones antiguas y actualiza la BD.
+    Recibe el archivo del formulario, procesa con Pillow (normaliza a JPEG),
+    guarda los bytes en la columna foto (BLOB), y borra referencias antiguas en disco si existían.
+    Mantiene compatibilidad con tu flujo anterior y evita imágenes rotas.
     """
     dpi = request.form.get("dpi")
     if not dpi:
@@ -652,9 +709,24 @@ def subir_foto():
     save_path = os.path.join(app.config["UPLOAD_FOLDER"], final_name)
 
     try:
-        file.save(save_path)
+        # Normalizar y convertir a JPEG bytes con Pillow
+        image = Image.open(file.stream)
+        if image.mode in ("RGBA", "P", "LA"):
+            image = image.convert("RGB")
+        buffer = BytesIO()
+        image.save(buffer, format="JPEG", quality=85, optimize=True)
+        img_bytes = buffer.getvalue()
 
-        # eliminar versiones antiguas del mismo DPI
+        # Intento de guardar también en disco (para compatibilidad y fallback). Si prefieres solo BLOB,
+        # comenta la linea file.disk_save o file.save y la eliminación asociada.
+        try:
+            # Guardar copia en disco para compatibilidad con versiones previas
+            with open(save_path, "wb") as f:
+                f.write(img_bytes)
+        except Exception:
+            pass
+
+        # eliminar versiones antiguas del mismo DPI en disco
         try:
             for f in os.listdir(app.config["UPLOAD_FOLDER"]):
                 if f.startswith(f"{dpi}_") and f != final_name:
@@ -665,24 +737,43 @@ def subir_foto():
         except Exception:
             pass
 
-        # actualizar BD
+        # Antes de escribir BLOB, si en BD existía un nombre de archivo antiguo, intentar eliminarlo del disco
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT `foto` FROM empleados_info WHERE `Numero de DPI`=%s", (dpi,))
+            prev = cursor.fetchone()
+            if prev and isinstance(prev.get("foto"), str) and prev.get("foto").strip() != "":
+                old_name = prev.get("foto")
+                old_path = os.path.join(app.config["UPLOAD_FOLDER"], old_name)
+                if os.path.exists(old_path):
+                    try:
+                        os.remove(old_path)
+                    except Exception:
+                        pass
+            cursor.close()
+            conn.close()
+        except Exception:
+            pass
+
+        # Guardar BLOB en BD (campo foto)
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("UPDATE empleados_info SET `foto`=%s WHERE `Numero de DPI`=%s", (final_name, dpi))
+        cursor.execute("UPDATE empleados_info SET `foto`=%s WHERE `Numero de DPI`=%s", (img_bytes, dpi))
         conn.commit()
         cursor.close()
         conn.close()
 
-        flash("Foto subida correctamente", "success")
+        flash("Foto guardada correctamente", "success")
     except Exception as e:
-        flash(f"Error al guardar foto: {e}", "danger")
+        flash(f"Error al procesar/guardar la foto: {e}", "danger")
 
     return redirect(url_for("home"))
 
 @app.route("/eliminar_foto", methods=["POST"])
 def eliminar_foto():
     """
-    Elimina la foto registrada (archivo y referencia en BD) para el DPI indicado (formulario).
+    Elimina la foto: limpia la columna foto (sea BLOB o nombre de archivo) y elimina el fichero antiguo si aplica.
     """
     dpi = request.form.get("dpi")
     if not dpi:
@@ -696,13 +787,16 @@ def eliminar_foto():
         row = cursor.fetchone()
 
         if row and row.get("foto"):
-            filename = row["foto"]
-            filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-            if os.path.exists(filepath):
-                try:
-                    os.remove(filepath)
-                except Exception:
-                    pass
+            val = row.get("foto")
+            # si era nombre de archivo, eliminar fichero
+            if isinstance(val, str) and val.strip() != "":
+                filepath = os.path.join(app.config["UPLOAD_FOLDER"], val)
+                if os.path.exists(filepath):
+                    try:
+                        os.remove(filepath)
+                    except Exception:
+                        pass
+            # limpiar columna (NULL)
             cursor.execute("UPDATE empleados_info SET `foto`=NULL WHERE `Numero de DPI`=%s", (dpi,))
             conn.commit()
             flash("Foto eliminada", "success")
