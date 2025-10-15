@@ -16,6 +16,35 @@
 
   <!-- CUSTOM CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+  <!-- Ajustes específicos para el layout (tamaño del título y separación) -->
+  <style>
+    .brand-title {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: #FFFFFF;
+      text-decoration: none;
+    }
+    .navbar-left-links {
+      margin-left: 1.75rem; /* separación considerable desde Empaquetex */
+      display: flex;
+      gap: 1.25rem;
+      align-items: center;
+    }
+    .navbar-left-links .nav-link {
+      color: #FFFFFF;
+      padding: 0.25rem 0.5rem;
+    }
+    .navbar-left-links .nav-link i { margin-right: 6px; }
+    /* Asegurar que el logo y título actúen como un solo control clickable */
+    .brand-link { display: inline-flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+    .brand-link img { height: 64px; width: 64px; object-fit: cover; border-radius: 6px; }
+    @media (max-width: 576px) {
+      .brand-title { font-size: 1.15rem; }
+      .navbar-left-links { margin-left: 0.75rem; gap: 0.6rem; }
+      .brand-link img { height: 50px; width: 50px; }
+    }
+  </style>
 </head>
 
 <body>
@@ -29,28 +58,24 @@
     </a>
     {% endif %}
 
-    <!-- Logo + Nombre -->
-    <a class="navbar-brand d-flex align-items-center" href="{{ url_for('home') }}">
-      <img src="{{ url_for('static', filename='imagenes/logo.png') }}" alt="Empaquetex" class="logo-navbar mr-2">
-      <span class="text-white font-weight-bold">Empaquetex</span>
+    <!-- Logo + Nombre (ahora enlazan a planilla) -->
+    <a class="brand-link" href="{{ url_for('planilla') }}" aria-label="Ir a Planilla">
+      <img src="{{ url_for('static', filename='imagenes/logo.png') }}" alt="Empaquetex" class="logo-navbar">
+      <span class="brand-title">Empaquetex</span>
     </a>
+
+    <!-- En /planilla mostrar las opciones directamente a la izquierda con separación -->
+    {% if 'usuario' in session and request.path == '/planilla' %}
+      <div class="navbar-left-links">
+        <a class="nav-link" href="{{ url_for('planilla') }}"><i class="fas fa-list"></i>Planilla</a>
+        <a class="nav-link" href="#"><i class="fas fa-file-invoice-dollar"></i>Recibo del pago</a>
+        <a class="nav-link" href="#"><i class="fas fa-id-badge"></i>Ficha de empleados</a>
+      </div>
+    {% endif %}
   </div>
 
   {% if 'usuario' in session %}
-    {% if request.path == '/planilla' %}
-      <!-- En /planilla mostramos opciones directamente en el navbar (NO hamburguesa) -->
-      <div class="d-flex align-items-center">
-        <a class="nav-link text-white mr-3" href="{{ url_for('planilla') }}">
-          <i class="fas fa-list mr-1"></i> Planilla
-        </a>
-        <a class="nav-link text-white mr-3" href="#">
-          <i class="fas fa-file-invoice-dollar mr-1"></i> Recibo del pago
-        </a>
-        <a class="nav-link text-white mr-3" href="#">
-          <i class="fas fa-id-badge mr-1"></i> Ficha de empleados
-        </a>
-      </div>
-    {% else %}
+    {% if request.path != '/planilla' %}
       <!-- En las demás páginas (información del empleado) mostramos la hamburguesa que abre el sidebar -->
       <button class="navbar-toggler" type="button" id="menuToggle" aria-label="Abrir menú">
         <span class="navbar-toggler-icon"></span>
@@ -67,7 +92,7 @@
 <div id="sidebarMenu" class="sidebar bg-dark" aria-hidden="true">
   <ul class="navbar-nav">
     {% if request.path == '/planilla' %}
-      <!-- Si por alguna razón se abre el panel en /planilla, mantenemos Logout -->
+      <!-- Si se abre el panel en /planilla, mantenemos Logout -->
       <li class="nav-item">
         <a class="nav-link text-white border-bottom" href="{{ url_for('logout') }}">
           <i class="fas fa-sign-out-alt"></i> Salir
