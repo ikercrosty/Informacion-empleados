@@ -2,50 +2,65 @@
 {% block title %}Planilla{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-center align-items-center" style="min-height:70vh;">
-  <div class="text-center">
-    <h1 class="mb-2">Bienvenido a Planilla</h1>
-    <p class="lead mb-4">Hola, {{ usuario }}. Usa el botón para abrir el menú y acceder a las secciones de empleados.</p>
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h3 mb-0">Planilla</h1>
+    <small class="text-muted">Panel de acceso rápido</small>
+  </div>
 
-    <div class="d-flex flex-column align-items-center">
-      <button id="btnAbrirMenu" class="btn btn-lg btn-primary mb-3">
-        <i class="fas fa-bars mr-2"></i> Abrir Menú
-      </button>
+  <!-- Botón hamburguesa de Planilla -->
+  <div>
+    <button id="planillaToggle" class="btn btn-outline-primary">
+      <i class="fas fa-bars"></i> Menú Planilla
+    </button>
+  </div>
+</div>
 
-      <div>
-        <a href="{{ url_for('home') }}" class="btn btn-outline-primary mr-2">Ir a Datos Personales</a>
-        <a href="{{ url_for('about') }}" class="btn btn-outline-secondary mr-2">Información Académica</a>
-        <a href="{{ url_for('conyugue') }}" class="btn btn-outline-secondary">Datos del Cónyuge</a>
-      </div>
+<div class="card mb-4">
+  <div class="card-body">
+    <p class="lead mb-2">Hola, <strong>{{ usuario }}</strong>. Desde aquí puedes abrir el menú de Planilla.</p>
 
-      <div class="mt-4">
-        <a href="{{ url_for('logout') }}" class="btn btn-danger">Cerrar sesión</a>
-      </div>
+    <div class="d-flex flex-wrap">
+      <a href="{{ url_for('home') }}" class="btn btn-outline-primary mr-2 mb-2">Datos Personales</a>
+      <a href="{{ url_for('about') }}" class="btn btn-outline-secondary mr-2 mb-2">Información Académica</a>
+      <a href="{{ url_for('conyugue') }}" class="btn btn-outline-secondary mr-2 mb-2">Datos del Cónyuge</a>
+      <a href="{{ url_for('emergencia') }}" class="btn btn-outline-secondary mr-2 mb-2">Contacto de Emergencia</a>
     </div>
   </div>
 </div>
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const btn = document.getElementById("btnAbrirMenu");
-  btn && btn.addEventListener("click", () => {
-    const menuToggle = document.getElementById('menuToggle');
-    const overlay = document.getElementById('overlay');
-    const sidebar = document.getElementById('sidebarMenu');
+<!-- Planilla overlay y sidebar (contenido reducido: solo Logout) -->
+<div id="planillaOverlay" aria-hidden="true"></div>
 
-    if (menuToggle) {
-      menuToggle.click();
-      return;
-    }
+<nav id="planillaSidebar" aria-label="Planilla Sidebar">
+  <div class="px-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="d-flex align-items-center">
+        <img src="{{ url_for('static', filename='imagenes/logo.png') }}" alt="logo" style="height:36px;" class="mr-2">
+        <strong>Planilla</strong>
+      </div>
+      <button id="planillaClose" class="planilla-toggle text-white" title="Cerrar">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
 
-    if (sidebar && overlay) {
-      sidebar.classList.add('active');
-      overlay.classList.add('active');
-    } else {
-      // Fallback: ir directamente a Datos Personales
-      window.location.href = "{{ url_for('home') }}";
-    }
-  });
-});
-</script>
+    <ul class="nav flex-column">
+      <!-- Solo opción de Logout -->
+      <li class="nav-item mt-3">
+        <a class="nav-link" href="{{ url_for('logout') }}">
+          <i class="fas fa-sign-out-alt mr-2"></i> Cerrar sesión
+        </a>
+      </li>
+    </ul>
+
+    <hr class="bg-secondary">
+
+    <div class="mt-4 px-2 text-muted small">
+      <div>Versión: 1.0</div>
+      <div>Usuario: {{ usuario }}</div>
+    </div>
+  </div>
+</nav>
+
+<script src="{{ url_for('static', filename='planilla.js') }}"></script>
 {% endblock %}
