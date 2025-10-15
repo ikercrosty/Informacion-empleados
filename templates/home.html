@@ -17,10 +17,10 @@
       <button id="btnCancelar" type="button" class="btn btn-secondary btn-sm mb-2" disabled>Cancelar</button>
     </div>
 
-    <!-- table-responsive proporciona scroll horizontal en pantallas pequeñas -->
+    <!-- scroll horizontal y encabezados compactos -->
     <div class="table-responsive">
       <table id="tablaEmpleados" class="table table-bordered table-striped table-hover table-sm">
-        <thead class="thead-dark">
+        <thead class="thead-dark table-compact">
           <tr>
             <th>DPI</th>
             <th>Nombre</th>
@@ -42,7 +42,6 @@
             <th>Duración del trabajo</th>
             <th>Fecha de inicio laboral</th>
             <th>Dias Laborales</th>
-            <th>Foto (archivo)</th>
           </tr>
         </thead>
         <tbody>
@@ -68,7 +67,6 @@
             <td>{{ e.get('Duración del trabajo') }}</td>
             <td>{{ e.get('Fecha de inicio laboral') }}</td>
             <td>{{ e.get('Dias Laborales') }}</td>
-            <td>{{ e.get('foto') }}</td>
           </tr>
           {% endfor %}
         </tbody>
