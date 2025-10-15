@@ -21,21 +21,81 @@
 <body>
  <!-- NAVBAR -->
 <nav class="navbar navbar-dark bg-dark">
-  <!-- Logo + Nombre -->
   <a class="navbar-brand d-flex align-items-center" href="{{ url_for('home') }}">
-    <img src="{{ url_for('static', filename='imagenes/logo.png') }}" 
-         alt="Empaquetex" 
-         class="logo-navbar mr-2">
+    <img src="{{ url_for('static', filename='imagenes/logo.png') }}" alt="Empaquetex" class="logo-navbar mr-2">
     <span class="text-white font-weight-bold">Empaquetex</span>
   </a>
 
   {% if 'usuario' in session %}
-  <!-- Botón hamburguesa (solo si hay usuario en sesión) -->
+  <!-- Botón hamburguesa global -->
   <button class="navbar-toggler" type="button" id="menuToggle">
     <span class="navbar-toggler-icon"></span>
   </button>
   {% endif %}
 </nav>
+
+{% if 'usuario' in session %}
+<!-- OVERLAY (global) -->
+<div id="overlay" class="overlay"></div>
+
+<!-- PANEL LATERAL GLOBAL: su contenido cambia si estamos en /planilla -->
+<div id="sidebarMenu" class="sidebar bg-dark">
+  <ul class="navbar-nav">
+    {% if request.path == '/planilla' %}
+      <!-- En la página Planilla sólo mostrar Logout -->
+      <li class="nav-item">
+        <a class="nav-link text-white border-bottom" href="{{ url_for('logout') }}">
+          <i class="fas fa-sign-out-alt"></i> Salir
+        </a>
+      </li>
+    {% else %}
+      <!-- En cualquier otra página mostrar el menú completo -->
+      <li class="nav-item {% if request.path == '/' %}active{% endif %}">
+        <a class="nav-link text-white border-bottom" href="{{ url_for('home') }}">
+          <i class="fas fa-id-card"></i> Datos Personales
+        </a>
+      </li>
+
+      <li class="nav-item {% if request.path == '/about' %}active{% endif %}">
+        <a class="nav-link text-white border-bottom" href="{{ url_for('about') }}">
+          <i class="fas fa-graduation-cap"></i> Información Académica
+        </a>
+      </li>
+
+      <li class="nav-item {% if request.path == '/conyugue' %}active{% endif %}">
+        <a class="nav-link text-white border-bottom" href="{{ url_for('conyugue') }}">
+          <i class="fas fa-user-friends"></i> Datos del Cónyuge
+        </a>
+      </li>
+
+      <li class="nav-item {% if request.path == '/emergencia' %}active{% endif %}">
+        <a class="nav-link text-white border-bottom" href="{{ url_for('emergencia') }}">
+          <i class="fas fa-phone-alt"></i> Contacto de Emergencia
+        </a>
+      </li>
+
+      <li class="nav-item {% if request.path == '/laboral' %}active{% endif %}">
+        <a class="nav-link text-white border-bottom" href="{{ url_for('laboral') }}">
+          <i class="fas fa-briefcase"></i> Referencias Laborales
+        </a>
+      </li>
+
+      <li class="nav-item {% if request.path == '/medica' %}active{% endif %}">
+        <a class="nav-link text-white border-bottom" href="{{ url_for('medica') }}">
+          <i class="fas fa-notes-medical"></i> Referencias Médicas
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link text-white border-bottom" href="{{ url_for('logout') }}">
+          <i class="fas fa-sign-out-alt"></i> Salir
+        </a>
+      </li>
+    {% endif %}
+  </ul>
+</div>
+{% endif %}
+
 
 {% if 'usuario' in session %}
 <!-- OVERLAY (fondo oscuro al abrir el panel) -->

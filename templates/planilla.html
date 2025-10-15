@@ -2,65 +2,34 @@
 {% block title %}Planilla{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <div>
-    <h1 class="h3 mb-0">Planilla</h1>
-    <small class="text-muted">Panel de acceso rápido</small>
-  </div>
+<div class="d-flex justify-content-center align-items-center" style="min-height:70vh;">
+  <div class="text-center">
+    <h1 class="mb-3">Bienvenido a Planilla</h1>
+    <p class="lead mb-4">Hola, {{ usuario }}. Usa el botón para ver la información de empleados.</p>
 
-  <!-- Botón hamburguesa de Planilla -->
-  <div>
-    <button id="planillaToggle" class="btn btn-outline-primary">
-      <i class="fas fa-bars"></i> Menú Planilla
-    </button>
-  </div>
-</div>
+    <a href="{{ url_for('home') }}" id="btnAbrirInfo" class="btn btn-naranja btn-lg" role="button" style="padding:14px 24px; border-radius:10px;">
+      Abrir Información empleados
+    </a>
 
-<div class="card mb-4">
-  <div class="card-body">
-    <p class="lead mb-2">Hola, <strong>{{ usuario }}</strong>. Desde aquí puedes abrir el menú de Planilla.</p>
-
-    <div class="d-flex flex-wrap">
-      <a href="{{ url_for('home') }}" class="btn btn-outline-primary mr-2 mb-2">Datos Personales</a>
-      <a href="{{ url_for('about') }}" class="btn btn-outline-secondary mr-2 mb-2">Información Académica</a>
-      <a href="{{ url_for('conyugue') }}" class="btn btn-outline-secondary mr-2 mb-2">Datos del Cónyuge</a>
-      <a href="{{ url_for('emergencia') }}" class="btn btn-outline-secondary mr-2 mb-2">Contacto de Emergencia</a>
+    <div class="mt-4">
+      <a href="{{ url_for('logout') }}" class="btn btn-outline-secondary">Cerrar sesión</a>
     </div>
   </div>
 </div>
 
-<!-- Planilla overlay y sidebar (contenido reducido: solo Logout) -->
-<div id="planillaOverlay" aria-hidden="true"></div>
-
-<nav id="planillaSidebar" aria-label="Planilla Sidebar">
-  <div class="px-3">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <div class="d-flex align-items-center">
-        <img src="{{ url_for('static', filename='imagenes/logo.png') }}" alt="logo" style="height:36px;" class="mr-2">
-        <strong>Planilla</strong>
-      </div>
-      <button id="planillaClose" class="planilla-toggle text-white" title="Cerrar">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-
-    <ul class="nav flex-column">
-      <!-- Solo opción de Logout -->
-      <li class="nav-item mt-3">
-        <a class="nav-link" href="{{ url_for('logout') }}">
-          <i class="fas fa-sign-out-alt mr-2"></i> Cerrar sesión
-        </a>
-      </li>
-    </ul>
-
-    <hr class="bg-secondary">
-
-    <div class="mt-4 px-2 text-muted small">
-      <div>Versión: 1.0</div>
-      <div>Usuario: {{ usuario }}</div>
-    </div>
-  </div>
-</nav>
-
-<script src="{{ url_for('static', filename='planilla.js') }}"></script>
+<style>
+/* botón naranja local: override pequeño para garantizar hover */
+.btn-naranja {
+  background: #F56217;
+  border-color: #F56217;
+  color: #fff;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.btn-naranja:hover {
+  background: #d94e12;
+  border-color: #d94e12;
+  text-decoration: none;
+}
+</style>
 {% endblock %}
