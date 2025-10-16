@@ -170,6 +170,19 @@ def medica():
     conn.close()
     return render_template("medica.html", empleados=empleados, usuario=session.get("usuario"))
 
+@app.route("/ficha")
+def ficha():
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+    return render_template("ficha.html", usuario=session.get("usuario"))
+
+@app.route("/recibo")
+def recibo():
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+    return render_template("recibo.html", usuario=session.get("usuario"))
+
+
 # ---------------- Login ----------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -229,7 +242,7 @@ def logout():
 def planilla():
     if "usuario" not in session:
         return redirect(url_for("login"))
-    return render_template("planilla.html", usuario=session.get("usuario"))
+    return render_template("planilla.html", usuario=session.get("usuario"))    
 
 @app.route("/db-test")
 def db_test():
