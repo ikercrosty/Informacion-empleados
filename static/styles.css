@@ -244,11 +244,19 @@ body {
 #formEliminarFoto {
   margin-top: 12px;
 }
+/* Jumbotron mejorado */
+.jumbotron-welcome {
+  background: linear-gradient(180deg, #f7fbff 0%, #ffffff 60%);
+  border-bottom: 1px solid rgba(20,40,60,0.04);
+  padding: 3rem 1rem;
+  box-shadow: 0 6px 18px rgba(9,30,66,0.03);
+}
+
 /* Área de botones centrada bajo el jumbotron */
 .welcome-actions {
-  min-height: calc(100vh - 220px);
+  min-height: calc(100vh - 260px);
   padding: 2.25rem 0;
-  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,250,252,0.98));
+  background: linear-gradient(180deg, rgba(250,250,252,0.8), rgba(255,255,255,0.95));
 }
 
 /* Contenedor interior */
@@ -259,15 +267,15 @@ body {
 
 /* Tarjeta de acción */
 .action-card {
-  background: #fff;
+  background: linear-gradient(180deg, #ffffff, #fbfdff);
   border-radius: 10px;
   padding: 1.5rem;
-  border: 1px solid #eef0f2;
+  border: 1px solid #eef3f7;
   transition: transform .18s ease, box-shadow .18s ease;
 }
 
-/* Icon wrapper */
-.action-card .icon-wrap {
+/* Icon wrapper genérico */
+.icon-wrap {
   width: 76px;
   height: 76px;
   margin: 0 auto;
@@ -275,48 +283,74 @@ body {
   align-items:center;
   justify-content:center;
   border-radius:50%;
-  background: linear-gradient(135deg, rgba(0,123,255,0.08), rgba(255,122,0,0.06));
-  color: #2b6fb3;
+  color: #fff;
 }
 
-/* Hover effect */
+/* Icono Planillas: color y fondo */
+.icon-clipboard {
+  background: linear-gradient(135deg, #ffb74d, #ff9800);
+  color: #3a2a00;
+}
+
+/* Icono Empleados: color y fondo */
+.icon-id {
+  background: linear-gradient(135deg, #4f9ef8, #2b6fb3);
+  color: #fff;
+}
+
+/* Hover effect para tarjetas */
 .action-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 30px rgba(18,38,63,0.08);
+  transform: translateY(-8px);
+  box-shadow: 0 18px 40px rgba(18,38,63,0.08);
 }
 
-/* Titles and descriptions */
+/* Titulos y descripciones */
 .action-card h5 {
-  color: #2c3e50;
+  color: #22303f;
   font-weight: 600;
 }
 .action-card p {
   font-size: .95rem;
+  color: #55606a;
 }
 
-/* Buttons */
+/* Botones: ancho, colores y hover */
+.action-btn {
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+/* Planillas: estilo naranja suave */
 .btn-outline-warning {
   color: #7a4f00;
-  background: linear-gradient(90deg, #fff8ef, #fff4e6);
+  background: linear-gradient(90deg, #fff8ef, #fff6e8);
   border: 1px solid rgba(122,79,0,0.12);
 }
 .btn-outline-warning:hover {
   background: linear-gradient(90deg,#ffd27a,#ffb347);
   color: #fff;
+  box-shadow: 0 8px 20px rgba(255,138,0,0.12);
+  transform: translateY(-2px);
 }
-.btn-primary {
-  background: linear-gradient(90deg,#007bff,#0069d9);
+
+/* Empleados: botón azul con hover visible */
+.action-btn-blue {
+  background: linear-gradient(90deg,#1e88e5,#1565c0);
   border: 0;
+  color: #fff;
+  transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
 }
-.btn-primary:hover {
-  filter: brightness(.95);
+.action-btn-blue:hover, .action-btn-blue:focus {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(21,101,192,0.18);
+  filter: brightness(.98);
 }
 
 /* Responsive spacing */
 @media (max-width: 991px) {
-  .welcome-actions { padding: 1.5rem 0; }
+  .welcome-actions { padding: 1.25rem 0; }
   .action-card { margin-bottom: 1rem; }
 }
 
 
-/* End of styles.css */
+/* --------- Fin -----*/ 
