@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from io import BytesIO
-from PIL import Image  # requiere pillow
+from PIL import Image  
 
 app = Flask(__name__)
 app.secret_key = "clave-secreta"
@@ -69,6 +69,7 @@ def no_cache(response):
     return response
 
 # ---------------- Páginas principales ----------------
+#
 @app.route("/")
 def home():
     conn = get_db_connection()
