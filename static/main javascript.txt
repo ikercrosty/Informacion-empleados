@@ -61,35 +61,29 @@ document.addEventListener("DOMContentLoaded", () => {
         const foto = document.getElementById("fotoEmpleado");
         const formSubir = document.getElementById("formSubirFoto");
         const formEliminar = document.getElementById("formEliminarFoto");
-        const inputDpiUpload = document.getElementById("inputDpiForUpload");
-        const inputDpiDelete = document.getElementById("inputDpiForDelete");
+        if (!foto || !formSubir || !formEliminar) return;
 
-        if (!foto || !formSubir || !formEliminar || !inputDpiUpload || !inputDpiDelete) return;
-
-        // Siempre usar la ruta fija; poner DPI en inputs ocultos
-        inputDpiUpload.value = dpi;
-        inputDpiDelete.value = dpi;
         formSubir.style.display = "none";
         formEliminar.style.display = "none";
 
-        // Petición a la API para saber si existe foto
-        fetch(`/api/foto/${encodeURIComponent(dpi)}`, { cache: "no-store" })
+        fetch(`/api/foto/${encodeURIComponent(dpi)}`)
           .then(res => res.json())
           .then(data => {
             if (data && data.foto) {
-              // usamos la URL que devolvió la API si viene url, si no construimos con static
-              const url = data.url ? data.url : `/static/fotos/${data.foto}`;
-              foto.src = `${url}?t=${Date.now()}`;
+              foto.src = `/static/fotos/${data.foto}`;
+              formEliminar.action = `/eliminar_foto/${encodeURIComponent(dpi)}`;
               formEliminar.style.display = "block";
               formSubir.style.display = "none";
             } else {
               foto.src = "/static/imagenes/default.png";
+              formSubir.action = `/subir_foto/${encodeURIComponent(dpi)}`;
               formSubir.style.display = "block";
               formEliminar.style.display = "none";
             }
           })
           .catch(() => {
             foto.src = "/static/imagenes/default.png";
+            formSubir.action = `/subir_foto/${encodeURIComponent(dpi)}`;
             formSubir.style.display = "block";
             formEliminar.style.display = "none";
           });
@@ -286,113 +280,6 @@ document.addEventListener("DOMContentLoaded", () => {
     "Numero de DPI","Padece alguna enfermedad","Tipo de enfermedad","Recibe tratamiento medico","Nombre del tratamiento","Es alergico a algun medicamento","Nombre del medico Tratante","Tipo de sangre"
   ]);
 
-  // ---------------- Foto: manejar subida y eliminación por AJAX ----------------
-  // Elementos del DOM (pueden no existir en otras páginas)
-  const formSubir = document.getElementById("formSubirFoto");
-  const formEliminar = document.getElementById("formEliminarFoto");
-  const fileFoto = document.getElementById("fileFoto");
-  const fotoEmpleado = document.getElementById("fotoEmpleado");
-  const inputDpiUpload = document.getElementById("inputDpiForUpload");
-  const inputDpiDelete = document.getElementById("inputDpiForDelete");
-  const DEFAULT_SRC = "/static/imagenes/default.png";
-
-  // Manejo AJAX de subida (si existe el form)
-  if (formSubir) {
-    // Asegura que el action apunte a la ruta fija
-    formSubir.action = "/subir_foto";
-    formSubir.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const dpi = inputDpiUpload ? inputDpiUpload.value.trim() : "";
-      if (!dpi) {
-        alert("Selecciona una fila primero.");
-        return;
-      }
-      const file = fileFoto ? fileFoto.files[0] : null;
-      if (!file) {
-        alert("Selecciona un archivo.");
-        return;
-      }
-
-      const fd = new FormData();
-      fd.append("dpi", dpi);
-      fd.append("foto", file);
-
-      try {
-        const res = await fetch("/subir_foto", {
-          method: "POST",
-          body: fd,
-          credentials: "same-origin"
-        });
-
-        if (!res.ok && res.status !== 302) {
-          const text = await res.text().catch(()=>"");
-          alert("Error al subir: " + res.status + " " + text);
-          return;
-        }
-
-        // Actualizar vista de la foto desde /api/foto/<dpi>
-        const api = await fetch(`/api/foto/${encodeURIComponent(dpi)}?t=${Date.now()}`, { cache: "no-store" });
-        const j = await api.json();
-        if (j && j.url) {
-          fotoEmpleado.src = `${j.url}?t=${Date.now()}`;
-        } else if (j && j.foto) {
-          fotoEmpleado.src = `/static/fotos/${j.foto}?t=${Date.now()}`;
-        } else {
-          fotoEmpleado.src = DEFAULT_SRC;
-        }
-
-        if (fileFoto) fileFoto.value = "";
-        formSubir.style.display = "none";
-        formEliminar.style.display = "block";
-        alert("Foto subida correctamente");
-      } catch (err) {
-        console.error("Error subir foto:", err);
-        alert("Error en la subida. Revisa la consola y la terminal del servidor.");
-      }
-    });
-  }
-
-  // Manejo AJAX de eliminación
-  if (formEliminar) {
-    // dejar action fija
-    formEliminar.action = "/eliminar_foto";
-    formEliminar.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const dpi = inputDpiDelete ? inputDpiDelete.value.trim() : "";
-      if (!dpi) {
-        alert("Selecciona una fila primero.");
-        return;
-      }
-
-      const fd = new FormData();
-      fd.append("dpi", dpi);
-
-      try {
-        const res = await fetch("/eliminar_foto", {
-          method: "POST",
-          body: fd,
-          credentials: "same-origin"
-        });
-
-        if (!res.ok && res.status !== 302) {
-          const text = await res.text().catch(()=>"");
-          alert("Error al eliminar: " + res.status + " " + text);
-          return;
-        }
-
-        // Actualizar panel
-        fotoEmpleado.src = DEFAULT_SRC;
-        formEliminar.style.display = "none";
-        formSubir.style.display = "block";
-        if (fileFoto) fileFoto.value = "";
-        alert("Foto eliminada");
-      } catch (err) {
-        console.error("Error eliminar foto:", err);
-        alert("Error al eliminar la foto. Revisa la consola del servidor.");
-      }
-    });
-  }
-
   // ---------------- Comportamiento del sidebar global (menuToggle / overlay) ----------------
   const menuToggle = document.getElementById('menuToggle');
   const sidebar = document.getElementById('sidebarMenu');
@@ -426,6 +313,7 @@ document.addEventListener("DOMContentLoaded", () => {
     abrirInfoBtn.addEventListener('click', () => {
       // No previene navegación; si quieres abrir sidebar automáticamente al llegar a home,
       // puedes agregar un query string ?open=1 al enlace y aquí gestionar su lectura en home.
+      // Ejemplo: href="{{ url_for('home') }}?open=1" y en home template leer window.location.search
     });
   }
 

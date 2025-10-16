@@ -7,6 +7,8 @@
   <p class="lead">Datos personales del empleado</p>
 </div>
 
+
+
 <div class="row">
   <!-- Tabla y botones (izquierda) -->
   <div class="col-md-8">
@@ -68,46 +70,46 @@
             <td>{{ e.get('Dias Laborales') }}</td>
           </tr>
           {% endfor %}
+          ...
+<!-- HTML del final de la página -->
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
+
         </tbody>
       </table>
     </div>
   </div>
 
   <!-- Panel de imagen (derecha) -->
-  <div class="col-md-4">
-    <div class="card p-3">
-      <h5 class="mb-3">Datos personales del empleado</h5>
+  <!-- Panel de foto: coloca ESTE bloque donde quieras mostrar la imagen y controles -->
+<div class="text-center mb-3">
+  <img id="fotoEmpleado"
+       src="{{ url_for('static', filename='imagenes/default.png') }}"
+       alt="Foto empleado"
+       class="img-fluid rounded"
+       style="width:220px;height:220px;object-fit:cover;border:1px solid #ddd;">
+</div>
 
-      <div class="text-center mb-3">
-        <img id="fotoEmpleado"
-             src="{{ url_for('static', filename='imagenes/default.png') }}"
-             alt="Foto empleado"
-             class="img-fluid rounded-circle"
-             style="width:160px;height:160px;object-fit:cover;">
-      </div>
+<!-- Formulario para subir foto (AJAX manejado por main.js) -->
+<form id="formSubirFoto" method="post" enctype="multipart/form-data" action="/subir_foto" style="display:none;">
+  <input type="hidden" name="dpi" id="inputDpiForUpload" value="">
+  <div class="form-group">
+    <input id="fileFoto" name="foto" type="file" accept="image/*" class="form-control-file" required>
+  </div>
+  <button id="btnSubirFoto" type="submit" class="btn btn-primary btn-block">Subir foto</button>
+</form>
 
-      <!-- Upload controls (ocultos por defecto) -->
-      <div id="uploadControls" style="display:none;">
-        <form id="formSubirFoto" method="post" action="{{ url_for('subir_foto') }}" enctype="multipart/form-data">
-          <input type="hidden" name="dpi" id="inputDpiForUpload" value="">
-          <div class="form-group">
-            <input id="fileFoto" name="foto" type="file" accept="image/*" class="form-control-file">
-          </div>
-          <button id="btnSubirFoto" type="submit" class="btn btn-primary btn-block">Subir Foto</button>
-        </form>
-      </div>
+<!-- Formulario para eliminar foto (AJAX manejado por main.js) -->
+<form id="formEliminarFoto" method="post" action="/eliminar_foto" style="display:none;">
+  <input type="hidden" name="dpi" id="inputDpiForDelete" value="">
+  <button id="btnEliminarFoto" type="submit" class="btn btn-outline-danger btn-block">Eliminar foto</button>
+</form>
 
-      <!-- Delete control (oculto por defecto) -->
-      <div id="deleteControl" style="display:none;">
-        <form id="formEliminarFoto" method="post" action="{{ url_for('eliminar_foto') }}">
-          <input type="hidden" name="dpi" id="inputDpiForDelete" value="">
-          <button id="btnEliminarFoto" type="submit" class="btn btn-outline-danger btn-block">Eliminar Foto</button>
-        </form>
-      </div>
+<small class="text-muted mt-3 d-block">
+  Selecciona una fila de la tabla para gestionar la foto del empleado.
+</small>
 
-      <small class="text-muted mt-3 d-block">
-        Selecciona una fila de la tabla para gestionar la foto del empleado.
-      </small>
     </div>
   </div>
 </div>
@@ -133,10 +135,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (fileFoto) fileFoto.value = "";
   }
 
-  // Estado inicial: no fila seleccionada
+  // Estado inicial
   resetPanelToDefault();
 
-  // Preview local cuando el usuario selecciona archivo para subir
+  // Preview local al seleccionar archivo
   if (fileFoto) {
     fileFoto.addEventListener('change', (e) => {
       const f = e.target.files[0];
@@ -147,48 +149,46 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Manejo de selección de fila
+  // Selección de fila de la tabla
   if (tabla) {
-    tabla.addEventListener('click', (ev) => {
+    tabla.addEventListener('click', async (ev) => {
       const tr = ev.target.closest('tr');
       if (!tr || !tr.cells.length) return;
       const dpi = tr.cells[0].innerText.trim();
       if (!dpi) return;
 
-      // Set hidden inputs DPI
+      // Set DPI ocultos
       inputDpiUpload.value = dpi;
       inputDpiDelete.value = dpi;
 
-      // Llamar API para validar si existe foto y que el archivo realmente exista.
-      // La API retorna { foto: ..., url: ... } y, para BLOBs, url apuntará a /foto/<dpi>.
-      fetch(`/api/foto/${encodeURIComponent(dpi)}`)
-        .then(r => r.json())
-        .then(j => {
-          const url = j && j.url;
-          if (url) {
-            // Añadimos cache-busting para evitar imágenes rotas por cached 404
-            fotoEmpleado.src = `${url}?t=${Date.now()}`;
-            uploadControls.style.display = "none";
-            deleteControl.style.display = "block";
-          } else {
-            // No hay foto registrada o no existe en disco
-            fotoEmpleado.src = DEFAULT_SRC;
-            uploadControls.style.display = "block";
-            deleteControl.style.display = "none";
-            if (fileFoto) fileFoto.value = "";
-          }
-        })
-        .catch(() => {
-          // En caso de error tratamos como sin foto
+      // Consultar API de foto
+      try {
+        const r = await fetch(`/api/foto/${encodeURIComponent(dpi)}`, { cache: 'no-store' });
+        const j = await r.json();
+
+        // Si trae URL válida, mostrar foto y habilitar eliminar
+        if (j && j.url && (j.url.startsWith('/') || j.url.startsWith('http'))) {
+          fotoEmpleado.src = `${j.url}?t=${Date.now()}`;
+          uploadControls.style.display = "none";
+          deleteControl.style.display = "block";
+        } else {
+          // No hay foto: mostrar default y habilitar subir
           fotoEmpleado.src = DEFAULT_SRC;
           uploadControls.style.display = "block";
           deleteControl.style.display = "none";
           if (fileFoto) fileFoto.value = "";
-        });
+        }
+      } catch (err) {
+        // Error en API: tratar como sin foto
+        fotoEmpleado.src = DEFAULT_SRC;
+        uploadControls.style.display = "block";
+        deleteControl.style.display = "none";
+        if (fileFoto) fileFoto.value = "";
+      }
     });
   }
 
-  // Si el usuario hace click fuera de la tabla y fuera de controles, reestablecer estado por defecto
+  // Reset si clic fuera de la tabla y controles
   document.addEventListener('click', (e) => {
     const insideTable = e.target.closest('#tablaEmpleados');
     const insideControls = e.target.closest('#uploadControls') || e.target.closest('#deleteControl');
