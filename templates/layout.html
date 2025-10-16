@@ -20,44 +20,43 @@
 </head>
 
 <body>
-  <!-- NAVBAR
-       Comportamiento deseado (solo en /planilla):
-       - En pantallas anchas (md+) el navbar muestra las opciones: Planilla, Recibo del pago, Ficha de empleados, Cerrar sesión.
-       - En pantallas pequeñas (< md) el navbar queda despejado y esas opciones no se muestran ahí; en su lugar aparecen dentro del panel lateral.
-       - El panel lateral (sidebarMenu) muestra Siempre Cerrar sesión; además muestra las otras opciones SOLO en pantallas pequeñas (d-md-none).
-       - El botón hamburguesa que abre el panel lateral (menuInfoToggle) está siempre visible y funciona como único control para desplegar el panel.
-       - En páginas de información de empleados (no /planilla) el panel lateral contiene el menú completo como antes; el navbar muestra flecha de regreso y logo.
-  -->
+  <!-- NAVBAR -->
   <nav class="navbar navbar-dark bg-dark">
     <div class="container-fluid d-flex align-items-center">
       <div class="d-flex align-items-center">
-        <!-- Back button: aparece solo en páginas de información de empleados -->
+        <!-- Back button: aparece solo en páginas de información de empleados (no planilla/recibo/ficha) -->
         {% if 'usuario' in session and request.path in ['/', '/about', '/conyugue', '/emergencia', '/laboral', '/medica'] %}
         <a href="{{ url_for('planilla') }}" id="btnBackToPlanilla" class="btn btn-back mr-2" title="Regresar a Planilla">
           <i class="fas fa-arrow-left"></i>
         </a>
         {% endif %}
 
-        <!-- Logo + Marca: ahora enlazan a planilla -->
+        <!-- Logo + Marca: enlaza a planilla -->
         <a class="brand-link d-flex align-items-center" href="{{ url_for('planilla') }}" aria-label="Ir a Planilla">
           <img src="{{ url_for('static', filename='imagenes/logo.png') }}" alt="Empaquetex" class="logo-navbar" />
-          <span class="brand-title ml-2">Empaquetex</span>
+          <span class="brand-title ml-2 text-white">Empaquetex</span>
         </a>
 
-        <!-- Opciones visibles en navbar SOLO en /planilla y SOLO en pantallas md+ -->
-        {% if 'usuario' in session and request.path == '/planilla' %}
+        <!-- Opciones visibles en navbar SOLO en /planilla, /recibo, /ficha y SOLO en pantallas md+ -->
+        {% if 'usuario' in session and request.path in ['/planilla', '/recibo', '/ficha'] %}
         <div class="navbar-left-links d-none d-md-flex ml-4">
-          <a class="nav-link text-white" href="{{ url_for('planilla') }}"><i class="fas fa-list mr-1"></i> Planilla</a>
-          <a class="nav-link text-white" href="{{url_for('recibo')}}"><i class="fas fa-file-invoice-dollar mr-1"></i> Recibo del pago</a>
-          <a class="nav-link text-white" href="{{url_for('ficha')}}"><i class="fas fa-id-badge mr-1"></i> Ficha de empleados</a>
-          <a class="nav-link text-white" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt mr-1"></i> Cerrar sesión</a>
+          <a class="nav-link text-white {% if request.path == '/planilla' %}font-weight-bold{% endif %}" href="{{ url_for('planilla') }}">
+            <i class="fas fa-list mr-1"></i> Planilla
+          </a>
+          <a class="nav-link text-white {% if request.path == '/recibo' %}font-weight-bold{% endif %}" href="{{ url_for('recibo') }}">
+            <i class="fas fa-file-invoice-dollar mr-1"></i> Recibo del pago
+          </a>
+          <a class="nav-link text-white {% if request.path == '/ficha' %}font-weight-bold{% endif %}" href="{{ url_for('ficha') }}">
+            <i class="fas fa-id-badge mr-1"></i> Ficha de empleados
+          </a>
+          <a class="nav-link text-white" href="{{ url_for('logout') }}">
+            <i class="fas fa-sign-out-alt mr-1"></i> Cerrar sesión
+          </a>
         </div>
         {% endif %}
       </div>
 
-      <!-- Único botón hamburguesa (si el usuario está autenticado) que abre el panel lateral.
-           El usuario lo verá en todas las páginas; en pantallas pequeñas servirá para mostrar las mismas opciones
-           que estaban en el navbar en desktop (porque esas opciones están duplicadas dentro del panel con d-md-none). -->
+      <!-- Único botón hamburguesa (si el usuario está autenticado) -->
       {% if 'usuario' in session %}
       <button id="menuInfoToggle" class="btn btn-hamburger ml-auto" type="button" aria-label="Abrir menú">
         <i class="fas fa-bars" style="font-size:1.1rem; color:#fff;"></i>
@@ -74,25 +73,33 @@
   <div id="sidebarMenu" class="sidebar bg-dark" aria-hidden="true">
     <ul class="navbar-nav">
 
-     {% if 'usuario' in session and request.path in ['/planilla', '/recibo', '/ficha'] %}
-<div class="navbar-left-links d-none d-md-flex ml-4">
-  <a class="nav-link text-white {% if request.path == '/planilla' %}font-weight-bold{% endif %}" href="{{ url_for('planilla') }}">
-    <i class="fas fa-list mr-1"></i> Planilla
-  </a>
-  <a class="nav-link text-white {% if request.path == '/recibo' %}font-weight-bold{% endif %}" href="{{ url_for('recibo') }}">
-    <i class="fas fa-file-invoice-dollar mr-1"></i> Recibo del pago
-  </a>
-  <a class="nav-link text-white {% if request.path == '/ficha' %}font-weight-bold{% endif %}" href="{{ url_for('ficha') }}">
-    <i class="fas fa-id-badge mr-1"></i> Ficha de empleados
-  </a>
-  <a class="nav-link text-white" href="{{ url_for('logout') }}">
-    <i class="fas fa-sign-out-alt mr-1"></i> Cerrar sesión
-  </a>
-</div>
-{% endif %}
+      {% if request.path in ['/planilla', '/recibo', '/ficha'] %}
+        <!-- En planilla/recibo/ficha: mostrar opciones en móviles (d-md-none) y siempre Cerrar sesión -->
+        <li class="nav-item d-md-none">
+          <a class="nav-link text-white border-bottom {% if request.path == '/planilla' %}font-weight-bold{% endif %}" href="{{ url_for('planilla') }}">
+            <i class="fas fa-list"></i> Planilla
+          </a>
+        </li>
 
+        <li class="nav-item d-md-none">
+          <a class="nav-link text-white border-bottom {% if request.path == '/recibo' %}font-weight-bold{% endif %}" href="{{ url_for('recibo') }}">
+            <i class="fas fa-file-invoice-dollar"></i> Recibo del pago
+          </a>
+        </li>
+
+        <li class="nav-item d-md-none">
+          <a class="nav-link text-white border-bottom {% if request.path == '/ficha' %}font-weight-bold{% endif %}" href="{{ url_for('ficha') }}">
+            <i class="fas fa-id-badge"></i> Ficha de empleados
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link text-white border-bottom" href="{{ url_for('logout') }}">
+            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+          </a>
+        </li>
       {% else %}
-        <!-- En páginas de información de empleados mostrar el menú completo (como antes) -->
+        <!-- En páginas de información de empleados: menú completo como antes -->
         <li class="nav-item {% if request.path == '/' %}active{% endif %}">
           <a class="nav-link text-white border-bottom" href="{{ url_for('home') }}">
             <i class="fas fa-id-card"></i> Datos Personales
