@@ -45,7 +45,7 @@
         </a>
 
         <!-- Opciones visibles en navbar SOLO en /planilla y SOLO en pantallas md+ -->
-        {% if 'usuario' in session and request.path == '/planilla' '/ficha' '/recibo' %}
+        {% if 'usuario' in session and request.path == '/planilla' %}
         <div class="navbar-left-links d-none d-md-flex ml-4">
           <a class="nav-link text-white" href="{{ url_for('planilla') }}"><i class="fas fa-list mr-1"></i> Planilla</a>
           <a class="nav-link text-white" href="{{url_for('recibo')}}"><i class="fas fa-file-invoice-dollar mr-1"></i> Recibo del pago</a>
