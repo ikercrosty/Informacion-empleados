@@ -74,33 +74,23 @@
   <div id="sidebarMenu" class="sidebar bg-dark" aria-hidden="true">
     <ul class="navbar-nav">
 
-      {% if request.path == '/planilla' %}
-        <!-- En planilla: mostrar opciones adicionales SOLO en pantallas pequeñas (d-md-none).
-             En pantallas anchas esas opciones ya están en el navbar y aquí solo se muestra Cerrar sesión. -->
-        <li class="nav-item d-md-none">
-          <a class="nav-link text-white border-bottom" href="{{ url_for('planilla') }}">
-            <i class="fas fa-list"></i> Planilla
-          </a>
-        </li>
+     {% if 'usuario' in session and request.path in ['/planilla', '/recibo', '/ficha'] %}
+<div class="navbar-left-links d-none d-md-flex ml-4">
+  <a class="nav-link text-white {% if request.path == '/planilla' %}font-weight-bold{% endif %}" href="{{ url_for('planilla') }}">
+    <i class="fas fa-list mr-1"></i> Planilla
+  </a>
+  <a class="nav-link text-white {% if request.path == '/recibo' %}font-weight-bold{% endif %}" href="{{ url_for('recibo') }}">
+    <i class="fas fa-file-invoice-dollar mr-1"></i> Recibo del pago
+  </a>
+  <a class="nav-link text-white {% if request.path == '/ficha' %}font-weight-bold{% endif %}" href="{{ url_for('ficha') }}">
+    <i class="fas fa-id-badge mr-1"></i> Ficha de empleados
+  </a>
+  <a class="nav-link text-white" href="{{ url_for('logout') }}">
+    <i class="fas fa-sign-out-alt mr-1"></i> Cerrar sesión
+  </a>
+</div>
+{% endif %}
 
-        <li class="nav-item d-md-none">
-          <a class="nav-link text-white border-bottom" href="{{url_for('recibo')}}">
-            <i class="fas fa-file-invoice-dollar"></i> Recibo del pago
-          </a>
-        </li>
-
-        <li class="nav-item d-md-none">
-          <a class="nav-link text-white border-bottom" href="{{url_for('ficha')}}">
-            <i class="fas fa-id-badge"></i> Ficha de empleados
-          </a>
-        </li>
-
-        <!-- Cerrar sesión siempre visible en el sidebar -->
-        <li class="nav-item">
-          <a class="nav-link text-white border-bottom" href="{{ url_for('logout') }}">
-            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
-          </a>
-        </li>
       {% else %}
         <!-- En páginas de información de empleados mostrar el menú completo (como antes) -->
         <li class="nav-item {% if request.path == '/' %}active{% endif %}">
