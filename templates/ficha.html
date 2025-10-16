@@ -6,4 +6,17 @@
   <h1 class="display-4">Ficha</h1>
   <p class="lead">Aquí irá la información de la ficha del empleado.</p>
 </div>
+<script>
+  // Si quieres que al hacer click se añada query para abrir sidebar automáticamente:
+  document.addEventListener("DOMContentLoaded", () => {
+    const btn = document.getElementById('btnAbrirInfo');
+    if (btn) {
+      btn.addEventListener('click', (e) => {
+        // navegar normalmente; si prefieres abrir sidebar al llegar a home,
+        // cambia el href en la plantilla a "{{ url_for('home') }}?from=planilla"
+      });
+    }
+  });
+</script>
+
 {% endblock %}
