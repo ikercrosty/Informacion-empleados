@@ -7,24 +7,16 @@
   <p class="lead">Selecciona una opción del menú lateral o continúa con la navegación.</p>
 </div>
 
-  <p class="text-muted mt-3"> </p>
-<div class="d-flex justify-content-end align-items-end" style="min-height:220px;">
-    <a href="{{ url_for('home') }}" id="btnAbrirInfo" class="btn btn-naranja btn-sm">
-      Abrir Información empleados
+<!-- Contenedor centrado para los botones -->
+<div class="menu-actions d-flex justify-content-center align-items-center">
+  <div class="actions-inner text-center">
+    <a href="{{ url_for('planilla') }}" class="btn btn-lg btn-warning btn-block mb-3" role="button" style="max-width:320px;margin:0 auto;">
+      Planillas
+    </a>
+
+    <a href="#" id="btnAbrirInfo" class="btn btn-lg btn-orange btn-block" role="button" style="max-width:320px;margin:0 auto;">
+      ABRIR INFORMACIÓN EMPLEADOS
     </a>
   </div>
 </div>
-
-<script>
-  // Si quieres que al hacer click se añada query para abrir sidebar automáticamente:
-  document.addEventListener("DOMContentLoaded", () => {
-    const btn = document.getElementById('btnAbrirInfo');
-    if (btn) {
-      btn.addEventListener('click', (e) => {
-        // navegar normalmente; si prefieres abrir sidebar al llegar a home,
-        // cambia el href en la plantilla a "{{ url_for('home') }}?from=planilla"
-      });
-    }
-  });
-</script>
 {% endblock %}
