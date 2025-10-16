@@ -4,21 +4,29 @@
 {% block content %}
 <div class="jumbotron text-center">
   <h1 class="display-4">Bienvenido</h1>
-  <p class="lead">Selecciona una opción del menú lateral o continúa con la navegación.</p>
+  <p class="lead">Panel de control. Desde aquí puedes acceder rápidamente a Planillas o al detalle de empleados.</p>
 </div>
 
 <!-- Contenedor centrado para los botones -->
 <div class="menu-actions d-flex justify-content-center align-items-center">
   <div class="actions-inner text-center">
-    <a href="{{ url_for('planilla') }}" class="btn btn-lg btn-warning btn-block mb-3" role="button" style="max-width:320px;margin:0 auto;">
-      Planillas
-    </a>
 
-  <p class="text-muted mt-3"> </p>
-<div class="d-flex justify-content-center align-items-center" style="min-height:220px;">
-    <a href="{{ url_for('home') }}" id="btnAbrirInfo" class="btn btn-naranja btn-sm">
-      Abrir Información empleados
-    </a>
+    <div class="action-card mb-4">
+      <h5 class="action-title">Gestionar planillas</h5>
+      <p class="action-desc text-muted">Abrir y administrar las planillas de pago, generar reportes y descargar comprobantes.</p>
+      <a href="{{ url_for('planilla') }}" class="btn btn-lg btn-warning btn-block action-btn">
+        <i class="fas fa-file-invoice-dollar mr-2"></i> Ir a Planillas
+      </a>
+    </div>
+
+    <div class="action-card">
+      <h5 class="action-title">Información de empleados</h5>
+      <p class="action-desc text-muted">Ver y editar fichas, subir fotografías y revisar historial de cada empleado.</p>
+      <a href="{{ url_for('home') }}" id="btnAbrirInfo" class="btn btn-lg btn-naranja btn-block action-btn">
+        <i class="fas fa-id-badge mr-2"></i> Abrir información empleados
+      </a>
+    </div>
+
   </div>
 </div>
 {% endblock %}
