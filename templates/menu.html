@@ -5,47 +5,20 @@
 <div class="jumbotron jumbotron-welcome text-center mb-0">
   <div class="container">
     <h1 class="display-4">Bienvenido a Empaquetex</h1>
-    <p class="lead text-muted">Panel de control centralizado. Accede rápidamente a plantillas o a la información de empleados.</p>
+    <p class="lead text-muted">Panel de control centralizado. Accede rápidamente a planillas o a la información de empleados.</p>
   </div>
 </div>
 
-<!-- Línea decorativa + subtítulo -->
-<section class="welcome-hero">
-  <div class="container text-center">
-    <div class="hero-decorator my-3"></div>
-    <p class="hero-subtitle text-muted mb-4">Todo lo que necesitas para administrar nóminas y fichas de empleados en un solo lugar.</p>
-
-    <!-- Estadísticas rápidas -->
-    <div class="row justify-content-center stats-row mb-4">
-      <div class="col-6 col-md-3">
-        <div class="stat-card">
-          <div class="stat-value">214</div>
-          <div class="stat-label text-muted">Empleados activos</div>
-        </div>
-      </div>
-      <div class="col-6 col-md-3">
-        <div class="stat-card">
-          <div class="stat-value">12</div>
-          <div class="stat-label text-muted">Planillas pendientes</div>
-        </div>
-      </div>
-      <div class="col-6 col-md-3">
-        <div class="stat-card">
-          <div class="stat-value">3</div>
-          <div class="stat-label text-muted">Alertas recientes</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Área principal con cards de acción y una ilustración -->
-    <div class="row align-items-center justify-content-center">
+<section class="welcome-actions d-flex align-items-center">
+  <div class="actions-inner container">
+    <div class="row justify-content-center">
       <div class="col-12 col-md-5">
-        <div class="action-card shadow-sm text-center mb-4">
+        <div class="action-card shadow-sm text-center">
           <div class="icon-wrap mb-3 icon-clipboard">
             <i class="fas fa-clipboard-list fa-2x" aria-hidden="true"></i>
           </div>
           <h5 class="mb-2">Planillas</h5>
-          <p class="text-muted mb-3">Abrir y administrar planillas; generar reportes y descargar comprobantes.</p>
+          <p class="text-muted mb-3">Abrir y administrar planillas de pago; generar reportes y descargar comprobantes.</p>
           <a href="{{ url_for('planilla') }}" class="btn btn-outline-warning btn-block btn-lg action-btn">
             <i class="fas fa-file-alt mr-2" aria-hidden="true"></i> Ir a Planillas
           </a>
@@ -53,7 +26,7 @@
       </div>
 
       <div class="col-12 col-md-5">
-        <div class="action-card shadow-sm text-center mb-4">
+        <div class="action-card shadow-sm text-center">
           <div class="icon-wrap mb-3 icon-id">
             <i class="fas fa-id-badge fa-2x" aria-hidden="true"></i>
           </div>
@@ -65,9 +38,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Pequeña nota / CTA secundaria -->
-    <p class="text-muted small mt-3">¿Necesitas ayuda? Visita la sección de soporte o revisa la documentación interna.</p>
   </div>
 </section>
 {% endblock %}
