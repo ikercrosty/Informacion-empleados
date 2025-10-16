@@ -70,6 +70,13 @@ def no_cache(response):
 
 # ---------------- Páginas principales ----------------
 #
+
+@app.route("/")
+def menu():
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+    return render_template("menu.html", usuario=session.get("usuario"))
+
 @app.route("/")
 def home():
     conn = get_db_connection()
@@ -219,7 +226,7 @@ def login():
             if password == stored_password:
                 session["usuario"] = user_row.get("Usuarios") or user_row.get("Correo Electronico")
                 session.permanent = False
-                return redirect(url_for("planilla"))
+                return redirect(url_for("menu"))
             else:
                 flash("Contraseña incorrecta", "danger")
                 return redirect(url_for("login"))
