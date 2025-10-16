@@ -83,36 +83,41 @@
 
   <!-- Panel de imagen (derecha) -->
   <!-- Panel de foto: coloca ESTE bloque donde quieras mostrar la imagen y controles -->
-<div class="text-center mb-3">
-  <img id="fotoEmpleado"
-       src="{{ url_for('static', filename='imagenes/default.png') }}"
-       alt="Foto empleado"
-       class="img-fluid rounded"
-       style="width:220px;height:220px;object-fit:cover;border:1px solid #ddd;">
-</div>
+<!-- PANEL DERECHO: FOTO Y CONTROLES (REEMPLAZAR BLOQUE EXISTENTE) -->
+<div class="card p-3">
+  <h5 class="mb-3">Foto del empleado</h5>
 
-<!-- Formulario para subir foto (AJAX manejado por main.js) -->
-<form id="formSubirFoto" method="post" enctype="multipart/form-data" action="/subir_foto" style="display:none;">
-  <input type="hidden" name="dpi" id="inputDpiForUpload" value="">
-  <div class="form-group">
-    <input id="fileFoto" name="foto" type="file" accept="image/*" class="form-control-file" required>
-  </div>
-  <button id="btnSubirFoto" type="submit" class="btn btn-primary btn-block">Subir foto</button>
-</form>
-
-<!-- Formulario para eliminar foto (AJAX manejado por main.js) -->
-<form id="formEliminarFoto" method="post" action="/eliminar_foto" style="display:none;">
-  <input type="hidden" name="dpi" id="inputDpiForDelete" value="">
-  <button id="btnEliminarFoto" type="submit" class="btn btn-outline-danger btn-block">Eliminar foto</button>
-</form>
-
-<small class="text-muted mt-3 d-block">
-  Selecciona una fila de la tabla para gestionar la foto del empleado.
-</small>
-
+  <div class="d-flex flex-column align-items-center">
+    <!-- Imagen -->
+    <div class="mb-3">
+      <img id="fotoEmpleado"
+           src="{{ url_for('static', filename='imagenes/default.png') }}"
+           alt="Foto empleado"
+           class="img-fluid rounded"
+           style="width:220px;height:220px;object-fit:cover;border:1px solid #ddd;">
     </div>
+
+    <!-- Formulario para subir foto (aparece solo cuando corresponde) -->
+    <form id="formSubirFoto" method="post" enctype="multipart/form-data" action="/subir_foto" style="display:none; width:100%; max-width:260px;">
+      <input type="hidden" name="dpi" id="inputDpiForUpload" value="">
+      <div class="form-group mb-2">
+        <input id="fileFoto" name="foto" type="file" accept="image/*" class="form-control-file" required>
+      </div>
+      <button id="btnSubirFoto" type="submit" class="btn btn-primary btn-block">Subir foto</button>
+    </form>
+
+    <!-- Botón de eliminar (aparece solo cuando hay foto) -->
+    <form id="formEliminarFoto" method="post" action="/eliminar_foto" style="display:none; width:100%; max-width:260px; margin-top:12px;">
+      <input type="hidden" name="dpi" id="inputDpiForDelete" value="">
+      <button id="btnEliminarFoto" type="submit" class="btn btn-outline-danger btn-block">Eliminar foto</button>
+    </form>
+
+    <small class="text-muted mt-3 text-center">
+      Selecciona una fila de la tabla para gestionar la foto del empleado.
+    </small>
   </div>
 </div>
+
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
