@@ -25,7 +25,7 @@
     <div class="container-fluid d-flex align-items-center">
       <div class="d-flex align-items-center">
         <!-- Back button: aparece solo en páginas de información de empleados (no planilla/recibo/ficha) -->
-        {% if 'usuario' in session and request.path in ['/', '/about', '/conyugue', '/emergencia', '/laboral', '/medica'] %}
+        {% if 'usuario' in session and request.path in ['/', '/about','/ficha','/planilla','/recibo', '/conyugue', '/emergencia', '/laboral', '/medica'] %}
         <a href="{{ url_for('menu') }}" id="btnBackToPlanilla" class="btn btn-back mr-2" title="Regresar al Menú">
           <i class="fas fa-arrow-left"></i>
         </a>
