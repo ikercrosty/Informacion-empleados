@@ -26,13 +26,13 @@
       <div class="d-flex align-items-center">
         <!-- Back button: aparece solo en páginas de información de empleados (no planilla/recibo/ficha) -->
         {% if 'usuario' in session and request.path in ['/', '/about', '/conyugue', '/emergencia', '/laboral', '/medica'] %}
-        <a href="{{ url_for('planilla') }}" id="btnBackToPlanilla" class="btn btn-back mr-2" title="Regresar a Planilla">
+        <a href="{{ url_for('menu') }}" id="btnBackToPlanilla" class="btn btn-back mr-2" title="Regresar al Menú">
           <i class="fas fa-arrow-left"></i>
         </a>
         {% endif %}
 
         <!-- Logo + Marca: enlaza a planilla -->
-        <a class="brand-link d-flex align-items-center" href="{{ url_for('planilla') }}" aria-label="Ir a Planilla">
+        <a class="brand-link d-flex align-items-center" href="{{ url_for('menu') }}" aria-label="Ir a Planilla">
           <img src="{{ url_for('static', filename='imagenes/logo.png') }}" alt="Empaquetex" class="logo-navbar" />
           <span class="brand-title ml-2 text-white">Empaquetex</span>
         </a>
@@ -203,7 +203,7 @@
       });
 
       // Si hacemos click en el botón Back (volver a planilla), cerramos sidebar antes de navegar
-      const backBtn = document.getElementById('btnBackToMenu');
+      const backBtn = document.getElementById('btnBackToPlanilla');
       if (backBtn) {
         backBtn.addEventListener('click', () => {
           if (sidebar && sidebar.classList.contains('active')) {
