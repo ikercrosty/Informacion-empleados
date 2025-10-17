@@ -36,7 +36,7 @@
           <th>Horas Extras (monto)</th>
           <th>Total Devengado</th>
           <th>IGSS (4.83%)</th>
-          <th>ISR (estimado)</th>
+          <th>ISR (calculado)</th>
           <th>Otras deducciones</th>
           <th>Total Deducciones</th>
           <th>Líquido a pagar</th>
@@ -54,7 +54,7 @@
           <td>
             <div class="money-inline">
               <span class="money-prefix">Q</span>
-              <input type="number" step="0.01" class="form-control num-cell sueldo" value="3723.61">
+              <input type="number" step="0.01" class="form-control num-cell sueldo" value="3723.05">
             </div>
           </td>
 
@@ -82,10 +82,11 @@
           <td class="text-right align-middle total-devengado">Q 0.00</td>
           <td class="text-right align-middle igss">Q 0.00</td>
 
+          <!-- ISR ahora readonly; se calcula con la lógica del sheet "CALCULO DEL ISR" -->
           <td>
             <div class="money-inline">
               <span class="money-prefix">Q</span>
-              <input type="number" step="0.01" class="form-control num-cell isr" value="0">
+              <input type="number" step="0.01" class="form-control num-cell isr" value="0" readonly>
             </div>
           </td>
 
@@ -109,7 +110,7 @@
           <td class="align-middle">IGDALIA ALIDA OCTAVI VELASQUEZ MALDONDO</td>
 
           <td>
-            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell sueldo" value="3723.61"></div>
+            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell sueldo" value="3723.05"></div>
           </td>
 
           <td>
@@ -130,7 +131,7 @@
           <td class="text-right align-middle igss">Q 0.00</td>
 
           <td>
-            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell isr" value="0"></div>
+            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell isr" value="0" readonly></div>
           </td>
 
           <td>
@@ -150,7 +151,7 @@
           <td class="align-middle">ANGEL ESTUARDO ESCOBAR VELÁSQUEZ</td>
 
           <td>
-            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell sueldo" value="4141.74"></div>
+            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell sueldo" value="4500.00"></div>
           </td>
 
           <td>
@@ -171,7 +172,7 @@
           <td class="text-right align-middle igss">Q 0.00</td>
 
           <td>
-            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell isr" value="14.13"></div>
+            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell isr" value="0" readonly></div>
           </td>
 
           <td>
@@ -191,7 +192,7 @@
           <td class="align-middle">LEONIDAS ANIBAL ESCOBAR PASCUAL</td>
 
           <td>
-            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell sueldo" value="4499.51"></div>
+            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell sueldo" value="4500.00"></div>
           </td>
 
           <td>
@@ -212,7 +213,7 @@
           <td class="text-right align-middle igss">Q 0.00</td>
 
           <td>
-            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell isr" value="14.13"></div>
+            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell isr" value="0" readonly></div>
           </td>
 
           <td>
@@ -252,24 +253,45 @@
   <div class="mb-4">
     <button id="addRow" class="btn btn-sm btn-outline-primary">Agregar fila</button>
     <button id="exportCsv" class="btn btn-sm btn-outline-secondary">Exportar CSV</button>
-    <span class="ml-3 text-muted">Los cálculos se realizan en tiempo real: Horas Extras (monto) = Sueldo Base / Días Laborados / 8 * 1.5 * Horas extra. Total Devengado = Sueldo Base + Bonificación + Comisiones + Horas Extras (monto). IGSS = Sueldo Base * 4.83%. Deducciones = IGSS + ISR + Otras deducciones. Líquido = Total Devengado - Deducciones.</span>
+    <span class="ml-3 text-muted">Los cálculos se realizan en tiempo real: Horas Extras (monto) = Sueldo Base / Días Laborados / 8 * 1.5 * Horas extra. Total Devengado = Sueldo Base + Bonificación + Comisiones + Horas Extras (monto). IGSS = Sueldo Base * 4.83%. ISR mensual calculado desde la hoja CALCULO DEL ISR del archivo. Deducciones = IGSS + ISR + Otras deducciones. Líquido = Total Devengado - Deducciones.</span>
   </div>
 </div>
 
 <script>
+/* Parámetros fiscales tomados del archivo CALCULO DEL ISR */
 const IGSS_RATE = 0.0483;
+const GASTOS_PERSONALES_ANUAL = 48000; // artículo 72 en tu hoja
+const ISR_ANNUAL_RATE = 0.05; // "5% DEL ISR ANUAL SOBRE BASE DE CALCULO" según la hoja
 
 /* helpers */
 function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
 function formatNum(n){ return n.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); }
 function withQ(n){ return 'Q ' + formatNum(n); }
 
-/* compute hours-amount using formula: sueldo / dias / 8 * 1.5 * horas */
+/* compute hours-amount: sueldo / dias / 8 * 1.5 * horas */
 function computeHorasMonto(sueldo, dias, horas) {
   if (!dias || dias <= 0) return 0;
   const valorHora = sueldo / dias / 8;
   const monto = valorHora * 1.5 * horas;
   return round2(monto);
+}
+
+/* compute ISR monthly using the logic in the CALCULO DEL ISR sheet:
+   - salario_anual = sueldo_base * 12
+   - igss_anual = salario_anual * IGSS_RATE
+   - base_calculo = salario_anual - GASTOS_PERSONALES_ANUAL - igss_anual
+   - si base_calculo <= 0 => isr_anual = 0
+   - else isr_anual = base_calculo * ISR_ANNUAL_RATE
+   - isr_mensual = isr_anual / 12
+*/
+function computeISRMonthly(sueldoBaseMensual) {
+  const salarioAnual = sueldoBaseMensual * 12;
+  const igssAnual = salarioAnual * IGSS_RATE;
+  const baseCalculo = salarioAnual - GASTOS_PERSONALES_ANUAL - igssAnual;
+  if (baseCalculo <= 0) return 0;
+  const isrAnual = baseCalculo * ISR_ANNUAL_RATE;
+  const isrMensual = isrAnual / 12;
+  return round2(isrMensual);
 }
 
 function recalcRow(tr) {
@@ -278,19 +300,28 @@ function recalcRow(tr) {
   const comisiones = parseFloat(tr.querySelector('.comisiones').value) || 0;
   const dias = parseInt(tr.querySelector('.dias').value) || 0;
   const horas = parseInt(tr.querySelector('.horas').value) || 0;
-  const isr = parseFloat(tr.querySelector('.isr').value) || 0;
   const otras = parseFloat(tr.querySelector('.otras').value) || 0;
 
   const hextrasMonto = computeHorasMonto(sueldo, dias, horas);
-
   const totalDevengado = round2(sueldo + bono + comisiones + hextrasMonto);
   const igss = round2(sueldo * IGSS_RATE);
-  const totalDeducciones = round2(igss + isr + otras);
+
+  /* ISR calculado automáticamente */
+  const isrMensual = computeISRMonthly(sueldo);
+
+  const totalDeducciones = round2(igss + isrMensual + otras);
   const liquido = round2(totalDevengado - totalDeducciones);
 
   tr.querySelector('.hextras').textContent = withQ(hextrasMonto);
   tr.querySelector('.total-devengado').textContent = withQ(totalDevengado);
   tr.querySelector('.igss').textContent = withQ(igss);
+
+  /* Set ISR input value (readonly) */
+  const isrInput = tr.querySelector('.isr');
+  if (isrInput) {
+    isrInput.value = isrMensual.toFixed(2);
+  }
+
   tr.querySelector('.total-deducciones').textContent = withQ(totalDeducciones);
   tr.querySelector('.liquido').textContent = withQ(liquido);
 }
@@ -304,13 +335,13 @@ function recalcTotals() {
     const dias = parseInt(tr.querySelector('.dias').value) || 0;
     const comisiones = parseFloat(tr.querySelector('.comisiones').value) || 0;
     const horas = parseInt(tr.querySelector('.horas').value) || 0;
-    const isr = parseFloat(tr.querySelector('.isr').value) || 0;
     const otras = parseFloat(tr.querySelector('.otras').value) || 0;
 
     const hextrasMonto = computeHorasMonto(sueldo, dias, horas);
     const totalDevengado = round2(sueldo + bono + comisiones + hextrasMonto);
     const igss = round2(sueldo * IGSS_RATE);
-    const totalDeducciones = round2(igss + isr + otras);
+    const isrMensual = computeISRMonthly(sueldo);
+    const totalDeducciones = round2(igss + isrMensual + otras);
     const liquido = round2(totalDevengado - totalDeducciones);
 
     totals.sueldo += sueldo;
@@ -321,7 +352,7 @@ function recalcTotals() {
     totals.hextras += hextrasMonto;
     totals.devengado += totalDevengado;
     totals.igss += igss;
-    totals.isr += isr;
+    totals.isr += isrMensual;
     totals.otras += otras;
     totals.deducciones += totalDeducciones;
     totals.liquido += liquido;
@@ -374,7 +405,7 @@ document.getElementById('addRow').addEventListener('click', () => {
     <td class="text-right align-middle total-devengado">Q 0.00</td>
     <td class="text-right align-middle igss">Q 0.00</td>
 
-    <td><div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell isr" value="0"></div></td>
+    <td><div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell isr" value="0" readonly></div></td>
     <td><div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell otras" value="0"></div></td>
 
     <td class="text-right align-middle total-deducciones">Q 0.00</td>
@@ -387,7 +418,7 @@ document.getElementById('addRow').addEventListener('click', () => {
   recalcTotals();
 });
 
-/* export CSV (hextras numeric is included) */
+/* export CSV (hextras numeric included) */
 document.getElementById('exportCsv').addEventListener('click', () => {
   const rows = [];
   const header = Array.from(document.querySelectorAll('#planillaTable thead th')).map(th => th.innerText.trim());
