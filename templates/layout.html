@@ -26,7 +26,7 @@
       <!-- left group: back button + brand + optional nav links -->
       <div class="d-flex align-items-center">
         <!-- Back button: aparece solo en páginas de información de empleados (no en /menu ni en la página de inicio) -->
-        {% if 'usuario' in session and request.path in ['/', '/about','/conyugue','/emergencia','/laboral','/medica','/ficha','planilla','recibo'] and request.path != url_for('menu') %}
+        {% if 'usuario' in session and request.path in ['/', '/about','/conyugue','/emergencia','/laboral','/medica','/ficha','/planilla','/recibo'] and request.path != url_for('menu') %}
         <a href="{{ url_for('menu') }}" id="btnBackToPlanilla" class="btn btn-back mr-2" title="Regresar al Menú">
           <i class="fas fa-arrow-left"></i>
         </a>
