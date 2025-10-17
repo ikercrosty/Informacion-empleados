@@ -6,22 +6,25 @@
   <h2 class="mt-3">Planilla - Noviembre 2025</h2>
   <p class="text-muted">Empresa: EMPAQUES Y TEXTURAS DE GUATEMALA, SOCIEDAD ANÓNIMA</p>
 
+  <!-- Scroll horizontal restablecido -->
   <div class="table-responsive mb-3 horizontal-scroll">
     <table id="planillaTable" class="table table-bordered table-sm">
+      <!-- Columnas más anchas -->
       <colgroup>
         <col style="width:4%">
-        <col style="width:30%">
+        <col style="width:32%">
+        <col style="width:10%">
         <col style="width:10%">
         <col style="width:8%">
         <col style="width:8%">
         <col style="width:8%">
-        <col style="width:8%">
-        <col style="width:8%">
-        <col style="width:8%">
-        <col style="width:8%">
-        <col style="width:8%">
-        <col style="width:8%">
-        <col style="width:6%">
+        <col style="width:10%">
+        <col style="width:9%">
+        <col style="width:9%">
+        <col style="width:9%">
+        <col style="width:10%">
+        <col style="width:12%">
+        <col style="width:12%">
       </colgroup>
       <thead class="thead-light">
         <tr>
@@ -31,12 +34,15 @@
           <th>Bonificación</th>
           <th>Días Laborados</th>
           <th>Comisiones</th>
+          <th>Horas extra</th>
           <th>Horas Extras (monto)</th>
           <th>Sub Total</th>
           <th>IGSS (4.83%)</th>
           <th>ISR (estimado)</th>
+          <th>Otras deducciones</th>
           <th>Total Deducciones</th>
           <th>Líquido a pagar</th>
+          <th>Medio de pago (Banco) / Firma</th>
           <th>Observaciones</th>
         </tr>
       </thead>
@@ -50,14 +56,17 @@
           <td><input type="number" step="0.01" class="form-control form-control-sm num-cell bono" value="250.00"></td>
           <td><input type="number" step="1" class="form-control form-control-sm num-cell dias" value="30"></td>
           <td><input type="number" step="0.01" class="form-control form-control-sm num-cell comisiones" value="0"></td>
+          <td><input type="number" step="1" class="form-control form-control-sm num-cell horas" value="0"></td>
           <td><input type="number" step="0.01" class="form-control form-control-sm num-cell hextras" value="0"></td>
 
           <td class="text-right align-middle subtotal">0.00</td>
           <td class="text-right align-middle igss">0.00</td>
           <td><input type="number" step="0.01" class="form-control form-control-sm num-cell isr" value="0"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell otras" value="0"></td>
           <td class="text-right align-middle total-deducciones">0.00</td>
           <td class="text-right align-middle liquido">0.00</td>
-          <td><input type="text" class="form-control form-control-sm" value=""></td>
+          <td><input type="text" class="form-control form-control-sm medio-pago" value=""></td>
+          <td><input type="text" class="form-control form-control-sm obs" value=""></td>
         </tr>
 
         <!-- Fila 2 -->
@@ -69,14 +78,17 @@
           <td><input type="number" step="0.01" class="form-control form-control-sm num-cell bono" value="250.00"></td>
           <td><input type="number" step="1" class="form-control form-control-sm num-cell dias" value="30"></td>
           <td><input type="number" step="0.01" class="form-control form-control-sm num-cell comisiones" value="0"></td>
+          <td><input type="number" step="1" class="form-control form-control-sm num-cell horas" value="0"></td>
           <td><input type="number" step="0.01" class="form-control form-control-sm num-cell hextras" value="0"></td>
 
           <td class="text-right align-middle subtotal">0.00</td>
           <td class="text-right align-middle igss">0.00</td>
           <td><input type="number" step="0.01" class="form-control form-control-sm num-cell isr" value="0"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell otras" value="0"></td>
           <td class="text-right align-middle total-deducciones">0.00</td>
           <td class="text-right align-middle liquido">0.00</td>
-          <td><input type="text" class="form-control form-control-sm" value=""></td>
+          <td><input type="text" class="form-control form-control-sm medio-pago" value=""></td>
+          <td><input type="text" class="form-control form-control-sm obs" value=""></td>
         </tr>
 
         <!-- Fila 3 -->
@@ -88,15 +100,18 @@
           <td><input type="number" step="0.01" class="form-control form-control-sm num-cell bono" value="250.00"></td>
           <td><input type="number" step="1" class="form-control form-control-sm num-cell dias" value="30"></td>
           <td><input type="number" step="0.01" class="form-control form-control-sm num-cell comisiones" value="0"></td>
-          <!-- horas extras moved to 0, ISR placed with 14.13 per previous instruction -->
+          <td><input type="number" step="1" class="form-control form-control-sm num-cell horas" value="0"></td>
           <td><input type="number" step="0.01" class="form-control form-control-sm num-cell hextras" value="0"></td>
 
           <td class="text-right align-middle subtotal">0.00</td>
           <td class="text-right align-middle igss">0.00</td>
+          <!-- ISR con 14.13 como pediste -->
           <td><input type="number" step="0.01" class="form-control form-control-sm num-cell isr" value="14.13"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell otras" value="0"></td>
           <td class="text-right align-middle total-deducciones">0.00</td>
           <td class="text-right align-middle liquido">0.00</td>
-          <td><input type="text" class="form-control form-control-sm" value=""></td>
+          <td><input type="text" class="form-control form-control-sm medio-pago" value=""></td>
+          <td><input type="text" class="form-control form-control-sm obs" value=""></td>
         </tr>
 
         <!-- Fila 4 -->
@@ -108,14 +123,18 @@
           <td><input type="number" step="0.01" class="form-control form-control-sm num-cell bono" value="250.00"></td>
           <td><input type="number" step="1" class="form-control form-control-sm num-cell dias" value="30"></td>
           <td><input type="number" step="0.01" class="form-control form-control-sm num-cell comisiones" value="0"></td>
+          <td><input type="number" step="1" class="form-control form-control-sm num-cell horas" value="0"></td>
           <td><input type="number" step="0.01" class="form-control form-control-sm num-cell hextras" value="0"></td>
 
           <td class="text-right align-middle subtotal">0.00</td>
           <td class="text-right align-middle igss">0.00</td>
+          <!-- ISR con 14.13 como pediste -->
           <td><input type="number" step="0.01" class="form-control form-control-sm num-cell isr" value="14.13"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell otras" value="0"></td>
           <td class="text-right align-middle total-deducciones">0.00</td>
           <td class="text-right align-middle liquido">0.00</td>
-          <td><input type="text" class="form-control form-control-sm" value=""></td>
+          <td><input type="text" class="form-control form-control-sm medio-pago" value=""></td>
+          <td><input type="text" class="form-control form-control-sm obs" value=""></td>
         </tr>
       </tbody>
 
@@ -126,12 +145,15 @@
           <td id="total-bono" class="text-right">0.00</td>
           <td id="total-dias" class="text-right">0</td>
           <td id="total-comisiones" class="text-right">0.00</td>
+          <td id="total-horas" class="text-right">0</td>
           <td id="total-hextras" class="text-right">0.00</td>
           <td id="total-subtotal" class="text-right">0.00</td>
           <td id="total-igss" class="text-right">0.00</td>
           <td id="total-isr" class="text-right">0.00</td>
+          <td id="total-otras" class="text-right">0.00</td>
           <td id="total-deducciones" class="text-right">0.00</td>
           <td id="total-liquido" class="text-right">0.00</td>
+          <td></td>
           <td></td>
         </tr>
       </tfoot>
@@ -141,7 +163,7 @@
   <div class="mb-4">
     <button id="addRow" class="btn btn-sm btn-outline-primary">Agregar fila</button>
     <button id="exportCsv" class="btn btn-sm btn-outline-secondary">Exportar CSV</button>
-    <span class="ml-3 text-muted">Los cálculos se realizan en tiempo real: Subtotal = SueldoBase + Bonificación + Comisiones + Horas Extras. IGSS = SueldoBase * 4.83%. Deducciones = IGSS + ISR. Líquido = Subtotal - Deducciones.</span>
+    <span class="ml-3 text-muted">Los cálculos se realizan en tiempo real: Subtotal = Sueldo Base + Bonificación + Comisiones + Horas Extras (monto). IGSS = Sueldo Base * 4.83%. Deducciones = IGSS + ISR + Otras deducciones. Líquido = Subtotal - Deducciones.</span>
   </div>
 </div>
 
@@ -155,12 +177,14 @@ function recalcRow(tr) {
   const sueldo = parseFloat(tr.querySelector('.sueldo').value) || 0;
   const bono = parseFloat(tr.querySelector('.bono').value) || 0;
   const comisiones = parseFloat(tr.querySelector('.comisiones').value) || 0;
-  const hextras = parseFloat(tr.querySelector('.hextras').value) || 0;
+  const horas = parseFloat(tr.querySelector('.horas').value) || 0; // no afecta subtotal, solo conteo
+  const hextras = parseFloat(tr.querySelector('.hexras') ? tr.querySelector('.hexras').value : tr.querySelector('.hextras').value) || 0;
   const isr = parseFloat(tr.querySelector('.isr').value) || 0;
+  const otras = parseFloat(tr.querySelector('.otras').value) || 0;
 
   const subtotal = round2(sueldo + bono + comisiones + hextras);
   const igss = round2(sueldo * IGSS_RATE);
-  const totalDeducciones = round2(igss + isr);
+  const totalDeducciones = round2(igss + isr + otras);
   const liquido = round2(subtotal - totalDeducciones);
 
   tr.querySelector('.subtotal').textContent = formatNum(subtotal);
@@ -171,40 +195,46 @@ function recalcRow(tr) {
 
 function recalcTotals() {
   const rows = document.querySelectorAll('#planillaTable tbody tr');
-  let totals = {sueldo:0, bono:0, dias:0, comisiones:0, hextras:0, subtotal:0, igss:0, isr:0, deducciones:0, liquido:0};
+  let totals = {sueldo:0, bono:0, dias:0, comisiones:0, horas:0, hextras:0, subtotal:0, igss:0, isr:0, otras:0, deducciones:0, liquido:0};
   rows.forEach(tr => {
     const sueldo = parseFloat(tr.querySelector('.sueldo').value) || 0;
     const bono = parseFloat(tr.querySelector('.bono').value) || 0;
     const dias = parseFloat(tr.querySelector('.dias').value) || 0;
     const comisiones = parseFloat(tr.querySelector('.comisiones').value) || 0;
+    const horas = parseFloat(tr.querySelector('.horas').value) || 0;
     const hextras = parseFloat(tr.querySelector('.hextras').value) || 0;
     const isr = parseFloat(tr.querySelector('.isr').value) || 0;
+    const otras = parseFloat(tr.querySelector('.otras').value) || 0;
 
     const subtotal = round2(sueldo + bono + comisiones + hextras);
     const igss = round2(sueldo * IGSS_RATE);
-    const totalDeducciones = round2(igss + isr);
+    const totalDeducciones = round2(igss + isr + otras);
     const liquido = round2(subtotal - totalDeducciones);
 
     totals.sueldo += sueldo;
     totals.bono += bono;
     totals.dias += dias;
     totals.comisiones += comisiones;
+    totals.horas += horas;
     totals.hextras += hextras;
     totals.subtotal += subtotal;
     totals.igss += igss;
     totals.isr += isr;
+    totals.otras += otras;
     totals.deducciones += totalDeducciones;
     totals.liquido += liquido;
   });
 
   document.getElementById('total-sueldo').textContent = formatNum(totals.sueldo);
   document.getElementById('total-bono').textContent = formatNum(totals.bono);
-  document.getElementById('total-dias').textContent = formatNum(totals.dias);
+  document.getElementById('total-dias').textContent = totals.dias.toString();
   document.getElementById('total-comisiones').textContent = formatNum(totals.comisiones);
+  document.getElementById('total-horas').textContent = totals.horas.toString();
   document.getElementById('total-hextras').textContent = formatNum(totals.hextras);
   document.getElementById('total-subtotal').textContent = formatNum(totals.subtotal);
   document.getElementById('total-igss').textContent = formatNum(totals.igss);
   document.getElementById('total-isr').textContent = formatNum(totals.isr);
+  document.getElementById('total-otras').textContent = formatNum(totals.otras);
   document.getElementById('total-deducciones').textContent = formatNum(totals.deducciones);
   document.getElementById('total-liquido').textContent = formatNum(totals.liquido);
 }
@@ -232,13 +262,16 @@ document.getElementById('addRow').addEventListener('click', () => {
     <td><input type="number" step="0.01" class="form-control form-control-sm num-cell bono" value="0"></td>
     <td><input type="number" step="1" class="form-control form-control-sm num-cell dias" value="30"></td>
     <td><input type="number" step="0.01" class="form-control form-control-sm num-cell comisiones" value="0"></td>
+    <td><input type="number" step="1" class="form-control form-control-sm num-cell horas" value="0"></td>
     <td><input type="number" step="0.01" class="form-control form-control-sm num-cell hextras" value="0"></td>
     <td class="text-right align-middle subtotal">0.00</td>
     <td class="text-right align-middle igss">0.00</td>
     <td><input type="number" step="0.01" class="form-control form-control-sm num-cell isr" value="0"></td>
+    <td><input type="number" step="0.01" class="form-control form-control-sm num-cell otras" value="0"></td>
     <td class="text-right align-middle total-deducciones">0.00</td>
     <td class="text-right align-middle liquido">0.00</td>
-    <td><input type="text" class="form-control form-control-sm" value=""></td>`;
+    <td><input type="text" class="form-control form-control-sm medio-pago" value=""></td>
+    <td><input type="text" class="form-control form-control-sm obs" value=""></td>`;
   tbody.appendChild(tr);
   recalcRow(tr);
   recalcTotals();
@@ -257,14 +290,17 @@ document.getElementById('exportCsv').addEventListener('click', () => {
     const bono = tr.querySelector('.bono').value || 0;
     const dias = tr.querySelector('.dias').value || 0;
     const comis = tr.querySelector('.comisiones').value || 0;
+    const horas = tr.querySelector('.horas').value || 0;
     const hex = tr.querySelector('.hextras').value || 0;
     const subtotal = tr.querySelector('.subtotal').innerText.trim();
     const igss = tr.querySelector('.igss').innerText.trim();
     const isr = tr.querySelector('.isr').value || 0;
+    const otras = tr.querySelector('.otras').value || 0;
     const totDed = tr.querySelector('.total-deducciones').innerText.trim();
     const liqui = tr.querySelector('.liquido').innerText.trim();
-    const obs = tr.querySelector('td:last-child input') ? tr.querySelector('td:last-child input').value.replace(/"/g,'""') : '';
-    cols.push(sueldo, bono, dias, comis, hex, subtotal, igss, isr, totDed, liqui, `"${obs}"`);
+    const medio = tr.querySelector('.medio-pago') ? tr.querySelector('.medio-pago').value.replace(/"/g,'""') : '';
+    const obs = tr.querySelector('.obs') ? tr.querySelector('.obs').value.replace(/"/g,'""') : '';
+    cols.push(sueldo, bono, dias, comis, horas, hex, subtotal, igss, isr, otras, totDed, liqui, `"${medio}"`, `"${obs}"`);
     rows.push(cols.join(','));
   });
 
@@ -282,26 +318,28 @@ document.getElementById('exportCsv').addEventListener('click', () => {
 </script>
 
 <style>
-  /* Restore horizontal scroll and make columns wider */
+  /* Scroll horizontal y columnas más anchas */
   .horizontal-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  /* Ensure the table doesn't shrink below the colgroup widths */
-  #planillaTable { min-width: 1200px; font-size: 0.96rem; }
-  /* Inputs fill column and show full numbers */
-  #planillaTable input.form-control { padding: .45rem .6rem; font-size: .98rem; }
+  #planillaTable { min-width: 1350px; font-size: 0.98rem; }
+  #planillaTable thead th { white-space: nowrap; }
+
+  /* Inputs amplios para ver números completos */
+  #planillaTable input.form-control { padding: .5rem .65rem; font-size: 1rem; }
   #planillaTable td input { width: 100%; box-sizing: border-box; }
-  /* Names wrap and have more space */
+
+  /* Nombres con espacio y salto de línea */
   #planillaTable td:nth-child(2) { white-space: normal; word-break: break-word; }
-  /* Right-align numeric display cells */
+
+  /* Alineaciones a la derecha para números */
   #planillaTable td.subtotal,
   #planillaTable td.igss,
   #planillaTable td.total-deducciones,
   #planillaTable td.liquido,
   #planillaTable tfoot td { text-align: right; vertical-align: middle; }
-  /* Slightly larger table for readability and wider header cells */
-  #planillaTable thead th { white-space: nowrap; }
-  /* On very small screens allow full horizontal scrolling */
+
+  /* Responsivo: mantener scroll en pantallas pequeñas */
   @media (max-width: 992px) {
-    #planillaTable { min-width: 1100px; }
+    #planillaTable { min-width: 1200px; }
     colgroup col:nth-child(2) { width: 40%; }
   }
 </style>
