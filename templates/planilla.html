@@ -46,7 +46,7 @@
       </thead>
 
       <tbody>
-        <!-- Fila 1 -->
+        <!-- ejemplo fila 1 -->
         <tr data-row="1">
           <td class="align-middle">1</td>
           <td class="align-middle">EDNA ANABELY MARISTELA VELASQUEZ MALDONAOD</td>
@@ -82,11 +82,12 @@
           <td class="text-right align-middle total-devengado">Q 0.00</td>
           <td class="text-right align-middle igss">Q 0.00</td>
 
-          <!-- ISR readonly; se calcula con la lógica del sheet "CALCULO DEL ISR" and only if sueldo >= 4000 -->
+          <!-- ISR editable: calculado automáticamente pero editable por el usuario;
+               si el usuario lo edita, se marca como manual y deja de calcularse hasta que cambien otros campos -->
           <td>
             <div class="money-inline">
               <span class="money-prefix">Q</span>
-              <input type="number" step="0.01" class="form-control num-cell isr" value="0" readonly>
+              <input type="number" step="0.01" class="form-control num-cell isr" value="0">
             </div>
           </td>
 
@@ -104,128 +105,27 @@
           <td><input type="text" class="form-control form-control-sm obs" value=""></td>
         </tr>
 
-        <!-- Fila 2 -->
-        <tr data-row="2">
+        <!-- copia las filas necesarias o usa Agregar fila -->
+        <tr data-row="2"> <!-- ejemplo fila 2 -->
           <td class="align-middle">2</td>
           <td class="align-middle">IGDALIA ALIDA OCTAVI VELASQUEZ MALDONDO</td>
-
-          <td>
-            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell sueldo" value="3723.05"></div>
-          </td>
-
-          <td>
-            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell bono" value="250.00"></div>
-          </td>
-
+          <td><div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell sueldo" value="3723.05"></div></td>
+          <td><div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell bono" value="250.00"></div></td>
           <td><input type="number" step="1" min="0" class="form-control form-control-sm num-cell dias" value="30"></td>
-
-          <td>
-            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell comisiones" value="0"></div>
-          </td>
-
+          <td><div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell comisiones" value="0"></div></td>
           <td><input type="number" step="1" min="0" class="form-control form-control-sm num-cell horas" value="0"></td>
-
           <td class="text-right align-middle hextras">Q 0.00</td>
-
           <td class="text-right align-middle total-devengado">Q 0.00</td>
           <td class="text-right align-middle igss">Q 0.00</td>
-
-          <td>
-            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell isr" value="0" readonly></div>
-          </td>
-
-          <td>
-            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell otras" value="0"></div>
-          </td>
-
+          <td><div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell isr" value="0"></div></td>
+          <td><div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell otras" value="0"></div></td>
           <td class="text-right align-middle total-deducciones">Q 0.00</td>
           <td class="text-right align-middle liquido">Q 0.00</td>
-
           <td><input type="text" class="form-control form-control-sm medio-pago" value=""></td>
           <td><input type="text" class="form-control form-control-sm obs" value=""></td>
         </tr>
 
-        <!-- Fila 3 -->
-        <tr data-row="3">
-          <td class="align-middle">3</td>
-          <td class="align-middle">ANGEL ESTUARDO ESCOBAR VELÁSQUEZ</td>
-
-          <td>
-            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell sueldo" value="4500.00"></div>
-          </td>
-
-          <td>
-            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell bono" value="250.00"></div>
-          </td>
-
-          <td><input type="number" step="1" min="0" class="form-control form-control-sm num-cell dias" value="30"></td>
-
-          <td>
-            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell comisiones" value="0"></div>
-          </td>
-
-          <td><input type="number" step="1" min="0" class="form-control form-control-sm num-cell horas" value="0"></td>
-
-          <td class="text-right align-middle hextras">Q 0.00</td>
-
-          <td class="text-right align-middle total-devengado">Q 0.00</td>
-          <td class="text-right align-middle igss">Q 0.00</td>
-
-          <td>
-            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell isr" value="0" readonly></div>
-          </td>
-
-          <td>
-            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell otras" value="0"></div>
-          </td>
-
-          <td class="text-right align-middle total-deducciones">Q 0.00</td>
-          <td class="text-right align-middle liquido">Q 0.00</td>
-
-          <td><input type="text" class="form-control form-control-sm medio-pago" value=""></td>
-          <td><input type="text" class="form-control form-control-sm obs" value=""></td>
-        </tr>
-
-        <!-- Fila 4 -->
-        <tr data-row="4">
-          <td class="align-middle">4</td>
-          <td class="align-middle">LEONIDAS ANIBAL ESCOBAR PASCUAL</td>
-
-          <td>
-            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell sueldo" value="4500.00"></div>
-          </td>
-
-          <td>
-            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell bono" value="250.00"></div>
-          </td>
-
-          <td><input type="number" step="1" min="0" class="form-control form-control-sm num-cell dias" value="30"></td>
-
-          <td>
-            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell comisiones" value="0"></div>
-          </td>
-
-          <td><input type="number" step="1" min="0" class="form-control form-control-sm num-cell horas" value="0"></td>
-
-          <td class="text-right align-middle hextras">Q 0.00</td>
-
-          <td class="text-right align-middle total-devengado">Q 0.00</td>
-          <td class="text-right align-middle igss">Q 0.00</td>
-
-          <td>
-            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell isr" value="0" readonly></div>
-          </td>
-
-          <td>
-            <div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell otras" value="0"></div>
-          </td>
-
-          <td class="text-right align-middle total-deducciones">Q 0.00</td>
-          <td class="text-right align-middle liquido">Q 0.00</td>
-
-          <td><input type="text" class="form-control form-control-sm medio-pago" value=""></td>
-          <td><input type="text" class="form-control form-control-sm obs" value=""></td>
-        </tr>
+        <!-- agrega más filas según necesites -->
       </tbody>
 
       <tfoot>
@@ -253,7 +153,7 @@
   <div class="mb-4">
     <button id="addRow" class="btn btn-sm btn-outline-primary">Agregar fila</button>
     <button id="exportCsv" class="btn btn-sm btn-outline-secondary">Exportar CSV</button>
-    <span class="ml-3 text-muted">Los cálculos se realizan en tiempo real: Horas Extras (monto) = Sueldo Base / Días Laborados / 8 * 1.5 * Horas extra. Total Devengado = Sueldo Base + Bonificación + Comisiones + Horas Extras (monto). IGSS = Sueldo Base * 4.83%. ISR mensual calculado desde la hoja CALCULO DEL ISR del archivo y aplica solo si Sueldo Base ≥ Q 4,000. Deducciones = IGSS + ISR + Otras deducciones. Líquido = Total Devengado - Deducciones.</span>
+    <span class="ml-3 text-muted">Los cálculos se realizan en tiempo real: Horas Extras (monto) = Sueldo Base / Días Laborados / 8 * 1.5 * Horas extra. Total Devengado = Sueldo Base + Bonificación + Comisiones + Horas Extras (monto). IGSS = Sueldo Base * 4.83%. ISR mensual calculado desde la hoja CALCULO DEL ISR del archivo y aplica solo si Sueldo Base ≥ Q 4,000. Si editas manualmente el ISR en una fila, el sistema respetará tu cambio hasta que modifiques un campo base (sueldo, días, horas, bono, comisiones, otras), momento en el que el ISR volverá a recalcularse automáticamente.</span>
   </div>
 </div>
 
@@ -261,8 +161,8 @@
 /* Parámetros fiscales tomados del archivo CALCULO DEL ISR */
 const IGSS_RATE = 0.0483;
 const GASTOS_PERSONALES_ANUAL = 48000; // artículo 72 en tu hoja
-const ISR_ANNUAL_RATE = 0.05; // "5% DEL ISR ANUAL SOBRE BASE DE CALCULO" según la hoja
-const ISR_MIN_SALARIO = 4000.00; // ISR only applies for sueldo base >= Q 4,000
+const ISR_ANNUAL_RATE = 0.05; // según tu hoja
+const ISR_MIN_SALARIO = 4000.00; // ISR solo si sueldo base >= Q 4,000
 
 /* helpers */
 function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
@@ -278,7 +178,7 @@ function computeHorasMonto(sueldo, dias, horas) {
 }
 
 /* compute ISR monthly using the logic in the CALCULO DEL ISR sheet:
-   - ISR only applies if sueldoBaseMensual >= ISR_MIN_SALARIO
+   - aplicable solo si sueldoBaseMensual >= ISR_MIN_SALARIO
    - salario_anual = sueldo_base * 12
    - igss_anual = salario_anual * IGSS_RATE
    - base_calculo = salario_anual - GASTOS_PERSONALES_ANUAL - igss_anual
@@ -297,6 +197,14 @@ function computeISRMonthly(sueldoBaseMensual) {
   return round2(isrMensual);
 }
 
+/* marca/desmarca ISR manual por fila */
+function setIsrManualFlag(tr, manual) {
+  if (manual) tr.dataset.isrManual = '1';
+  else delete tr.dataset.isrManual;
+}
+function isIsrManual(tr) { return tr.dataset.isrManual === '1'; }
+
+/* recalcula una sola fila; respeta ISR manual si está marcado */
 function recalcRow(tr) {
   const sueldo = parseFloat(tr.querySelector('.sueldo').value) || 0;
   const bono = parseFloat(tr.querySelector('.bono').value) || 0;
@@ -309,26 +217,29 @@ function recalcRow(tr) {
   const totalDevengado = round2(sueldo + bono + comisiones + hextrasMonto);
   const igss = round2(sueldo * IGSS_RATE);
 
-  /* ISR calculado automáticamente y solo si sueldo >= ISR_MIN_SALARIO */
-  const isrMensual = computeISRMonthly(sueldo);
+  const isrCalculado = computeISRMonthly(sueldo);
 
-  const totalDeducciones = round2(igss + isrMensual + otras);
-  const liquido = round2(totalDevengado - totalDeducciones);
-
+  /* actualiza visuales calculadas */
   tr.querySelector('.hextras').textContent = withQ(hextrasMonto);
   tr.querySelector('.total-devengado').textContent = withQ(totalDevengado);
   tr.querySelector('.igss').textContent = withQ(igss);
 
-  /* Set ISR input value (readonly) */
+  /* ISR: si el usuario editó manualmente, no sobrescribimos.
+     Si no hay marca manual, actualizamos el campo ISR con el valor calculado. */
   const isrInput = tr.querySelector('.isr');
-  if (isrInput) {
-    isrInput.value = isrMensual.toFixed(2);
+  if (!isIsrManual(tr)) {
+    isrInput.value = isrCalculado.toFixed(2);
   }
+
+  const isrFinal = parseFloat(isrInput.value) || 0;
+  const totalDeducciones = round2(igss + isrFinal + otras);
+  const liquido = round2(totalDevengado - totalDeducciones);
 
   tr.querySelector('.total-deducciones').textContent = withQ(totalDeducciones);
   tr.querySelector('.liquido').textContent = withQ(liquido);
 }
 
+/* recalcula totales del pie */
 function recalcTotals() {
   const rows = document.querySelectorAll('#planillaTable tbody tr');
   let totals = {sueldo:0, bono:0, dias:0, comisiones:0, horas:0, hextras:0, devengado:0, igss:0, isr:0, otras:0, deducciones:0, liquido:0};
@@ -343,8 +254,8 @@ function recalcTotals() {
     const hextrasMonto = computeHorasMonto(sueldo, dias, horas);
     const totalDevengado = round2(sueldo + bono + comisiones + hextrasMonto);
     const igss = round2(sueldo * IGSS_RATE);
-    const isrMensual = computeISRMonthly(sueldo);
-    const totalDeducciones = round2(igss + isrMensual + otras);
+    const isrFinal = parseFloat(tr.querySelector('.isr').value) || 0;
+    const totalDeducciones = round2(igss + isrFinal + otras);
     const liquido = round2(totalDevengado - totalDeducciones);
 
     totals.sueldo += sueldo;
@@ -355,7 +266,7 @@ function recalcTotals() {
     totals.hextras += hextrasMonto;
     totals.devengado += totalDevengado;
     totals.igss += igss;
-    totals.isr += isrMensual;
+    totals.isr += isrFinal;
     totals.otras += otras;
     totals.deducciones += totalDeducciones;
     totals.liquido += liquido;
@@ -375,21 +286,60 @@ function recalcTotals() {
   document.getElementById('total-liquido').textContent = withQ(totals.liquido);
 }
 
-/* event delegation */
+/* cuando el usuario edita campos base (sueldo, bono, dias, comisiones, horas, otras),
+   se elimina la marca manual de ISR para que vuelva a recalcularse */
+function attachBaseFieldReset(tr) {
+  ['sueldo','bono','dias','comisiones','horas','otras'].forEach(cls => {
+    const el = tr.querySelector('.' + cls);
+    if (!el) return;
+    el.addEventListener('input', () => {
+      setIsrManualFlag(tr, false); // clear manual flag when core values change
+      recalcRow(tr);
+      recalcTotals();
+    });
+  });
+}
+
+/* ISR input: si el usuario lo cambia manualmente, marcamos la fila como manual */
+function attachIsrManualControl(tr) {
+  const isrInput = tr.querySelector('.isr');
+  if (!isrInput) return;
+  isrInput.addEventListener('input', () => {
+    // If user manually types, set manual flag
+    setIsrManualFlag(tr, true);
+    recalcRow(tr);
+    recalcTotals();
+  });
+}
+
+/* Delegated listener: recompute when other numeric inputs change (handles added rows) */
 document.addEventListener('input', (e) => {
   if (!e.target.classList) return;
   if (e.target.classList.contains('num-cell')) {
     const tr = e.target.closest('tr');
+    // if the edited field was ISR, attachIsrManualControl already handled marking manual
+    if (e.target.classList.contains('isr')) {
+      // user typed ISR manually — handled by specific handler; still update totals
+      recalcRow(tr);
+      recalcTotals();
+      return;
+    }
+    // other numeric fields
+    // for base fields, base-field input handler removes ISR manual flag via attachBaseFieldReset
     recalcRow(tr);
     recalcTotals();
   }
 });
 
-/* initialize */
-document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
+/* Inicializar filas existentes: attach handlers y calcular */
+document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
+  attachBaseFieldReset(tr);
+  attachIsrManualControl(tr);
+  recalcRow(tr);
+});
 recalcTotals();
 
-/* add row */
+/* Agregar fila (mantiene el comportamiento) */
 document.getElementById('addRow').addEventListener('click', () => {
   const tbody = document.querySelector('#planillaTable tbody');
   const newIndex = tbody.querySelectorAll('tr').length + 1;
@@ -408,7 +358,7 @@ document.getElementById('addRow').addEventListener('click', () => {
     <td class="text-right align-middle total-devengado">Q 0.00</td>
     <td class="text-right align-middle igss">Q 0.00</td>
 
-    <td><div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell isr" value="0" readonly></div></td>
+    <td><div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell isr" value="0"></div></td>
     <td><div class="money-inline"><span class="money-prefix">Q</span><input type="number" step="0.01" class="form-control num-cell otras" value="0"></div></td>
 
     <td class="text-right align-middle total-deducciones">Q 0.00</td>
@@ -417,11 +367,14 @@ document.getElementById('addRow').addEventListener('click', () => {
     <td><input type="text" class="form-control form-control-sm medio-pago" value=""></td>
     <td><input type="text" class="form-control form-control-sm obs" value=""></td>`;
   tbody.appendChild(tr);
+
+  attachBaseFieldReset(tr);
+  attachIsrManualControl(tr);
   recalcRow(tr);
   recalcTotals();
 });
 
-/* export CSV (hextras numeric included) */
+/* Export CSV (valores numéricos sin prefijo 'Q') */
 document.getElementById('exportCsv').addEventListener('click', () => {
   const rows = [];
   const header = Array.from(document.querySelectorAll('#planillaTable thead th')).map(th => th.innerText.trim());
