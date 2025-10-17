@@ -50,40 +50,30 @@
         <tr data-row="1">
           <td>1</td>
           <td class="align-middle">EDNA ANABELY MARISTELA VELASQUEZ MALDONADO</td>
-
           <td>
             <div class="money-inline"><span class="money-prefix">Q</span>
             <input class="form-control num-cell sueldo" type="number" step="0.01" value="3723.05"></div>
           </td>
-
           <td>
             <div class="money-inline"><span class="money-prefix">Q</span>
             <input class="form-control num-cell bono" type="number" step="0.01" value="250.00"></div>
           </td>
-
           <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="30"></td>
-
           <td>
             <div class="money-inline"><span class="money-prefix">Q</span>
             <input class="form-control num-cell comisiones" type="number" step="0.01" value="0"></div>
           </td>
-
           <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
-
           <td class="text-right hextras">Q 0.00</td>
           <td class="text-right total-devengado">Q 0.00</td>
           <td class="text-right igss">Q 0.00</td>
-
           <td class="text-right isr-cell"></td>
-
           <td>
             <div class="money-inline"><span class="money-prefix">Q</span>
             <input class="form-control num-cell otras" type="number" step="0.01" value="0"></div>
           </td>
-
           <td class="text-right total-deducciones">Q 0.00</td>
           <td class="text-right liquido">Q 0.00</td>
-
           <td><input class="form-control form-control-sm medio-pago" type="text" value=""></td>
           <td><input class="form-control form-control-sm obs" type="text" value=""></td>
         </tr>
@@ -170,24 +160,27 @@
 
   <div class="mb-4">
     <button id="addRow" class="btn btn-sm btn-outline-primary">Agregar fila</button>
-    <button id="exportCsv" class="btn btn-sm btn-outline-secondary">Exportar CSV</button>
-    <span class="ml-3 text-muted">Los cálculos se realizan en tiempo real: Horas Extras = Sueldo / Días / 8 * 1.5 * Horas. ISR calculado ahora usa la suma de ganancias brutas anual como indicaste; aparece solo si Sueldo Base ≥ Q 4,000.</span>
+    <button id="exportCsv" class="btn btn-sm btn-outline-secondary">Exportar a Excel</button>
+    <span class="ml-3 text-muted">Los cálculos se realizan en tiempo real: Horas Extras = Sueldo / Días / 8 * 1.5 * Horas. ISR calculado usa la suma de ganancias brutas anual y aparece solo si Sueldo Base ≥ Q 4,000.</span>
   </div>
 </div>
 
-<script>
-/* Parámetros fiscales */
-const IGSS_RATE = 0.0483;
-const GASTOS_PERSONALES_ANUAL = 48000; // fijo
-const ISR_ANNUAL_RATE = 0.05;         // 5%
-const ISR_MIN_SALARIO = 4000.00;      // condición mínima
+<!-- SheetJS CDN -->
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
-/* util */
+<script>
+/* Parámetros fiscales según tu especificación */
+const IGSS_RATE = 0.0483;
+const GASTOS_PERSONALES_ANUAL = 48000;
+const ISR_ANNUAL_RATE = 0.05;
+const ISR_MIN_SALARIO = 4000.00;
+
+/* Helpers */
 function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
 function formatNum(n){ return n.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); }
 function withQ(n){ return 'Q ' + formatNum(n); }
 
-/* Horas extras (monto) mensual: sueldo / dias / 8 * 1.5 * horas */
+/* Horas extras mensual */
 function computeHorasMontoMensual(sueldo, dias, horas) {
   if (!dias || dias <= 0) return 0;
   const valorHora = sueldo / dias / 8;
@@ -195,20 +188,10 @@ function computeHorasMontoMensual(sueldo, dias, horas) {
   return round2(monto);
 }
 
-/* ISR según tu nuevo procedimiento:
-   Ganancias brutas anuales:
-     sueldo_base*12 + bonificacion*12 + comisiones*12 + horas_extra_monto*12
-   IGSS_ANUAL = (suma de ganancias brutas mensuales) * 12 * IGSS_RATE
-     pero según tu enunciado: "IGGS ANUAL = El total de la suma de las ganancias brutas * 4.83%"
-     interpretamos eso como IGSS_ANUAL = ganancias_brutas_anual * IGSS_RATE
-   Base calculo = ganancias_brutas_anual - (IGSS_ANUAL + 48000)
-   5% = base_calculo * 5%
-   ISR mensual = (5% anual) / 12
-   Aplica solo si sueldo_base >= ISR_MIN_SALARIO
-*/
+/* ISR según nuevo procedimiento (uso de ganancias brutas anuales) */
 function computeISRMonthlyFromRow(sueldo, bono, comisiones, hextrasMensual) {
   if (sueldo < ISR_MIN_SALARIO) return 0;
-  const gbMensual = sueldo + bono + comisiones + hextrasMensual; // ganancias brutas mensuales
+  const gbMensual = sueldo + bono + comisiones + hextrasMensual;
   const gbAnual = gbMensual * 12;
   const igssAnual = round2(gbAnual * IGSS_RATE);
   const baseCalculo = gbAnual - (igssAnual + GASTOS_PERSONALES_ANUAL);
@@ -218,8 +201,7 @@ function computeISRMonthlyFromRow(sueldo, bono, comisiones, hextrasMensual) {
   return isrMensual;
 }
 
-/* Recalcula fila y escribe ISR calculado en .isr-cell (Q xx.xx) o la deja vacía.
-   También guarda el valor numérico en tr.dataset._isrValue para totales/export */
+/* recalcula fila */
 function recalcRow(tr) {
   const sueldo = parseFloat(tr.querySelector('.sueldo').value) || 0;
   const bono = parseFloat(tr.querySelector('.bono').value) || 0;
@@ -228,16 +210,16 @@ function recalcRow(tr) {
   const horas = parseInt(tr.querySelector('.horas').value) || 0;
   const otras = parseFloat(tr.querySelector('.otras').value) || 0;
 
-  const hextrasMonto = computeHorasMontoMensual(sueldo, dias, horas); // mensual
+  const hextrasMonto = computeHorasMontoMensual(sueldo, dias, horas);
   const totalDevengado = round2(sueldo + bono + comisiones + hextrasMonto);
-  const igss = round2((sueldo + bono + comisiones + hextrasMonto) * IGSS_RATE); // IGSS sobre ganancias brutas mensuales
-  // ISR según nuevo método (usa gb mensual *12 internamente)
+  const igss = round2((sueldo + bono + comisiones + hextrasMonto) * IGSS_RATE);
+
   const isrMensual = computeISRMonthlyFromRow(sueldo, bono, comisiones, hextrasMonto);
 
   const totalDeducciones = round2(igss + isrMensual + otras);
   const liquido = round2(totalDevengado - totalDeducciones);
 
-  // escribir resultados visibles
+  // escribir visibles
   const hextrasCell = tr.querySelector('.hextras'); if (hextrasCell) hextrasCell.textContent = withQ(hextrasMonto);
   const devCell = tr.querySelector('.total-devengado'); if (devCell) devCell.textContent = withQ(totalDevengado);
   const igssCell = tr.querySelector('.igss'); if (igssCell) igssCell.textContent = withQ(igss);
@@ -248,7 +230,6 @@ function recalcRow(tr) {
     else isrCell.textContent = '';
   }
 
-  // almacenar valores para totales/export
   tr.dataset._isrValue = isrMensual;
   tr.dataset._hextras = hextrasMonto;
 
@@ -256,7 +237,7 @@ function recalcRow(tr) {
   const liquiCell = tr.querySelector('.liquido'); if (liquiCell) liquiCell.textContent = withQ(liquido);
 }
 
-/* Recalcula totales sumando ISR numérico guardado en dataset */
+/* recalcula totales */
 function recalcTotals() {
   const rows = document.querySelectorAll('#planillaTable tbody tr');
   let totals = {sueldo:0, bono:0, dias:0, comisiones:0, horas:0, hextras:0, devengado:0, igss:0, isr:0, otras:0, deducciones:0, liquido:0};
@@ -303,7 +284,7 @@ function recalcTotals() {
   document.getElementById('total-liquido').textContent = withQ(totals.liquido);
 }
 
-/* Listener delegado: cualquier cambio en inputs con clase num-cell recalcula fila y totales */
+/* Delegated listener */
 document.addEventListener('input', (e) => {
   if (!e.target.classList) return;
   if (e.target.classList.contains('num-cell')) {
@@ -313,11 +294,11 @@ document.addEventListener('input', (e) => {
   }
 });
 
-/* Inicializar filas existentes */
+/* Init */
 document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
 recalcTotals();
 
-/* Agregar fila */
+/* Add row */
 document.getElementById('addRow').addEventListener('click', () => {
   const tbody = document.querySelector('#planillaTable tbody');
   const newIndex = tbody.querySelectorAll('tr').length + 1;
@@ -346,45 +327,40 @@ document.getElementById('addRow').addEventListener('click', () => {
   recalcTotals();
 });
 
-/* Export CSV */
+/* Export to Excel (.xlsx) using SheetJS */
 document.getElementById('exportCsv').addEventListener('click', () => {
-  const rows = [];
-  const header = Array.from(document.querySelectorAll('#planillaTable thead th')).map(th => th.innerText.trim());
-  rows.push(header.join(','));
-  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
-    const cols = [];
-    cols.push(tr.querySelector('td:nth-child(1)').innerText.trim());
-    const nameCell = tr.querySelector('td:nth-child(2)');
-    const nameVal = nameCell.querySelector('input') ? nameCell.querySelector('input').value : nameCell.innerText.trim();
-    cols.push(`"${nameVal.replace(/"/g,'""')}"`);
-    const sueldo = parseFloat(tr.querySelector('.sueldo').value) || 0;
-    const bono = parseFloat(tr.querySelector('.bono').value) || 0;
-    const dias = parseInt(tr.querySelector('.dias').value) || 0;
-    const comis = parseFloat(tr.querySelector('.comisiones').value) || 0;
-    const horas = parseInt(tr.querySelector('.horas').value) || 0;
-    const hex = parseFloat(tr.dataset._hextras) || parseFloat(tr.querySelector('.hextras').textContent.replace(/Q\s?/g,'')) || 0;
-    const dev = parseFloat(tr.querySelector('.total-devengado').textContent.replace(/Q\s?/g,'')) || 0;
-    const igss = parseFloat(tr.querySelector('.igss').textContent.replace(/Q\s?/g,'')) || 0;
-    const isr = parseFloat(tr.dataset._isrValue) || 0;
-    const otras = parseFloat(tr.querySelector('.otras').value) || 0;
-    const totDed = parseFloat(tr.querySelector('.total-deducciones').textContent.replace(/Q\s?/g,'')) || 0;
-    const liqui = parseFloat(tr.querySelector('.liquido').textContent.replace(/Q\s?/g,'')) || 0;
-    const medio = tr.querySelector('.medio-pago') ? tr.querySelector('.medio-pago').value.replace(/"/g,'""') : '';
-    const obs = tr.querySelector('.obs') ? tr.querySelector('.obs').value.replace(/"/g,'""') : '';
-    cols.push(sueldo, bono, dias, comis, horas, hex, dev, igss, isr, otras, totDed, liqui, `"${medio}"`, `"${obs}"`);
-    rows.push(cols.join(','));
+  const table = document.getElementById('planillaTable');
+  if (!table) return;
+
+  // Clone table to clean and convert values
+  const clone = table.cloneNode(true);
+
+  // Replace inputs with their values
+  clone.querySelectorAll('input').forEach(inp => {
+    const val = inp.value;
+    const parent = inp.parentElement || inp;
+    parent.replaceChild(document.createTextNode(val), inp);
   });
 
-  const csv = rows.join('\n');
-  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'planilla_noviembre.csv';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  // Clean cells: convert "Q 1,234.56" => numeric 1234.56; keep empty where needed
+  clone.querySelectorAll('td, th').forEach(cell => {
+    let txt = (cell.textContent || '').replace(/\u00A0/g, ' ').trim();
+    if (txt === '') return;
+    // Remove "Q" prefix if present
+    const qRemoved = txt.replace(/^Q\s*/i, '').replace(/,/g, '');
+    // If numeric, convert to number (so Excel shows numeric cell)
+    const n = Number(qRemoved);
+    if (qRemoved !== '' && isFinite(n)) {
+      cell.textContent = n;
+    } else {
+      cell.textContent = txt;
+    }
+  });
+
+  // Use SheetJS to build workbook from the cleaned table
+  const wb = XLSX.utils.table_to_book(clone, {sheet: "Planilla"});
+  // download
+  XLSX.writeFile(wb, 'planilla_noviembre.xlsx');
 });
 </script>
 
