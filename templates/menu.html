@@ -1,13 +1,13 @@
-{% extends "layout.html" %}
-{% block title %}Inicio{% endblock %}
-
 {% block content %}
-<!-- JUMBOTRON MEJORADO -->
+<!-- JUMBOTRON ESTÉTICO -->
 <div class="jumbotron jumbotron-welcome text-center mb-0 text-white">
+  <div class="overlay"></div>
   <div class="container fade-in">
     <h1 class="display-4">Bienvenido a Empaquetex</h1>
     <p class="lead">Panel de control centralizado. Accede rápidamente a planillas o a la información de empleados.</p>
   </div>
+  <!-- Curva decorativa inferior -->
+  <svg class="wave" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120"><path fill="#ffffff" fill-opacity="1" d="M0,64L48,80C96,96,192,128,288,128C384,128,480,96,576,74.7C672,53,768,43,864,64C960,85,1056,139,1152,160C1248,181,1344,171,1392,165.3L1440,160L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path></svg>
 </div>
 
 <section class="welcome-actions d-flex align-items-center">
@@ -43,17 +43,33 @@
 </section>
 
 <style>
-/* Jumbotron con colores vivos */
+/* Jumbotron con overlay y curva */
 .jumbotron-welcome {
-  background: linear-gradient(135deg, #ff7a00, #1e88e5);
-  padding: 3rem 1rem;
+  position: relative;
+  background: url("{{ url_for('static', filename='imagenes/pattern.png') }}") center/cover no-repeat, #1e3c72;
+  background-blend-mode: overlay;
+  padding: 4rem 1rem 6rem;
   margin-bottom: 0;
-  border-radius: 0 0 20px 20px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+  border-radius: 0;
+  overflow: hidden;
+}
+.jumbotron-welcome .overlay {
+  position: absolute;
+  top:0; left:0; right:0; bottom:0;
+  background: rgba(30,60,114,0.7);
 }
 .jumbotron-welcome h1,
 .jumbotron-welcome p {
-  text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
+  position: relative;
+  z-index: 2;
+  text-shadow: 1px 2px 6px rgba(0,0,0,0.4);
+}
+.jumbotron-welcome .wave {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: auto;
 }
 
 /* Animaciones */
@@ -72,30 +88,5 @@
   from { opacity: 0; transform: translateY(40px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
-/* Iconos con estilo */
-.icon-clipboard {
-  background: #ff9800;
-  color: #fff;
-  border-radius: 50%;
-  width: 70px;
-  height: 70px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  margin: 0 auto;
-}
-.icon-id {
-  background: #1e88e5;
-  color: #fff;
-  border-radius: 50%;
-  width: 70px;
-  height: 70px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  margin: 0 auto;
-}
 </style>
 {% endblock %}
-
