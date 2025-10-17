@@ -3,7 +3,7 @@
 
 {% block content %}
 <!-- JUMBOTRON MEJORADO -->
-<div class="jumbotron jumbotron-welcome text-center mb-0 text-white">
+<div class="jumbotron jumbotron-welcome text-center mb-0">
   <div class="container fade-in">
     <h1 class="display-4">Bienvenido a Empaquetex</h1>
     <p class="lead">Panel de control centralizado. Accede rápidamente a planillas o a la información de empleados.</p>
@@ -49,19 +49,20 @@
 
 <!-- ESTILOS -->
 <style>
-/* Jumbotron con color sólido y curva */
+/* Jumbotron con fondo claro y curva */
 .jumbotron-welcome {
   position: relative;
-  background-color: #1565c0; /* Azul corporativo */
+  background-color: #f5f7fa; /* Fondo claro elegante */
   padding: 4rem 1rem 6rem;
   margin-bottom: 0;
   border-radius: 0 0 30px 30px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
   overflow: hidden;
 }
 .jumbotron-welcome h1,
 .jumbotron-welcome p {
-  text-shadow: 1px 2px 6px rgba(0,0,0,0.4);
+  color: #212529; /* Texto negro */
+  text-shadow: none; /* Sin sombra para mantenerlo limpio */
 }
 .jumbotron-welcome .wave {
   position: absolute;
