@@ -11,14 +11,14 @@
       </div>
 
       <div class="d-flex flex-wrap align-items-center gap-2">
-        <input id="planillaName" class="form-control form-control-sm" type="text" value="Planilla - Noviembre 2025" style="min-width:220px" />
+        <input id="planillaName" class="form-control form-control-sm" type="text" value="Planilla - Noviembre 2025" style="min-width:240px" />
         <input id="emisionDate" class="form-control form-control-sm" type="date" />
         <button id="exportExcel" class="btn btn-primary btn-sm d-flex align-items-center" title="Exportar a Excel">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-file-earmark-excel mr-2" viewBox="0 0 16 16"><path d="M5.884 6.68 4.52 9.5l1.364 2.82H3.54L2 9.5l1.54-2.82h1.344z"/><path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zM10.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5.5H10.5A1.5 1.5 0 0 1 9 4V3.5z"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-file-earmark-excel me-2" viewBox="0 0 16 16"><path d="M5.884 6.68 4.52 9.5l1.364 2.82H3.54L2 9.5l1.54-2.82h1.344z"/><path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zM10.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5.5H10.5A1.5 1.5 0 0 1 9 4V3.5z"/></svg>
           Exportar a Excel
         </button>
         <button id="addRow" class="btn btn-outline-secondary btn-sm" title="Agregar fila">Agregar fila</button>
-        <button id="deleteRow" class="btn btn-outline-danger btn-sm" title="Eliminar última fila">Eliminar fila</button>
+        <button id="deleteRow" class="btn btn-outline-danger btn-sm" title="Eliminar fila">Eliminar fila</button>
         <small id="exportHint" class="text-danger" style="display:none; margin-left:.5rem;">Ingrese fecha de emisión para exportar</small>
       </div>
     </div>
@@ -27,24 +27,24 @@
   <div class="card shadow-sm border-0">
     <div class="card-body p-3">
       <div class="table-responsive horizontal-scroll">
-        <table id="planillaTable" class="table table-hover table-sm align-middle mb-0" style="min-width:1200px">
+        <table id="planillaTable" class="table table-hover table-sm align-middle mb-0" style="min-width:1400px">
           <colgroup>
             <col style="width:4%">
-            <col style="width:36%">
-            <col style="width:9%">
-            <col style="width:9%">
+            <col style="width:40%">
+            <col style="width:10%">
+            <col style="width:10%">
             <col style="width:7%">
-            <col style="width:8%">
+            <col style="width:9%">
             <col style="width:6%">
-            <col style="width:8%">
-            <col style="width:8%">
-            <col style="width:8%">
-            <col style="width:8%">
-            <col style="width:8%">
+            <col style="width:9%">
+            <col style="width:9%">
+            <col style="width:9%">
+            <col style="width:9%">
+            <col style="width:9%">
             <col style="width:10%">
           </colgroup>
 
-          <thead class="thead-dark text-white" style="background: linear-gradient(90deg,#0d6efd,#6610f2);">
+          <thead class="table-header-custom text-white">
             <tr>
               <th>No.</th>
               <th>Apellido(s), Nombre(s)</th>
@@ -63,7 +63,6 @@
           </thead>
 
           <tbody>
-            <!-- Filas ejemplo iniciales -->
             <tr data-row="1">
               <td>1</td>
               <td class="align-middle">EDNA ANABELY MARISTELA VELASQUEZ MALDONADO</td>
@@ -239,13 +238,12 @@ function recalcRow(tr) {
   tr.dataset._hextras = hextrasMonto;
 
   const totDedCell = tr.querySelector('.total-deducciones'); if (totDedCell) totDedCell.textContent = withQ(totalDeducciones);
-  const liquiCell = tr.querySelector('.liquido'); if (liquiCell) liquiCell.textContent = withQ(liquido);
 }
 
 /* Recalcula totales */
 function recalcTotals() {
   const rows = document.querySelectorAll('#planillaTable tbody tr');
-  let totals = {sueldo:0, bono:0, dias:0, comisiones:0, horas:0, hextras:0, devengado:0, igss:0, isr:0, otras:0, deducciones:0, liquido:0};
+  let totals = {sueldo:0, bono:0, dias:0, comisiones:0, horas:0, hextras:0, devengado:0, igss:0, isr:0, otras:0, deducciones:0};
   rows.forEach(tr => {
     const sueldo = parseFloat(tr.querySelector('.sueldo').value) || 0;
     const bono = parseFloat(tr.querySelector('.bono').value) || 0;
@@ -259,7 +257,6 @@ function recalcTotals() {
     const igss = round2((sueldo + bono + comisiones + hextrasMonto) * IGSS_RATE);
     const isrMensual = parseFloat(tr.dataset._isrValue) || 0;
     const totalDeducciones = round2(igss + isrMensual + otras);
-    const liquido = round2(totalDevengado - totalDeducciones);
 
     totals.sueldo += sueldo;
     totals.bono += bono;
@@ -272,7 +269,6 @@ function recalcTotals() {
     totals.isr += isrMensual;
     totals.otras += otras;
     totals.deducciones += totalDeducciones;
-    totals.liquido += liquido;
   });
 
   document.getElementById('total-sueldo').textContent = withQ(totals.sueldo);
@@ -382,29 +378,31 @@ document.getElementById('exportExcel').addEventListener('click', () => {
 
 <style>
   :root{
-    --card-bg: #ffffff;
+    --bg-grad-start: #f3f6ff;
+    --bg-grad-end: #fafbff;
     --muted: #6c757d;
-    --accent1: #0d6efd;
-    --accent2: #6610f2;
+    --accent1: #0ea5a4;
+    --accent2: #0b7285;
     --panel: #f8f9fa;
   }
-  body { background: linear-gradient(180deg,#f3f6ff 0%, #fafbff 100%); }
+  body { background: linear-gradient(180deg,var(--bg-grad-start) 0%, var(--bg-grad-end) 100%); }
   .card { border-radius: .6rem; }
   .card .card-body { padding: .9rem 1rem; }
-  h3 { font-weight:600; color:#0b3d91; }
+  h3 { font-weight:600; color:var(--accent2); }
   .money-prefix { background:linear-gradient(180deg,#fff 0%, #f3f6fb 100%); border-radius:6px; padding:.3rem .45rem; border:1px solid rgba(0,0,0,0.06); font-weight:600; color:#333; }
   .form-control { border-radius:.45rem; }
-  .btn-primary { background: linear-gradient(90deg,var(--accent1),var(--accent2)); border: none; box-shadow: 0 4px 14px rgba(102,16,242,0.12); }
+  .btn-primary { background: linear-gradient(90deg,var(--accent1),var(--accent2)); border: none; box-shadow: 0 6px 20px rgba(11,114,133,0.08); }
   .btn-outline-secondary { border-radius:.45rem; }
-  table.table thead th { border:0; color:#fff; font-weight:600; }
+  .table-header-custom { background: linear-gradient(90deg,#0ea5a4,#036b6a); }
+  .table-header-custom th { color:#fff; border:0; font-weight:700; padding:.7rem .8rem; }
   table.table tbody tr { background: #fff; }
-  table.table tbody tr:nth-child(odd) { background: #fbfdff; }
-  table.table { border-collapse: separate; border-spacing:0; border-radius:.5rem; overflow:hidden; }
-  table.table td, table.table th { vertical-align: middle; padding:.5rem .6rem; }
+  table.table tbody tr:nth-child(odd) { background: #fbfeff; }
+  table.table { border-collapse: separate; border-spacing:0; border-radius:.6rem; overflow:hidden; box-shadow: 0 1px 2px rgba(15,23,42,0.04); }
+  table.table td, table.table th { vertical-align: middle; padding:.6rem .9rem; }
   .horizontal-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
   .text-end { text-align:right; }
   .fw-bold { font-weight:700; }
-  .small-muted { color:var(--muted); font-size:.85rem; }
+  .money-inline .form-control { min-width:160px; }
   @media (max-width:767px) {
     .card-body { padding:.6rem; }
     .money-inline .form-control { min-width:110px; }
