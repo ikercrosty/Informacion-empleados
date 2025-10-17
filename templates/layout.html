@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -8,8 +7,10 @@
   <title>{% block title %}{% endblock %}</title>
 
   <!-- BOOTSTRAP 4 CDN -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
-    integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+  <link rel="stylesheet"
+        href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+        integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
+        crossorigin="anonymous">
 
   <!-- FONT AWESOME -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -24,8 +25,7 @@
     <div class="container-fluid d-flex align-items-center">
       <div class="d-flex align-items-center">
         <!-- Back button: aparece solo en páginas de información de empleados (no planilla/recibo/ficha) -->
-        {% if 'usuario' in session and request.path in ['/', '/about','/ficha','/planilla','/recibo', '/conyugue',
-        '/emergencia', '/laboral', '/medica'] %}
+        {% if 'usuario' in session and request.path in ['/', '/about','/ficha','/planilla','/recibo', '/conyugue', '/emergencia', '/laboral', '/medica'] %}
         <a href="{{ url_for('menu') }}" id="btnBackToPlanilla" class="btn btn-back mr-2" title="Regresar al Menú">
           <i class="fas fa-arrow-left"></i>
         </a>
@@ -40,16 +40,13 @@
         <!-- Opciones visibles en navbar SOLO en /planilla, /recibo, /ficha y SOLO en pantallas md+ -->
         {% if 'usuario' in session and request.path in ['/planilla', '/recibo', '/ficha'] %}
         <div class="navbar-left-links d-none d-md-flex ml-4">
-          <a class="nav-link text-white {% if request.path == '/planilla' %}font-weight-bold{% endif %}"
-            href="{{ url_for('planilla') }}">
+          <a class="nav-link text-white {% if request.path == '/planilla' %}font-weight-bold{% endif %}" href="{{ url_for('planilla') }}">
             <i class="fas fa-list mr-1"></i> Planilla
           </a>
-          <a class="nav-link text-white {% if request.path == '/recibo' %}font-weight-bold{% endif %}"
-            href="{{ url_for('recibo') }}">
+          <a class="nav-link text-white {% if request.path == '/recibo' %}font-weight-bold{% endif %}" href="{{ url_for('recibo') }}">
             <i class="fas fa-file-invoice-dollar mr-1"></i> Recibo del pago
           </a>
-          <a class="nav-link text-white {% if request.path == '/ficha' %}font-weight-bold{% endif %}"
-            href="{{ url_for('ficha') }}">
+          <a class="nav-link text-white {% if request.path == '/ficha' %}font-weight-bold{% endif %}" href="{{ url_for('ficha') }}">
             <i class="fas fa-id-badge mr-1"></i> Ficha de empleados
           </a>
           <a class="nav-link text-white" href="{{ url_for('logout') }}">
@@ -60,11 +57,11 @@
       </div>
 
       <!-- Único botón hamburguesa (si el usuario está autenticado) -->
-      {% if 'usuario' in session and request.path not in ['/', '/login'] %}
-      <button id="menuInfoToggle" class="btn btn-hamburger ml-auto" type="button" aria-label="Abrir menú">
-        <i class="fas fa-bars" style="font-size:1.1rem; color:#fff;"></i>
-      </button>
-      {% endif %}
+{% if 'usuario' in session and request.path not in ['/', '/login'] %}
+<button id="menuInfoToggle" class="btn btn-hamburger ml-auto" type="button" aria-label="Abrir menú">
+  <i class="fas fa-bars" style="font-size:1.1rem; color:#fff;"></i>
+</button>
+{% endif %}
 
   </nav>
 
@@ -77,76 +74,73 @@
     <ul class="navbar-nav">
 
       {% if request.path in ['/planilla', '/recibo', '/ficha'] %}
-      <!-- En planilla/recibo/ficha: mostrar opciones en móviles (d-md-none) y siempre Cerrar sesión -->
-      <li class="nav-item d-md-none">
-        <a class="nav-link text-white border-bottom {% if request.path == '/planilla' %}font-weight-bold{% endif %}"
-          href="{{ url_for('planilla') }}">
-          <i class="fas fa-list"></i> Planilla
-        </a>
-      </li>
+        <!-- En planilla/recibo/ficha: mostrar opciones en móviles (d-md-none) y siempre Cerrar sesión -->
+        <li class="nav-item d-md-none">
+          <a class="nav-link text-white border-bottom {% if request.path == '/planilla' %}font-weight-bold{% endif %}" href="{{ url_for('planilla') }}">
+            <i class="fas fa-list"></i> Planilla
+          </a>
+        </li>
 
-      <li class="nav-item d-md-none">
-        <a class="nav-link text-white border-bottom {% if request.path == '/recibo' %}font-weight-bold{% endif %}"
-          href="{{ url_for('recibo') }}">
-          <i class="fas fa-file-invoice-dollar"></i> Recibo del pago
-        </a>
-      </li>
+        <li class="nav-item d-md-none">
+          <a class="nav-link text-white border-bottom {% if request.path == '/recibo' %}font-weight-bold{% endif %}" href="{{ url_for('recibo') }}">
+            <i class="fas fa-file-invoice-dollar"></i> Recibo del pago
+          </a>
+        </li>
 
-      <li class="nav-item d-md-none">
-        <a class="nav-link text-white border-bottom {% if request.path == '/ficha' %}font-weight-bold{% endif %}"
-          href="{{ url_for('ficha') }}">
-          <i class="fas fa-id-badge"></i> Ficha de empleados
-        </a>
-      </li>
+        <li class="nav-item d-md-none">
+          <a class="nav-link text-white border-bottom {% if request.path == '/ficha' %}font-weight-bold{% endif %}" href="{{ url_for('ficha') }}">
+            <i class="fas fa-id-badge"></i> Ficha de empleados
+          </a>
+        </li>
 
-      <li class="nav-item">
-        <a class="nav-link text-white border-bottom" href="{{ url_for('logout') }}">
-          <i class="fas fa-sign-out-alt"></i> Cerrar sesión
-        </a>
-      </li>
+        <li class="nav-item">
+          <a class="nav-link text-white border-bottom" href="{{ url_for('logout') }}">
+            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+          </a>
+        </li>
       {% else %}
-      <!-- En páginas de información de empleados: menú completo como antes -->
-      <li class="nav-item {% if request.path == '/' %}active{% endif %}">
-        <a class="nav-link text-white border-bottom" href="{{ url_for('home') }}">
-          <i class="fas fa-id-card"></i> Datos Personales
-        </a>
-      </li>
+        <!-- En páginas de información de empleados: menú completo como antes -->
+        <li class="nav-item {% if request.path == '/' %}active{% endif %}">
+          <a class="nav-link text-white border-bottom" href="{{ url_for('home') }}">
+            <i class="fas fa-id-card"></i> Datos Personales
+          </a>
+        </li>
 
-      <li class="nav-item {% if request.path == '/about' %}active{% endif %}">
-        <a class="nav-link text-white border-bottom" href="{{ url_for('about') }}">
-          <i class="fas fa-graduation-cap"></i> Información Académica
-        </a>
-      </li>
+        <li class="nav-item {% if request.path == '/about' %}active{% endif %}">
+          <a class="nav-link text-white border-bottom" href="{{ url_for('about') }}">
+            <i class="fas fa-graduation-cap"></i> Información Académica
+          </a>
+        </li>
 
-      <li class="nav-item {% if request.path == '/conyugue' %}active{% endif %}">
-        <a class="nav-link text-white border-bottom" href="{{ url_for('conyugue') }}">
-          <i class="fas fa-user-friends"></i> Datos del Cónyuge
-        </a>
-      </li>
+        <li class="nav-item {% if request.path == '/conyugue' %}active{% endif %}">
+          <a class="nav-link text-white border-bottom" href="{{ url_for('conyugue') }}">
+            <i class="fas fa-user-friends"></i> Datos del Cónyuge
+          </a>
+        </li>
 
-      <li class="nav-item {% if request.path == '/emergencia' %}active{% endif %}">
-        <a class="nav-link text-white border-bottom" href="{{ url_for('emergencia') }}">
-          <i class="fas fa-phone-alt"></i> Contacto de Emergencia
-        </a>
-      </li>
+        <li class="nav-item {% if request.path == '/emergencia' %}active{% endif %}">
+          <a class="nav-link text-white border-bottom" href="{{ url_for('emergencia') }}">
+            <i class="fas fa-phone-alt"></i> Contacto de Emergencia
+          </a>
+        </li>
 
-      <li class="nav-item {% if request.path == '/laboral' %}active{% endif %}">
-        <a class="nav-link text-white border-bottom" href="{{ url_for('laboral') }}">
-          <i class="fas fa-briefcase"></i> Referencias Laborales
-        </a>
-      </li>
+        <li class="nav-item {% if request.path == '/laboral' %}active{% endif %}">
+          <a class="nav-link text-white border-bottom" href="{{ url_for('laboral') }}">
+            <i class="fas fa-briefcase"></i> Referencias Laborales
+          </a>
+        </li>
 
-      <li class="nav-item {% if request.path == '/medica' %}active{% endif %}">
-        <a class="nav-link text-white border-bottom" href="{{ url_for('medica') }}">
-          <i class="fas fa-notes-medical"></i> Referencias Médicas
-        </a>
-      </li>
+        <li class="nav-item {% if request.path == '/medica' %}active{% endif %}">
+          <a class="nav-link text-white border-bottom" href="{{ url_for('medica') }}">
+            <i class="fas fa-notes-medical"></i> Referencias Médicas
+          </a>
+        </li>
 
-      <li class="nav-item">
-        <a class="nav-link text-white border-bottom" href="{{ url_for('logout') }}">
-          <i class="fas fa-sign-out-alt"></i> Cerrar sesión
-        </a>
-      </li>
+        <li class="nav-item">
+          <a class="nav-link text-white border-bottom" href="{{ url_for('logout') }}">
+            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+          </a>
+        </li>
       {% endif %}
     </ul>
   </div>
@@ -155,13 +149,13 @@
   <!-- CONTENIDO -->
   <div class="container p-4">
     {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    <div>
-      {% for category, message in messages %}
-      <div class="alert alert-{{ category }}">{{ message }}</div>
-      {% endfor %}
-    </div>
-    {% endif %}
+      {% if messages %}
+        <div>
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
     {% endwith %}
 
     {% block content %}{% endblock %}
@@ -169,14 +163,14 @@
 
   <!-- SCRIPTS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-    integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-    crossorigin="anonymous"></script>
+          integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+          crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
-    integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
-    crossorigin="anonymous"></script>
+          integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+          crossorigin="anonymous"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
-    integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
-    crossorigin="anonymous"></script>
+          integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+          crossorigin="anonymous"></script>
 
   <script src="{{ url_for('static', filename='main.js') }}"></script>
 
@@ -221,5 +215,4 @@
     });
   </script>
 </body>
-
 </html>
