@@ -57,7 +57,7 @@
       </div>
 
       <!-- Único botón hamburguesa (si el usuario está autenticado) -->
-{% if 'usuario' in session and request.path not in ['menu', '/login'] %}
+{% if 'usuario' in session and request.path not in ['/menu', '/login'] %}
 <button id="menuInfoToggle" class="btn btn-hamburger ml-auto" type="button" aria-label="Abrir menú">
   <i class="fas fa-bars" style="font-size:1.1rem; color:#fff;"></i>
 </button>
