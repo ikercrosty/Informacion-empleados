@@ -2,18 +2,17 @@
 {% block title %}Inicio{% endblock %}
 
 {% block content %}
-<!-- JUMBOTRON COLORIDO -->
-<div class="jumbotron jumbotron-welcome text-center mb-0 text-white">
-  <div class="container fade-in">
+<div class="jumbotron jumbotron-welcome text-center mb-0">
+  <div class="container">
     <h1 class="display-4">Bienvenido a Empaquetex</h1>
-    <p class="lead">Panel de control centralizado. Accede rápidamente a planillas o a la información de empleados.</p>
+    <p class="lead text-muted">Panel de control centralizado. Accede rápidamente a planillas o a la información de empleados.</p>
   </div>
 </div>
 
 <section class="welcome-actions d-flex align-items-center">
   <div class="actions-inner container">
     <div class="row justify-content-center">
-      <div class="col-12 col-md-5 slide-up">
+      <div class="col-12 col-md-5">
         <div class="action-card shadow-sm text-center">
           <div class="icon-wrap mb-3 icon-clipboard">
             <i class="fas fa-clipboard-list fa-2x" aria-hidden="true"></i>
@@ -26,7 +25,7 @@
         </div>
       </div>
 
-      <div class="col-12 col-md-5 slide-up" style="animation-delay:0.2s;">
+      <div class="col-12 col-md-5">
         <div class="action-card shadow-sm text-center">
           <div class="icon-wrap mb-3 icon-id">
             <i class="fas fa-id-badge fa-2x" aria-hidden="true"></i>
@@ -41,60 +40,4 @@
     </div>
   </div>
 </section>
-
-<style>
-/* Fondo sólido elegante */
-.jumbotron-welcome {
-  background-color: #1565c0; /* Azul corporativo */
-  padding: 3rem 1rem;
-  margin-bottom: 0;
-  border-radius: 0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-/* Animaciones */
-.fade-in {
-  animation: fadeIn 1s ease-in-out;
-}
-.slide-up {
-  animation: slideUp 0.8s ease forwards;
-  opacity: 0;
-}
-.slide-up:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Iconos con colores */
-.icon-clipboard {
-  background: #ff9800;
-  color: #fff;
-  border-radius: 50%;
-  width: 70px;
-  height: 70px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  margin: 0 auto;
-}
-.icon-id {
-  background: #1e88e5;
-  color: #fff;
-  border-radius: 50%;
-  width: 70px;
-  height: 70px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  margin: 0 auto;
-}
-</style>
 {% endblock %}
