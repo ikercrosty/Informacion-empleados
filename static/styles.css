@@ -244,61 +244,114 @@ body {
 #formEliminarFoto {
   margin-top: 12px;
 }
-/* Jumbotron mejorado y acorde al proyecto */
+/* Jumbotron mejorado */
 .jumbotron-welcome {
-  background: linear-gradient(180deg,#f4f8fb 0%,#ffffff 60%);
-  border-bottom: 1px solid rgba(30,60,90,0.04);
-  padding: 2.25rem 1rem;
-  box-shadow: 0 8px 24px rgba(7,22,40,0.03);
+  background: linear-gradient(180deg, #f7fbff 0%, #ffffff 60%);
+  border-bottom: 1px solid rgba(20,40,60,0.04);
+  padding: 3rem 1rem;
+  box-shadow: 0 6px 18px rgba(9,30,66,0.03);
 }
 
-/* Contenido superior del welcome */
-.welcome-top { max-width: 980px; margin: 0 auto; align-items:flex-start; }
-.welcome-badge { width:72px; height:72px; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg,#ff7a00,#1e88e5); border-radius:12px; box-shadow: 0 8px 20px rgba(30,60,90,0.06); }
-.welcome-logo { width:44px; height:auto; filter: brightness(1.02); }
+/* Área de botones centrada bajo el jumbotron */
+.welcome-actions {
+  min-height: calc(100vh - 260px);
+  padding: 2.25rem 0;
+  background: linear-gradient(180deg, rgba(250,250,252,0.8), rgba(255,255,255,0.95));
+}
 
-/* Texto del jumbotron */
-.welcome-text h1 { font-size:1.9rem; margin:0; color:#17314b; }
-.welcome-text .lead { margin:0; color:#566978; font-size:1rem; }
+/* Contenedor interior */
+.actions-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
 
-/* Meta pills */
-.meta-row { margin-top:6px; }
-.meta-pill { background:#f1f6fb; color:#274057; padding:6px 9px; border-radius:999px; font-size:0.85rem; border:1px solid rgba(20,40,60,0.04); }
+/* Tarjeta de acción */
+.action-card {
+  background: linear-gradient(180deg, #ffffff, #fbfdff);
+  border-radius: 10px;
+  padding: 1.5rem;
+  border: 1px solid #eef3f7;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
 
-/* Línea decorativa */
-.decor-line { width:120px; height:6px; border-radius:6px; background: linear-gradient(90deg,#ff7a00,#1e88e5); box-shadow: 0 8px 24px rgba(30,60,90,0.05); }
+/* Icon wrapper genérico */
+.icon-wrap {
+  width: 76px;
+  height: 76px;
+  margin: 0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  color: #fff;
+}
 
-/* Área de acciones */
-.welcome-actions { min-height: calc(100vh - 320px); padding: 2rem 0 3rem; background: transparent; }
-.actions-inner { max-width:1100px; margin:0 auto; }
+/* Icono Planillas: color y fondo */
+.icon-clipboard {
+  background: linear-gradient(135deg, #ffb74d, #ff9800);
+  color: #3a2a00;
+}
 
-/* Card de acción */
-.action-card { background: linear-gradient(180deg,#fff,#fbfdff); border-radius:10px; padding:1.4rem; border:1px solid #eef4f8; transition: transform .16s ease, box-shadow .16s ease; display:flex; flex-direction:column; justify-content:space-between; }
-.action-card:hover { transform: translateY(-6px); box-shadow: 0 18px 40px rgba(18,38,63,0.07); }
+/* Icono Empleados: color y fondo */
+.icon-id {
+  background: linear-gradient(135deg, #4f9ef8, #2b6fb3);
+  color: #fff;
+}
 
-/* Icon wrapper */
-.icon-wrap { width:72px; height:72px; margin:0 auto; display:flex; align-items:center; justify-content:center; border-radius:12px; color:#fff; }
-.icon-clipboard { background: linear-gradient(135deg,#ffb74d,#ff9800); color:#3a2a00; }
-.icon-id { background: linear-gradient(135deg,#4f9ef8,#2b6fb3); color:#fff; }
+/* Hover effect para tarjetas */
+.action-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 18px 40px rgba(18,38,63,0.08);
+}
 
 /* Titulos y descripciones */
-.action-card h5 { color:#1d303f; font-weight:600; margin-bottom:6px; }
-.action-card p { color:#5a6a76; margin-bottom:12px; }
-
-/* Botones y hover */
-.action-btn { max-width:360px; margin:0 auto; }
-.btn-outline-warning { color:#7a4f00; background: linear-gradient(90deg,#fff8ef,#fff6e8); border:1px solid rgba(122,79,0,0.12); transition: all .12s ease; }
-.btn-outline-warning:hover { background: linear-gradient(90deg,#ffd27a,#ffb347); color:#fff; transform: translateY(-3px); box-shadow: 0 10px 28px rgba(255,138,0,0.12); }
-.action-btn-blue { background: linear-gradient(90deg,#1e88e5,#1565c0); border:0; color:#fff; transition: all .12s ease; }
-.action-btn-blue:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(21,101,192,0.18); filter: brightness(.98); }
-
-/* Info strip */
-.info-strip { background:#ffffff; border:1px solid #eef4f8; border-radius:8px; padding:10px 14px; box-shadow: 0 6px 18px rgba(18,38,63,0.03); }
-
-/* Responsive */
-@media (max-width: 991px) {
-  .welcome-top { flex-direction:column; text-align:center; }
-  .welcome-text { margin-left:0 !important; margin-top:10px; }
-  .meta-row { justify-content:center; display:flex; gap:8px; }
-  .welcome-actions { min-height: auto; padding-bottom:1.5rem; }
+.action-card h5 {
+  color: #22303f;
+  font-weight: 600;
 }
+.action-card p {
+  font-size: .95rem;
+  color: #55606a;
+}
+
+/* Botones: ancho, colores y hover */
+.action-btn {
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+/* Planillas: estilo naranja suave */
+.btn-outline-warning {
+  color: #7a4f00;
+  background: linear-gradient(90deg, #fff8ef, #fff6e8);
+  border: 1px solid rgba(122,79,0,0.12);
+}
+.btn-outline-warning:hover {
+  background: linear-gradient(90deg,#ffd27a,#ffb347);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(255,138,0,0.12);
+  transform: translateY(-2px);
+}
+
+/* Empleados: botón azul con hover visible */
+.action-btn-blue {
+  background: linear-gradient(90deg,#1e88e5,#1565c0);
+  border: 0;
+  color: #fff;
+  transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+}
+.action-btn-blue:hover, .action-btn-blue:focus {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(21,101,192,0.18);
+  filter: brightness(.98);
+}
+
+/* Responsive spacing */
+@media (max-width: 991px) {
+  .welcome-actions { padding: 1.25rem 0; }
+  .action-card { margin-bottom: 1rem; }
+}
+
+
+
+/* --------- Fin -----*/ 
