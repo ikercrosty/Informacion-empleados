@@ -1,24 +1,281 @@
 {% extends "layout.html" %}
-{% block title %}Planilla{% endblock %}
+{% block title %}Planilla - Noviembre 2025{% endblock %}
 
 {% block content %}
-<div class="jumbotron">
-  <h1 class="display-4">Planilla</h1>
-  <p class="lead">Aquí irá la información de la planilla.</p>
+<div class="container">
+  <h2 class="mt-3">Planilla - Noviembre 2025</h2>
+  <p class="text-muted">Empresa: EMPAQUES Y TEXTURAS DE GUATEMALA, SOCIEDAD ANÓNIMA</p>
+
+  <div class="table-responsive mb-3">
+    <table id="planillaTable" class="table table-bordered table-sm">
+      <thead class="thead-light">
+        <tr>
+          <th>No.</th>
+          <th>Apellido(s), Nombre(s)</th>
+          <th>Sueldo Base</th>
+          <th>Bonificación</th>
+          <th>Días</th>
+          <th>Comisiones</th>
+          <th>Horas Extras (monto)</th>
+          <th>Sub Total</th>
+          <th>IGSS (4.83%)</th>
+          <th>ISR (estimado)</th>
+          <th>Total Deducciones</th>
+          <th>Líquido a pagar</th>
+          <th>Medio de Pago / Observaciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Fila 1 -->
+        <tr data-row="1">
+          <td class="align-middle">1</td>
+          <td class="align-middle">EDNA ANABELY MARISTELA VELASQUEZ MALDONAOD</td>
+
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell sueldo" value="3723.05"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell bono" value="250"></td>
+          <td><input type="number" step="1" class="form-control form-control-sm num-cell dias" value="30"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell comisiones" value="0"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell hextras" value="0"></td>
+
+          <td class="text-right align-middle subtotal">0.00</td>
+          <td class="text-right align-middle igss">0.00</td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell isr" value="0"></td>
+          <td class="text-right align-middle total-deducciones">0.00</td>
+          <td class="text-right align-middle liquido">0.00</td>
+          <td><input type="text" class="form-control form-control-sm" value=""></td>
+        </tr>
+
+        <!-- Fila 2 -->
+        <tr data-row="2">
+          <td class="align-middle">2</td>
+          <td class="align-middle">IGDALIA ALIDA OCTAVI VELASQUEZ MALDONDO</td>
+
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell sueldo" value="3723.05"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell bono" value="250"></td>
+          <td><input type="number" step="1" class="form-control form-control-sm num-cell dias" value="30"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell comisiones" value="0"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell hextras" value="0"></td>
+
+          <td class="text-right align-middle subtotal">0.00</td>
+          <td class="text-right align-middle igss">0.00</td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell isr" value="0"></td>
+          <td class="text-right align-middle total-deducciones">0.00</td>
+          <td class="text-right align-middle liquido">0.00</td>
+          <td><input type="text" class="form-control form-control-sm" value=""></td>
+        </tr>
+
+        <!-- Fila 3 -->
+        <tr data-row="3">
+          <td class="align-middle">3</td>
+          <td class="align-middle">ANGEL ESTUARDO ESCOBAR VELASQUEZ</td>
+
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell sueldo" value="4500.00"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell bono" value="250"></td>
+          <td><input type="number" step="1" class="form-control form-control-sm num-cell dias" value="30"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell comisiones" value="0"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell hextras" value="14.13"></td>
+
+          <td class="text-right align-middle subtotal">0.00</td>
+          <td class="text-right align-middle igss">0.00</td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell isr" value="0"></td>
+          <td class="text-right align-middle total-deducciones">0.00</td>
+          <td class="text-right align-middle liquido">0.00</td>
+          <td><input type="text" class="form-control form-control-sm" value=""></td>
+        </tr>
+
+        <!-- Fila 4 -->
+        <tr data-row="4">
+          <td class="align-middle">4</td>
+          <td class="align-middle">LEONIDAS ANIBAL ESCOBAR PASCUAL</td>
+
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell sueldo" value="4500.00"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell bono" value="250"></td>
+          <td><input type="number" step="1" class="form-control form-control-sm num-cell dias" value="30"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell comisiones" value="0"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell hextras" value="14.13"></td>
+
+          <td class="text-right align-middle subtotal">0.00</td>
+          <td class="text-right align-middle igss">0.00</td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell isr" value="0"></td>
+          <td class="text-right align-middle total-deducciones">0.00</td>
+          <td class="text-right align-middle liquido">0.00</td>
+          <td><input type="text" class="form-control form-control-sm" value=""></td>
+        </tr>
+      </tbody>
+
+      <tfoot>
+        <tr class="font-weight-bold">
+          <td colspan="2" class="text-right">TOTAL</td>
+          <td id="total-sueldo" class="text-right">0.00</td>
+          <td id="total-bono" class="text-right">0.00</td>
+          <td id="total-dias" class="text-right">0</td>
+          <td id="total-comisiones" class="text-right">0.00</td>
+          <td id="total-hextras" class="text-right">0.00</td>
+          <td id="total-subtotal" class="text-right">0.00</td>
+          <td id="total-igss" class="text-right">0.00</td>
+          <td id="total-isr" class="text-right">0.00</td>
+          <td id="total-deducciones" class="text-right">0.00</td>
+          <td id="total-liquido" class="text-right">0.00</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="mb-4">
+    <button id="addRow" class="btn btn-sm btn-outline-primary">Agregar fila</button>
+    <button id="exportCsv" class="btn btn-sm btn-outline-secondary">Exportar CSV</button>
+    <span class="ml-3 text-muted">Los cálculos se realizan en tiempo real: Subtotal = SueldoBase + Bonificación + Horas Extras + Comisiones. IGSS = SueldoBase * 4.83%. Deducciones = IGSS + ISR. Líquido = Subtotal - Deducciones.</span>
+  </div>
 </div>
 
-  <p class="text-muted mt-3"> </p>
-
 <script>
-  // Si quieres que al hacer click se añada query para abrir sidebar automáticamente:
-  document.addEventListener("DOMContentLoaded", () => {
-    const btn = document.getElementById('btnAbrirInfo');
-    if (btn) {
-      btn.addEventListener('click', (e) => {
-        // navegar normalmente; si prefieres abrir sidebar al llegar a home,
-        // cambia el href en la plantilla a "{{ url_for('home') }}?from=planilla"
-      });
-    }
+/* Parámetros fiscales simples (ajustables) */
+const IGSS_RATE = 0.0483;
+
+/* Recalcula una fila dadas las celdas */
+function recalcRow(tr) {
+  const sueldo = parseFloat(tr.querySelector('.sueldo').value) || 0;
+  const bono = parseFloat(tr.querySelector('.bono').value) || 0;
+  const comisiones = parseFloat(tr.querySelector('.comisiones').value) || 0;
+  const hextras = parseFloat(tr.querySelector('.hextras').value) || 0;
+  const isrInput = tr.querySelector('.isr');
+  const isr = parseFloat(isrInput.value) || 0;
+
+  const subtotal = round2(sueldo + bono + comisiones + hextras);
+  const igss = round2(sueldo * IGSS_RATE);
+  const totalDeducciones = round2(igss + isr);
+  const liquido = round2(subtotal - totalDeducciones);
+
+  tr.querySelector('.subtotal').textContent = formatNum(subtotal);
+  tr.querySelector('.igss').textContent = formatNum(igss);
+  tr.querySelector('.total-deducciones').textContent = formatNum(totalDeducciones);
+  tr.querySelector('.liquido').textContent = formatNum(liquido);
+}
+
+/* Recalcula todos los totales de pie */
+function recalcTotals() {
+  const rows = document.querySelectorAll('#planillaTable tbody tr');
+  let totals = {
+    sueldo:0, bono:0, dias:0, comisiones:0, hextras:0, subtotal:0, igss:0, isr:0, deducciones:0, liquido:0
+  };
+  rows.forEach(tr => {
+    const sueldo = parseFloat(tr.querySelector('.sueldo').value) || 0;
+    const bono = parseFloat(tr.querySelector('.bono').value) || 0;
+    const dias = parseFloat(tr.querySelector('.dias').value) || 0;
+    const comisiones = parseFloat(tr.querySelector('.comisiones').value) || 0;
+    const hextras = parseFloat(tr.querySelector('.hextras').value) || 0;
+    const isr = parseFloat(tr.querySelector('.isr').value) || 0;
+
+    const subtotal = round2(sueldo + bono + comisiones + hextras);
+    const igss = round2(sueldo * IGSS_RATE);
+    const totalDeducciones = round2(igss + isr);
+    const liquido = round2(subtotal - totalDeducciones);
+
+    totals.sueldo += sueldo;
+    totals.bono += bono;
+    totals.dias += dias;
+    totals.comisiones += comisiones;
+    totals.hextras += hextras;
+    totals.subtotal += subtotal;
+    totals.igss += igss;
+    totals.isr += isr;
+    totals.deducciones += totalDeducciones;
+    totals.liquido += liquido;
   });
+
+  document.getElementById('total-sueldo').textContent = formatNum(totals.sueldo);
+  document.getElementById('total-bono').textContent = formatNum(totals.bono);
+  document.getElementById('total-dias').textContent = formatNum(totals.dias);
+  document.getElementById('total-comisiones').textContent = formatNum(totals.comisiones);
+  document.getElementById('total-hextras').textContent = formatNum(totals.hextras);
+  document.getElementById('total-subtotal').textContent = formatNum(totals.subtotal);
+  document.getElementById('total-igss').textContent = formatNum(totals.igss);
+  document.getElementById('total-isr').textContent = formatNum(totals.isr);
+  document.getElementById('total-deducciones').textContent = formatNum(totals.deducciones);
+  document.getElementById('total-liquido').textContent = formatNum(totals.liquido);
+}
+
+/* Round helper */
+function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
+function formatNum(n){ return n.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+/* Event delegation: recalculate when any numeric input changes */
+document.addEventListener('input', (e) => {
+  if (!e.target.classList) return;
+  if (e.target.classList.contains('num-cell')) {
+    const tr = e.target.closest('tr');
+    recalcRow(tr);
+    recalcTotals();
+  }
+});
+
+/* Initialize existing rows */
+document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
+recalcTotals();
+
+/* Add row button */
+document.getElementById('addRow').addEventListener('click', () => {
+  const tbody = document.querySelector('#planillaTable tbody');
+  const newIndex = tbody.querySelectorAll('tr').length + 1;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td class="align-middle">${newIndex}</td>
+    <td><input type="text" class="form-control form-control-sm" value=""></td>
+    <td><input type="number" step="0.01" class="form-control form-control-sm num-cell sueldo" value="0"></td>
+    <td><input type="number" step="0.01" class="form-control form-control-sm num-cell bono" value="0"></td>
+    <td><input type="number" step="1" class="form-control form-control-sm num-cell dias" value="30"></td>
+    <td><input type="number" step="0.01" class="form-control form-control-sm num-cell comisiones" value="0"></td>
+    <td><input type="number" step="0.01" class="form-control form-control-sm num-cell hextras" value="0"></td>
+    <td class="text-right align-middle subtotal">0.00</td>
+    <td class="text-right align-middle igss">0.00</td>
+    <td><input type="number" step="0.01" class="form-control form-control-sm num-cell isr" value="0"></td>
+    <td class="text-right align-middle total-deducciones">0.00</td>
+    <td class="text-right align-middle liquido">0.00</td>
+    <td><input type="text" class="form-control form-control-sm" value=""></td>`;
+  tbody.appendChild(tr);
+  recalcRow(tr);
+  recalcTotals();
+});
+
+/* Simple CSV export */
+document.getElementById('exportCsv').addEventListener('click', () => {
+  const rows = [];
+  const header = Array.from(document.querySelectorAll('#planillaTable thead th')).map(th => th.innerText.trim());
+  rows.push(header.join(','));
+  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
+    const cols = [];
+    cols.push(tr.querySelector('td:nth-child(1)').innerText.trim()); // No
+    const nameCell = tr.querySelector('td:nth-child(2)');
+    cols.push(nameCell.querySelector('input') ? `"${nameCell.querySelector('input').value.replace(/"/g,'""')}"` : `"${nameCell.innerText.trim().replace(/"/g,'""')}"`);
+    const numInputs = tr.querySelectorAll('input[type="number"], input[type="text"]');
+    // collect numeric/text inputs in order: sueldo, bono, dias, comisiones, hextras, isr, last text
+    const sueldo = tr.querySelector('.sueldo').value || 0;
+    const bono = tr.querySelector('.bono').value || 0;
+    const dias = tr.querySelector('.dias').value || 0;
+    const comis = tr.querySelector('.comisiones').value || 0;
+    const hex = tr.querySelector('.hextras').value || 0;
+    const subtotal = tr.querySelector('.subtotal').innerText.trim();
+    const igss = tr.querySelector('.igss').innerText.trim();
+    const isr = tr.querySelector('.isr').value || 0;
+    const totDed = tr.querySelector('.total-deducciones').innerText.trim();
+    const liqui = tr.querySelector('.liquido').innerText.trim();
+    const obs = tr.querySelector('td:last-child input') ? tr.querySelector('td:last-child input').value.replace(/"/g,'""') : '';
+    cols.push(sueldo, bono, dias, comis, hex, subtotal, igss, isr, totDed, liqui, `"${obs}"`);
+    rows.push(cols.join(','));
+  });
+
+  const csv = rows.join('\n');
+  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'planilla_noviembre.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
 </script>
 {% endblock %}
+
