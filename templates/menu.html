@@ -2,7 +2,7 @@
 {% block title %}Inicio{% endblock %}
 
 {% block content %}
-<!-- JUMBOTRON MEJORADO -->
+<!-- JUMBOTRON -->
 <div class="jumbotron jumbotron-welcome text-center mb-0">
   <div class="container fade-in">
     <h1 class="display-4">Bienvenido a Empaquetex</h1>
@@ -49,11 +49,11 @@
 
 <!-- ESTILOS -->
 <style>
-/* Jumbotron con fondo claro y curva */
+/* Jumbotron */
 .jumbotron-welcome {
   position: relative;
-  background-color: #f5f7fa; /* Fondo claro elegante */
-  padding: 4rem 1rem 6rem;
+  background-color: #f5f7fa;
+  padding: 3rem 1rem 4rem; /* menos padding abajo */
   margin-bottom: 0;
   border-radius: 0 0 30px 30px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.15);
@@ -61,8 +61,7 @@
 }
 .jumbotron-welcome h1,
 .jumbotron-welcome p {
-  color: #212529; /* Texto negro */
-  text-shadow: none; /* Sin sombra para mantenerlo limpio */
+  color: #212529;
 }
 .jumbotron-welcome .wave {
   position: absolute;
@@ -70,6 +69,12 @@
   left: 0;
   width: 100%;
   height: auto;
+}
+
+/* Reducir espacio entre jumbotron y tarjetas */
+.welcome-actions {
+  padding-top: 1rem; /* antes era más grande */
+  padding-bottom: 2rem;
 }
 
 /* Animaciones */
