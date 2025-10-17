@@ -53,14 +53,16 @@
             <i class="fas fa-sign-out-alt mr-1"></i> Cerrar sesión
           </a>
         </div>
-        {% elif 'usuario' in session and request.path == url_for('menu') %}
-        <!-- En la página del menú (/) mostrar únicamente Cerrar sesión en el navbar -->
-        <div class="ml-auto d-none d-md-block">
-          <a class="nav-link text-white" href="{{ url_for('logout') }}">
-            <i class="fas fa-sign-out-alt d-flex"></i> Cerrar sesión
-          </a>
-        </div>
-        {% endif %}
+{% elif 'usuario' in session and request.path == url_for('menu') %}
+<!-- En la página del menú (/) mostrar únicamente Cerrar sesión y alinearlo a la derecha -->
+<div class="ml-auto d-flex align-items-center">
+  <a class="nav-link text-white d-flex align-items-center" href="{{ url_for('logout') }}">
+    <span class="d-none d-md-inline mr-2"><i class="fas fa-sign-out-alt"></i></span>
+    <span class="font-weight-normal">Cerrar sesión</span>
+  </a>
+</div>
+{% endif %}
+
       </div>
 
       <!-- Único botón hamburguesa (si el usuario está autenticado) -->
