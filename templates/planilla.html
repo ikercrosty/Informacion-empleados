@@ -8,6 +8,21 @@
 
   <div class="table-responsive mb-3">
     <table id="planillaTable" class="table table-bordered table-sm">
+      <colgroup>
+        <col style="width:3%">
+        <col style="width:26%">
+        <col style="width:10%">
+        <col style="width:8%">
+        <col style="width:6%">
+        <col style="width:8%">
+        <col style="width:8%">
+        <col style="width:8%">
+        <col style="width:7%">
+        <col style="width:7%">
+        <col style="width:7%">
+        <col style="width:7%">
+        <col style="width:5%">
+      </colgroup>
       <thead class="thead-light">
         <tr>
           <th>No.</th>
@@ -22,7 +37,7 @@
           <th>ISR (estimado)</th>
           <th>Total Deducciones</th>
           <th>Líquido a pagar</th>
-          <th>Medio de Pago / Observaciones</th>
+          <th>Observaciones</th>
         </tr>
       </thead>
       <tbody>
@@ -31,8 +46,8 @@
           <td class="align-middle">1</td>
           <td class="align-middle">EDNA ANABELY MARISTELA VELASQUEZ MALDONAOD</td>
 
-          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell sueldo" value="3723.05"></td>
-          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell bono" value="250"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell sueldo" value="3723.61"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell bono" value="250.00"></td>
           <td><input type="number" step="1" class="form-control form-control-sm num-cell dias" value="30"></td>
           <td><input type="number" step="0.01" class="form-control form-control-sm num-cell comisiones" value="0"></td>
           <td><input type="number" step="0.01" class="form-control form-control-sm num-cell hextras" value="0"></td>
@@ -50,8 +65,8 @@
           <td class="align-middle">2</td>
           <td class="align-middle">IGDALIA ALIDA OCTAVI VELASQUEZ MALDONDO</td>
 
-          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell sueldo" value="3723.05"></td>
-          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell bono" value="250"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell sueldo" value="3723.61"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell bono" value="250.00"></td>
           <td><input type="number" step="1" class="form-control form-control-sm num-cell dias" value="30"></td>
           <td><input type="number" step="0.01" class="form-control form-control-sm num-cell comisiones" value="0"></td>
           <td><input type="number" step="0.01" class="form-control form-control-sm num-cell hextras" value="0"></td>
@@ -67,17 +82,18 @@
         <!-- Fila 3 -->
         <tr data-row="3">
           <td class="align-middle">3</td>
-          <td class="align-middle">ANGEL ESTUARDO ESCOBAR VELASQUEZ</td>
+          <td class="align-middle">ANGEL ESTUARDO ESCOBAR VELÁSQUEZ</td>
 
-          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell sueldo" value="4500.00"></td>
-          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell bono" value="250"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell sueldo" value="4141.74"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell bono" value="250.00"></td>
           <td><input type="number" step="1" class="form-control form-control-sm num-cell dias" value="30"></td>
           <td><input type="number" step="0.01" class="form-control form-control-sm num-cell comisiones" value="0"></td>
-          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell hextras" value="14.13"></td>
+          <!-- horas extras moved to 0, ISR placed with 14.13 per your instruction -->
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell hextras" value="0"></td>
 
           <td class="text-right align-middle subtotal">0.00</td>
           <td class="text-right align-middle igss">0.00</td>
-          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell isr" value="0"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell isr" value="14.13"></td>
           <td class="text-right align-middle total-deducciones">0.00</td>
           <td class="text-right align-middle liquido">0.00</td>
           <td><input type="text" class="form-control form-control-sm" value=""></td>
@@ -88,15 +104,16 @@
           <td class="align-middle">4</td>
           <td class="align-middle">LEONIDAS ANIBAL ESCOBAR PASCUAL</td>
 
-          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell sueldo" value="4500.00"></td>
-          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell bono" value="250"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell sueldo" value="4499.51"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell bono" value="250.00"></td>
           <td><input type="number" step="1" class="form-control form-control-sm num-cell dias" value="30"></td>
           <td><input type="number" step="0.01" class="form-control form-control-sm num-cell comisiones" value="0"></td>
-          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell hextras" value="14.13"></td>
+          <!-- horas extras moved to 0, ISR placed with 14.13 per your instruction -->
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell hextras" value="0"></td>
 
           <td class="text-right align-middle subtotal">0.00</td>
           <td class="text-right align-middle igss">0.00</td>
-          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell isr" value="0"></td>
+          <td><input type="number" step="0.01" class="form-control form-control-sm num-cell isr" value="14.13"></td>
           <td class="text-right align-middle total-deducciones">0.00</td>
           <td class="text-right align-middle liquido">0.00</td>
           <td><input type="text" class="form-control form-control-sm" value=""></td>
@@ -125,22 +142,22 @@
   <div class="mb-4">
     <button id="addRow" class="btn btn-sm btn-outline-primary">Agregar fila</button>
     <button id="exportCsv" class="btn btn-sm btn-outline-secondary">Exportar CSV</button>
-    <span class="ml-3 text-muted">Los cálculos se realizan en tiempo real: Subtotal = SueldoBase + Bonificación + Horas Extras + Comisiones. IGSS = SueldoBase * 4.83%. Deducciones = IGSS + ISR. Líquido = Subtotal - Deducciones.</span>
+    <span class="ml-3 text-muted">Los cálculos se realizan en tiempo real: Subtotal = SueldoBase + Bonificación + Comisiones + Horas Extras. IGSS = SueldoBase * 4.83%. Deducciones = IGSS + ISR. Líquido = Subtotal - Deducciones.</span>
   </div>
 </div>
 
 <script>
-/* Parámetros fiscales simples (ajustables) */
 const IGSS_RATE = 0.0483;
 
-/* Recalcula una fila dadas las celdas */
+function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
+function formatNum(n){ return n.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); }
+
 function recalcRow(tr) {
   const sueldo = parseFloat(tr.querySelector('.sueldo').value) || 0;
   const bono = parseFloat(tr.querySelector('.bono').value) || 0;
   const comisiones = parseFloat(tr.querySelector('.comisiones').value) || 0;
   const hextras = parseFloat(tr.querySelector('.hextras').value) || 0;
-  const isrInput = tr.querySelector('.isr');
-  const isr = parseFloat(isrInput.value) || 0;
+  const isr = parseFloat(tr.querySelector('.isr').value) || 0;
 
   const subtotal = round2(sueldo + bono + comisiones + hextras);
   const igss = round2(sueldo * IGSS_RATE);
@@ -153,12 +170,9 @@ function recalcRow(tr) {
   tr.querySelector('.liquido').textContent = formatNum(liquido);
 }
 
-/* Recalcula todos los totales de pie */
 function recalcTotals() {
   const rows = document.querySelectorAll('#planillaTable tbody tr');
-  let totals = {
-    sueldo:0, bono:0, dias:0, comisiones:0, hextras:0, subtotal:0, igss:0, isr:0, deducciones:0, liquido:0
-  };
+  let totals = {sueldo:0, bono:0, dias:0, comisiones:0, hextras:0, subtotal:0, igss:0, isr:0, deducciones:0, liquido:0};
   rows.forEach(tr => {
     const sueldo = parseFloat(tr.querySelector('.sueldo').value) || 0;
     const bono = parseFloat(tr.querySelector('.bono').value) || 0;
@@ -196,11 +210,6 @@ function recalcTotals() {
   document.getElementById('total-liquido').textContent = formatNum(totals.liquido);
 }
 
-/* Round helper */
-function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
-function formatNum(n){ return n.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); }
-
-/* Event delegation: recalculate when any numeric input changes */
 document.addEventListener('input', (e) => {
   if (!e.target.classList) return;
   if (e.target.classList.contains('num-cell')) {
@@ -210,11 +219,9 @@ document.addEventListener('input', (e) => {
   }
 });
 
-/* Initialize existing rows */
 document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
 recalcTotals();
 
-/* Add row button */
 document.getElementById('addRow').addEventListener('click', () => {
   const tbody = document.querySelector('#planillaTable tbody');
   const newIndex = tbody.querySelectorAll('tr').length + 1;
@@ -238,7 +245,6 @@ document.getElementById('addRow').addEventListener('click', () => {
   recalcTotals();
 });
 
-/* Simple CSV export */
 document.getElementById('exportCsv').addEventListener('click', () => {
   const rows = [];
   const header = Array.from(document.querySelectorAll('#planillaTable thead th')).map(th => th.innerText.trim());
@@ -248,8 +254,6 @@ document.getElementById('exportCsv').addEventListener('click', () => {
     cols.push(tr.querySelector('td:nth-child(1)').innerText.trim()); // No
     const nameCell = tr.querySelector('td:nth-child(2)');
     cols.push(nameCell.querySelector('input') ? `"${nameCell.querySelector('input').value.replace(/"/g,'""')}"` : `"${nameCell.innerText.trim().replace(/"/g,'""')}"`);
-    const numInputs = tr.querySelectorAll('input[type="number"], input[type="text"]');
-    // collect numeric/text inputs in order: sueldo, bono, dias, comisiones, hextras, isr, last text
     const sueldo = tr.querySelector('.sueldo').value || 0;
     const bono = tr.querySelector('.bono').value || 0;
     const dias = tr.querySelector('.dias').value || 0;
@@ -277,5 +281,26 @@ document.getElementById('exportCsv').addEventListener('click', () => {
   URL.revokeObjectURL(url);
 });
 </script>
-{% endblock %}
 
+<!-- Estilos para inputs más amplios y nombres con espacio -->
+<style>
+  #planillaTable input.form-control { padding: .35rem .5rem; font-size: .95rem; }
+  /* Ensure inputs fill the column width so numbers are fully visible */
+  #planillaTable td input { width: 100%; box-sizing: border-box; }
+  /* Give names more breathing room and wrap if needed */
+  #planillaTable td:nth-child(2) { white-space: normal; word-break: break-word; }
+  /* Right-align numeric display cells */
+  #planillaTable td.subtotal,
+  #planillaTable td.igss,
+  #planillaTable td.total-deducciones,
+  #planillaTable td.liquido,
+  #planillaTable tfoot td { text-align: right; vertical-align: middle; }
+  /* Slightly larger table for readability */
+  #planillaTable { font-size: 0.95rem; }
+  /* Responsive tweak: allow horizontal scroll on small screens */
+  @media (max-width: 992px) {
+    colgroup col:nth-child(2) { width: 40%; }
+    colgroup col:nth-child(3) { width: 12%; }
+  }
+</style>
+{% endblock %}
