@@ -2,15 +2,16 @@
 {% block title %}Inicio{% endblock %}
 
 {% block content %}
-<div class="jumbotron jumbotron-welcome text-center mb-0">
-  <div class="container">
+<!-- JUMBOTRON MEJORADO -->
+<div class="jumbotron jumbotron-welcome text-center mb-0 text-white">
+  <div class="container fade-in">
     <h1 class="display-4">Bienvenido a Empaquetex</h1>
-    <p class="lead text-muted">Panel de control centralizado. Accede rápidamente a planillas o a la información de empleados.</p>
+    <p class="lead">Panel de control centralizado. Accede rápidamente a planillas o a la información de empleados.</p>
   </div>
 </div>
 
 <section class="welcome-actions d-flex align-items-center">
-  <div class="actions-inner container">
+  <div class="actions-inner container slide-up">
     <div class="row justify-content-center">
       <div class="col-12 col-md-5">
         <div class="action-card shadow-sm text-center">
@@ -40,4 +41,61 @@
     </div>
   </div>
 </section>
+
+<style>
+/* Jumbotron con colores vivos */
+.jumbotron-welcome {
+  background: linear-gradient(135deg, #ff7a00, #1e88e5);
+  padding: 3rem 1rem;
+  margin-bottom: 0;
+  border-radius: 0 0 20px 20px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+}
+.jumbotron-welcome h1,
+.jumbotron-welcome p {
+  text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
+}
+
+/* Animaciones */
+.fade-in {
+  animation: fadeIn 1s ease-in-out;
+}
+.slide-up {
+  animation: slideUp 1s ease forwards;
+  opacity: 0;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Iconos con estilo */
+.icon-clipboard {
+  background: #ff9800;
+  color: #fff;
+  border-radius: 50%;
+  width: 70px;
+  height: 70px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin: 0 auto;
+}
+.icon-id {
+  background: #1e88e5;
+  color: #fff;
+  border-radius: 50%;
+  width: 70px;
+  height: 70px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin: 0 auto;
+}
+</style>
 {% endblock %}
+
