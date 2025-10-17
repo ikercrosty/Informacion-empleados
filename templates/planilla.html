@@ -82,7 +82,7 @@
           <td class="text-right align-middle total-devengado">Q 0.00</td>
           <td class="text-right align-middle igss">Q 0.00</td>
 
-          <!-- ISR ahora readonly; se calcula con la lógica del sheet "CALCULO DEL ISR" -->
+          <!-- ISR readonly; se calcula con la lógica del sheet "CALCULO DEL ISR" and only if sueldo >= 4000 -->
           <td>
             <div class="money-inline">
               <span class="money-prefix">Q</span>
@@ -253,7 +253,7 @@
   <div class="mb-4">
     <button id="addRow" class="btn btn-sm btn-outline-primary">Agregar fila</button>
     <button id="exportCsv" class="btn btn-sm btn-outline-secondary">Exportar CSV</button>
-    <span class="ml-3 text-muted">Los cálculos se realizan en tiempo real: Horas Extras (monto) = Sueldo Base / Días Laborados / 8 * 1.5 * Horas extra. Total Devengado = Sueldo Base + Bonificación + Comisiones + Horas Extras (monto). IGSS = Sueldo Base * 4.83%. ISR mensual calculado desde la hoja CALCULO DEL ISR del archivo. Deducciones = IGSS + ISR + Otras deducciones. Líquido = Total Devengado - Deducciones.</span>
+    <span class="ml-3 text-muted">Los cálculos se realizan en tiempo real: Horas Extras (monto) = Sueldo Base / Días Laborados / 8 * 1.5 * Horas extra. Total Devengado = Sueldo Base + Bonificación + Comisiones + Horas Extras (monto). IGSS = Sueldo Base * 4.83%. ISR mensual calculado desde la hoja CALCULO DEL ISR del archivo y aplica solo si Sueldo Base ≥ Q 4,000. Deducciones = IGSS + ISR + Otras deducciones. Líquido = Total Devengado - Deducciones.</span>
   </div>
 </div>
 
@@ -262,6 +262,7 @@
 const IGSS_RATE = 0.0483;
 const GASTOS_PERSONALES_ANUAL = 48000; // artículo 72 en tu hoja
 const ISR_ANNUAL_RATE = 0.05; // "5% DEL ISR ANUAL SOBRE BASE DE CALCULO" según la hoja
+const ISR_MIN_SALARIO = 4000.00; // ISR only applies for sueldo base >= Q 4,000
 
 /* helpers */
 function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
@@ -277,14 +278,16 @@ function computeHorasMonto(sueldo, dias, horas) {
 }
 
 /* compute ISR monthly using the logic in the CALCULO DEL ISR sheet:
+   - ISR only applies if sueldoBaseMensual >= ISR_MIN_SALARIO
    - salario_anual = sueldo_base * 12
    - igss_anual = salario_anual * IGSS_RATE
    - base_calculo = salario_anual - GASTOS_PERSONALES_ANUAL - igss_anual
-   - si base_calculo <= 0 => isr_anual = 0
+   - if base_calculo <= 0 => isr_anual = 0
    - else isr_anual = base_calculo * ISR_ANNUAL_RATE
    - isr_mensual = isr_anual / 12
 */
 function computeISRMonthly(sueldoBaseMensual) {
+  if (sueldoBaseMensual < ISR_MIN_SALARIO) return 0;
   const salarioAnual = sueldoBaseMensual * 12;
   const igssAnual = salarioAnual * IGSS_RATE;
   const baseCalculo = salarioAnual - GASTOS_PERSONALES_ANUAL - igssAnual;
@@ -306,7 +309,7 @@ function recalcRow(tr) {
   const totalDevengado = round2(sueldo + bono + comisiones + hextrasMonto);
   const igss = round2(sueldo * IGSS_RATE);
 
-  /* ISR calculado automáticamente */
+  /* ISR calculado automáticamente y solo si sueldo >= ISR_MIN_SALARIO */
   const isrMensual = computeISRMonthly(sueldo);
 
   const totalDeducciones = round2(igss + isrMensual + otras);
