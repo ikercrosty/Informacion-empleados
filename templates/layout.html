@@ -23,9 +23,10 @@
   <!-- NAVBAR -->
   <nav class="navbar navbar-dark bg-dark">
     <div class="container-fluid d-flex align-items-center">
+      <!-- left group: back button + brand + optional nav links -->
       <div class="d-flex align-items-center">
         <!-- Back button: aparece solo en páginas de información de empleados (no en /menu ni en la página de inicio) -->
-        {% if 'usuario' in session and request.path in ['/','/about','/conyugue','/emergencia','/laboral','/medica'] and request.path != url_for('menu') %}
+        {% if 'usuario' in session and request.path in ['/', '/about','/conyugue','/emergencia','/laboral','/medica'] and request.path != url_for('menu') %}
         <a href="{{ url_for('menu') }}" id="btnBackToPlanilla" class="btn btn-back mr-2" title="Regresar al Menú">
           <i class="fas fa-arrow-left"></i>
         </a>
@@ -49,28 +50,35 @@
           <a class="nav-link text-white {% if request.path == '/ficha' %}font-weight-bold{% endif %}" href="{{ url_for('ficha') }}">
             <i class="fas fa-id-badge mr-1"></i> Ficha de empleados
           </a>
-          <a class="nav-link text-white" href="{{ url_for('logout') }}">
-            <i class="fas fa-sign-out-alt mr-1"></i> Cerrar sesión
-          </a>
         </div>
-{% elif 'usuario' in session and request.path == url_for('menu') %}
-<!-- En la página del menú (/) mostrar únicamente Cerrar sesión y alinearlo a la derecha -->
-<div class="ml-auto d-flex align-items-center">
-  <a class="nav-link text-white d-flex align-items-center" href="{{ url_for('logout') }}">
-    <span class="d-none d-md-inline mr-2"><i class="fas fa-sign-out-alt"></i></span>
-    <span class="font-weight-normal">Cerrar sesión</span>
-  </a>
-</div>
-{% endif %}
-
+        {% endif %}
       </div>
 
-      <!-- Único botón hamburguesa (si el usuario está autenticado) -->
-      {% if 'usuario' in session and request.path not in [url_for('menu'), url_for('login')] %}
-      <button id="menuInfoToggle" class="btn btn-hamburger ml-auto" type="button" aria-label="Abrir menú">
-        <i class="fas fa-bars" style="font-size:1.1rem; color:#fff;"></i>
-      </button>
-      {% endif %}
+      <!-- right group: logout (always aligned to far right when shown) and hamburger when applicable -->
+      <div class="d-flex align-items-center ml-auto">
+        {% if 'usuario' in session and request.path == url_for('menu') %}
+          <!-- On menu page: show only logout, aligned at extreme right -->
+          <a class="nav-link text-white d-flex align-items-center" href="{{ url_for('logout') }}">
+            <span class="d-none d-md-inline mr-2"><i class="fas fa-sign-out-alt"></i></span>
+            <span class="font-weight-normal">Cerrar sesión</span>
+          </a>
+        {% else %}
+          {% if 'usuario' in session %}
+            <!-- For other authenticated pages: show logout in navbar (on md+) and hamburger for toggling sidebar on smaller screens -->
+            <div class="d-none d-md-flex align-items-center mr-2">
+              <a class="nav-link text-white" href="{{ url_for('logout') }}">
+                <i class="fas fa-sign-out-alt mr-1"></i> Cerrar sesión
+              </a>
+            </div>
+
+            {% if request.path not in [url_for('menu'), url_for('login')] %}
+            <button id="menuInfoToggle" class="btn btn-hamburger" type="button" aria-label="Abrir menú">
+              <i class="fas fa-bars" style="font-size:1.1rem; color:#fff;"></i>
+            </button>
+            {% endif %}
+          {% endif %}
+        {% endif %}
+      </div>
     </div>
   </nav>
 
@@ -225,3 +233,4 @@
   </script>
 </body>
 </html>
+
