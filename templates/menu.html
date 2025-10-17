@@ -2,31 +2,48 @@
 {% block title %}Inicio{% endblock %}
 
 {% block content %}
+<!-- JUMBOTRON DECORADO -->
 <div class="jumbotron jumbotron-welcome text-center mb-0">
   <div class="container">
-    <h1 class="display-4">Bienvenido a Empaquetex</h1>
-    <p class="lead text-muted">Panel de control centralizado. Accede rápidamente a planillas o a la información de empleados.</p>
+    <div class="welcome-top d-flex justify-content-center align-items-center">
+      <div class="welcome-badge">
+        <img src="{{ url_for('static', filename='imagenes/logo.png') }}" alt="Empaquetex" class="welcome-logo">
+      </div>
+      <div class="welcome-text ml-3 text-left">
+        <h1 class="display-4 mb-1">Bienvenido a Empaquetex</h1>
+        <p class="lead text-muted mb-0">Panel de control centralizado. Accede rápidamente a planillas o a la información de empleados.</p>
+        <div class="meta-row mt-2">
+          <span class="meta-pill">Usuarios activos: <strong>{{ usuarios_activos or 214 }}</strong></span>
+          <span class="meta-pill ml-2">Planillas pendientes: <strong>{{ planillas_pendientes or 12 }}</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="decor-line mt-4 mx-auto"></div>
+
+    <p class="lead text-muted small mt-3 mb-0">Accede a las secciones principales desde aquí. Los atajos y la información rápida te ayudan a trabajar más rápido.</p>
   </div>
 </div>
 
+<!-- ÁREA DE ACCIONES -->
 <section class="welcome-actions d-flex align-items-center">
   <div class="actions-inner container">
-    <div class="row justify-content-center">
-      <div class="col-12 col-md-5">
-        <div class="action-card shadow-sm text-center">
+    <div class="row justify-content-center align-items-stretch">
+      <div class="col-12 col-md-5 mb-4">
+        <div class="action-card shadow-sm text-center h-100">
           <div class="icon-wrap mb-3 icon-clipboard">
             <i class="fas fa-clipboard-list fa-2x" aria-hidden="true"></i>
           </div>
           <h5 class="mb-2">Planillas</h5>
-          <p class="text-muted mb-3">Abrir y administrar planillas de pago; generar reportes y descargar comprobantes.</p>
+          <p class="text-muted mb-3">Abrir y administrar planillas; generar reportes y descargar comprobantes.</p>
           <a href="{{ url_for('planilla') }}" class="btn btn-outline-warning btn-block btn-lg action-btn">
             <i class="fas fa-file-alt mr-2" aria-hidden="true"></i> Ir a Planillas
           </a>
         </div>
       </div>
 
-      <div class="col-12 col-md-5">
-        <div class="action-card shadow-sm text-center">
+      <div class="col-12 col-md-5 mb-4">
+        <div class="action-card shadow-sm text-center h-100">
           <div class="icon-wrap mb-3 icon-id">
             <i class="fas fa-id-badge fa-2x" aria-hidden="true"></i>
           </div>
@@ -35,6 +52,20 @@
           <a href="{{ url_for('home') }}" id="btnAbrirInfo" class="btn btn-primary btn-block btn-lg action-btn action-btn-blue">
             <i class="fas fa-users mr-2" aria-hidden="true"></i> Abrir información empleados
           </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ILUSTRACIÓN / NOTAS ADICIONALES -->
+    <div class="row justify-content-center mt-3">
+      <div class="col-12 col-md-10">
+        <div class="info-strip d-flex flex-wrap align-items-center justify-content-between">
+          <div class="info-left">
+            <strong>Consejo:</strong> Mantén las fotografías actualizadas para evitar errores en los documentos.
+          </div>
+          <div class="info-right text-muted small">
+            Última sincronización: {{ ultima_sync or "2025-10-16 17:58" }}
+          </div>
         </div>
       </div>
     </div>
