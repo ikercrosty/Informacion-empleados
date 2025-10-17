@@ -24,15 +24,15 @@
   <nav class="navbar navbar-dark bg-dark">
     <div class="container-fluid d-flex align-items-center">
       <div class="d-flex align-items-center">
-        <!-- Back button: aparece solo en páginas de información de empleados (no planilla/recibo/ficha) -->
-        {% if 'usuario' in session and request.path in ['/', '/about','/ficha','/planilla','/recibo', '/conyugue', '/emergencia', '/laboral', '/medica'] %}
+        <!-- Back button: aparece solo en páginas de información de empleados (no en /menu ni en la página de inicio) -->
+        {% if 'usuario' in session and request.path in ['/','/about','/conyugue','/emergencia','/laboral','/medica'] and request.path != url_for('menu') %}
         <a href="{{ url_for('menu') }}" id="btnBackToPlanilla" class="btn btn-back mr-2" title="Regresar al Menú">
           <i class="fas fa-arrow-left"></i>
         </a>
         {% endif %}
 
-        <!-- Logo + Marca: enlaza a planilla -->
-        <a class="brand-link d-flex align-items-center" href="{{ url_for('menu') }}" aria-label="Ir a Planilla">
+        <!-- Logo + Marca: enlaza a menú -->
+        <a class="brand-link d-flex align-items-center" href="{{ url_for('menu') }}" aria-label="Ir al Menú">
           <img src="{{ url_for('static', filename='imagenes/logo.png') }}" alt="Empaquetex" class="logo-navbar" />
           <span class="brand-title ml-2 text-white">Empaquetex</span>
         </a>
@@ -53,16 +53,23 @@
             <i class="fas fa-sign-out-alt mr-1"></i> Cerrar sesión
           </a>
         </div>
+        {% elif 'usuario' in session and request.path == url_for('menu') %}
+        <!-- En la página del menú (/) mostrar únicamente Cerrar sesión en el navbar -->
+        <div class="ml-auto d-none d-md-block">
+          <a class="nav-link text-white" href="{{ url_for('logout') }}">
+            <i class="fas fa-sign-out-alt mr-1"></i> Cerrar sesión
+          </a>
+        </div>
         {% endif %}
       </div>
 
       <!-- Único botón hamburguesa (si el usuario está autenticado) -->
-{% if 'usuario' in session and request.path not in ['/menu', '/login'] %}
-<button id="menuInfoToggle" class="btn btn-hamburger ml-auto" type="button" aria-label="Abrir menú">
-  <i class="fas fa-bars" style="font-size:1.1rem; color:#fff;"></i>
-</button>
-{% endif %}
-
+      {% if 'usuario' in session and request.path not in [url_for('menu'), url_for('login')] %}
+      <button id="menuInfoToggle" class="btn btn-hamburger ml-auto" type="button" aria-label="Abrir menú">
+        <i class="fas fa-bars" style="font-size:1.1rem; color:#fff;"></i>
+      </button>
+      {% endif %}
+    </div>
   </nav>
 
   {% if 'usuario' in session %}
@@ -202,7 +209,7 @@
         }
       });
 
-      // Si hacemos click en el botón Back (volver a planilla), cerramos sidebar antes de navegar
+      // Si hacemos click en el botón Back (volver al menu), cerramos sidebar antes de navegar
       const backBtn = document.getElementById('btnBackToPlanilla');
       if (backBtn) {
         backBtn.addEventListener('click', () => {
