@@ -6,6 +6,28 @@
   <h2 class="mt-3">Planilla - Noviembre 2025</h2>
   <p class="text-muted">Empresa: EMPAQUES Y TEXTURAS DE GUATEMALA, SOCIEDAD ANÓNIMA</p>
 
+  <div class="form-row align-items-center mb-2">
+    <div class="col-auto">
+      <label class="sr-only" for="planillaName">Nombre de planilla</label>
+      <input id="planillaName" class="form-control form-control-sm" type="text" value="Planilla - Noviembre 2025" />
+    </div>
+
+    <div class="col-auto">
+      <label class="sr-only" for="emisionDate">Fecha de emisión</label>
+      <input id="emisionDate" class="form-control form-control-sm" type="date" />
+    </div>
+
+    <div class="col-auto">
+      <button id="addRow" class="btn btn-sm btn-outline-primary">Agregar fila</button>
+      <button id="exportCsv" class="btn btn-sm btn-outline-secondary">Exportar a Excel</button>
+      <button id="deleteRow" class="btn btn-sm btn-outline-danger">Eliminar fila</button>
+    </div>
+
+    <div class="col-auto">
+      <small id="exportHint" class="text-danger" style="display:none;">Debe ingresar la fecha de emisión antes de exportar</small>
+    </div>
+  </div>
+
   <div class="table-responsive mb-3 horizontal-scroll">
     <table id="planillaTable" class="table table-bordered table-sm">
       <colgroup>
@@ -327,40 +349,60 @@ document.getElementById('addRow').addEventListener('click', () => {
   recalcTotals();
 });
 
-/* Export to Excel (.xlsx) using SheetJS */
+/* Delete last row */
+document.getElementById('deleteRow').addEventListener('click', () => {
+  const tbody = document.querySelector('#planillaTable tbody');
+  const rows = tbody.querySelectorAll('tr');
+  if (rows.length === 0) return;
+  tbody.removeChild(rows[rows.length - 1]);
+  recalcTotals();
+});
+
+/* Export to Excel (.xlsx) using SheetJS
+   Requires fecha de emisión; filename will include planilla name and date
+*/
 document.getElementById('exportCsv').addEventListener('click', () => {
+  const dateInput = document.getElementById('emisionDate').value;
+  const planillaName = document.getElementById('planillaName').value.trim() || 'Planilla';
+  const exportHint = document.getElementById('exportHint');
+  if (!dateInput) {
+    exportHint.style.display = 'inline';
+    return;
+  }
+  exportHint.style.display = 'none';
+
+  // Clone table and clean inputs
   const table = document.getElementById('planillaTable');
-  if (!table) return;
-
-  // Clone table to clean and convert values
   const clone = table.cloneNode(true);
-
-  // Replace inputs with their values
   clone.querySelectorAll('input').forEach(inp => {
-    const val = inp.value;
     const parent = inp.parentElement || inp;
-    parent.replaceChild(document.createTextNode(val), inp);
+    parent.replaceChild(document.createTextNode(inp.value), inp);
   });
 
-  // Clean cells: convert "Q 1,234.56" => numeric 1234.56; keep empty where needed
+  // Convert Q-prefixed numeric cells to numbers for Excel
   clone.querySelectorAll('td, th').forEach(cell => {
     let txt = (cell.textContent || '').replace(/\u00A0/g, ' ').trim();
     if (txt === '') return;
-    // Remove "Q" prefix if present
-    const qRemoved = txt.replace(/^Q\s*/i, '').replace(/,/g, '');
-    // If numeric, convert to number (so Excel shows numeric cell)
-    const n = Number(qRemoved);
-    if (qRemoved !== '' && isFinite(n)) {
-      cell.textContent = n;
-    } else {
-      cell.textContent = txt;
-    }
+    const removed = txt.replace(/^Q\s*/i, '').replace(/,/g, '');
+    const n = Number(removed);
+    if (removed !== '' && isFinite(n)) cell.textContent = n;
+    else cell.textContent = txt;
   });
 
-  // Use SheetJS to build workbook from the cleaned table
-  const wb = XLSX.utils.table_to_book(clone, {sheet: "Planilla"});
-  // download
-  XLSX.writeFile(wb, 'planilla_noviembre.xlsx');
+  // Build sheet from table
+  const ws = XLSX.utils.table_to_sheet(clone, {raw:true});
+
+  // Insert header rows with planilla name and date
+  XLSX.utils.sheet_add_aoa(ws, [[planillaName]], {origin: "A1"});
+  XLSX.utils.sheet_add_aoa(ws, [[`Fecha de emisión:`, dateInput]], {origin: "A2"});
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Planilla");
+
+  // Safe filename: planillaName_date.xlsx
+  const safeName = planillaName.replace(/[^a-z0-9_\- ]/gi,'').replace(/\s+/g,'_');
+  const filename = `${safeName}_${dateInput}.xlsx`;
+  XLSX.writeFile(wb, filename);
 });
 </script>
 
@@ -384,10 +426,13 @@ document.getElementById('exportCsv').addEventListener('click', () => {
   #planillaTable tfoot td { text-align: right; vertical-align: middle; }
 
   #planillaTable td input.horas { text-align:center; }
+
+  .form-row .col-auto { margin-right:.5rem; }
+  #exportHint { margin-left: .5rem; }
+
   @media (max-width:992px) {
     #planillaTable { min-width: 1300px; }
     colgroup col:nth-child(2) { width:45%; }
   }
 </style>
 {% endblock %}
-
