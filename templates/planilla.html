@@ -571,30 +571,44 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     --accent1: #0ea5a4;
     --accent2: #0b7285;
     --panel: #f8f9fa;
+
+    /* Ajustes globales de tamaño de celda e inputs */
+    --planilla-cell-vertical-padding: 1.05rem; /* aumenta altura de celdas */
+    --planilla-cell-horizontal-padding: 1.2rem; /* mayor espacio horizontal */
+    --planilla-input-min-height: 52px; /* altura de inputs */
+    --planilla-input-font-size: 1.03rem;
+    --planilla-money-min-width: 220px; /* ancho mínimo para columnas monetarias */
+    --planilla-name-col-min-width: 360px; /* ancho visible para columna nombre */
   }
+
   body { background: linear-gradient(180deg,var(--bg-grad-start) 0%, var(--bg-grad-end) 100%); }
   .card { border-radius: .6rem; }
-  .card .card-body { padding: .9rem 1rem; }
+  .card .card-body { padding: 1rem 1.1rem; }
   h3 { font-weight:600; color:var(--accent2); }
-  .money-prefix { background:linear-gradient(180deg,#fff 0%, #f3f6fb 100%); border-radius:6px; padding:.3rem .45rem; border:1px solid rgba(0,0,0,0.06); font-weight:600; color:#333; }
-  .form-control { border-radius:.45rem; }
+
+  .form-control { border-radius:.45rem; font-size: var(--planilla-input-font-size); }
+
   .btn-primary { background: linear-gradient(90deg,var(--accent1),var(--accent2)); border: none; box-shadow: 0 6px 20px rgba(11,114,133,0.08); }
   .btn-outline-secondary { border-radius:.45rem; }
   .table-header-custom { background: linear-gradient(90deg,#0ea5a4,#036b6a); }
-  .table-header-custom th { color:#fff; border:0; font-weight:700; padding:.7rem .8rem; }
-  table.table tbody tr { background: #fff; }
-  table.table tbody tr:nth-child(odd) { background: #fbfeff; }
-  table.table { border-collapse: separate; border-spacing:0; border-radius:.6rem; overflow:hidden; box-shadow: 0 1px 2px rgba(15,23,42,0.04); }
-  table.table td, table.table th { vertical-align: middle; padding:.6rem .9rem; }
+  .table-header-custom th { color:#fff; border:0; font-weight:700; padding:.9rem 1rem; }
+
+  table.table { border-collapse: separate; border-spacing:0; border-radius:.6rem; overflow:hidden; box-shadow: 0 1px 2px rgba(15,23,42,0.04); width:100%; }
+  table.table td, table.table th {
+    vertical-align: middle;
+    padding: var(--planilla-cell-vertical-padding) var(--planilla-cell-horizontal-padding);
+  }
+
   .horizontal-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
   .text-end { text-align:right; }
   .fw-bold { font-weight:700; }
 
+  /* Mantener Q siempre a la izquierda y alineado con inputs más altos */
   .money-inline {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    white-space: nowrap;
+    gap: 0.6rem;
+    white-space: nowrap;   /* evita que el prefijo salte de línea */
     flex-wrap: nowrap;
   }
   .money-prefix {
@@ -603,32 +617,91 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     justify-content: center;
     flex: 0 0 auto;
     margin-right: 0;
-    min-width: 28px;
+    min-width: 36px;                      /* un poco más ancho para equilibrio */
+    height: var(--planilla-input-min-height);
+    padding: 0 .6rem;
+    border-radius: .45rem;
+    background: linear-gradient(180deg,#fff 0%, #f3f6fb 100%);
+    border:1px solid rgba(0,0,0,0.06);
+    font-weight:600;
+    color:#333;
+    box-sizing: border-box;
   }
+
+  /* Inputs más altos y con suficiente ancho para mostrar números sin romper la Q */
   .money-inline .form-control {
-    padding: .45rem .6rem;
-    min-width: 140px;
-    flex: 1 1 auto;
+    min-width: var(--planilla-money-min-width);
+    min-height: var(--planilla-input-min-height);
+    height: var(--planilla-input-min-height);
+    padding-top: .45rem;
+    padding-bottom: .45rem;
+    box-sizing: border-box;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  #planillaTable input.form-control { font-size: .98rem; width:100%; box-sizing:border-box; }
-  #planillaTable td:nth-child(2) { white-space: normal; word-break: break-word; }
+  /* Inputs generales de la tabla */
+  #planillaTable input.form-control {
+    font-size: var(--planilla-input-font-size);
+    min-height: var(--planilla-input-min-height);
+    height: var(--planilla-input-min-height);
+    box-sizing: border-box;
+    padding: .45rem .6rem;
+  }
 
+  /* Columna nombre más ancha y con wrapping controlado */
+  #planillaTable col:nth-child(2),
+  #planillaTable td:nth-child(2),
+  #planillaTable th:nth-child(2) {
+    min-width: var(--planilla-name-col-min-width);
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  /* Alineaciones numéricas y celdas de resultado */
   #planillaTable td.total-devengado,
   #planillaTable td.igss,
   #planillaTable td.total-deducciones,
   #planillaTable td.liquido,
   #planillaTable td.isr-cell,
-  #planillaTable tfoot td { text-align: right; vertical-align: middle; }
+  #planillaTable tfoot td {
+    text-align: right;
+    vertical-align: middle;
+  }
 
-  #planillaTable td input.horas { text-align:center; }
-  @media (max-width:992px) {
-    #planillaTable { min-width: 1300px; }
-    colgroup col:nth-child(2) { width:45%; }
-    .money-inline .form-control { min-width:120px; }
+  /* Centrar hora y reducir su padding para que se vea bien dentro de la fila alta */
+  #planillaTable td input.horas {
+    text-align:center;
+    padding-top: .35rem;
+    padding-bottom: .35rem;
+    height: calc(var(--planilla-input-min-height) - .8rem);
+  }
+
+  /* Sombras y fondos sutiles mantienen el diseño existente */
+  table.table tbody tr { background: #fff; }
+  table.table tbody tr:nth-child(odd) { background: #fbfeff; }
+
+  /* Responsivo: bajar tamaños en pantallas pequeñas sin romper la posición del prefijo Q */
+  @media (max-width: 992px) {
+    :root {
+      --planilla-money-min-width: 160px;
+      --planilla-input-min-height: 44px;
+      --planilla-cell-horizontal-padding: 0.9rem;
+      --planilla-name-col-min-width: 260px;
+    }
+    #planillaTable { min-width: 1200px; }
+  }
+
+  @media (max-width: 576px) {
+    :root {
+      --planilla-money-min-width: 120px;
+      --planilla-input-min-height: 40px;
+      --planilla-cell-horizontal-padding: 0.6rem;
+      --planilla-name-col-min-width: 200px;
+    }
+    #planillaTable { min-width: 1000px; }
   }
 </style>
+
 {% endblock %}
