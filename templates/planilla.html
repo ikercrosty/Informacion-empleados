@@ -244,15 +244,15 @@ function recalcRow(tr) {
 /* Recalcula totales */
 function recalcTotals() {
   const rows = document.querySelectorAll('#planillaTable tbody tr');
-  let totals = {sueldo:0, bono:0, dias:0, comisiones:0, horas:0, hextras:0, devengado:0, igss:0, isr:0, otras:0, deducciones:0};
+  let totals = {sueldo:0, bono:0, /* dias eliminado */ comisiones:0, horas:0, hextras:0, devengado:0, igss:0, isr:0, otras:0, deducciones:0};
   rows.forEach(tr => {
     const sueldo = parseFloat(tr.querySelector('.sueldo').value) || 0;
     const bono = parseFloat(tr.querySelector('.bono').value) || 0;
-    const dias = parseInt(tr.querySelector('.dias').value) || 0;
     const comisiones = parseFloat(tr.querySelector('.comisiones').value) || 0;
     const horas = parseInt(tr.querySelector('.horas').value) || 0;
     const otras = parseFloat(tr.querySelector('.otras').value) || 0;
 
+    const dias = parseInt(tr.querySelector('.dias').value) || 0; // se usa por fila pero no se suma en totales
     const hextrasMonto = parseFloat(tr.dataset._hextras) || computeHorasMontoMensual(sueldo, dias, horas);
     const totalDevengado = round2(sueldo + bono + comisiones + hextrasMonto);
     const igss = round2((sueldo + bono + comisiones + hextrasMonto) * IGSS_RATE);
@@ -261,7 +261,6 @@ function recalcTotals() {
 
     totals.sueldo += sueldo;
     totals.bono += bono;
-    totals.dias += dias;
     totals.comisiones += comisiones;
     totals.horas += horas;
     totals.hextras += hextrasMonto;
@@ -274,7 +273,7 @@ function recalcTotals() {
 
   document.getElementById('total-sueldo').textContent = withQ(totals.sueldo);
   document.getElementById('total-bono').textContent = withQ(totals.bono);
-  document.getElementById('total-dias').textContent = totals.dias.toString();
+  document.getElementById('total-dias').textContent = '';
   document.getElementById('total-comisiones').textContent = withQ(totals.comisiones);
   document.getElementById('total-horas').textContent = totals.horas.toString();
   document.getElementById('total-hextras').textContent = withQ(totals.hextras);
@@ -284,6 +283,7 @@ function recalcTotals() {
   document.getElementById('total-otras').textContent = withQ(totals.otras);
   document.getElementById('total-deducciones').textContent = withQ(totals.deducciones);
 }
+
 
 /* Delegated listener */
 document.addEventListener('input', (e) => {
