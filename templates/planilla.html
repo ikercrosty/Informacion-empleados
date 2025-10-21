@@ -573,13 +573,13 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     --accent2: #0b7285;
     --panel: #f8f9fa;
 
-    /* tamaños ajustables */
-    --planilla-cell-vertical-padding: 1.05rem;
-    --planilla-cell-horizontal-padding: 1.1rem;
-    --planilla-input-min-height: 52px;
-    --planilla-input-font-size: 1rem;
-    --planilla-money-min-width: 220px;
-    --planilla-name-col-min-width: 360px;
+    /* Ajustes globales de tamaño de celda e inputs */
+    --planilla-cell-vertical-padding: 1.05rem; /* aumenta altura de celdas */
+    --planilla-cell-horizontal-padding: 1.2rem; /* mayor espacio horizontal */
+    --planilla-input-min-height: 52px; /* altura de inputs */
+    --planilla-input-font-size: 1.03rem;
+    --planilla-money-min-width: 220px; /* ancho mínimo para columnas monetarias */
+    --planilla-name-col-min-width: 360px; /* ancho visible para columna nombre */
   }
 
   body { background: linear-gradient(180deg,var(--bg-grad-start) 0%, var(--bg-grad-end) 100%); }
@@ -604,12 +604,12 @@ document.getElementById('exportExcel').addEventListener('click', () => {
   .text-end { text-align:right; }
   .fw-bold { font-weight:700; }
 
-  /* Money inline: siempre mantener Q a la izquierda */
+  /* Mantener Q siempre a la izquierda y alineado con inputs más altos */
   .money-inline {
     display: inline-flex;
     align-items: center;
     gap: 0.6rem;
-    white-space: nowrap;
+    white-space: nowrap;   /* evita que el prefijo salte de línea */
     flex-wrap: nowrap;
   }
   .money-prefix {
@@ -617,7 +617,8 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     align-items: center;
     justify-content: center;
     flex: 0 0 auto;
-    min-width: 36px;
+    margin-right: 0;
+    min-width: 36px;                      /* un poco más ancho para equilibrio */
     height: var(--planilla-input-min-height);
     padding: 0 .6rem;
     border-radius: .45rem;
@@ -628,7 +629,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     box-sizing: border-box;
   }
 
-  /* Inputs más altos y espaciosos */
+  /* Inputs más altos y con suficiente ancho para mostrar números sin romper la Q */
   .money-inline .form-control {
     min-width: var(--planilla-money-min-width);
     min-height: var(--planilla-input-min-height);
@@ -641,7 +642,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     text-overflow: ellipsis;
   }
 
-  /* Inputs generales en la tabla */
+  /* Inputs generales de la tabla */
   #planillaTable input.form-control {
     font-size: var(--planilla-input-font-size);
     min-height: var(--planilla-input-min-height);
@@ -650,7 +651,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     padding: .45rem .6rem;
   }
 
-  /* Columna nombre más ancha */
+  /* Columna nombre más ancha y con wrapping controlado */
   #planillaTable col:nth-child(2),
   #planillaTable td:nth-child(2),
   #planillaTable th:nth-child(2) {
@@ -659,49 +660,18 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     word-break: break-word;
   }
 
-  /* Alineación y espaciado de celdas numéricas de resultados
-     (especialmente IGSS, ISR y totales) */
+  /* Alineaciones numéricas y celdas de resultado */
   #planillaTable td.total-devengado,
   #planillaTable td.igss,
   #planillaTable td.total-deducciones,
   #planillaTable td.liquido,
-  #planillaTable td.isr-cell {
-    display: flex;
-    align-items: center;        /* centra verticalmente el contenido */
-    justify-content: flex-end;  /* mantiene la Q a la izquierda y número a la derecha */
-    gap: 0.5rem;
-    min-height: calc(var(--planilla-input-min-height) - 6px);
-    padding-top: calc(var(--planilla-cell-vertical-padding) - 0.15rem);
-    padding-bottom: calc(var(--planilla-cell-vertical-padding) - 0.15rem);
-    line-height: 1.15;
-    white-space: nowrap;
-  }
-
-  /* Si el contenido viene como texto "Q 0.00", forzamos el prefijo y el valor a estar en línea */
-  #planillaTable td.igss::marker, /* noop: kept to avoid unexpected style shifts */ 
-  #planillaTable td.igss span,
-  #planillaTable td.total-devengado span,
-  #planillaTable td.total-deducciones span {
+  #planillaTable td.isr-cell,
+  #planillaTable tfoot td {
+    text-align: right;
     vertical-align: middle;
   }
 
-  /* Cuando la celda contiene solo texto (ej. "Q 191.90"), aplicar estilos para separar Q del número */
-  #planillaTable td.igss,
-  #planillaTable td.total-devengado,
-  #planillaTable td.total-deducciones,
-  #planillaTable td.isr-cell {
-    /* separar visualmente el prefijo Q del número si existe */
-    letter-spacing: 0;
-  }
-
-  /* Asegurar que la Q textual (no elemento .money-prefix) se muestre con el mismo aspecto si aparece */
-  #planillaTable td.igss,
-  #planillaTable td.total-devengado,
-  #planillaTable td.total-deducciones {
-    font-feature-settings: "tnum";
-  }
-
-  /* Inputs de horas centradas y con espacio vertical adecuado */
+  /* Centrar hora y reducir su padding para que se vea bien dentro de la fila alta */
   #planillaTable td input.horas {
     text-align:center;
     padding-top: .35rem;
@@ -709,28 +679,11 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     height: calc(var(--planilla-input-min-height) - .8rem);
   }
 
-  /* Footer (totales): mantener Q y números alineados y centrados verticalmente */
-  #planillaTable tfoot td {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    padding: .9rem 1rem;
-    min-height: var(--planilla-input-min-height);
-  }
-
-  /* Más espacio interno solo para IGSS column header y celdas (evitar amontonamiento) */
-  #planillaTable thead th:nth-child(10),
-  #planillaTable td.igss {
-    padding-top: calc(var(--planilla-cell-vertical-padding) + 0.15rem);
-    padding-bottom: calc(var(--planilla-cell-vertical-padding) + 0.15rem);
-  }
-
-  /* Mantener fondo alterno y aspecto existente */
+  /* Sombras y fondos sutiles mantienen el diseño existente */
   table.table tbody tr { background: #fff; }
   table.table tbody tr:nth-child(odd) { background: #fbfeff; }
 
-  /* Responsivo: reducir tamaños en pantallas pequeñas sin desalinear Q */
+  /* Responsivo: bajar tamaños en pantallas pequeñas sin romper la posición del prefijo Q */
   @media (max-width: 992px) {
     :root {
       --planilla-money-min-width: 160px;
