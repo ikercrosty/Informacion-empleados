@@ -7,12 +7,14 @@
     <div class="card-body d-flex align-items-center justify-content-between gap-3">
       <div>
         <h3 class="mb-0">FICHA DEL PERSONAL</h3>
-        <div class="text-muted small mt-1">Aquí se mostrará la información del empleado seleccionado</div>
+        <div class="text-muted small mt-1">Selecciona un empleado para ver su ficha</div>
       </div>
+
       <div class="d-flex flex-column align-items-end gap-2">
         <select id="empleadoSelect" class="form-select form-select-sm" style="min-width:320px">
           <option value="">Cargando lista de empleados...</option>
         </select>
+
         <img id="fotoEmpleado" src="{{ url_for('static', filename='placeholder.png') }}" alt="Foto" style="width:120px;height:140px;object-fit:cover;border:1px solid #ddd;border-radius:4px;">
       </div>
     </div>
@@ -20,83 +22,66 @@
 
   <form id="fichaForm" class="card shadow-sm border-0 mb-4">
     <div class="card-body p-4">
-      <h5 class="mb-3">DATOS DE IDENTIFICACIÓN</h5>
+
+      <h5 class="mb-3">IDENTIFICACIÓN</h5>
       <div class="row g-3">
         <div class="col-md-4">
-          <label class="form-label">NOMBRE</label>
+          <label class="form-label">Numero de DPI</label>
+          <input id="dpi" name="Numero de DPI" class="form-control form-control-sm" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Nombre</label>
           <input id="nombre" name="Nombre" class="form-control form-control-sm" />
         </div>
         <div class="col-md-4">
-          <label class="form-label">APELLIDO PATERNO</label>
+          <label class="form-label">Apellidos</label>
           <input id="apellidos" name="Apellidos" class="form-control form-control-sm" />
         </div>
         <div class="col-md-4">
-          <label class="form-label">APELLIDO MATERNO</label>
+          <label class="form-label">Apellidos de casada</label>
           <input id="apellidos_casada" name="Apellidos de casada" class="form-control form-control-sm" />
         </div>
-
-        <div class="col-md-3">
-          <label class="form-label">FECHA DE NACIMIENTO</label>
-          <input id="fecha_nacimiento" name="Fecha de nacimiento" type="date" class="form-control form-control-sm" />
-        </div>
-        <div class="col-md-1">
-          <label class="form-label">EDAD</label>
-          <input id="edad" name="Edad" class="form-control form-control-sm" />
-        </div>
-        <div class="col-md-2">
-          <label class="form-label">SEXO</label>
-          <input id="sexo" name="Sexo" class="form-control form-control-sm" />
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">ESTADO CIVIL</label>
+        <div class="col-md-4">
+          <label class="form-label">Estado Civil</label>
           <input id="estado_civil" name="Estado Civil" class="form-control form-control-sm" />
         </div>
-        <div class="col-md-3">
-          <label class="form-label">NSS / IGGS</label>
-          <input id="iggs" name="Numero de Afiliación del IGGS" class="form-control form-control-sm" />
-        </div>
-
         <div class="col-md-4">
-          <label class="form-label">TELÉFONO</label>
-          <input id="telefono" name="Numero de Telefono" class="form-control form-control-sm" />
+          <label class="form-label">Nacionalidad</label>
+          <input id="nacionalidad" name="Nacionalidad" class="form-control form-control-sm" />
         </div>
         <div class="col-md-4">
-          <label class="form-label">CELULAR</label>
-          <input id="celular" name="Celular" class="form-control form-control-sm" />
+          <label class="form-label">Fecha de nacimiento</label>
+          <input id="fecha_nacimiento" name="Fecha de nacimiento" type="date" class="form-control form-control-sm" />
         </div>
         <div class="col-md-4">
-          <label class="form-label">CORREO ELECTRÓNICO</label>
-          <input id="correo" name="Correo Electronico" type="email" class="form-control form-control-sm" />
+          <label class="form-label">Lugar de nacimiento</label>
+          <input id="lugar_nacimiento" name="Lugar de nacimiento" class="form-control form-control-sm" />
         </div>
       </div>
 
       <hr class="my-4">
 
-      <h5 class="mb-3">DATOS DE DOMICILIO</h5>
+      <h5 class="mb-3">DOMICILIO</h5>
       <div class="row g-3">
-        <div class="col-md-5">
-          <label class="form-label">CALLE / DIRECCIÓN</label>
-          <input id="direccion" name="Direccion del Domicilio" class="form-control form-control-sm" />
+        <div class="col-md-6">
+          <label class="form-label">Dirección del Domicilio</label>
+          <input id="direccion" name="Dirección del Domicilio" class="form-control form-control-sm" />
         </div>
-        <div class="col-md-2">
-          <label class="form-label">NÚMERO</label>
-          <input id="numero" name="Numero" class="form-control form-control-sm" />
-        </div>
-        <div class="col-md-5">
-          <label class="form-label">COLONIA</label>
-          <input id="colonia" name="Colonia" class="form-control form-control-sm" />
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">MUNICIPIO</label>
-          <input id="municipio" name="Municipio" class="form-control form-control-sm" />
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">DEPARTAMENTO / ESTADO</label>
+        <div class="col-md-3">
+          <label class="form-label">Departamento</label>
           <input id="departamento" name="Departamento" class="form-control form-control-sm" />
         </div>
+        <div class="col-md-3">
+          <label class="form-label">Numero de Telefono</label>
+          <input id="telefono" name="Numero de Telefono" class="form-control form-control-sm" />
+        </div>
         <div class="col-md-4">
-          <label class="form-label">C.P.</label>
-          <input id="cp" name="CP" class="form-control form-control-sm" />
+          <label class="form-label">Correo Electronico</label>
+          <input id="correo" name="Correo Electronico" type="email" class="form-control form-control-sm" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Religión</label>
+          <input id="religion" name="Religión" class="form-control form-control-sm" />
         </div>
       </div>
 
@@ -105,82 +90,32 @@
       <h5 class="mb-3">DATOS LABORALES</h5>
       <div class="row g-3">
         <div class="col-md-4">
-          <label class="form-label">PUESTO</label>
+          <label class="form-label">Puesto de trabajo</label>
           <input id="puesto" name="Puesto de trabajo" class="form-control form-control-sm" />
         </div>
         <div class="col-md-4">
-          <label class="form-label">ÁREA</label>
-          <input id="area" name="Area" class="form-control form-control-sm" />
+          <label class="form-label">Tipo de contrato</label>
+          <input id="tipo_contrato" name="Tipo de contrato" class="form-control form-control-sm" />
         </div>
         <div class="col-md-4">
-          <label class="form-label">JEFE INMEDIATO</label>
-          <input id="jefe" name="Nombre del Jefe Imediato" class="form-control form-control-sm" />
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">FECHA DE INGRESO</label>
-          <input id="fecha_ingreso" name="Fecha de inicio laboral" type="date" class="form-control form-control-sm" />
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">SUELDO</label>
-          <input id="sueldo" name="Sueldo" type="number" step="0.01" class="form-control form-control-sm" />
-        </div>
-      </div>
-
-      <hr class="my-4">
-
-      <h5 class="mb-3">DATOS ACADÉMICOS</h5>
-      <div class="row g-3">
-        <div class="col-md-4">
-          <label class="form-label">ESCOLARIDAD</label>
-          <input id="escolaridad" name="Nivel de estudios" class="form-control form-control-sm" />
+          <label class="form-label">Jornada laboral</label>
+          <input id="jornada" name="Jornada laboral" class="form-control form-control-sm" />
         </div>
         <div class="col-md-4">
-          <label class="form-label">ESPECIFIQUE</label>
-          <input id="especifique" name="Especifique" class="form-control form-control-sm" />
+          <label class="form-label">Duración del trabajo</label>
+          <input id="duracion" name="Duración del trabajo" class="form-control form-control-sm" />
         </div>
         <div class="col-md-4">
-          <label class="form-label">OTROS ESTUDIOS</label>
-          <input id="otros_estudios" name="Cursos o titulos adicionales" class="form-control form-control-sm" />
-        </div>
-      </div>
-
-      <hr class="my-4">
-
-      <h5 class="mb-3">INFORMACIÓN ADICIONAL</h5>
-      <div class="row g-3">
-        <div class="col-md-3">
-          <label class="form-label">ENFERMEDAD CRÓNICA</label>
-          <input id="padece" name="Padece alguna enfermedad" class="form-control form-control-sm" />
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">MEDICAMENTO</label>
-          <input id="medicamento" name="Nombre del tratamiento" class="form-control form-control-sm" />
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">OPERACIONES</label>
-          <input id="operaciones" name="Operaciones" class="form-control form-control-sm" />
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">ACCIDENTES</label>
-          <input id="accidentes" name="Accidentes" class="form-control form-control-sm" />
-        </div>
-      </div>
-
-      <hr class="my-4">
-
-      <h5 class="mb-3">PERSONAS A AVISAR EN CASO DE EMERGENCIA</h5>
-      <div class="row g-3">
-        <div class="col-md-5">
-          <label class="form-label">NOMBRE</label>
-          <input id="emerg_nombre" name="Nombre del contacto de emergencia" class="form-control form-control-sm" />
+          <label class="form-label">Fecha de inicio laboral</label>
+          <input id="fecha_inicio" name="Fecha de inicio laboral" type="date" class="form-control form-control-sm" />
         </div>
         <div class="col-md-4">
-          <label class="form-label">TELÉFONO</label>
-          <input id="emerg_telefono" name="Numero de telefono de emergencia" class="form-control form-control-sm" />
+          <label class="form-label">Dias Laborales</label>
+          <input id="dias_laborales" name="Dias Laborales" type="number" class="form-control form-control-sm" />
         </div>
-        <div class="col-md-3">
-          <label class="form-label">PARENTESCO</label>
-          <input id="emerg_parentesco" name="Parentesco" class="form-control form-control-sm" />
+        <div class="col-md-4">
+          <label class="form-label">Numero de Afiliación del IGGS</label>
+          <input id="iggs" name="Numero de Afiliación del IGGS" class="form-control form-control-sm" />
         </div>
       </div>
 
