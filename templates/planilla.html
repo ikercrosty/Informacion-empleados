@@ -684,24 +684,24 @@ document.getElementById('exportExcel').addEventListener('click', () => {
   table.table tbody tr:nth-child(odd) { background: #fbfeff; }
 
   /* Responsivo: bajar tamaños en pantallas pequeñas sin romper la posición del prefijo Q */
-  @media (max-width: 992px) {
+  @media (max-width: 1000px) {
     :root {
-      --planilla-money-min-width: 160px;
-      --planilla-input-min-height: 44px;
-      --planilla-cell-horizontal-padding: 0.9rem;
-      --planilla-name-col-min-width: 260px;
+      --planilla-money-min-width: 165px;
+      --planilla-input-min-height: 48px;
+      --planilla-cell-horizontal-padding: 1.2rem;
+      --planilla-name-col-min-width: 265px;
     }
-    #planillaTable { min-width: 1200px; }
+    #planillaTable { min-width: 1220px; }
   }
 
   @media (max-width: 576px) {
     :root {
-      --planilla-money-min-width: 120px;
-      --planilla-input-min-height: 40px;
-      --planilla-cell-horizontal-padding: 0.6rem;
-      --planilla-name-col-min-width: 200px;
+      --planilla-money-min-width: 130px;
+      --planilla-input-min-height: 50px;
+      --planilla-cell-horizontal-padding: 1.0rem;
+      --planilla-name-col-min-width: 210px;
     }
-    #planillaTable { min-width: 1000px; }
+    #planillaTable { min-width: 1030px; }
   }
 
 /* Bordes por columna: coloca esto dentro del bloque <style> existente */
