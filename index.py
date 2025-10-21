@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response, jsonify
-from flask_cors import CORS
 import os
 import pymysql
 from urllib.parse import urlparse
@@ -13,9 +12,20 @@ app = Flask(__name__)
 app.secret_key = "clave-secreta"
 app.config["SESSION_PERMANENT"] = False
 
-# Habilitar CORS: en desarrollo permite el frontend local; en producción configura ORIGINS desde env
+# Configuración de CORS con fallback si Flask-Cors no está instalado
 FRONTEND_ORIGINS = os.environ.get("FRONTEND_ORIGINS", "http://localhost:5173")
-CORS(app, resources={r"/api/*": {"origins": FRONTEND_ORIGINS}, r"/subir_foto": {"origins": FRONTEND_ORIGINS}, r"/eliminar_foto": {"origins": FRONTEND_ORIGINS}})
+try:
+    from flask_cors import CORS
+    CORS(app, resources={r"/api/*": {"origins": FRONTEND_ORIGINS}, r"/subir_foto": {"origins": FRONTEND_ORIGINS}, r"/eliminar_foto": {"origins": FRONTEND_ORIGINS}})
+except Exception:
+    @app.after_request
+    def _simple_cors(response):
+        origin = FRONTEND_ORIGINS
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With"
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        return response
 
 # Tamaño máximo de subida (ej. 16 MB)
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
@@ -59,7 +69,6 @@ def get_db_connection():
 
 @app.before_request
 def requerir_login():
-    # Rutas públicas (no requieren sesión)
     rutas_publicas = {
         "login", "static", "db_test", "db-test",
         "guardar_empleado", "guardar_academico", "guardar_conyugue",
