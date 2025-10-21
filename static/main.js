@@ -1,3 +1,17 @@
+// static/js/main.js
+// Reemplaza el contenido actual por este archivo.
+// Maneja:
+// - registro y edición de tablas (planilla)
+// - carga del select de empleados y llenado de ficha (normaliza claves JSON)
+// - subida/eliminación de fotos y actualización de vista
+// - UI global (sidebar, botones)
+// Las plantillas pueden sobrescribir rutas con window.__FICHA_CONFIG:
+// {
+//   placeholder: "/static/imagenes/default.png",
+//   apiEmpleados: "/api/empleados",
+//   apiEmpleadoBase: "/api/empleado/",
+//   apiFotoBase: "/api/foto/"
+// }
 
 (function () {
   'use strict';
@@ -239,9 +253,50 @@
 
   window.registrarTabla = registrarTabla;
 
-  // -------------- final registro de tablas: tus plantillas pueden llamar registrarTabla(...) --------------
+  // ---------------- FICHA (select, load, fill) con normalización de claves ----------------
 
-  // ---------------- FICHA (select, load, fill) ----------------
+  // Normaliza una clave: quita acentos, signos y espacios, pasa a minúsculas
+  function normalizeKey(k) {
+    if (!k) return '';
+    const from = 'ÁÀÂÄáàâäÉÈÊËéèêëÍÌÎÏíìîïÓÒÔÖóòôöÚÙÛÜúùûüÑñÇç';
+    const to   = 'AAAAaaaaEEEEeeeeIIIIiiiiOOOOooooUUUUuuuuNnCc';
+    let s = String(k);
+    for (let i=0;i<from.length;i++) s = s.replace(new RegExp(from[i], 'g'), to[i]);
+    s = s.replace(/[\s\-_\/\.(),:]+/g, '').toLowerCase();
+    return s;
+  }
+
+  // Convierte un registro a mapa normalizado
+  function normalizedRecord(emp) {
+    const map = {};
+    if (!emp || typeof emp !== 'object') return map;
+    const row = Array.isArray(emp) && emp.length > 0 ? emp[0] : emp;
+    Object.keys(row).forEach(k => {
+      const nk = normalizeKey(k);
+      map[nk] = row[k];
+    });
+    return map;
+  }
+
+  // Variantes normalizadas por campo del form
+  const FIELD_VARIANTS = {
+    dpi: ['numerodedpi','dpi','numero','id'],
+    nombre: ['nombre','nombres','fullname','full_name'],
+    apellidos: ['apellidos','apellido','apellido2','apellidopaterno','apellidomaterno'],
+    apellidos_casada: ['apellidosdecasada','apellidos_casada'],
+    estado_civil: ['estadocivil','estado','civil'],
+    nacionalidad: ['nacionalidad'],
+    fecha_nacimiento: ['fechadenacimiento','fechanacimiento','nacimiento','birthdate'],
+    direccion: ['direccióndeldomicilio','direccion','direcciondeldomicilio','direcciondomicilio'],
+    departamento: ['departamento','estado'],
+    telefono: ['numerodetelefono','telefono','tel'],
+    correo: ['correoelectronico','correo','email','mail'],
+    puesto: ['puestodetrabajo','puesto','cargo'],
+    fecha_ingreso: ['fechadeiniciolaboral','fechainiciolaboral','fecha_inicio','inicio'],
+    sueldo: ['sueldo'],
+    region: ['region','región']
+  };
+
   async function loadEmpleados() {
     const sel = document.getElementById('empleadoSelect');
     if (!sel) return;
@@ -250,9 +305,12 @@
       const data = await fetchJson(API_EMPLEADOS);
       sel.innerHTML = '<option value="">Seleccione empleado...</option>';
       (Array.isArray(data) ? data : []).forEach(e => {
+        const norm = normalizedRecord(e);
+        const value = safe(norm['dpi'] || norm['numerodedpi'] || norm['id'] || norm['numero']);
+        const label = safe(norm['fullname'] || norm['full_name'] || norm['nombre'] || ((e.nombre && e.apellido) ? (e.nombre + ' ' + e.apellido) : '---'));
         const opt = document.createElement('option');
-        opt.value = e.dpi || '';
-        opt.textContent = e.full_name || e.dpi || '---';
+        opt.value = value;
+        opt.textContent = label || value || '---';
         sel.appendChild(opt);
       });
     } catch (err) {
@@ -261,62 +319,32 @@
     }
   }
 
+  // Rellena inputs basándose en normalizedRecord y FIELD_VARIANTS
   async function fillFicha(emp) {
-    if (!emp || typeof emp !== 'object') return;
+    if (!emp) return;
     try {
-      const map = {
-        nombre: ['Nombre'],
-        apellidos: ['Apellidos'],
-        apellidos_casada: ['Apellidos de casada'],
-        fecha_nacimiento: ['Fecha de nacimiento'],
-        edad: ['Edad'],
-        sexo: ['Sexo'],
-        estado_civil: ['Estado Civil'],
-        iggs: ['Numero de Afiliación del IGGS'],
-        telefono: ['Numero de Telefono'],
-        celular: ['Celular', 'Telefono Celular'],
-        correo: ['Correo Electronico'],
-        direccion: ['Dirección del Domicilio', 'direccion'],
-        numero: ['Numero', 'numero'],
-        colonia: ['Colonia', 'colonia'],
-        municipio: ['Municipio', 'municipio'],
-        departamento: ['Departamento'],
-        cp: ['C.P.', 'CP'],
-        puesto: ['Puesto de trabajo', 'Puesto'],
-        area: ['Area'],
-        jefe: ['Nombre del Jefe Imediato', 'Jefe'],
-        fecha_ingreso: ['Fecha de inicio laboral'],
-        sueldo: ['Sueldo'],
-        escolaridad: ['Nivel de estudios'],
-        especifique: ['Profesión u Oficio', 'Especifique'],
-        otros_estudios: ['Cursos o titulos adicionales'],
-        padece: ['Padece alguna enfermedad'],
-        medicamento: ['Nombre del tratamiento'],
-        operaciones: ['Operaciones', 'Cirugias'],
-        accidentes: ['Accidentes', 'Ha tenido algun accidente'],
-        emerg_nombre: ['Nombre del contacto de emergencia'],
-        emerg_telefono: ['Numero de telefono de emergencia'],
-        emerg_parentesco: ['Parentesco']
-      };
+      const rec = normalizedRecord(emp);
 
-      Object.keys(map).forEach(id => {
-        const el = document.getElementById(id);
+      Object.keys(FIELD_VARIANTS).forEach(fieldId => {
+        const el = document.getElementById(fieldId) || document.getElementById(fieldId.replace(/_/g, ''));
         if (!el) return;
-        const keys = map[id];
-        let val = '';
-        for (let k of keys) {
-          if (Object.prototype.hasOwnProperty.call(emp, k) && emp[k] != null) { val = emp[k]; break; }
+        let v = '';
+        for (const variant of FIELD_VARIANTS[fieldId]) {
+          if (Object.prototype.hasOwnProperty.call(rec, variant) && rec[variant] !== null && rec[variant] !== undefined) {
+            v = rec[variant];
+            break;
+          }
         }
-        el.value = safe(val);
+        el.value = safe(v);
       });
 
-      const dpi = emp['Numero de DPI'] || emp.dpi || emp.numero || '';
+      const possibleDpi = rec['numerodedpi'] || rec['dpi'] || rec['numero'] || rec['id'] || '';
       const fotoEl = document.getElementById('fotoEmpleado') || document.getElementById('foto');
       if (!fotoEl) return;
-      if (!dpi) { fotoEl.src = PLACEHOLDER; return; }
+      if (!possibleDpi) { fotoEl.src = PLACEHOLDER; return; }
 
       try {
-        const j = await fetchJson(API_FOTO_BASE + encodeURIComponent(dpi));
+        const j = await fetchJson(API_FOTO_BASE + encodeURIComponent(possibleDpi));
         if (j && j.url) fotoEl.src = `${j.url}?t=${Date.now()}`;
         else if (j && j.foto) fotoEl.src = `/static/fotos/${j.foto}?t=${Date.now()}`;
         else fotoEl.src = PLACEHOLDER;
@@ -343,7 +371,8 @@
       }
       try {
         const emp = await fetchJson(API_EMPLEADO_BASE + encodeURIComponent(dpi));
-        await fillFicha(emp);
+        const resolved = Array.isArray(emp) && emp.length > 0 ? emp[0] : emp;
+        await fillFicha(resolved);
       } catch (err) {
         console.error('Error cargando empleado', err);
         alert('Error cargando datos del empleado');
@@ -459,7 +488,7 @@
 
   // ---------------- Auto-init ----------------
   document.addEventListener('DOMContentLoaded', () => {
-    // Planilla scripts assume registrarTabla() calls happen from templates after this file loads.
+    // Planilla templates may call registrarTabla(...) after this file loads
     loadEmpleados().then(() => attachSelectListener()).catch(e => console.error(e));
     initUploadForms();
     initGlobalUI();
