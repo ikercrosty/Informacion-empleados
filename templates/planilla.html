@@ -574,12 +574,14 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     --panel: #f8f9fa;
 
     /* Ajustes globales de tamaño de celda e inputs */
-    --planilla-cell-vertical-padding: 1.08rem; /* aumenta altura de celdas */
-    --planilla-cell-horizontal-padding: 1.5rem; /* mayor espacio horizontal */
-    --planilla-input-min-height: 52px; /* altura de inputs */
+    --planilla-cell-vertical-padding: 1.08rem;
+    --planilla-cell-horizontal-padding: 1.5rem;
+    --planilla-input-min-height: 52px;
     --planilla-input-font-size: 1.03rem;
-    --planilla-money-min-width: 225px; /* ancho mínimo para columnas monetarias */
-    --planilla-name-col-min-width: 360px; /* ancho visible para columna nombre */
+    --planilla-money-min-width: 225px;
+    --planilla-name-col-min-width: 360px;
+    --tfoot-sep-color: #e6eef6;
+    --tfoot-top-border: #dfe6ee;
   }
 
   body { background: linear-gradient(180deg,var(--bg-grad-start) 0%, var(--bg-grad-end) 100%); }
@@ -609,7 +611,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     display: inline-flex;
     align-items: center;
     gap: 0.6rem;
-    white-space: nowrap;   /* evita que el prefijo salte de línea */
+    white-space: nowrap;
     flex-wrap: nowrap;
   }
   .money-prefix {
@@ -618,7 +620,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     justify-content: center;
     flex: 0 0 auto;
     margin-right: 0;
-    min-width: 38px;                      /* un poco más ancho para equilibrio */
+    min-width: 38px;
     height: var(--planilla-input-min-height);
     padding: 0 .6rem;
     border-radius: .45rem;
@@ -660,18 +662,72 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     word-break: break-word;
   }
 
-  /* Alineaciones numéricas y celdas de resultado */
+  /* Alineación y espaciado de celdas numéricas de resultados */
   #planillaTable td.total-devengado,
   #planillaTable td.igss,
   #planillaTable td.total-deducciones,
   #planillaTable td.liquido,
-  #planillaTable td.isr-cell,
-  #planillaTable tfoot td {
-    text-align: right;
-    vertical-align: middle;
+  #planillaTable td.isr-cell {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    min-height: calc(var(--planilla-input-min-height) - 6px);
+    padding-top: calc(var(--planilla-cell-vertical-padding) - 0.15rem);
+    padding-bottom: calc(var(--planilla-cell-vertical-padding) - 0.15rem);
+    line-height: 1.15;
+    white-space: nowrap;
   }
 
-  /* Centrar hora y reducir su padding para que se vea bien dentro de la fila alta */
+  /* Footer (totales): divisiones claras entre celdas */
+  #planillaTable tfoot tr {
+    border-top: 2px solid var(--tfoot-top-border);
+    background: #f8f9fa;
+  }
+
+  #planillaTable tfoot td {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: calc(var(--planilla-cell-vertical-padding) - 0.15rem) var(--planilla-cell-horizontal-padding);
+    min-height: var(--planilla-input-min-height);
+    background: linear-gradient(180deg, rgba(248,249,250,0.9) 0%, rgba(248,249,250,1) 100%);
+  }
+
+  /* Separadores verticales: añadir línea a la izquierda de cada celda de totales excepto la primera visible */
+  #planillaTable tfoot td + td {
+    border-left: 1px solid var(--tfoot-sep-color);
+    padding-left: calc(var(--planilla-cell-horizontal-padding) - 4px);
+  }
+
+  /* Cuando la primera cell abarca 2 columnas (colspan=2), aseguramos la primera división visible */
+  #planillaTable tfoot td[colspan="2"] {
+    padding-right: calc(var(--planilla-cell-horizontal-padding) + 6px);
+  }
+  #planillaTable tfoot td[colspan="2"] + td {
+    /* primera celda numérica después del colspan deberá mostrar separación más marcada */
+    border-left: 1px solid var(--tfoot-top-border);
+    padding-left: calc(var(--planilla-cell-horizontal-padding) - 2px);
+  }
+
+  /* Más espacio específico para la columna IGSS en totales (evita apilamiento visual) */
+  #planillaTable tfoot td#total-igss,
+  #planillaTable td.igss {
+    padding-top: calc(var(--planilla-cell-vertical-padding) + 0.2rem);
+    padding-bottom: calc(var(--planilla-cell-vertical-padding) + 0.2rem);
+    min-width: 120px;
+  }
+
+  /* Asegurar que el texto Q y el número no estén amontonados en IGSS y totales */
+  #planillaTable td.igss,
+  #planillaTable tfoot td {
+    letter-spacing: 0;
+    word-spacing: 0.15rem;
+  }
+
+  /* Inputs de horas centradas y con espacio vertical adecuado */
   #planillaTable td input.horas {
     text-align:center;
     padding-top: .35rem;
@@ -679,11 +735,11 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     height: calc(var(--planilla-input-min-height) - .8rem);
   }
 
-  /* Sombras y fondos sutiles mantienen el diseño existente */
+  /* Mantener fondo alterno y aspecto existente */
   table.table tbody tr { background: #fff; }
   table.table tbody tr:nth-child(odd) { background: #fbfeff; }
 
-  /* Responsivo: bajar tamaños en pantallas pequeñas sin romper la posición del prefijo Q */
+  /* Responsivo: reducir tamaños en pantallas pequeñas sin desalinear Q */
   @media (max-width: 992px) {
     :root {
       --planilla-money-min-width: 160px;
@@ -704,5 +760,6 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     #planillaTable { min-width: 1000px; }
   }
 </style>
+
 
 {% endblock %}
