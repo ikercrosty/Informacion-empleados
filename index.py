@@ -79,9 +79,11 @@ def menu():
 
 @app.route("/")
 def home():
-    # Si no hay usuario en sesión, redirigir al login
-    if "usuario" not in session:
-        return redirect(url_for("login"))
+    # Si hay usuario en sesión, redirige al menú; si no, al login
+    if "usuario" in session:
+        return redirect(url_for("menu"))
+    return redirect(url_for("login"))
+
 
     # Usuario en sesión: cargar datos y mostrar home
     conn = get_db_connection()
