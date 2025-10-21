@@ -26,19 +26,52 @@
       <!-- Datos personales -->
       <h5 class="mb-3">DATOS PERSONALES</h5>
       <div class="row g-3">
-        <div class="col-md-3"><label class="form-label">Número de DPI</label><input id="dpi" value="{{ e['Numero de DPI'] if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Nombre</label><input id="nombre" value="{{ e.get('Nombre') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Apellidos</label><input id="apellidos" value="{{ e.get('Apellidos') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Apellidos de casada</label><input id="apellidos_casada" value="{{ e.get('Apellidos de casada') if e else '' }}" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3">
+          <label class="form-label">Número de DPI</label>
+          <input id="dpi" value="{{ e['Numero de DPI'] if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Nombre</label>
+          <input id="nombre" value="{{ e.get('Nombre') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Apellidos</label>
+          <input id="apellidos" value="{{ e.get('Apellidos') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Apellidos de casada</label>
+          <input id="apellidos_casada" value="{{ e.get('Apellidos de casada') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
 
-        <div class="col-md-3"><label class="form-label">Estado Civil</label><input id="estado_civil" value="{{ e.get('Estado Civil') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Nacionalidad</label><input id="nacionalidad" value="{{ e.get('Nacionalidad') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Departamento</label><input id="departamento" value="{{ e.get('Departamento') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Fecha de nacimiento</label><input id="fecha_nacimiento" value="{{ e.get('Fecha de nacimiento') if e else '' }}" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3">
+          <label class="form-label">Estado Civil</label>
+          <input id="estado_civil" value="{{ e.get('Estado Civil') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Nacionalidad</label>
+          <input id="nacionalidad" value="{{ e.get('Nacionalidad') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Departamento</label>
+          <input id="departamento" value="{{ e.get('Departamento') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Fecha de nacimiento</label>
+          <input id="fecha_nacimiento" value="{{ e.get('Fecha de nacimiento')[:10] if e and e.get('Fecha de nacimiento') }}" class="form-control form-control-sm" readonly>
+        </div>
 
-        <div class="col-md-4"><label class="form-label">Lugar de nacimiento</label><input id="lugar_nacimiento" value="{{ e.get('Lugar de nacimiento') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-4"><label class="form-label">Número de Afiliación IGSS</label><input id="iggs" value="{{ e.get('Numero de Afiliación del IGGS') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-4"><label class="form-label">Religión</label><input id="religion" value="{{ e.get('Religión') if e else '' }}" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-4">
+          <label class="form-label">Lugar de nacimiento</label>
+          <input id="lugar_nacimiento" value="{{ e.get('Lugar de nacimiento') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Número de Afiliación IGSS</label>
+          <input id="iggs" value="{{ e.get('Numero de Afiliación del IGGS') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Religión</label>
+          <input id="religion" value="{{ e.get('Religión') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
       </div>
 
       <hr class="my-4">
@@ -46,23 +79,55 @@
       <!-- Domicilio y contacto -->
       <h5 class="mb-3">DOMICILIO Y CONTACTO</h5>
       <div class="row g-3">
-        <div class="col-md-6"><label class="form-label">Dirección del Domicilio</label><input id="direccion" value="{{ e.get('Dirección del Domicilio') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Número de Teléfono</label><input id="telefono" value="{{ e.get('Numero de Telefono') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Correo Electrónico</label><input id="correo" value="{{ e.get('Correo Electronico') if e else '' }}" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-6">
+          <label class="form-label">Dirección del Domicilio</label>
+          <input id="direccion" value="{{ e.get('Dirección del Domicilio') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Número de Teléfono</label>
+          <input id="telefono" value="{{ e.get('Numero de Telefono') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Correo Electrónico</label>
+          <input id="correo" value="{{ e.get('Correo Electronico') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
       </div>
 
       <hr class="my-4">
 
       <!-- Datos laborales -->
-      <h5 class="mb-3">DATOS LABORALES</h5>
+      <h5 class="mb-3">Datos Laborales (Exclusivo de la administración)</h5>
+      <div class="text-muted small mb-3">Administración será la encargada de llenar este apartado.</div>
       <div class="row g-3">
-        <div class="col-md-3"><label class="form-label">Puesto de trabajo</label><input id="puesto" value="{{ e.get('Puesto de trabajo') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Tipo de contrato</label><input id="tipo_contrato" value="{{ e.get('Tipo de contrato') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Jornada laboral</label><input id="jornada" value="{{ e.get('Jornada laboral') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Duración del trabajo</label><input id="duracion" value="{{ e.get('Duración del trabajo') if e else '' }}" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3">
+          <label class="form-label">Puesto de trabajo</label>
+          <input id="puesto" value="{{ e.get('Puesto de trabajo') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Tipo de contrato</label>
+          <input id="tipo_contrato" value="{{ e.get('Tipo de contrato') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Jornada laboral</label>
+          <input id="jornada" value="{{ e.get('Jornada laboral') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Duración del contrato</label>
+          <input id="duracion" value="{{ e.get('Duración del trabajo') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
 
-        <div class="col-md-3"><label class="form-label">Fecha de inicio laboral</label><input id="fecha_inicio" value="{{ e.get('Fecha de inicio laboral') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Días laborales</label><input id="dias_laborales" value="{{ e.get('Dias Laborales') if e else '' }}" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3">
+          <label class="form-label">Fecha de inicio laboral</label>
+          <input id="fecha_inicio" value="{{ e.get('Fecha de inicio laboral') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Días laborales</label>
+          <input id="dias_laborales" value="{{ e.get('Dias Laborales') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Número de Afiliación del IGSS</label>
+          <input id="iggs_clone" value="{{ e.get('Numero de Afiliación del IGGS') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
       </div>
 
       <hr class="my-4">
@@ -70,10 +135,22 @@
       <!-- Información académica -->
       <h5 class="mb-3">INFORMACIÓN ACADÉMICA</h5>
       <div class="row g-3">
-        <div class="col-md-3"><label class="form-label">Nivel de estudios</label><input id="nivel_estudios" value="{{ e.get('Nivel de estudios') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Profesión u Oficio</label><input id="profesion" value="{{ e.get('Profesión u Oficio') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Colegio o establecimiento</label><input id="colegio" value="{{ e.get('Colegio o establecimiento') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Cursos o títulos adicionales</label><input id="cursos" value="{{ e.get('Cursos o títulos adicionales') if e else '' }}" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3">
+          <label class="form-label">Nivel de estudios</label>
+          <input id="nivel_estudios" value="{{ e.get('Nivel de estudios') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Profesión u Oficio</label>
+          <input id="profesion" value="{{ e.get('Profesión u Oficio') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Colegio o establecimiento</label>
+          <input id="colegio" value="{{ e.get('Colegio o establecimiento') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Cursos o títulos adicionales</label>
+          <input id="cursos" value="{{ e.get('Cursos o títulos adicionales') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
       </div>
 
       <hr class="my-4">
@@ -81,11 +158,26 @@
       <!-- Datos del cónyuge -->
       <h5 class="mb-3">DATOS DEL CÓNYUGE</h5>
       <div class="row g-3">
-        <div class="col-md-3"><label class="form-label">Nombres del cónyuge</label><input id="conyuge_nombres" value="{{ e.get('Nombres del cónyuge') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Apellidos del cónyuge</label><input id="conyuge_apellidos" value="{{ e.get('Apellidos del cónyuge') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Dirección del cónyuge</label><input id="conyuge_direccion" value="{{ e.get('Dirección del cónyuge') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Teléfono del cónyuge</label><input id="conyuge_telefono" value="{{ e.get('Teléfono del cónyuge') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-4 mt-2"><label class="form-label">Correo del cónyuge</label><input id="conyuge_correo" value="{{ e.get('Correo del cónyuge') if e else '' }}" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3">
+          <label class="form-label">Nombres del cónyuge</label>
+          <input id="conyuge_nombres" value="{{ e.get('Nombres del cónyuge') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Apellidos del cónyuge</label>
+          <input id="conyuge_apellidos" value="{{ e.get('Apellidos del cónyuge') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Dirección del cónyuge</label>
+          <input id="conyuge_direccion" value="{{ e.get('Dirección del cónyuge') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Teléfono del cónyuge</label>
+          <input id="conyuge_telefono" value="{{ e.get('Teléfono del cónyuge') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-4 mt-2">
+          <label class="form-label">Correo del cónyuge</label>
+          <input id="conyuge_correo" value="{{ e.get('Correo del cónyuge') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
       </div>
 
       <hr class="my-4">
@@ -93,25 +185,34 @@
       <!-- Contacto de emergencia -->
       <h5 class="mb-3">CONTACTO DE EMERGENCIA</h5>
       <div class="row g-3">
-        <div class="col-md-3"><label class="form-label">Nombre contacto</label><input id="contacto_nombre" value="{{ e.get('Nombre contacto') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Apellidos contacto</label><input id="contacto_apellidos" value="{{ e.get('Apellidos contacto') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Teléfono de emergencia</label><input id="contacto_telefono" value="{{ e.get('Teléfono de emergencia') if e else '' }}" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3">
+          <label class="form-label">Nombre contacto</label>
+          <input id="contacto_nombre" value="{{ e.get('Nombre contacto') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Apellidos contacto</label>
+          <input id="contacto_apellidos" value="{{ e.get('Apellidos contacto') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Teléfono de emergencia</label>
+          <input id="contacto_telefono" value="{{ e.get('Teléfono de emergencia') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
       </div>
 
       <hr class="my-4">
 
-      <!-- Referencias laborales (lista de una entrada; repetir si guardas múltiples en tu estructura) -->
-      <h5 class="mb-3">REFERENCIAS LABORALES</h5>
+      <!-- Referencias laborales -->
+      <h5 class="mb-3">REFERENCIAS LABORALES (Último empleo)</h5>
       <div class="table-responsive">
         <table class="table table-sm table-borderless">
           <thead>
             <tr>
               <th>Nombre Empresa</th>
               <th>Dirección Empresa</th>
-              <th>Inicio</th>
-              <th>Fin</th>
+              <th>Inicio en la empresa</th>
+              <th>Fin en la empresa</th>
               <th>Motivo del retiro</th>
-              <th>Jefe inmediato</th>
+              <th>Nombre del jefe inmediato</th>
             </tr>
           </thead>
           <tbody>
@@ -132,14 +233,35 @@
       <!-- Referencias médicas -->
       <h5 class="mb-3">REFERENCIAS MÉDICAS</h5>
       <div class="row g-3">
-        <div class="col-md-3"><label class="form-label">¿Padece alguna enfermedad?</label><input id="padece_enfermedad" value="{{ e.get('Padece alguna enfermedad') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Tipo de enfermedad</label><input id="tipo_enfermedad" value="{{ e.get('Tipo de enfermedad') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Recibe tratamiento</label><input id="recibe_tratamiento" value="{{ e.get('Recibe tratamiento') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-3"><label class="form-label">Nombre del tratamiento</label><input id="nombre_tratamiento" value="{{ e.get('Nombre del tratamiento') if e else '' }}" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3">
+          <label class="form-label">¿Padece alguna enfermedad?</label>
+          <input id="padece_enfermedad" value="{{ e.get('Padece alguna enfermedad') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Tipo de enfermedad</label>
+          <input id="tipo_enfermedad" value="{{ e.get('Tipo de enfermedad') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Recibe tratamiento</label>
+          <input id="recibe_tratamiento" value="{{ e.get('Recibe tratamiento') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Nombre del tratamiento</label>
+          <input id="nombre_tratamiento" value="{{ e.get('Nombre del tratamiento') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
 
-        <div class="col-md-4 mt-3"><label class="form-label">¿Es alérgico a algún medicamento?</label><input id="alergico" value="{{ e.get('Es alérgico a algún medicamento') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-4 mt-3"><label class="form-label">Nombre del médico tratante</label><input id="medico_tratante" value="{{ e.get('Nombre del médico tratante') if e else '' }}" class="form-control form-control-sm" readonly></div>
-        <div class="col-md-4 mt-3"><label class="form-label">Tipo de sangre</label><input id="tipo_sangre" value="{{ e.get('Tipo de sangre') if e else '' }}" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-4 mt-3">
+          <label class="form-label">¿Es alérgico a algún medicamento?</label>
+          <input id="alergico" value="{{ e.get('Es alérgico a algún medicamento') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-4 mt-3">
+          <label class="form-label">Nombre del médico tratante</label>
+          <input id="medico_tratante" value="{{ e.get('Nombre del médico tratante') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-4 mt-3">
+          <label class="form-label">Tipo de sangre</label>
+          <input id="tipo_sangre" value="{{ e.get('Tipo de sangre') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
       </div>
 
       <div class="mt-4 text-end">
