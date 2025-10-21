@@ -71,7 +71,11 @@ def no_cache(response):
 # ---------------- Páginas principales ----------------
 #
 
-@app.route("/empleados")
+@app.route("/menu")
+def menu():
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+    return render_template("menu.html", usuario=session.get("usuario"))@app.route("/empleados")
 def empleados():
     if "usuario" not in session:
         return redirect(url_for("login"))
