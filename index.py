@@ -13,6 +13,10 @@ app = Flask(__name__)
 app.secret_key = "clave-secreta"
 app.config["SESSION_PERMANENT"] = False
 
+# Habilitar CORS: en desarrollo permite el frontend local; en producción configura ORIGINS desde env
+FRONTEND_ORIGINS = os.environ.get("FRONTEND_ORIGINS", "http://localhost:5173")
+CORS(app, resources={r"/api/*": {"origins": FRONTEND_ORIGINS}, r"/subir_foto": {"origins": FRONTEND_ORIGINS}, r"/eliminar_foto": {"origins": FRONTEND_ORIGINS}})
+
 # Tamaño máximo de subida (ej. 16 MB)
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
 
@@ -60,10 +64,9 @@ def requerir_login():
         "login", "static", "db_test", "db-test",
         "guardar_empleado", "guardar_academico", "guardar_conyugue",
         "guardar_emergencia", "guardar_laboral", "guardar_medica",
-        "api_foto", "subir_foto", "eliminar_foto"
+        "api_foto", "subir_foto", "eliminar_foto", "api_empleados_list", "api_empleado_get"
     }
     endpoint = request.endpoint or ""
-    # request.endpoint puede venir con blueprint: "bp.endpoint", tomamos la parte antes del punto
     base_endpoint = endpoint.split(".")[0] if "." in endpoint else endpoint
     if ("usuario" not in session) and (base_endpoint not in rutas_publicas):
         return redirect(url_for("login"))
@@ -110,11 +113,8 @@ def empleados():
 
 @app.route("/")
 def home():
-    # Página pública: si hay usuario en sesión redirige al menú, sino al login
     if "usuario" in session:
         return redirect(url_for("menu"))
-
-    # Si no hay sesión, mostrar login (mantengo redirect a login)
     return redirect(url_for("login"))
 
 # Lista simplificada de empleados para el combobox (JSON)
@@ -691,10 +691,6 @@ def guardar_medica():
 # ---------------- Fotos: API, subida y eliminación (solo archivos en disco) ----------------
 @app.route("/api/foto/<dpi>")
 def api_foto(dpi):
-    """
-    Devuelve {foto: nombre, url: url} si existe archivo en static/fotos.
-    Si no, devuelve None para que el frontend muestre la imagen por defecto.
-    """
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -711,7 +707,6 @@ def api_foto(dpi):
         if os.path.exists(filepath):
             return jsonify({"foto": filename, "url": url_for('static', filename=f"fotos/{filename}")})
         else:
-            # Si no existe en disco, limpiar BD
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("UPDATE empleados_info SET `foto`=NULL WHERE `Numero de DPI`=%s", (dpi,))
@@ -725,7 +720,6 @@ def api_foto(dpi):
 
 @app.route("/subir_foto", methods=["POST"])
 def subir_foto():
-    # Depuración mínima para logs de servidor
     try:
         print("=== LLEGA A SUBIR_FOTO ===", file=sys.stderr)
         print("request.path:", request.path, " request.endpoint:", request.endpoint, file=sys.stderr)
@@ -752,16 +746,13 @@ def subir_foto():
         flash("Tipo de archivo no permitido", "danger")
         return redirect(url_for("home"))
 
-    # Normalizar nombre original y generar final unico por DPI + timestamp
     orig_name = secure_filename(file.filename)
     ts = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
     final_name = f"{dpi}_{ts}.jpg"
     save_path = os.path.join(app.config["UPLOAD_FOLDER"], final_name)
 
     try:
-        # Normalizar y convertir a JPEG bytes con Pillow
         image = Image.open(file.stream)
-        # Corregir orientación EXIF si existe
         try:
             from PIL import ExifTags
             exif = image._getexif()
@@ -784,11 +775,9 @@ def subir_foto():
         image.save(buffer, format="JPEG", quality=85, optimize=True)
         img_bytes = buffer.getvalue()
 
-        # Guardar en disco
         with open(save_path, "wb") as f:
             f.write(img_bytes)
 
-        # eliminar versiones antiguas del mismo DPI en disco
         try:
             for fname in os.listdir(app.config["UPLOAD_FOLDER"]):
                 if fname.startswith(f"{dpi}_") and fname != final_name:
@@ -799,7 +788,6 @@ def subir_foto():
         except Exception:
             pass
 
-        # Guardar nombre en BD
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("UPDATE empleados_info SET `foto`=%s WHERE `Numero de DPI`=%s", (final_name, dpi))
@@ -818,9 +806,6 @@ def subir_foto():
 
 @app.route("/eliminar_foto", methods=["POST"])
 def eliminar_foto():
-    """
-    Elimina el archivo del disco y limpia la columna foto (NULL) en BD.
-    """
     dpi = request.form.get("dpi")
     if not dpi:
         flash("Debe seleccionar un empleado (DPI)", "warning")
