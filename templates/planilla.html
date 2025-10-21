@@ -211,6 +211,7 @@ function recalcRow(tr) {
   const sueldo = parseFloat(tr.querySelector('.sueldo').value) || 0;
   const bono = parseFloat(tr.querySelector('.bono').value) || 0;
   const comisiones = parseFloat(tr.querySelector('.comisiones').value) || 0;
+  const dias = parseInt(tr.querySelector('.dias').value) || 0;
   const horas = parseInt(tr.querySelector('.horas').value) || 0;
   const otras = parseFloat(tr.querySelector('.otras').value) || 0;
 
@@ -247,6 +248,7 @@ function recalcTotals() {
   rows.forEach(tr => {
     const sueldo = parseFloat(tr.querySelector('.sueldo').value) || 0;
     const bono = parseFloat(tr.querySelector('.bono').value) || 0;
+    const dias = parseInt(tr.querySelector('.dias').value) || 0;
     const comisiones = parseFloat(tr.querySelector('.comisiones').value) || 0;
     const horas = parseInt(tr.querySelector('.horas').value) || 0;
     const otras = parseFloat(tr.querySelector('.otras').value) || 0;
