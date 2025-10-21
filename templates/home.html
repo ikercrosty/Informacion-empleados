@@ -197,6 +197,194 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const tabla = document.getElementById('tablaEmpleados');
+  const btnEditar = document.getElementById('btnEditar');
+  const btnGuardar = document.getElementById('btnGuardar');
+  const btnCancelar = document.getElementById('btnCancelar');
+
+  let selectedRow = null;
+  let originalCells = null;
+  let editing = false;
+
+  function clearSelection() {
+    if (selectedRow) selectedRow.classList.remove('table-active');
+    selectedRow = null;
+    originalCells = null;
+    editing = false;
+    btnEditar.disabled = true;
+    btnGuardar.disabled = true;
+    btnCancelar.disabled = true;
+  }
+
+  // Inicial: deshabilitar botones de edición salvo que haya selección
+  btnEditar.disabled = true;
+  btnGuardar.disabled = true;
+  btnCancelar.disabled = true;
+
+  // Doble clic en fila: seleccionar fila y habilitar editar
+  if (tabla) {
+    tabla.addEventListener('dblclick', (ev) => {
+      const tr = ev.target.closest('tr');
+      if (!tr || !tr.cells.length) return;
+
+      // Si ya está en modo edición y se hace dblclick en otra fila, cancelar edición primero
+      if (editing && selectedRow && tr !== selectedRow) {
+        cancelEdit();
+      }
+
+      // Toggle selección
+      if (selectedRow === tr) {
+        // ya seleccionada -> deseleccionar
+        clearSelection();
+      } else {
+        if (selectedRow) selectedRow.classList.remove('table-active');
+        selectedRow = tr;
+        selectedRow.classList.add('table-active');
+        btnEditar.disabled = false;
+        btnGuardar.disabled = true;
+        btnCancelar.disabled = false;
+      }
+    });
+  }
+
+  // Convertir celdas a inputs para edición in-line
+  function startEdit() {
+    if (!selectedRow || editing) return;
+    editing = true;
+    originalCells = Array.from(selectedRow.cells).map(td => td.innerText);
+    // Para cada celda, reemplazar por input (excepto la DPI que dejamos solo lectura)
+    selectedRow.querySelectorAll('td').forEach((td, idx) => {
+      const text = td.innerText;
+      // DPI (col 0) no editable; si quieres permitir editar, cambia la condición
+      if (idx === 0) {
+        td.innerHTML = `<input class="form-control form-control-sm" value="${escapeHtml(text)}" readonly>`;
+      } else {
+        td.innerHTML = `<input class="form-control form-control-sm" value="${escapeHtml(text)}">`;
+      }
+    });
+    btnEditar.disabled = true;
+    btnGuardar.disabled = false;
+    btnCancelar.disabled = false;
+    // focus first editable input
+    const firstEditable = selectedRow.querySelector('td:nth-child(2) input');
+    if (firstEditable) firstEditable.focus();
+  }
+
+  // Guardar edición: construir objeto a partir de columnas y enviar al servidor
+  async function saveEdit() {
+    if (!selectedRow || !editing) return;
+    const inputs = Array.from(selectedRow.querySelectorAll('td input'));
+    const dpi = inputs[0].value.trim();
+    // Construir payload siguiendo el orden de columnas en la tabla.
+    // Ajusta las claves según tu API/estructura si es necesario.
+    const payload = {
+      "Numero de DPI": dpi,
+      "Nombre": inputs[1].value.trim(),
+      "Apellidos": inputs[2].value.trim(),
+      "Apellidos de casada": inputs[3].value.trim(),
+      "Estado Civil": inputs[4].value.trim(),
+      "Nacionalidad": inputs[5].value.trim(),
+      "Departamento": inputs[6].value.trim(),
+      "Fecha de nacimiento": inputs[7].value.trim(),
+      "Lugar de nacimiento": inputs[8].value.trim(),
+      "Numero IGSS": inputs[9].value.trim(),
+      "Dirección del Domicilio": inputs[10].value.trim(),
+      "Numero de Telefono": inputs[11].value.trim(),
+      "Religión": inputs[12].value.trim(),
+      "Correo Electronico": inputs[13].value.trim(),
+      "Puesto de trabajo": inputs[14].value.trim(),
+      "Tipo de contrato": inputs[15].value.trim(),
+      "Jornada laboral": inputs[16].value.trim(),
+      "Duración del trabajo": inputs[17].value.trim(),
+      "Fecha de inicio laboral": inputs[18].value.trim(),
+      "Dias Laborales": inputs[19].value.trim()
+    };
+
+    try {
+      // Ajusta la URL/verbos de la API si tu backend usa otro endpoint o método
+      const res = await fetch(`/api/empleado/${encodeURIComponent(dpi)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const txt = await res.text().catch(()=>null);
+        throw new Error(`Error ${res.status}: ${txt || res.statusText}`);
+      }
+
+      // Si guardó bien, reemplazar inputs por texto actualizado
+      selectedRow.querySelectorAll('td').forEach((td, idx) => {
+        const v = Object.values(payload)[idx];
+        td.innerText = v !== undefined ? v : '';
+      });
+
+      editing = false;
+      btnGuardar.disabled = true;
+      btnEditar.disabled = false;
+      btnCancelar.disabled = false;
+      // opcional: mostrar feedback breve
+      flashMessage('Guardado correctamente', 'success');
+    } catch (err) {
+      flashMessage('Error al guardar: ' + err.message, 'danger');
+    }
+  }
+
+  // Cancelar edición: restaurar valores originales
+  function cancelEdit() {
+    if (!selectedRow) return;
+    if (editing && originalCells) {
+      selectedRow.querySelectorAll('td').forEach((td, idx) => {
+        td.innerText = originalCells[idx] || '';
+      });
+    }
+    editing = false;
+    btnEditar.disabled = selectedRow ? false : true;
+    btnGuardar.disabled = true;
+    btnCancelar.disabled = false;
+  }
+
+  // Utilidades
+  function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str).replace(/[&<>"'`=\/]/g, function(s) {
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[s];
+    });
+  }
+
+  function flashMessage(msg, type='info') {
+    // Mensaje temporal en la parte superior de la tabla (crea y remueve)
+    const existing = document.getElementById('flashMessage');
+    if (existing) existing.remove();
+    const container = document.createElement('div');
+    container.id = 'flashMessage';
+    container.className = `alert alert-${type} py-1 px-2 small position-fixed`;
+    container.style.top = '16px';
+    container.style.right = '16px';
+    container.style.zIndex = 2000;
+    container.innerText = msg;
+    document.body.appendChild(container);
+    setTimeout(()=> container.remove(), 2500);
+  }
+
+  // Eventos de botones
+  if (btnEditar) btnEditar.addEventListener('click', startEdit);
+  if (btnGuardar) btnGuardar.addEventListener('click', saveEdit);
+  if (btnCancelar) btnCancelar.addEventListener('click', cancelEdit);
+
+  // Click fuera de tabla quita selección (pero si estamos editando, no cancelar automáticamente)
+  document.addEventListener('click', (e) => {
+    const insideTable = e.target.closest('#tablaEmpleados');
+    if (!insideTable) {
+      if (!editing) clearSelection();
+    }
+  });
+
+});
+</script>
+
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 {% endblock %}
