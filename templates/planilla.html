@@ -153,7 +153,7 @@
               <td colspan="2" class="text-end">TOTAL</td>
               <td id="total-sueldo" class="text-end">Q 0.00</td>
               <td id="total-bono" class="text-end">Q 0.00</td>
-              <td id="total-dias" class="text-end">0</td>
+              <td id="total-dias" class="text-end"></td>
               <td id="total-comisiones" class="text-end">Q 0.00</td>
               <td id="total-horas" class="text-end">0</td>
               <td id="total-hextras" class="text-end">Q 0.00</td>
@@ -179,6 +179,9 @@ const IGSS_RATE = 0.0483;
 const GASTOS_PERSONALES_ANUAL = 48000;
 const ISR_ANNUAL_RATE = 0.05;
 const ISR_MIN_SALARIO = 4000.00;
+
+/* localStorage key */
+const STORAGE_KEY = 'empaquetex_planilla_noviembre_v1';
 
 /* Helpers */
 function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
@@ -241,10 +244,10 @@ function recalcRow(tr) {
   const liquiCell = tr.querySelector('.liquido'); if (liquiCell) liquiCell.textContent = withQ(liquido);
 }
 
-/* Recalcula totales */
+/* Recalcula totales (NO suma días) */
 function recalcTotals() {
   const rows = document.querySelectorAll('#planillaTable tbody tr');
-  let totals = {sueldo:0, bono:0, /* dias eliminado */ comisiones:0, horas:0, hextras:0, devengado:0, igss:0, isr:0, otras:0, deducciones:0};
+  let totals = {sueldo:0, bono:0, comisiones:0, horas:0, hextras:0, devengado:0, igss:0, isr:0, otras:0, deducciones:0};
   rows.forEach(tr => {
     const sueldo = parseFloat(tr.querySelector('.sueldo').value) || 0;
     const bono = parseFloat(tr.querySelector('.bono').value) || 0;
@@ -252,7 +255,7 @@ function recalcTotals() {
     const horas = parseInt(tr.querySelector('.horas').value) || 0;
     const otras = parseFloat(tr.querySelector('.otras').value) || 0;
 
-    const dias = parseInt(tr.querySelector('.dias').value) || 0; // se usa por fila pero no se suma en totales
+    const dias = parseInt(tr.querySelector('.dias').value) || 0; // usado por fila, no se suma
     const hextrasMonto = parseFloat(tr.dataset._hextras) || computeHorasMontoMensual(sueldo, dias, horas);
     const totalDevengado = round2(sueldo + bono + comisiones + hextrasMonto);
     const igss = round2((sueldo + bono + comisiones + hextrasMonto) * IGSS_RATE);
@@ -273,7 +276,7 @@ function recalcTotals() {
 
   document.getElementById('total-sueldo').textContent = withQ(totals.sueldo);
   document.getElementById('total-bono').textContent = withQ(totals.bono);
-  document.getElementById('total-dias').textContent = '';
+  document.getElementById('total-dias').textContent = ''; // no sumar días
   document.getElementById('total-comisiones').textContent = withQ(totals.comisiones);
   document.getElementById('total-horas').textContent = totals.horas.toString();
   document.getElementById('total-hextras').textContent = withQ(totals.hextras);
@@ -284,20 +287,112 @@ function recalcTotals() {
   document.getElementById('total-deducciones').textContent = withQ(totals.deducciones);
 }
 
+/* Serializar tabla para localStorage */
+function serializeTable() {
+  const rows = [];
+  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
+    const nombre = (tr.querySelector('.nombre')?.value ?? tr.cells[1].textContent ?? '').trim();
+    const sueldo = parseFloat(tr.querySelector('.sueldo')?.value ?? 0) || 0;
+    const bono = parseFloat(tr.querySelector('.bono')?.value ?? 0) || 0;
+    const dias = parseInt(tr.querySelector('.dias')?.value ?? 0) || 0;
+    const comisiones = parseFloat(tr.querySelector('.comisiones')?.value ?? 0) || 0;
+    const horas = parseInt(tr.querySelector('.horas')?.value ?? 0) || 0;
+    const otras = parseFloat(tr.querySelector('.otras')?.value ?? 0) || 0;
+    const hextras = parseFloat(tr.dataset._hextras) || 0;
+    const isr = parseFloat(tr.dataset._isrValue) || 0;
+    rows.push({ nombre, sueldo, bono, dias, comisiones, horas, otras, hextras, isr });
+  });
+  const meta = { saved_at: new Date().toISOString(), planillaName: document.getElementById('planillaName').value, emisionDate: document.getElementById('emisionDate').value };
+  return { rows, meta };
+}
 
-/* Delegated listener */
+/* Restaurar tabla desde objeto */
+function restoreTable(data) {
+  if (!data || !Array.isArray(data.rows)) return;
+  const tbody = document.querySelector('#planillaTable tbody');
+  tbody.innerHTML = '';
+  data.rows.forEach((r, i) => {
+    const idx = i + 1;
+    const tr = document.createElement('tr');
+    tr.dataset.row = idx;
+    tr.innerHTML = `
+      <td>${idx}</td>
+      <td class="align-middle"><input class="form-control form-control-sm nombre" type="text" value="${escapeHtml(r.nombre || '')}"></td>
+      <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell sueldo" type="number" step="0.01" value="${Number(r.sueldo||0).toFixed(2)}"></div></td>
+      <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell bono" type="number" step="0.01" value="${Number(r.bono||0).toFixed(2)}"></div></td>
+      <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="${Number(r.dias||0)}"></td>
+      <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="${Number(r.comisiones||0).toFixed(2)}"></div></td>
+      <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="${Number(r.horas||0)}"></td>
+      <td class="text-end hextras">Q ${Number(r.hextras||0).toFixed(2)}</td>
+      <td class="text-end total-devengado">Q 0.00</td>
+      <td class="text-end igss">Q 0.00</td>
+      <td class="text-end isr-cell">${r.isr && r.isr>0 ? 'Q '+Number(r.isr).toFixed(2) : ''}</td>
+      <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="${Number(r.otras||0).toFixed(2)}"></div></td>
+      <td class="text-end total-deducciones">Q 0.00</td>
+    `;
+    tr.dataset._hextras = Number(r.hextras||0);
+    tr.dataset._isrValue = Number(r.isr||0);
+    tbody.appendChild(tr);
+  });
+  // recalcular todo
+  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
+  recalcTotals();
+}
+
+/* Guardar en localStorage */
+function saveToLocal() {
+  try {
+    const data = serializeTable();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.error('Error guardando planilla en localStorage', e);
+  }
+}
+
+/* Cargar desde localStorage al inicio */
+function loadFromLocal() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const obj = JSON.parse(raw);
+    // restaurar planilla si hay filas guardadas
+    if (obj && Array.isArray(obj.rows) && obj.rows.length) {
+      restoreTable(obj);
+      if (obj.meta) {
+        if (obj.meta.planillaName) document.getElementById('planillaName').value = obj.meta.planillaName;
+        if (obj.meta.emisionDate) document.getElementById('emisionDate').value = obj.meta.emisionDate;
+      }
+    }
+  } catch (e) {
+    console.error('Error cargando planilla desde localStorage', e);
+  }
+}
+
+/* Escapar texto para insertar en value */
+function escapeHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* Delegated listener para inputs: recalcula y guarda */
 document.addEventListener('input', (e) => {
   if (!e.target.classList) return;
-  if (e.target.classList.contains('num-cell')) {
+  if (e.target.classList.contains('num-cell') || e.target.classList.contains('nombre')) {
     const tr = e.target.closest('tr');
     recalcRow(tr);
     recalcTotals();
+    saveToLocal();
   }
 });
 
 /* Init */
-document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
-recalcTotals();
+document.addEventListener('DOMContentLoaded', () => {
+  // cargar guardado si existe (sobrescribe tabla inicial si hay datos guardados)
+  loadFromLocal();
+
+  // recalcular (para casos donde no hubo localStorage)
+  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
+  recalcTotals();
+});
 
 /* Add row */
 document.getElementById('addRow').addEventListener('click', () => {
@@ -323,6 +418,7 @@ document.getElementById('addRow').addEventListener('click', () => {
   tbody.appendChild(tr);
   recalcRow(tr);
   recalcTotals();
+  saveToLocal();
 });
 
 /* Delete last row */
@@ -332,6 +428,7 @@ document.getElementById('deleteRow').addEventListener('click', () => {
   if (rows.length === 0) return;
   tbody.removeChild(rows[rows.length - 1]);
   recalcTotals();
+  saveToLocal();
 });
 
 /* Export to Excel (.xlsx): requiere fecha de emisión */
@@ -404,12 +501,11 @@ document.getElementById('exportExcel').addEventListener('click', () => {
   .text-end { text-align:right; }
   .fw-bold { font-weight:700; }
 
-  /* Ajustes mínimos para garantizar que "Q" quede siempre a la izquierda en la misma línea */
   .money-inline {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    white-space: nowrap;       /* evita que el prefijo salte a la línea superior */
+    white-space: nowrap;
     flex-wrap: nowrap;
   }
   .money-prefix {
@@ -422,14 +518,13 @@ document.getElementById('exportExcel').addEventListener('click', () => {
   }
   .money-inline .form-control {
     padding: .45rem .6rem;
-    min-width: 140px;         /* suficiente para evitar wrap en columnas estrechas */
+    min-width: 140px;
     flex: 1 1 auto;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  /* Inputs numéricos alineados correctamente */
   #planillaTable input.form-control { font-size: .98rem; width:100%; box-sizing:border-box; }
   #planillaTable td:nth-child(2) { white-space: normal; word-break: break-word; }
 

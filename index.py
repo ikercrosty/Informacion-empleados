@@ -5,7 +5,8 @@ from urllib.parse import urlparse
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from io import BytesIO
-from PIL import Image  
+from PIL import Image
+import sys
 
 app = Flask(__name__)
 app.secret_key = "clave-secreta"
@@ -22,8 +23,10 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 # Extensiones permitidas
 ALLOWED_EXT = {"png", "jpg", "jpeg", "gif", "webp"}
 
+
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXT
+
 
 def get_db_connection():
     url = os.environ.get("DATABASE_URL")
@@ -48,18 +51,22 @@ def get_db_connection():
             cursorclass=pymysql.cursors.DictCursor
         )
 
+
 @app.before_request
 def requerir_login():
     # Rutas públicas (no requieren sesión)
     rutas_publicas = {
-        "login", "static", "db_test",
+        "login", "static", "db_test", "db-test",
         "guardar_empleado", "guardar_academico", "guardar_conyugue",
         "guardar_emergencia", "guardar_laboral", "guardar_medica",
         "api_foto", "subir_foto", "eliminar_foto"
     }
     endpoint = request.endpoint or ""
-    if ("usuario" not in session) and (endpoint.split(".")[0] not in rutas_publicas):
+    # request.endpoint puede venir con blueprint: "bp.endpoint", tomamos la parte antes del punto
+    base_endpoint = endpoint.split(".")[0] if "." in endpoint else endpoint
+    if ("usuario" not in session) and (base_endpoint not in rutas_publicas):
         return redirect(url_for("login"))
+
 
 @app.after_request
 def no_cache(response):
@@ -68,8 +75,8 @@ def no_cache(response):
     response.headers["Expires"] = "0"
     return response
 
+
 # ---------------- Páginas principales ----------------
-#
 
 @app.route("/menu")
 def menu():
@@ -102,29 +109,13 @@ def empleados():
 
 @app.route("/")
 def home():
-    # Si hay usuario en sesión, redirige al menú; si no, al login
+    # Página pública: si hay usuario en sesión redirige al menú, sino al login
     if "usuario" in session:
         return redirect(url_for("menu"))
+
+    # Si no hay sesión, mostrar login (mantengo redirect a login)
     return redirect(url_for("login"))
 
-
-    # Usuario en sesión: cargar datos y mostrar home
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT 
-            `Numero de DPI`, `Nombre`, `Apellidos`, `Apellidos de casada`, `Estado Civil`,
-            `Nacionalidad`, `Departamento`, `Fecha de nacimiento`,
-            `Lugar de nacimiento`, `Numero de Afiliación del IGGS`, `Dirección del Domicilio`,
-            `Numero de Telefono`, `Religión`, `Correo Electronico`, `Puesto de trabajo`,
-            `Tipo de contrato`, `Jornada laboral`, `Duración del trabajo`,
-            `Fecha de inicio laboral`, `Dias Laborales`, `foto`
-        FROM empleados_info
-    """)
-    empleados = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return render_template("home.html", empleados=empleados, usuario=session.get("usuario"))
 
 @app.route("/about")
 def about():
@@ -142,6 +133,7 @@ def about():
     conn.close()
     return render_template("about.html", empleados=empleados, usuario=session.get("usuario"))
 
+
 @app.route("/conyugue")
 def conyugue():
     conn = get_db_connection()
@@ -158,6 +150,7 @@ def conyugue():
     conn.close()
     return render_template("conyugue.html", empleados=empleados, usuario=session.get("usuario"))
 
+
 @app.route("/emergencia")
 def emergencia():
     conn = get_db_connection()
@@ -173,6 +166,7 @@ def emergencia():
     cursor.close()
     conn.close()
     return render_template("emergencia.html", empleados=empleados, usuario=session.get("usuario"))
+
 
 @app.route("/laboral")
 def laboral():
@@ -191,6 +185,7 @@ def laboral():
     conn.close()
     return render_template("laboral.html", empleados=empleados, usuario=session.get("usuario"))
 
+
 @app.route("/medica")
 def medica():
     conn = get_db_connection()
@@ -207,11 +202,13 @@ def medica():
     conn.close()
     return render_template("medica.html", empleados=empleados, usuario=session.get("usuario"))
 
+
 @app.route("/ficha")
 def ficha():
     if "usuario" not in session:
         return redirect(url_for("login"))
     return render_template("ficha.html", usuario=session.get("usuario"))
+
 
 @app.route("/recibo")
 def recibo():
@@ -266,6 +263,7 @@ def login():
 
     return render_template("login.html")
 
+
 @app.route("/logout")
 def logout():
     session.clear()
@@ -275,11 +273,13 @@ def logout():
     resp.headers["Expires"] = "0"
     return resp
 
+
 @app.route("/planilla")
 def planilla():
     if "usuario" not in session:
         return redirect(url_for("login"))
-    return render_template("planilla.html", usuario=session.get("usuario"))    
+    return render_template("planilla.html", usuario=session.get("usuario"))
+
 
 @app.route("/db-test")
 def db_test():
@@ -293,6 +293,7 @@ def db_test():
         return f"Conexión OK. Resultado: {result}"
     except Exception as e:
         return f"Error de conexión: {e}"
+
 
 # ---------------- Guardados (POST JSON) ----------------
 @app.route("/guardar_empleado", methods=["POST"])
@@ -375,6 +376,7 @@ def guardar_empleado():
     except Exception as e:
         return jsonify({"mensaje": f"Error: {e}"}), 500
 
+
 @app.route("/guardar_academico", methods=["POST"])
 def guardar_academico():
     data = request.get_json() or {}
@@ -429,6 +431,7 @@ def guardar_academico():
     except Exception as e:
         return jsonify({"mensaje": f"Error: {e}"}), 500
 
+
 @app.route("/guardar_conyugue", methods=["POST"])
 def guardar_conyugue():
     data = request.get_json() or {}
@@ -482,6 +485,7 @@ def guardar_conyugue():
     except Exception as e:
         return jsonify({"mensaje": f"Error: {e}"}), 500
 
+
 @app.route("/guardar_emergencia", methods=["POST"])
 def guardar_emergencia():
     data = request.get_json() or {}
@@ -529,6 +533,7 @@ def guardar_emergencia():
         return jsonify({"mensaje": mensaje})
     except Exception as e:
         return jsonify({"mensaje": f"Error: {e}"}), 500
+
 
 @app.route("/guardar_laboral", methods=["POST"])
 def guardar_laboral():
@@ -583,6 +588,7 @@ def guardar_laboral():
         return jsonify({"mensaje": mensaje})
     except Exception as e:
         return jsonify({"mensaje": f"Error: {e}"}), 500
+
 
 @app.route("/guardar_medica", methods=["POST"])
 def guardar_medica():
@@ -639,6 +645,7 @@ def guardar_medica():
     except Exception as e:
         return jsonify({"mensaje": f"Error: {e}"}), 500
 
+
 # ---------------- Fotos: API, subida y eliminación (solo archivos en disco) ----------------
 @app.route("/api/foto/<dpi>")
 def api_foto(dpi):
@@ -673,18 +680,17 @@ def api_foto(dpi):
     except Exception as e:
         return jsonify({"foto": None, "url": None, "error": str(e)}), 500
 
-import sys
 
 @app.route("/subir_foto", methods=["POST"])
 def subir_foto():
-    # Depuración: ver si la petición llega y datos básicos
-    print("=== LLEGA A SUBIR_FOTO ===", file=sys.stderr)
+    # Depuración mínima para logs de servidor
     try:
+        print("=== LLEGA A SUBIR_FOTO ===", file=sys.stderr)
         print("request.path:", request.path, " request.endpoint:", request.endpoint, file=sys.stderr)
         print("request.method:", request.method, " content-length:", request.content_length, file=sys.stderr)
         print("form keys:", list(request.form.keys()), " files keys:", list(request.files.keys()), file=sys.stderr)
-    except Exception as _e:
-        print("Error dep debug:", _e, file=sys.stderr)
+    except Exception:
+        pass
 
     dpi = request.form.get("dpi")
     if not dpi:
@@ -704,7 +710,8 @@ def subir_foto():
         flash("Tipo de archivo no permitido", "danger")
         return redirect(url_for("home"))
 
-    # Nombre único por DPI + timestamp, extensión .jpg (normalizada)
+    # Normalizar nombre original y generar final unico por DPI + timestamp
+    orig_name = secure_filename(file.filename)
     ts = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
     final_name = f"{dpi}_{ts}.jpg"
     save_path = os.path.join(app.config["UPLOAD_FOLDER"], final_name)
@@ -712,6 +719,23 @@ def subir_foto():
     try:
         # Normalizar y convertir a JPEG bytes con Pillow
         image = Image.open(file.stream)
+        # Corregir orientación EXIF si existe
+        try:
+            from PIL import ExifTags
+            exif = image._getexif()
+            if exif is not None:
+                orientation_key = next((k for k, v in ExifTags.TAGS.items() if v == "Orientation"), None)
+                if orientation_key and orientation_key in exif:
+                    orientation = exif[orientation_key]
+                    if orientation == 3:
+                        image = image.rotate(180, expand=True)
+                    elif orientation == 6:
+                        image = image.rotate(270, expand=True)
+                    elif orientation == 8:
+                        image = image.rotate(90, expand=True)
+        except Exception:
+            pass
+
         if image.mode in ("RGBA", "P", "LA"):
             image = image.convert("RGB")
         buffer = BytesIO()
@@ -786,6 +810,7 @@ def eliminar_foto():
         flash(f"Error al eliminar foto: {e}", "danger")
 
     return redirect(url_for("home"))
+
 
 if __name__ == "__main__":
     app.run(debug=True)
