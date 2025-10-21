@@ -238,6 +238,7 @@ function recalcRow(tr) {
   tr.dataset._hextras = hextrasMonto;
 
   const totDedCell = tr.querySelector('.total-deducciones'); if (totDedCell) totDedCell.textContent = withQ(totalDeducciones);
+  const liquiCell = tr.querySelector('.liquido'); if (liquiCell) liquiCell.textContent = withQ(liquido);
 }
 
 /* Recalcula totales */
@@ -402,12 +403,48 @@ document.getElementById('exportExcel').addEventListener('click', () => {
   .horizontal-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
   .text-end { text-align:right; }
   .fw-bold { font-weight:700; }
-  .money-inline .form-control { min-width:160px; }
-  @media (max-width:767px) {
-    .card-body { padding:.6rem; }
-    .money-inline .form-control { min-width:110px; }
-    #planillaTable { min-width:1000px; }
+
+  /* Ajustes mínimos para garantizar que "Q" quede siempre a la izquierda en la misma línea */
+  .money-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;       /* evita que el prefijo salte a la línea superior */
+    flex-wrap: nowrap;
+  }
+  .money-prefix {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    margin-right: 0;
+    min-width: 28px;
+  }
+  .money-inline .form-control {
+    padding: .45rem .6rem;
+    min-width: 140px;         /* suficiente para evitar wrap en columnas estrechas */
+    flex: 1 1 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Inputs numéricos alineados correctamente */
+  #planillaTable input.form-control { font-size: .98rem; width:100%; box-sizing:border-box; }
+  #planillaTable td:nth-child(2) { white-space: normal; word-break: break-word; }
+
+  #planillaTable td.total-devengado,
+  #planillaTable td.igss,
+  #planillaTable td.total-deducciones,
+  #planillaTable td.liquido,
+  #planillaTable td.isr-cell,
+  #planillaTable tfoot td { text-align: right; vertical-align: middle; }
+
+  #planillaTable td input.horas { text-align:center; }
+  @media (max-width:992px) {
+    #planillaTable { min-width: 1300px; }
+    colgroup col:nth-child(2) { width:45%; }
+    .money-inline .form-control { min-width:120px; }
   }
 </style>
 {% endblock %}
-```
