@@ -55,9 +55,42 @@
           <label class="form-label">Departamento</label>
           <input id="departamento" value="{{ e.get('Departamento') if e else '' }}" class="form-control form-control-sm" readonly>
         </div>
+
+        {# Fecha de nacimiento - mostrar solo fecha en formato DD/MM/AAAA #}
         <div class="col-md-3">
           <label class="form-label">Fecha de nacimiento</label>
-          <input id="fecha_nacimiento" value="{{ e.get('Fecha de nacimiento')[:10] if e and e.get('Fecha de nacimiento') }}" class="form-control form-control-sm" readonly>
+          {% set fn = e.get('Fecha de nacimiento') if e else None %}
+          {% if fn %}
+            {# Caso ISO YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS -> tomar primeros 10 y reordenar #}
+            {% if '-' in fn and fn[:4].isdigit() %}
+              {% set dpart = fn[:10].split('-') %}
+              {% set fecha_nac = dpart[2] ~ '/' ~ dpart[1] ~ '/' ~ dpart[0] %}
+            {% else %}
+              {# Caso estilo 'Tue, 03 Jul 1990 00:00:00 GMT' o '03 Jul 1990' -> detectar día, mes abreviado y año #}
+              {% set months = {'Jan':'01','Feb':'02','Mar':'03','Apr':'04','May':'05','Jun':'06','Jul':'07','Aug':'08','Sep':'09','Oct':'10','Nov':'11','Dec':'12',
+                               'enero':'01','febrero':'02','marzo':'03','abril':'04','mayo':'05','junio':'06','julio':'07','agosto':'08','septiembre':'09','octubre':'10','noviembre':'11','diciembre':'12'} %}
+              {% set tokens = fn.replace(',', ' ').split() %}
+              {% set day=None %}{% set mon=None %}{% set year=None %}
+              {% for t in tokens %}
+                {% if day is none and t.isdigit() and 1 <= t|int <= 31 %}
+                  {% set day = ("%02d"|format(t|int)) %}
+                {% elif mon is none and (t[:3].capitalize() in months or t.lower() in months) %}
+                  {% set key = t[:3].capitalize() if t[:3].capitalize() in months else t.lower() %}
+                  {% set mon = months[key] %}
+                {% elif year is none and t.isdigit() and (t|length == 4) %}
+                  {% set year = t %}
+                {% endif %}
+              {% endfor %}
+              {% if day and mon and year %}
+                {% set fecha_nac = day ~ '/' ~ mon ~ '/' ~ year %}
+              {% else %}
+                {% set fecha_nac = fn %}
+              {% endif %}
+            {% endif %}
+          {% else %}
+            {% set fecha_nac = '' %}
+          {% endif %}
+          <input id="fecha_nacimiento" value="{{ fecha_nac }}" class="form-control form-control-sm" readonly>
         </div>
 
         <div class="col-md-4">
@@ -95,7 +128,7 @@
 
       <hr class="my-4">
 
-      <!-- Datos laborales -->
+      <!-- Datos laborales (título y nota solicitada) -->
       <h5 class="mb-3">Datos Laborales (Exclusivo de la administración)</h5>
       <div class="text-muted small mb-3">Administración será la encargada de llenar este apartado.</div>
       <div class="row g-3">
@@ -123,10 +156,6 @@
         <div class="col-md-3">
           <label class="form-label">Días laborales</label>
           <input id="dias_laborales" value="{{ e.get('Dias Laborales') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Número de Afiliación del IGSS</label>
-          <input id="iggs_clone" value="{{ e.get('Numero de Afiliación del IGGS') if e else '' }}" class="form-control form-control-sm" readonly>
         </div>
       </div>
 
@@ -201,7 +230,7 @@
 
       <hr class="my-4">
 
-      <!-- Referencias laborales -->
+      <!-- Referencias laborales (Último empleo) -->
       <h5 class="mb-3">REFERENCIAS LABORALES (Último empleo)</h5>
       <div class="table-responsive">
         <table class="table table-sm table-borderless">
