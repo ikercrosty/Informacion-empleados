@@ -394,85 +394,6 @@ document.addEventListener('DOMContentLoaded', () => {
   recalcTotals();
 });
 
-/* Add row */
-document.getElementById('addRow').addEventListener('click', () => {
-  const tbody = document.querySelector('#planillaTable tbody');
-  const newIndex = tbody.querySelectorAll('tr').length + 1;
-  const tr = document.createElement('tr');
-  tr.dataset.row = newIndex;
-  tr.innerHTML = `
-    <td>${newIndex}</td>
-    <td class="align-middle"><input class="form-control form-control-sm nombre" type="text" value=""></td>
-    <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell sueldo" type="number" step="0.01" value="0"></div></td>
-    <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell bono" type="number" step="0.01" value="0"></div></td>
-    <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="30"></td>
-    <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="0"></div></td>
-    <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
-    <td class="text-end hextras">Q 0.00</td>
-    <td class="text-end total-devengado">Q 0.00</td>
-    <td class="text-end igss">Q 0.00</td>
-    <td class="text-end isr-cell"></td>
-    <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="0"></div></td>
-    <td class="text-end total-deducciones">Q 0.00</td>
-  `;
-  tbody.appendChild(tr);
-  recalcRow(tr);
-  recalcTotals();
-  saveToLocal();
-});
-
-/* Delete last row */
-document.getElementById('deleteRow').addEventListener('click', () => {
-  const tbody = document.querySelector('#planillaTable tbody');
-  const rows = tbody.querySelectorAll('tr');
-  if (rows.length === 0) return;
-  tbody.removeChild(rows[rows.length - 1]);
-  recalcTotals();
-  saveToLocal();
-});
-
-/* Export to Excel (.xlsx): requiere fecha de emisión */
-document.getElementById('exportExcel').addEventListener('click', () => {
-  const dateInput = document.getElementById('emisionDate').value;
-  const planillaName = document.getElementById('planillaName').value.trim() || 'Planilla';
-  const exportHint = document.getElementById('exportHint');
-  if (!dateInput) {
-    exportHint.style.display = 'inline';
-    return;
-  }
-  exportHint.style.display = 'none';
-
-  // Clonar tabla y limpiar inputs
-  const table = document.getElementById('planillaTable');
-  const clone = table.cloneNode(true);
-  clone.querySelectorAll('input').forEach(inp => {
-    const parent = inp.parentElement || inp;
-    parent.replaceChild(document.createTextNode(inp.value), inp);
-  });
-
-  // Convertir celdas Q... a números
-  clone.querySelectorAll('td, th').forEach(cell => {
-    let txt = (cell.textContent || '').replace(/\u00A0/g, ' ').trim();
-    if (txt === '') return;
-    const removed = txt.replace(/^Q\s*/i, '').replace(/,/g, '');
-    const n = Number(removed);
-    if (removed !== '' && isFinite(n)) cell.textContent = n;
-    else cell.textContent = txt;
-  });
-
-  // Crear hoja y añadir encabezado con nombre y fecha
-  const ws = XLSX.utils.table_to_sheet(clone, {raw:true});
-  XLSX.utils.sheet_add_aoa(ws, [[planillaName]], {origin: "A1"});
-  XLSX.utils.sheet_add_aoa(ws, [[`Fecha de emisión:`, dateInput]], {origin: "A2"});
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Planilla");
-
-  const safeName = planillaName.replace(/[^a-z0-9_\- ]/gi,'').replace(/\s+/g,'_');
-  const filename = `${safeName}_${dateInput}.xlsx`;
-  XLSX.writeFile(wb, filename);
-});
-
 /* --- Inicializar bonos existentes: forzar 250 y readonly --- */
 function lockExistingBonos() {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
@@ -584,6 +505,59 @@ document.getElementById('addRow').addEventListener('click', () => {
 document.addEventListener('DOMContentLoaded', () => {
   lockExistingBonos();
   enforceBonoProtectionOnAllRows();
+});
+
+
+/* Delete last row */
+document.getElementById('deleteRow').addEventListener('click', () => {
+  const tbody = document.querySelector('#planillaTable tbody');
+  const rows = tbody.querySelectorAll('tr');
+  if (rows.length === 0) return;
+  tbody.removeChild(rows[rows.length - 1]);
+  recalcTotals();
+  saveToLocal();
+});
+
+/* Export to Excel (.xlsx): requiere fecha de emisión */
+document.getElementById('exportExcel').addEventListener('click', () => {
+  const dateInput = document.getElementById('emisionDate').value;
+  const planillaName = document.getElementById('planillaName').value.trim() || 'Planilla';
+  const exportHint = document.getElementById('exportHint');
+  if (!dateInput) {
+    exportHint.style.display = 'inline';
+    return;
+  }
+  exportHint.style.display = 'none';
+
+  // Clonar tabla y limpiar inputs
+  const table = document.getElementById('planillaTable');
+  const clone = table.cloneNode(true);
+  clone.querySelectorAll('input').forEach(inp => {
+    const parent = inp.parentElement || inp;
+    parent.replaceChild(document.createTextNode(inp.value), inp);
+  });
+
+  // Convertir celdas Q... a números
+  clone.querySelectorAll('td, th').forEach(cell => {
+    let txt = (cell.textContent || '').replace(/\u00A0/g, ' ').trim();
+    if (txt === '') return;
+    const removed = txt.replace(/^Q\s*/i, '').replace(/,/g, '');
+    const n = Number(removed);
+    if (removed !== '' && isFinite(n)) cell.textContent = n;
+    else cell.textContent = txt;
+  });
+
+  // Crear hoja y añadir encabezado con nombre y fecha
+  const ws = XLSX.utils.table_to_sheet(clone, {raw:true});
+  XLSX.utils.sheet_add_aoa(ws, [[planillaName]], {origin: "A1"});
+  XLSX.utils.sheet_add_aoa(ws, [[`Fecha de emisión:`, dateInput]], {origin: "A2"});
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Planilla");
+
+  const safeName = planillaName.replace(/[^a-z0-9_\- ]/gi,'').replace(/\s+/g,'_');
+  const filename = `${safeName}_${dateInput}.xlsx`;
+  XLSX.writeFile(wb, filename);
 });
 
 
