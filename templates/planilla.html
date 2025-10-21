@@ -472,6 +472,121 @@ document.getElementById('exportExcel').addEventListener('click', () => {
   const filename = `${safeName}_${dateInput}.xlsx`;
   XLSX.writeFile(wb, filename);
 });
+
+/* --- Inicializar bonos existentes: forzar 250 y readonly --- */
+function lockExistingBonos() {
+  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
+    const bonoInp = tr.querySelector('input.bono');
+    if (bonoInp) {
+      bonoInp.value = 250.00;
+      bonoInp.setAttribute('readonly', 'readonly');
+      bonoInp.classList.remove('num-cell'); // evitar doble disparo si quieres
+    }
+    // asegurar nombres ya cargados queden readonly
+    const nombreInp = tr.querySelector('input.nombre');
+    if (nombreInp) {
+      if ((nombreInp.value || '').trim() !== '') {
+        nombreInp.setAttribute('readonly', 'readonly');
+      } else {
+        nombreInp.removeAttribute('readonly');
+      }
+    }
+  });
+}
+
+/* --- Cuando se agrega fila: bonificación = 250 (readonly) y nombre editable sólo hasta llenarlo --- */
+function createRowHtml(index) {
+  return `
+    <td>${index}</td>
+    <td class="align-middle"><input class="form-control form-control-sm nombre" type="text" value=""></td>
+    <td>
+      <div class="money-inline">
+        <span class="money-prefix">Q</span>
+        <input class="form-control num-cell sueldo" type="number" step="0.01" value="0">
+      </div>
+    </td>
+    <td>
+      <div class="money-inline">
+        <span class="money-prefix">Q</span>
+        <input class="form-control bono" type="number" step="0.01" value="250.00" readonly>
+      </div>
+    </td>
+    <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="30"></td>
+    <td>
+      <div class="money-inline">
+        <span class="money-prefix">Q</span>
+        <input class="form-control num-cell comisiones" type="number" step="0.01" value="0">
+      </div>
+    </td>
+    <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
+    <td class="text-end hextras">Q 0.00</td>
+    <td class="text-end total-devengado">Q 0.00</td>
+    <td class="text-end igss">Q 0.00</td>
+    <td class="text-end isr-cell"></td>
+    <td>
+      <div class="money-inline">
+        <span class="money-prefix">Q</span>
+        <input class="form-control num-cell otras" type="number" step="0.01" value="0">
+      </div>
+    </td>
+    <td class="text-end total-deducciones">Q 0.00</td>
+  `;
+}
+
+/* --- Listener que bloquea nombre cuando se llena por primera vez --- */
+document.addEventListener('blur', (e) => {
+  if (!e.target.classList) return;
+  if (e.target.classList.contains('nombre')) {
+    const val = (e.target.value || '').trim();
+    if (val !== '') {
+      e.target.setAttribute('readonly', 'readonly');
+    }
+  }
+}, true);
+
+/* --- Protección adicional: impedir cambios a bonificaciones por JS accidental --- */
+function enforceBonoProtectionOnAllRows() {
+  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
+    const bonoInp = tr.querySelector('input.bono');
+    if (bonoInp) {
+      bonoInp.value = 250.00;
+      bonoInp.setAttribute('readonly', 'readonly');
+    }
+  });
+}
+
+/* --- Modificar el handler de Add row para usar createRowHtml y aplicar protecciones --- */
+document.getElementById('addRow').addEventListener('click', () => {
+  const tbody = document.querySelector('#planillaTable tbody');
+  const newIndex = tbody.querySelectorAll('tr').length + 1;
+  const tr = document.createElement('tr');
+  tr.dataset.row = newIndex;
+  tr.innerHTML = createRowHtml(newIndex);
+  tbody.appendChild(tr);
+
+  // inicializar comportamiento del nombre (editable hasta que se llene)
+  const nombreInp = tr.querySelector('input.nombre');
+  if (nombreInp) nombreInp.removeAttribute('readonly');
+
+  // asegurar bono fijo
+  const bonoInp = tr.querySelector('input.bono');
+  if (bonoInp) {
+    bonoInp.value = 250.00;
+    bonoInp.setAttribute('readonly', 'readonly');
+  }
+
+  // recalcular fila y totales
+  recalcRow(tr);
+  recalcTotals();
+});
+
+/* --- Al iniciar: aplicar bloqueo a bonos existentes y listeners para proteger valores --- */
+document.addEventListener('DOMContentLoaded', () => {
+  lockExistingBonos();
+  enforceBonoProtectionOnAllRows();
+});
+
+
 </script>
 
 <style>
