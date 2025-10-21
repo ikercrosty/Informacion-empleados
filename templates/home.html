@@ -54,30 +54,36 @@
                   </tr>
                 </thead>
                 <tbody class="small">
-                  {% for e in empleados %}
-                  <tr>
-                    <td>{{ e['Numero de DPI'] }}</td>
-                    <td>{{ e.get('Nombre') }}</td>
-                    <td>{{ e.get('Apellidos') }}</td>
-                    <td>{{ e.get('Apellidos de casada') }}</td>
-                    <td>{{ e.get('Estado Civil') }}</td>
-                    <td>{{ e.get('Nacionalidad') }}</td>
-                    <td>{{ e.get('Departamento') }}</td>
-                    <td>{{ e.get('Fecha de nacimiento') }}</td>
-                    <td>{{ e.get('Lugar de nacimiento') }}</td>
-                    <td>{{ e.get('Numero de Afiliación del IGGS') }}</td>
-                    <td>{{ e.get('Dirección del Domicilio') }}</td>
-                    <td>{{ e.get('Numero de Telefono') }}</td>
-                    <td>{{ e.get('Religión') }}</td>
-                    <td>{{ e.get('Correo Electronico') }}</td>
-                    <td>{{ e.get('Puesto de trabajo') }}</td>
-                    <td>{{ e.get('Tipo de contrato') }}</td>
-                    <td>{{ e.get('Jornada laboral') }}</td>
-                    <td>{{ e.get('Duración del trabajo') }}</td>
-                    <td>{{ e.get('Fecha de inicio laboral') }}</td>
-                    <td>{{ e.get('Dias Laborales') }}</td>
-                  </tr>
-                  {% endfor %}
+                  {% if empleados %}
+                    {% for e in empleados %}
+                    <tr>
+                      <td>{{ e['Numero de DPI'] }}</td>
+                      <td>{{ e.get('Nombre') }}</td>
+                      <td>{{ e.get('Apellidos') }}</td>
+                      <td>{{ e.get('Apellidos de casada') }}</td>
+                      <td>{{ e.get('Estado Civil') }}</td>
+                      <td>{{ e.get('Nacionalidad') }}</td>
+                      <td>{{ e.get('Departamento') }}</td>
+                      <td>{{ e.get('Fecha de nacimiento') }}</td>
+                      <td>{{ e.get('Lugar de nacimiento') }}</td>
+                      <td>{{ e.get('Numero de Afiliación del IGGS') }}</td>
+                      <td>{{ e.get('Dirección del Domicilio') }}</td>
+                      <td>{{ e.get('Numero de Telefono') }}</td>
+                      <td>{{ e.get('Religión') }}</td>
+                      <td>{{ e.get('Correo Electronico') }}</td>
+                      <td>{{ e.get('Puesto de trabajo') }}</td>
+                      <td>{{ e.get('Tipo de contrato') }}</td>
+                      <td>{{ e.get('Jornada laboral') }}</td>
+                      <td>{{ e.get('Duración del trabajo') }}</td>
+                      <td>{{ e.get('Fecha de inicio laboral') }}</td>
+                      <td>{{ e.get('Dias Laborales') }}</td>
+                    </tr>
+                    {% endfor %}
+                  {% else %}
+                    <tr>
+                      <td colspan="20" class="text-center text-muted">No hay empleados. Usa "Agregar" para crear la primera fila.</td>
+                    </tr>
+                  {% endif %}
                 </tbody>
               </table>
             </div> <!-- .table-responsive -->
@@ -112,7 +118,7 @@
               <button id="btnEliminarFoto" type="button" class="btn btn-outline-danger btn-sm w-100">Eliminar foto</button>
             </form>
 
-            <small class="text-muted mt-3 text-center">
+            <small id="fotoHint" class="text-muted mt-3 text-center">
               Selecciona una fila de la tabla para gestionar la foto del empleado.
             </small>
           </div>
@@ -140,6 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnSubirFoto = document.getElementById('btnSubirFoto');
   const btnEliminarFoto = document.getElementById('btnEliminarFoto');
 
+  // Ensure this path matches where your file lives: static/fotos/default.png
   const DEFAULT_SRC = "{{ url_for('static', filename='fotos/default.png') }}";
 
   let selectedRow = null;
@@ -171,7 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Inicial
   resetPanelToDefault();
 
-  // Preview local al seleccionar archivo
+  // Local preview when file chosen
   if (fileFoto) {
     fileFoto.addEventListener('change', (e) => {
       const f = e.target.files[0];
@@ -182,43 +189,44 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Agregar: inserta fila vacía arriba y la selecciona en modo edición
+  // AGREGAR: always insert a new empty row and open it for edit
   if (btnAgregar) {
     btnAgregar.addEventListener('click', () => {
       const tb = tabla.querySelector('tbody');
       if (!tb) {
-        alert('Tabla no encontrada para agregar fila.');
+        flashMessage('Error: tabla no disponible', 'danger');
         return;
       }
-      // crear nueva TR con 20 celdas (vacías)
+
+      // remove placeholder "no hay empleados" row if present
+      const placeholder = tb.querySelector('tr td[colspan]');
+      if (placeholder) placeholder.parentElement.remove();
+
       const tr = document.createElement('tr');
+      // create 20 empty cells
       for (let i = 0; i < 20; i++) {
         const td = document.createElement('td');
-        td.innerText = '';
+        td.textContent = '';
         tr.appendChild(td);
       }
       tb.insertBefore(tr, tb.firstChild);
-      // seleccionar y empezar edición
+
+      // select new row and start edit
       if (selectedRow) selectedRow.classList.remove('table-active');
       selectedRow = tr;
       selectedRow.classList.add('table-active');
-      btnEditar.disabled = true;
-      btnGuardar.disabled = false;
-      btnCancelar.disabled = false;
       isNewRow = true;
       startEdit();
     });
   }
 
-  // Doble clic: seleccionar fila y preparar panel
+  // Double click row: select and load photo
   if (tabla) {
     tabla.addEventListener('dblclick', async (ev) => {
       const tr = ev.target.closest('tr');
       if (!tr || !tr.cells.length) return;
 
-      if (editing && selectedRow && tr !== selectedRow) {
-        cancelEdit();
-      }
+      if (editing && selectedRow && tr !== selectedRow) cancelEdit();
 
       if (selectedRow === tr) {
         clearSelectionUI();
@@ -229,11 +237,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (selectedRow) selectedRow.classList.remove('table-active');
       selectedRow = tr;
       selectedRow.classList.add('table-active');
-      btnEditar.disabled = false;
-      btnGuardar.disabled = true;
-      btnCancelar.disabled = false;
+      if (btnEditar) btnEditar.disabled = false;
+      if (btnGuardar) btnGuardar.disabled = true;
+      if (btnCancelar) btnCancelar.disabled = false;
 
-      const dpi = tr.cells[0].innerText.trim();
+      const dpi = (tr.cells[0] && tr.cells[0].innerText || '').trim();
       if (!dpi) {
         resetPanelToDefault();
         return;
@@ -241,12 +249,12 @@ document.addEventListener("DOMContentLoaded", () => {
       if (inputDpiUpload) inputDpiUpload.value = dpi;
       if (inputDpiDelete) inputDpiDelete.value = dpi;
 
-      // Consultar API de foto; si no hay foto mostrar default
+      // request photo from backend; if 404 or no url use default
       try {
         const r = await fetch(`/api/foto/${encodeURIComponent(dpi)}`, { cache: 'no-store' });
         if (!r.ok) throw new Error('no-photo');
         const j = await r.json();
-        if (j && j.url && (j.url.startsWith('/') || j.url.startsWith('http'))) {
+        if (j && j.url) {
           fotoEmpleado.src = `${j.url}?t=${Date.now()}`;
           if (formSubir) formSubir.style.display = "none";
           if (formEliminar) formEliminar.style.display = "block";
@@ -263,7 +271,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Click fuera de tabla y controles resetea al default (no interrumpe edición)
+  // Click outside resets panel when not editing
   document.addEventListener('click', (e) => {
     const insideTable = e.target.closest('#tablaEmpleados');
     const insideControls = e.target.closest('#formSubirFoto') || e.target.closest('#formEliminarFoto') || e.target.closest('#fileFoto');
@@ -272,14 +280,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Edición inline: start / save / cancel
+  // Editing: convert cells to inputs
   function startEdit() {
     if (!selectedRow || editing) return;
     editing = true;
     originalCells = Array.from(selectedRow.cells).map(td => td.innerText);
     selectedRow.querySelectorAll('td').forEach((td, idx) => {
-      const text = td.innerText;
-      // primera columna DPI editable only for new rows
+      const text = td.innerText || '';
+      // allow editing DPI only for new rows
       if (idx === 0 && !isNewRow) {
         td.innerHTML = `<input class="form-control form-control-sm" value="${escapeHtml(text)}" readonly>`;
       } else {
@@ -293,6 +301,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (firstEditable) firstEditable.focus();
   }
 
+  // Save: POST for new row, PUT for existing
   async function saveEdit() {
     if (!selectedRow || !editing) return;
     const inputs = Array.from(selectedRow.querySelectorAll('td input'));
@@ -335,7 +344,7 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error(`${res.status} ${txt || res.statusText}`);
       }
 
-      // reflect saved values in the row
+      // reflect saved values into row cells
       selectedRow.querySelectorAll('td').forEach((td, idx) => {
         const v = Object.values(payload)[idx];
         td.innerText = v !== undefined ? v : '';
@@ -370,7 +379,7 @@ document.addEventListener("DOMContentLoaded", () => {
     resetPanelToDefault();
   }
 
-  // Image upload via AJAX to show image immediately after upload
+  // Upload photo via AJAX and show immediately
   if (btnSubirFoto) {
     btnSubirFoto.addEventListener('click', async () => {
       const dpi = inputDpiUpload.value && inputDpiUpload.value.trim();
@@ -388,7 +397,6 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error(`${res.status} ${t||res.statusText}`);
         }
         const j = await res.json();
-        // backend should return { url: '/static/fotos/....png' } or absolute url
         if (j && j.url) {
           fotoEmpleado.src = `${j.url}?t=${Date.now()}`;
           formSubir.style.display = "none";
@@ -403,6 +411,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Delete photo
   if (btnEliminarFoto) {
     btnEliminarFoto.addEventListener('click', async () => {
       const dpi = inputDpiDelete.value && inputDpiDelete.value.trim();
@@ -414,7 +423,6 @@ document.addEventListener("DOMContentLoaded", () => {
           body: JSON.stringify({ dpi })
         });
         if (!res.ok) throw new Error('error');
-        // After delete, show default and show upload form
         fotoEmpleado.src = DEFAULT_SRC;
         formSubir.style.display = "block";
         formEliminar.style.display = "none";
@@ -448,12 +456,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Buttons binding
-  if (btnEditar) btnEditar.addEventListener('click', () => startEdit());
-  if (btnGuardar) btnGuardar.addEventListener('click', () => saveEdit());
-  if (btnCancelar) btnCancelar.addEventListener('click', () => cancelEdit());
+  if (btnEditar) btnEditar.addEventListener('click', startEdit);
+  if (btnGuardar) btnGuardar.addEventListener('click', saveEdit);
+  if (btnCancelar) btnCancelar.addEventListener('click', cancelEdit);
 
 });
 </script>
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 {% endblock %}
+```
