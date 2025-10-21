@@ -102,14 +102,14 @@
             <form id="formSubirFoto" method="post" enctype="multipart/form-data" action="/subir_foto" class="w-100" style="max-width:260px; display:none;">
               <input type="hidden" name="dpi" id="inputDpiForUpload" value="">
               <div class="form-group mb-2">
-                <input id="fileFoto" name="foto" type="file" accept="image/*" class="form-control form-control-sm" required>
+                <input id="fileFoto" name="foto" type="file" accept="image/*" class="form-control form-control-sm">
               </div>
-              <button id="btnSubirFoto" type="submit" class="btn btn-primary btn-sm w-100">Subir foto</button>
+              <button id="btnSubirFoto" type="button" class="btn btn-primary btn-sm w-100">Subir foto</button>
             </form>
 
             <form id="formEliminarFoto" method="post" action="/eliminar_foto" class="w-100" style="max-width:260px; display:none; margin-top:12px;">
               <input type="hidden" name="dpi" id="inputDpiForDelete" value="">
-              <button id="btnEliminarFoto" type="submit" class="btn btn-outline-danger btn-sm w-100">Eliminar foto</button>
+              <button id="btnEliminarFoto" type="button" class="btn btn-outline-danger btn-sm w-100">Eliminar foto</button>
             </form>
 
             <small class="text-muted mt-3 text-center">
@@ -137,6 +137,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnEditar = document.getElementById('btnEditar');
   const btnGuardar = document.getElementById('btnGuardar');
   const btnCancelar = document.getElementById('btnCancelar');
+  const btnSubirFoto = document.getElementById('btnSubirFoto');
+  const btnEliminarFoto = document.getElementById('btnEliminarFoto');
 
   const DEFAULT_SRC = "{{ url_for('static', filename='fotos/default.png') }}";
 
@@ -183,18 +185,17 @@ document.addEventListener("DOMContentLoaded", () => {
   // Agregar: inserta fila vacía arriba y la selecciona en modo edición
   if (btnAgregar) {
     btnAgregar.addEventListener('click', () => {
+      const tb = tabla.querySelector('tbody');
+      if (!tb) {
+        alert('Tabla no encontrada para agregar fila.');
+        return;
+      }
       // crear nueva TR con 20 celdas (vacías)
       const tr = document.createElement('tr');
       for (let i = 0; i < 20; i++) {
         const td = document.createElement('td');
         td.innerText = '';
         tr.appendChild(td);
-      }
-      // insertar al inicio del tbody
-      const tb = tabla.querySelector('tbody');
-      if (!tb) {
-        alert('Tabla no encontrada para agregar fila.');
-        return;
       }
       tb.insertBefore(tr, tb.firstChild);
       // seleccionar y empezar edición
@@ -215,14 +216,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const tr = ev.target.closest('tr');
       if (!tr || !tr.cells.length) return;
 
-      // cancelar edición activa si viene de otra fila
       if (editing && selectedRow && tr !== selectedRow) {
         cancelEdit();
       }
 
-      // toggle selección
       if (selectedRow === tr) {
-        // deseleccionar
         clearSelectionUI();
         resetPanelToDefault();
         return;
@@ -235,16 +233,15 @@ document.addEventListener("DOMContentLoaded", () => {
       btnGuardar.disabled = true;
       btnCancelar.disabled = false;
 
-      // sincronizar panel de imagen
       const dpi = tr.cells[0].innerText.trim();
       if (!dpi) {
-        // sin DPI -> default y habilita subir foto solo si quieres (pero asociará DPI)
         resetPanelToDefault();
         return;
       }
       if (inputDpiUpload) inputDpiUpload.value = dpi;
       if (inputDpiDelete) inputDpiDelete.value = dpi;
 
+      // Consultar API de foto; si no hay foto mostrar default
       try {
         const r = await fetch(`/api/foto/${encodeURIComponent(dpi)}`, { cache: 'no-store' });
         if (!r.ok) throw new Error('no-photo');
@@ -282,7 +279,7 @@ document.addEventListener("DOMContentLoaded", () => {
     originalCells = Array.from(selectedRow.cells).map(td => td.innerText);
     selectedRow.querySelectorAll('td').forEach((td, idx) => {
       const text = td.innerText;
-      // primera columna DPI editable if new row, otherwise readonly
+      // primera columna DPI editable only for new rows
       if (idx === 0 && !isNewRow) {
         td.innerHTML = `<input class="form-control form-control-sm" value="${escapeHtml(text)}" readonly>`;
       } else {
@@ -299,13 +296,9 @@ document.addEventListener("DOMContentLoaded", () => {
   async function saveEdit() {
     if (!selectedRow || !editing) return;
     const inputs = Array.from(selectedRow.querySelectorAll('td input'));
-    const dpi = inputs[0].value.trim();
-    if (!dpi) {
-      flashMessage('DPI es obligatorio', 'danger');
-      return;
-    }
+    const dpi = (inputs[0] && inputs[0].value || '').trim();
+    if (!dpi) { flashMessage('DPI es obligatorio', 'danger'); return; }
 
-    // Construir payload siguiendo el orden de columnas
     const payload = {
       "Numero de DPI": dpi,
       "Nombre": inputs[1] ? inputs[1].value.trim() : '',
@@ -330,7 +323,6 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     try {
-      // Si es nueva fila usamos POST, si no usamos PUT (ajusta según tu API)
       const method = isNewRow ? 'POST' : 'PUT';
       const url = isNewRow ? '/api/empleados' : `/api/empleado/${encodeURIComponent(dpi)}`;
       const res = await fetch(url, {
@@ -343,7 +335,7 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error(`${res.status} ${txt || res.statusText}`);
       }
 
-      // Actualizar fila con los nuevos valores
+      // reflect saved values in the row
       selectedRow.querySelectorAll('td').forEach((td, idx) => {
         const v = Object.values(payload)[idx];
         td.innerText = v !== undefined ? v : '';
@@ -366,7 +358,6 @@ document.addEventListener("DOMContentLoaded", () => {
         td.innerText = originalCells[idx] || '';
       });
     }
-    // si era fila nueva, eliminarla
     if (isNewRow && selectedRow && selectedRow.parentNode) {
       selectedRow.parentNode.removeChild(selectedRow);
     }
@@ -379,7 +370,62 @@ document.addEventListener("DOMContentLoaded", () => {
     resetPanelToDefault();
   }
 
-  // Utilidades
+  // Image upload via AJAX to show image immediately after upload
+  if (btnSubirFoto) {
+    btnSubirFoto.addEventListener('click', async () => {
+      const dpi = inputDpiUpload.value && inputDpiUpload.value.trim();
+      if (!dpi) { flashMessage('Selecciona una fila con DPI antes de subir foto', 'danger'); return; }
+      if (!fileFoto || !fileFoto.files || !fileFoto.files[0]) { flashMessage('Selecciona un archivo de imagen', 'danger'); return; }
+
+      const fd = new FormData();
+      fd.append('dpi', dpi);
+      fd.append('foto', fileFoto.files[0]);
+
+      try {
+        const res = await fetch(formSubir.action || '/subir_foto', { method: 'POST', body: fd });
+        if (!res.ok) {
+          const t = await res.text().catch(()=>null);
+          throw new Error(`${res.status} ${t||res.statusText}`);
+        }
+        const j = await res.json();
+        // backend should return { url: '/static/fotos/....png' } or absolute url
+        if (j && j.url) {
+          fotoEmpleado.src = `${j.url}?t=${Date.now()}`;
+          formSubir.style.display = "none";
+          formEliminar.style.display = "block";
+          flashMessage('Foto subida', 'success');
+        } else {
+          throw new Error('Respuesta inesperada del servidor');
+        }
+      } catch (err) {
+        flashMessage('Error al subir foto: ' + err.message, 'danger');
+      }
+    });
+  }
+
+  if (btnEliminarFoto) {
+    btnEliminarFoto.addEventListener('click', async () => {
+      const dpi = inputDpiDelete.value && inputDpiDelete.value.trim();
+      if (!dpi) { flashMessage('No hay DPI seleccionado', 'danger'); return; }
+      try {
+        const res = await fetch(formEliminar.action || '/eliminar_foto', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dpi })
+        });
+        if (!res.ok) throw new Error('error');
+        // After delete, show default and show upload form
+        fotoEmpleado.src = DEFAULT_SRC;
+        formSubir.style.display = "block";
+        formEliminar.style.display = "none";
+        flashMessage('Foto eliminada', 'success');
+      } catch (err) {
+        flashMessage('Error al eliminar foto', 'danger');
+      }
+    });
+  }
+
+  // Utilities
   function escapeHtml(str) {
     if (str == null) return '';
     return String(str).replace(/[&<>"'`=\/]/g, function(s) {
@@ -398,10 +444,10 @@ document.addEventListener("DOMContentLoaded", () => {
     container.style.zIndex = 2000;
     container.innerText = msg;
     document.body.appendChild(container);
-    setTimeout(()=> container.remove(), 2500);
+    setTimeout(()=> container.remove(), 2800);
   }
 
-  // Botones
+  // Buttons binding
   if (btnEditar) btnEditar.addEventListener('click', () => startEdit());
   if (btnGuardar) btnGuardar.addEventListener('click', () => saveEdit());
   if (btnCancelar) btnCancelar.addEventListener('click', () => cancelEdit());
