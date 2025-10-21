@@ -14,7 +14,7 @@
     <hr class="my-3">
 
     <div class="row g-3">
-      <!-- Tabla ampliada: ocupa la mayor parte del jumbotron -->
+      <!-- Tabla: ocupa la mayor parte -->
       <div class="col-12 col-lg-9">
         <div class="card shadow-sm border-0 h-100">
           <div class="card-body p-2">
@@ -122,7 +122,7 @@
   </div> <!-- .jumbotron -->
 </div> <!-- .container-fluid -->
 
-<!-- Script: selección, edición inline y gestión de imagen -->
+<!-- Script: selección, edición inline, agregar fila y gestión de imagen -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const tabla = document.getElementById('tablaEmpleados');
@@ -133,16 +133,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const formEliminar = document.getElementById('formEliminarFoto');
   const fileFoto = document.getElementById('fileFoto');
 
+  const btnAgregar = document.getElementById('btnAgregar');
   const btnEditar = document.getElementById('btnEditar');
   const btnGuardar = document.getElementById('btnGuardar');
   const btnCancelar = document.getElementById('btnCancelar');
 
-  // Default image path you requested
   const DEFAULT_SRC = "{{ url_for('static', filename='fotos/default.png') }}";
 
   let selectedRow = null;
   let originalCells = null;
   let editing = false;
+  let isNewRow = false;
 
   function resetPanelToDefault() {
     if (fotoEmpleado) fotoEmpleado.src = DEFAULT_SRC;
@@ -159,6 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedRow = null;
     originalCells = null;
     editing = false;
+    isNewRow = false;
     if (btnEditar) btnEditar.disabled = true;
     if (btnGuardar) btnGuardar.disabled = true;
     if (btnCancelar) btnCancelar.disabled = true;
@@ -178,19 +180,49 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Doble clic en fila: seleccionar fila y habilitar editar
+  // Agregar: inserta fila vacía arriba y la selecciona en modo edición
+  if (btnAgregar) {
+    btnAgregar.addEventListener('click', () => {
+      // crear nueva TR con 20 celdas (vacías)
+      const tr = document.createElement('tr');
+      for (let i = 0; i < 20; i++) {
+        const td = document.createElement('td');
+        td.innerText = '';
+        tr.appendChild(td);
+      }
+      // insertar al inicio del tbody
+      const tb = tabla.querySelector('tbody');
+      if (!tb) {
+        alert('Tabla no encontrada para agregar fila.');
+        return;
+      }
+      tb.insertBefore(tr, tb.firstChild);
+      // seleccionar y empezar edición
+      if (selectedRow) selectedRow.classList.remove('table-active');
+      selectedRow = tr;
+      selectedRow.classList.add('table-active');
+      btnEditar.disabled = true;
+      btnGuardar.disabled = false;
+      btnCancelar.disabled = false;
+      isNewRow = true;
+      startEdit();
+    });
+  }
+
+  // Doble clic: seleccionar fila y preparar panel
   if (tabla) {
-    tabla.addEventListener('dblclick', (ev) => {
+    tabla.addEventListener('dblclick', async (ev) => {
       const tr = ev.target.closest('tr');
       if (!tr || !tr.cells.length) return;
 
-      // si está editando otra fila, cancelar edición
+      // cancelar edición activa si viene de otra fila
       if (editing && selectedRow && tr !== selectedRow) {
         cancelEdit();
       }
 
-      // Toggle selección
+      // toggle selección
       if (selectedRow === tr) {
+        // deseleccionar
         clearSelectionUI();
         resetPanelToDefault();
         return;
@@ -199,36 +231,38 @@ document.addEventListener("DOMContentLoaded", () => {
       if (selectedRow) selectedRow.classList.remove('table-active');
       selectedRow = tr;
       selectedRow.classList.add('table-active');
-      if (btnEditar) btnEditar.disabled = false;
-      if (btnGuardar) btnGuardar.disabled = true;
-      if (btnCancelar) btnCancelar.disabled = false;
+      btnEditar.disabled = false;
+      btnGuardar.disabled = true;
+      btnCancelar.disabled = false;
 
+      // sincronizar panel de imagen
       const dpi = tr.cells[0].innerText.trim();
-      if (!dpi) return;
+      if (!dpi) {
+        // sin DPI -> default y habilita subir foto solo si quieres (pero asociará DPI)
+        resetPanelToDefault();
+        return;
+      }
       if (inputDpiUpload) inputDpiUpload.value = dpi;
       if (inputDpiDelete) inputDpiDelete.value = dpi;
 
-      // Consultar API de foto; si no hay foto mostrar default
-      (async () => {
-        try {
-          const r = await fetch(`/api/foto/${encodeURIComponent(dpi)}`, { cache: 'no-store' });
-          if (!r.ok) throw new Error('no-photo');
-          const j = await r.json();
-          if (j && j.url && (j.url.startsWith('/') || j.url.startsWith('http'))) {
-            fotoEmpleado.src = `${j.url}?t=${Date.now()}`;
-            if (formSubir) formSubir.style.display = "none";
-            if (formEliminar) formEliminar.style.display = "block";
-          } else {
-            fotoEmpleado.src = DEFAULT_SRC;
-            if (formSubir) formSubir.style.display = "block";
-            if (formEliminar) formEliminar.style.display = "none";
-          }
-        } catch (err) {
+      try {
+        const r = await fetch(`/api/foto/${encodeURIComponent(dpi)}`, { cache: 'no-store' });
+        if (!r.ok) throw new Error('no-photo');
+        const j = await r.json();
+        if (j && j.url && (j.url.startsWith('/') || j.url.startsWith('http'))) {
+          fotoEmpleado.src = `${j.url}?t=${Date.now()}`;
+          if (formSubir) formSubir.style.display = "none";
+          if (formEliminar) formEliminar.style.display = "block";
+        } else {
           fotoEmpleado.src = DEFAULT_SRC;
           if (formSubir) formSubir.style.display = "block";
           if (formEliminar) formEliminar.style.display = "none";
         }
-      })();
+      } catch (err) {
+        fotoEmpleado.src = DEFAULT_SRC;
+        if (formSubir) formSubir.style.display = "block";
+        if (formEliminar) formEliminar.style.display = "none";
+      }
     });
   }
 
@@ -248,7 +282,8 @@ document.addEventListener("DOMContentLoaded", () => {
     originalCells = Array.from(selectedRow.cells).map(td => td.innerText);
     selectedRow.querySelectorAll('td').forEach((td, idx) => {
       const text = td.innerText;
-      if (idx === 0) {
+      // primera columna DPI editable if new row, otherwise readonly
+      if (idx === 0 && !isNewRow) {
         td.innerHTML = `<input class="form-control form-control-sm" value="${escapeHtml(text)}" readonly>`;
       } else {
         td.innerHTML = `<input class="form-control form-control-sm" value="${escapeHtml(text)}">`;
@@ -257,7 +292,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (btnEditar) btnEditar.disabled = true;
     if (btnGuardar) btnGuardar.disabled = false;
     if (btnCancelar) btnCancelar.disabled = false;
-    const firstEditable = selectedRow.querySelector('td:nth-child(2) input');
+    const firstEditable = selectedRow.querySelector('td input:not([readonly])');
     if (firstEditable) firstEditable.focus();
   }
 
@@ -265,49 +300,59 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!selectedRow || !editing) return;
     const inputs = Array.from(selectedRow.querySelectorAll('td input'));
     const dpi = inputs[0].value.trim();
+    if (!dpi) {
+      flashMessage('DPI es obligatorio', 'danger');
+      return;
+    }
+
+    // Construir payload siguiendo el orden de columnas
     const payload = {
       "Numero de DPI": dpi,
-      "Nombre": inputs[1].value.trim(),
-      "Apellidos": inputs[2].value.trim(),
-      "Apellidos de casada": inputs[3].value.trim(),
-      "Estado Civil": inputs[4].value.trim(),
-      "Nacionalidad": inputs[5].value.trim(),
-      "Departamento": inputs[6].value.trim(),
-      "Fecha de nacimiento": inputs[7].value.trim(),
-      "Lugar de nacimiento": inputs[8].value.trim(),
-      "Numero IGSS": inputs[9].value.trim(),
-      "Dirección del Domicilio": inputs[10].value.trim(),
-      "Numero de Telefono": inputs[11].value.trim(),
-      "Religión": inputs[12].value.trim(),
-      "Correo Electronico": inputs[13].value.trim(),
-      "Puesto de trabajo": inputs[14].value.trim(),
-      "Tipo de contrato": inputs[15].value.trim(),
-      "Jornada laboral": inputs[16].value.trim(),
-      "Duración del trabajo": inputs[17].value.trim(),
-      "Fecha de inicio laboral": inputs[18].value.trim(),
-      "Dias Laborales": inputs[19].value.trim()
+      "Nombre": inputs[1] ? inputs[1].value.trim() : '',
+      "Apellidos": inputs[2] ? inputs[2].value.trim() : '',
+      "Apellidos de casada": inputs[3] ? inputs[3].value.trim() : '',
+      "Estado Civil": inputs[4] ? inputs[4].value.trim() : '',
+      "Nacionalidad": inputs[5] ? inputs[5].value.trim() : '',
+      "Departamento": inputs[6] ? inputs[6].value.trim() : '',
+      "Fecha de nacimiento": inputs[7] ? inputs[7].value.trim() : '',
+      "Lugar de nacimiento": inputs[8] ? inputs[8].value.trim() : '',
+      "Numero de Afiliación del IGGS": inputs[9] ? inputs[9].value.trim() : '',
+      "Dirección del Domicilio": inputs[10] ? inputs[10].value.trim() : '',
+      "Numero de Telefono": inputs[11] ? inputs[11].value.trim() : '',
+      "Religión": inputs[12] ? inputs[12].value.trim() : '',
+      "Correo Electronico": inputs[13] ? inputs[13].value.trim() : '',
+      "Puesto de trabajo": inputs[14] ? inputs[14].value.trim() : '',
+      "Tipo de contrato": inputs[15] ? inputs[15].value.trim() : '',
+      "Jornada laboral": inputs[16] ? inputs[16].value.trim() : '',
+      "Duración del trabajo": inputs[17] ? inputs[17].value.trim() : '',
+      "Fecha de inicio laboral": inputs[18] ? inputs[18].value.trim() : '',
+      "Dias Laborales": inputs[19] ? inputs[19].value.trim() : ''
     };
 
     try {
-      const res = await fetch(`/api/empleado/${encodeURIComponent(dpi)}`, {
-        method: 'PUT',
+      // Si es nueva fila usamos POST, si no usamos PUT (ajusta según tu API)
+      const method = isNewRow ? 'POST' : 'PUT';
+      const url = isNewRow ? '/api/empleados' : `/api/empleado/${encodeURIComponent(dpi)}`;
+      const res = await fetch(url, {
+        method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       if (!res.ok) {
         const txt = await res.text().catch(()=>null);
-        throw new Error(`Error ${res.status}: ${txt || res.statusText}`);
+        throw new Error(`${res.status} ${txt || res.statusText}`);
       }
 
+      // Actualizar fila con los nuevos valores
       selectedRow.querySelectorAll('td').forEach((td, idx) => {
         const v = Object.values(payload)[idx];
         td.innerText = v !== undefined ? v : '';
       });
 
       editing = false;
+      isNewRow = false;
       if (btnGuardar) btnGuardar.disabled = true;
       if (btnEditar) btnEditar.disabled = false;
-      if (btnCancelar) btnCancelar.disabled = false;
       flashMessage('Guardado correctamente', 'success');
     } catch (err) {
       flashMessage('Error al guardar: ' + err.message, 'danger');
@@ -321,12 +366,20 @@ document.addEventListener("DOMContentLoaded", () => {
         td.innerText = originalCells[idx] || '';
       });
     }
+    // si era fila nueva, eliminarla
+    if (isNewRow && selectedRow && selectedRow.parentNode) {
+      selectedRow.parentNode.removeChild(selectedRow);
+    }
     editing = false;
+    isNewRow = false;
     if (btnEditar) btnEditar.disabled = selectedRow ? false : true;
     if (btnGuardar) btnGuardar.disabled = true;
-    if (btnCancelar) btnCancelar.disabled = false;
+    if (btnCancelar) btnCancelar.disabled = true;
+    if (selectedRow) { selectedRow.classList.remove('table-active'); selectedRow = null; }
+    resetPanelToDefault();
   }
 
+  // Utilidades
   function escapeHtml(str) {
     if (str == null) return '';
     return String(str).replace(/[&<>"'`=\/]/g, function(s) {
@@ -348,9 +401,11 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(()=> container.remove(), 2500);
   }
 
-  if (btnEditar) btnEditar.addEventListener('click', startEdit);
-  if (btnGuardar) btnGuardar.addEventListener('click', saveEdit);
-  if (btnCancelar) btnCancelar.addEventListener('click', cancelEdit);
+  // Botones
+  if (btnEditar) btnEditar.addEventListener('click', () => startEdit());
+  if (btnGuardar) btnGuardar.addEventListener('click', () => saveEdit());
+  if (btnCancelar) btnCancelar.addEventListener('click', () => cancelEdit());
+
 });
 </script>
 
