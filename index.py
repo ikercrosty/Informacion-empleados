@@ -116,6 +116,47 @@ def home():
     # Si no hay sesión, mostrar login (mantengo redirect a login)
     return redirect(url_for("login"))
 
+# Lista simplificada de empleados para el combobox (JSON)
+@app.route("/api/empleados")
+def api_empleados_list():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT `Numero de DPI` as dpi,
+                   COALESCE(CONCAT(`Nombre`, ' ', `Apellidos`), `Nombre`, `Apellidos`) as full_name
+            FROM empleados_info
+            WHERE `Nombre` IS NOT NULL OR `Apellidos` IS NOT NULL
+            ORDER BY `Apellidos`, `Nombre`
+        """)
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return jsonify(rows)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Devuelve todos los campos relevantes de un empleado por DPI
+@app.route("/api/empleado/<dpi>")
+def api_empleado_get(dpi):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT *
+            FROM empleados_info
+            WHERE `Numero de DPI` = %s
+            LIMIT 1
+        """, (dpi,))
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        if not row:
+            return jsonify({"error": "Empleado no encontrado"}), 404
+        return jsonify(row)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route("/about")
 def about():

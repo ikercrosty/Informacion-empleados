@@ -439,3 +439,152 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+// static/js/main.js
+// Este archivo asume que ficha.html definió window.__FICHA_CONFIG con:
+// { placeholder: "/static/placeholder.png", apiEmpleados: "/api/empleados", apiEmpleado: "/api/empleado/", apiFoto: "/api/foto/" }
+
+(function () {
+  const cfg = window.__FICHA_CONFIG || {};
+  const placeholder = cfg.placeholder || '/static/placeholder.png';
+  const apiEmpleados = cfg.apiEmpleados || '/api/empleados';
+  const apiEmpleadoBase = cfg.apiEmpleadoBase || '/api/empleado/';
+  const apiFotoBase = cfg.apiFotoBase || '/api/foto/';
+
+  const safe = v => v ?? '';
+
+  async function loadEmpleados() {
+    const sel = document.getElementById('empleadoSelect');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Cargando...</option>';
+    try {
+      const res = await fetch(apiEmpleados);
+      const data = await res.json();
+      sel.innerHTML = '<option value="">Seleccione empleado...</option>';
+      data.forEach(e => {
+        const opt = document.createElement('option');
+        opt.value = e.dpi;
+        opt.textContent = e.full_name || e.dpi;
+        sel.appendChild(opt);
+      });
+    } catch (err) {
+      sel.innerHTML = '<option value="">Error cargando empleados</option>';
+      console.error('loadEmpleados error', err);
+    }
+  }
+
+  async function fetchJson(url) {
+    const r = await fetch(url, { cache: 'no-store' });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return await r.json();
+  }
+
+  // fillFicha expuesto globalmente
+  async function fillFicha(emp) {
+    if (!emp) return;
+
+    try {
+      document.getElementById('nombre').value = safe(emp['Nombre']);
+      document.getElementById('apellidos').value = safe(emp['Apellidos']);
+      document.getElementById('apellidos_casada').value = safe(emp['Apellidos de casada']);
+      document.getElementById('fecha_nacimiento').value = safe(emp['Fecha de nacimiento']);
+      document.getElementById('edad').value = safe(emp['Edad']);
+      document.getElementById('sexo').value = safe(emp['Sexo']);
+      document.getElementById('estado_civil').value = safe(emp['Estado Civil']);
+      document.getElementById('iggs').value = safe(emp['Numero de Afiliación del IGGS']);
+      document.getElementById('telefono').value = safe(emp['Numero de Telefono']);
+      document.getElementById('celular').value = safe(emp['Celular'] ?? emp['Telefono Celular']);
+      document.getElementById('correo').value = safe(emp['Correo Electronico']);
+
+      document.getElementById('direccion').value = safe(emp['Dirección del Domicilio'] ?? emp['direccion']);
+      document.getElementById('numero').value = safe(emp['Numero'] ?? emp['numero']);
+      document.getElementById('colonia').value = safe(emp['Colonia'] ?? emp['colonia']);
+      document.getElementById('municipio').value = safe(emp['Municipio'] ?? emp['municipio']);
+      document.getElementById('departamento').value = safe(emp['Departamento']);
+      document.getElementById('cp').value = safe(emp['C.P.'] ?? emp['CP']);
+
+      document.getElementById('puesto').value = safe(emp['Puesto de trabajo'] ?? emp['Puesto']);
+      document.getElementById('area').value = safe(emp['Area']);
+      document.getElementById('jefe').value = safe(emp['Nombre del Jefe Imediato'] ?? emp['Jefe']);
+      document.getElementById('fecha_ingreso').value = safe(emp['Fecha de inicio laboral']);
+      document.getElementById('sueldo').value = safe(emp['Sueldo']);
+
+      document.getElementById('escolaridad').value = safe(emp['Nivel de estudios']);
+      document.getElementById('especifique').value = safe(emp['Profesión u Oficio'] ?? emp['Especifique']);
+      document.getElementById('otros_estudios').value = safe(emp['Cursos o titulos adicionales']);
+
+      document.getElementById('padece').value = safe(emp['Padece alguna enfermedad']);
+      document.getElementById('medicamento').value = safe(emp['Nombre del tratamiento']);
+      document.getElementById('operaciones').value = safe(emp['Operaciones'] ?? emp['Cirugias']);
+      document.getElementById('accidentes').value = safe(emp['Accidentes'] ?? emp['Ha tenido algun accidente']);
+
+      document.getElementById('emerg_nombre').value = safe(emp['Nombre del contacto de emergencia']);
+      document.getElementById('emerg_telefono').value = safe(emp['Numero de telefono de emergencia']);
+      document.getElementById('emerg_parentesco').value = safe(emp['Parentesco'] ?? '');
+
+      // Foto
+      const fotoEl = document.getElementById('fotoEmpleado') || document.getElementById('foto');
+      const dpi = emp['Numero de DPI'] ?? emp.dpi ?? emp.numero ?? '';
+      if (!fotoEl) return;
+      if (!dpi) {
+        fotoEl.src = placeholder;
+        return;
+      }
+      try {
+        const j = await fetchJson(apiFotoBase + encodeURIComponent(dpi));
+        fotoEl.src = (j && j.url) ? j.url : placeholder;
+      } catch (err) {
+        console.error('Error fetch foto', err);
+        fotoEl.src = placeholder;
+      }
+    } catch (err) {
+      console.error('fillFicha error', err);
+    }
+  }
+
+  // Listener para cambio de select (busca empleado por DPI y llama fillFicha)
+  function attachSelectListener() {
+    const sel = document.getElementById('empleadoSelect');
+    if (!sel) return;
+    sel.addEventListener('change', async function () {
+      const dpi = this.value;
+      if (!dpi) {
+        const form = document.getElementById('fichaForm');
+        if (form) form.reset();
+        const fotoEl = document.getElementById('fotoEmpleado') || document.getElementById('foto');
+        if (fotoEl) fotoEl.src = placeholder;
+        return;
+      }
+      try {
+        const emp = await fetchJson(apiEmpleadoBase + encodeURIComponent(dpi));
+        await fillFicha(emp);
+      } catch (err) {
+        console.error('Error cargando empleado', err);
+        alert('Error cargando datos del empleado');
+      }
+    });
+  }
+
+  // Public API
+  window.__FICHA = {
+    loadEmpleados,
+    fillFicha,
+    attachSelectListener
+  };
+
+  // Auto-init cuando DOM listo
+  document.addEventListener('DOMContentLoaded', () => {
+    loadEmpleados().then(() => attachSelectListener()).catch(e => console.error(e));
+    // Botón limpiar si existe
+    const btnClear = document.getElementById('btnClear');
+    if (btnClear) btnClear.addEventListener('click', () => {
+      const sel = document.getElementById('empleadoSelect');
+      if (sel) sel.value = '';
+      const form = document.getElementById('fichaForm');
+      if (form) form.reset();
+      const fotoEl = document.getElementById('fotoEmpleado') || document.getElementById('foto');
+      if (fotoEl) fotoEl.src = placeholder;
+    });
+  });
+})();
+
