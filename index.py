@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response, jsonify
+from flask_cors import CORS
 import os
 import pymysql
 from urllib.parse import urlparse
