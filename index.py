@@ -75,10 +75,30 @@ def no_cache(response):
 def menu():
     if "usuario" not in session:
         return redirect(url_for("login"))
-    return render_template("menu.html", usuario=session.get("usuario"))@app.route("/empleados")
+    return render_template("menu.html", usuario=session.get("usuario"))
+
+
+@app.route("/empleados")
 def empleados():
     if "usuario" not in session:
         return redirect(url_for("login"))
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT 
+            `Numero de DPI`, `Nombre`, `Apellidos`, `Apellidos de casada`, `Estado Civil`,
+            `Nacionalidad`, `Departamento`, `Fecha de nacimiento`,
+            `Lugar de nacimiento`, `Numero de Afiliación del IGGS`, `Dirección del Domicilio`,
+            `Numero de Telefono`, `Religión`, `Correo Electronico`, `Puesto de trabajo`,
+            `Tipo de contrato`, `Jornada laboral`, `Duración del trabajo`,
+            `Fecha de inicio laboral`, `Dias Laborales`, `foto`
+        FROM empleados_info
+    """)
+    empleados = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template("home.html", empleados=empleados, usuario=session.get("usuario"))
+
 
 @app.route("/")
 def home():
