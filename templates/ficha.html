@@ -23,7 +23,7 @@
   <form id="fichaForm" class="card shadow-sm border-0 mb-4">
     <div class="card-body p-4">
 
-      <!-- Datos personales -->
+      <!-- DATOS PERSONALES -->
       <h5 class="mb-3">DATOS PERSONALES</h5>
       <div class="row g-3">
         <div class="col-md-3">
@@ -56,7 +56,6 @@
           <input id="departamento" value="{{ e.get('Departamento') if e else '' }}" class="form-control form-control-sm" readonly>
         </div>
 
-        {# Fecha de nacimiento - mostrar solo fecha en formato DD/MM/AAAA #}
         <div class="col-md-3">
           <label class="form-label">Fecha de nacimiento</label>
           {% set fn = e.get('Fecha de nacimiento') if e else None %}
@@ -107,7 +106,7 @@
 
       <hr class="my-4">
 
-      <!-- Domicilio y contacto -->
+      <!-- DOMICILIO Y CONTACTO -->
       <h5 class="mb-3">DOMICILIO Y CONTACTO</h5>
       <div class="row g-3">
         <div class="col-md-6">
@@ -126,7 +125,7 @@
 
       <hr class="my-4">
 
-      <!-- Datos laborales (título y nota solicitada) -->
+      <!-- DATOS LABORALES -->
       <h5 class="mb-3">Datos Laborales (Exclusivo de la administración)</h5>
       <div class="text-muted small mb-3">Administración será la encargada de llenar este apartado.</div>
       <div class="row g-3">
@@ -159,7 +158,7 @@
 
       <hr class="my-4">
 
-      <!-- Información académica -->
+      <!-- INFORMACIÓN ACADÉMICA -->
       <h5 class="mb-3">INFORMACIÓN ACADÉMICA</h5>
       <div class="row g-3">
         <div class="col-md-3">
@@ -182,7 +181,7 @@
 
       <hr class="my-4">
 
-      <!-- Datos del cónyuge -->
+      <!-- DATOS DEL CÓNYUGE -->
       <h5 class="mb-3">DATOS DEL CÓNYUGE</h5>
       <div class="row g-3">
         <div class="col-md-3">
@@ -209,7 +208,7 @@
 
       <hr class="my-4">
 
-      <!-- Contacto de emergencia -->
+      <!-- CONTACTO DE EMERGENCIA -->
       <h5 class="mb-3">CONTACTO DE EMERGENCIA</h5>
       <div class="row g-3">
         <div class="col-md-3">
@@ -228,7 +227,7 @@
 
       <hr class="my-4">
 
-      <!-- Referencias laborales (Último empleo) -->
+      <!-- REFERENCIAS LABORALES -->
       <h5 class="mb-3">REFERENCIAS LABORALES (Último empleo)</h5>
       <div class="table-responsive">
         <table class="table table-sm table-borderless">
@@ -257,7 +256,7 @@
 
       <hr class="my-4">
 
-      <!-- Referencias médicas -->
+      <!-- REFERENCIAS MÉDICAS -->
       <h5 class="mb-3">REFERENCIAS MÉDICAS</h5>
       <div class="row g-3">
         <div class="col-md-3">
@@ -298,7 +297,7 @@
   </form>
 </div>
 
-<!-- Configuración que necesita main.js -->
+<!-- Configuración -->
 <script>
   window.__FICHA_CONFIG = {
     placeholder: "{{ url_for('static', filename='placeholder.png') }}",
@@ -320,17 +319,14 @@
   const fotoEl = document.getElementById('fotoEmpleado');
   const btnClear = document.getElementById('btnClear');
 
-  // Helper: normalize key to id-like token (remove accents, lowercase, underscores)
   function normalizeKeyToId(key){
     if (!key) return '';
-    // remove accents
-    const accents = {'á':'a','é':'e','í':'i','ó':'o','ú':'u','Á':'a','É':'e','Í':'i','Ó':'o','Ú':'u','ñ':'n','Ñ':'n','ü':'u','Ü':'u'};
+    // remove accents and lowercase
+    const map = { 'á':'a','é':'e','í':'i','ó':'o','ú':'u','Á':'a','É':'e','Í':'i','Ó':'o','Ú':'u','ñ':'n','Ñ':'n','ü':'u','Ü':'u' };
     let s = String(key).trim();
-    s = s.replace(/[\u00C0-\u017F]/g, function(c){
-      return accents[c] || c.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    });
+    s = s.split('').map(c => map[c] || c).join('');
     s = s.toLowerCase();
-    s = s.replace(/[^a-z0-9\s_-]/g,''); // remove punctuation
+    s = s.replace(/[^a-z0-9\s_-]/g,'');
     s = s.replace(/\s+/g,'_');
     return s;
   }
@@ -342,166 +338,117 @@
     el.value = value == null ? '' : String(value);
   }
 
-  // Explicit mapping for known variants (keys returned by your API -> input ids)
-  const explicitMap = {
-    // main personal
-    'numero_de_dpi': 'dpi',
-    'nombre': 'nombre',
-    'apellidos': 'apellidos',
-    'apellidos_de_casada': 'apellidos_casada',
-    'estado_civil': 'estado_civil',
-    'nacionalidad': 'nacionalidad',
-    'departamento': 'departamento',
-    'fecha_de_nacimiento': 'fecha_nacimiento',
-    'lugar_de_nacimiento': 'lugar_nacimiento',
-    'numero_de_afiliacion_del_iggs': 'iggs',
-    'numero_iggs': 'iggs',
-    'direccion_del_domicilio': 'direccion',
-    'direccion': 'direccion',
-    'numero_de_telefono': 'telefono',
-    'telefono': 'telefono',
-    'correo_electronico': 'correo',
-    'correo': 'correo',
-    'religion': 'religion',
-    // laboral
-    'puesto_de_trabajo': 'puesto',
-    'tipo_de_contrato': 'tipo_contrato',
-    'jornada_laboral': 'jornada',
-    'duracion_del_trabajo': 'duracion',
-    'fecha_de_inicio_laboral': 'fecha_inicio',
-    'dias_laborales': 'dias_laborales',
-    // academico
-    'nivel_de_estudios': 'nivel_estudios',
-    'profesion_u_oficio': 'profesion',
-    'colegio_o_establecimiento': 'colegio',
-    'cursos_o_titulos_adicionales': 'cursos',
-    'cursos_o_titulos_adicionales': 'cursos',
-    // conyuge variants
-    'nombres_del_conyuge': 'conyuge_nombres',
-    'apellidos_del_conyuge': 'conyuge_apellidos',
-    'direccion_del_conyuge': 'conyuge_direccion',
-    'direccion_conyuge': 'conyuge_direccion',
-    'telefono_del_conyuge': 'conyuge_telefono',
-    'telefono_conyuge': 'conyuge_telefono',
-    'correo_del_conyuge': 'conyuge_correo',
-    'correo_conyuge': 'conyuge_correo',
-    // emergencia variants
-    'nombre_contacto': 'contacto_nombre',
-    'nombre_contacto_de_emergencia': 'contacto_nombre',
-    'apellidos_contacto': 'contacto_apellidos',
-    'apellidos_contacto_de_emergencia': 'contacto_apellidos',
-    'telefono_de_emergencia': 'contacto_telefono',
-    'numero_de_telefono_de_emergencia': 'contacto_telefono',
-    // referencias laborales (table cells)
-    'nombre_empresa': 'ref_nombre_empresa',
-    'nombre_de_la_empresa_ultimo_trabajo': 'ref_nombre_empresa',
-    'direccion_empresa': 'ref_direccion_empresa',
-    'direccion_de_la_empresa': 'ref_direccion_empresa',
-    'inicio_en_la_empresa': 'ref_inicio_empresa',
-    'inicio_laboral_en_la_empresa': 'ref_inicio_empresa',
-    'fin_en_la_empresa': 'ref_fin_empresa',
-    'fin_laboral_en_la_empresa': 'ref_fin_empresa',
-    'motivo_del_retiro': 'ref_motivo_retiro',
-    'nombre_del_jefe_inmediato': 'ref_nombre_jefe',
-    'nombre_del_jefe_imediato': 'ref_nombre_jefe',
-    // medicos
-    'padece_alguna_enfermedad': 'padece_enfermedad',
-    'tipo_de_enfermedad': 'tipo_enfermedad',
-    'recibe_tratamiento': 'recibe_tratamiento',
-    'nombre_del_tratamiento': 'nombre_tratamiento',
-    'es_alergico_a_algun_medicamento': 'alergico',
-    'nombre_del_medico_tratante': 'medico_tratante',
-    'tipo_de_sangre': 'tipo_sangre'
-  };
+  function setCellText(id, text){
+    if (!id) return;
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerText = text == null ? '' : String(text);
+  }
 
-  // Try to set many possible keys for a single field (helper)
-  function trySetMany(emp, possibleKeys, id){
-    for (const k of possibleKeys){
+  function trySetMany(emp, keys, id){
+    for (const k of keys){
+      if (!k) continue;
       if (emp.hasOwnProperty(k) && emp[k] !== undefined && emp[k] !== null && String(emp[k]).trim() !== '') {
         setIfExists(id, emp[k]);
         return true;
       }
+      const nk = normalizeKeyToId(k);
+      if (emp.hasOwnProperty(nk) && emp[nk]) { setIfExists(id, emp[nk]); return true; }
     }
     return false;
   }
 
-  // Fill fields from employee object with robust matching
   function fillFields(emp){
     if (!emp || typeof emp !== 'object') return;
 
-    // First, explicit map
-    for (const rawKey in emp){
-      const idByExplicit = explicitMap[normalizeKeyToId(rawKey)];
-      if (idByExplicit) {
-        setIfExists(idByExplicit, emp[rawKey]);
-      }
+    // Direct explicit sets for common exact keys (original DB names)
+    const explicit = {
+      dpi: ['Numero de DPI','Numero_de_DPI','Numero_de_Dpi','numero_de_dpi','dpi'],
+      nombre: ['Nombre','nombre','full_name','fullName'],
+      apellidos: ['Apellidos','apellidos','surname'],
+      apellidos_casada: ['Apellidos de casada','Apellidos_de_casada','apellidos_de_casada'],
+      estado_civil: ['Estado Civil','Estado_Civil','estado_civil'],
+      nacionalidad: ['Nacionalidad','nacionalidad'],
+      departamento: ['Departamento','departamento'],
+      lugar_nacimiento: ['Lugar de nacimiento','Lugar_de_nacimiento','lugar_de_nacimiento'],
+      iggs: ['Numero de Afiliación del IGGS','Numero de Afiliacion del IGGS','Numero IGSS','numero_igg','numero_iggs'],
+      direccion: ['Dirección del Domicilio','Direccion del Domicilio','direccion','Dirección'],
+      telefono: ['Numero de Telefono','Numero de Teléfono','Telefono','telefono','numero_de_telefono'],
+      correo: ['Correo Electronico','Correo electrónico','Correo','correo','correo_electronico'],
+      religion: ['Religión','Religion','religion'],
+      puesto: ['Puesto de trabajo','puesto','puesto_de_trabajo'],
+      tipo_contrato: ['Tipo de contrato','tipo_de_contrato'],
+      jornada: ['Jornada laboral','jornada_laboral'],
+      duracion: ['Duración del trabajo','Duracion del trabajo','duracion_del_trabajo'],
+      fecha_inicio: ['Fecha de inicio laboral','fecha_inicio_laboral','fecha_inicio'],
+      dias_laborales: ['Dias Laborales','dias_laborales'],
+
+      nivel_estudios: ['Nivel de estudios','nivel_de_estudios'],
+      profesion: ['Profesión u Oficio','Profesion u Oficio','profesion_u_oficio'],
+      colegio: ['Colegio o establecimiento','colegio_o_establecimiento','colegio'],
+      cursos: ['Cursos o títulos adicionales','Cursos o titulos adicionales','Cursos o titulos adicionales','Cursos','cursos','cursos_o_titulos_adicionales'],
+
+      // cónyuge
+      conyuge_nombres: ['Nombres del cónyuge','Nombres del conyugue','nombres_del_conyuge','conyuge_nombres'],
+      conyuge_apellidos: ['Apellidos del cónyuge','Apellidos del conyugue','apellidos_del_conyuge','conyuge_apellidos'],
+      conyuge_direccion: ['Dirección del cónyuge','Direccion del conyugue','direccion_del_conyuge','conyuge_direccion'],
+      conyuge_telefono: ['Teléfono del cónyuge','Telefono del conyugue','telefono_del_conyuge','conyuge_telefono','telefono_conyuge'],
+      conyuge_correo: ['Correo del cónyuge','Correo del conyugue','correo_del_conyuge','conyuge_correo','correo_conyuge'],
+
+      // emergencia
+      contacto_nombre: ['Nombre contacto','Nombre contacto de emergencia','nombre_contacto','contacto_nombre'],
+      contacto_apellidos: ['Apellidos contacto','Apellidos contacto de emergencia','apellidos_contacto','contacto_apellidos'],
+      contacto_telefono: ['Teléfono de emergencia','Telefono de emergencia','Numero de telefono de emergencia','telefono_de_emergencia','contacto_telefono'],
+
+      // referencias laborales (varios nombres)
+      ref_nombre_empresa: ['Nombre Empresa','Nombre de la Empresa (Ultimo Trabajo)','nombre_empresa','nombre_de_la_empresa_ultimo_trabajo'],
+      ref_direccion_empresa: ['Dirección Empresa','Direccion de la empresa','direccion_empresa'],
+      ref_inicio_empresa: ['Inicio en la empresa','Inicio laboral en la empresa','inicio_en_la_empresa'],
+      ref_fin_empresa: ['Fin en la empresa','Fin Laboral en la empresa','fin_en_la_empresa'],
+      ref_motivo_retiro: ['Motivo del retiro','motivo_del_retiro'],
+      ref_nombre_jefe: ['Nombre del jefe inmediato','Nombre del Jefe Imediato','nombre_del_jefe_inmediato'],
+
+      // medicos
+      padece_enfermedad: ['Padece alguna enfermedad','padece_alguna_enfermedad'],
+      tipo_enfermedad: ['Tipo de enfermedad','tipo_de_enfermedad'],
+      recibe_tratamiento: ['Recibe tratamiento','Recibe tratamiento medico','recibe_tratamiento'],
+      nombre_tratamiento: ['Nombre del tratamiento','nombre_del_tratamiento'],
+      alergico: ['Es alergico a algun medicamento','Es alérgico a algún medicamento','es_alergico_a_algun_medicamento'],
+      medico_tratante: ['Nombre del medico Tratante','Nombre del médico tratante','nombre_del_medico_tratante'],
+      tipo_sangre: ['Tipo de sangre','tipo_de_sangre']
+    };
+
+    // Loop explicit map and set fields when found
+    for (const id in explicit){
+      const keys = explicit[id];
+      trySetMany(emp, keys, id);
     }
 
-    // Ensure common fallbacks for spouse, emergency and cursos if not set
-    // Cursos: try several possible API keys
-    trySetMany(emp, ['Cursos o títulos adicionales','Cursos o titulos adicionales','Cursos','cursos_o_titulos_adicionales','cursos_o_titulos_adicionales','cursos'], 'cursos');
+    // If some academic cursos field still empty, attempt to get from other keys
+    trySetMany(emp, ['Cursos o títulos adicionales', 'Cursos o titulos adicionales', 'Cursos', 'cursos_o_titulos_adicionales', 'cursos'], 'cursos');
 
-    // Cónyuge: several variants
-    trySetMany(emp,
-      ['Nombres del cónyuge','Nombres del conyugue','nombres_del_conyuge','nombres_del_conyugue','conyuge_nombres','nombres_conyuge'],
-      'conyuge_nombres');
-    trySetMany(emp,
-      ['Apellidos del cónyuge','Apellidos del conyugue','apellidos_del_conyuge','conyuge_apellidos','apellidos_conyuge'],
-      'conyuge_apellidos');
-    trySetMany(emp,
-      ['Dirección del cónyuge','Direccion del conyugue','direccion_del_conyuge','direccion_conyuge','conyuge_direccion'],
-      'conyuge_direccion');
-    trySetMany(emp,
-      ['Teléfono del cónyuge','Telefono del conyugue','telefono_del_conyuge','telefono_conyuge','conyuge_telefono'],
-      'conyuge_telefono');
-    trySetMany(emp,
-      ['Correo del cónyuge','Correo del conyugue','correo_del_conyuge','correo_conyuge','conyuge_correo'],
-      'conyuge_correo');
+    // Ensure spouse phone and email are set if present under other names
+    trySetMany(emp, ['Telefono del conyuge','Telefono conyuge','Teléfono del conyuge','tel_conyuge','conyuge_telefono'], 'conyuge_telefono');
+    trySetMany(emp, ['Correo del conyuge','correo_conyuge','correo_del_conyuge','conyuge_correo'], 'conyuge_correo');
 
-    // Emergencia: several variants
-    trySetMany(emp,
-      ['Nombre contacto','Nombre contacto de emergencia','nombre_contacto','nombre_contacto_de_emergencia'],
-      'contacto_nombre');
-    trySetMany(emp,
-      ['Apellidos contacto','Apellidos contacto de emergencia','apellidos_contacto','apellidos_contacto_de_emergencia'],
-      'contacto_apellidos');
-    trySetMany(emp,
-      ['Teléfono de emergencia','Teléfono de emergencia','Numero de telefono de emergencia','telefono_de_emergencia','numero_de_telefono_de_emergencia'],
-      'contacto_telefono');
+    // Emergency name/apellidos fallbacks
+    trySetMany(emp, ['Nombre contacto','nombre_contacto','contacto_nombre','nombre_contacto_de_emergencia'], 'contacto_nombre');
+    trySetMany(emp, ['Apellidos contacto','apellidos_contacto','contacto_apellidos','apellidos_contacto_de_emergencia'], 'contacto_apellidos');
 
-    // If explicit mapping didn't cover all keys, try normalized auto-fill for inputs that exist
-    for (const k in emp) {
-      const nid = normalizeKeyToId(k);
-      // skip if explicit map already handled
-      if (explicitMap[nid]) continue;
-      const candidateId = nid; // e.g., "nombre", "telefono"
-      const el = document.getElementById(candidateId);
-      if (el && el.tagName === 'INPUT') {
-        // only set if empty currently
-        if (!el.value || el.value.trim() === '') el.value = emp[k] == null ? '' : String(emp[k]);
-      }
-      // also check underscore-variants mapping to elements in template (some ids use underscores)
-      const altId = candidateId.replace(/\s+/g,'_');
-      const el2 = document.getElementById(altId);
-      if (el2 && el2.tagName === 'INPUT') {
-        if (!el2.value || el2.value.trim() === '') el2.value = emp[k] == null ? '' : String(emp[k]);
-      }
-    }
+    // Refs (set also into table cells)
+    const refNombre = getFirstNonEmpty(emp, ['Nombre Empresa','Nombre de la Empresa (Ultimo Trabajo)','nombre_empresa']);
+    const refDireccion = getFirstNonEmpty(emp, ['Dirección Empresa','Direccion de la empresa','direccion_empresa']);
+    const refInicio = getFirstNonEmpty(emp, ['Inicio en la empresa','Inicio laboral en la empresa','inicio_en_la_empresa']);
+    const refFin = getFirstNonEmpty(emp, ['Fin en la empresa','Fin Laboral en la empresa','fin_en_la_empresa']);
+    const refMotivo = getFirstNonEmpty(emp, ['Motivo del retiro','motivo_del_retiro']);
+    const refJefe = getFirstNonEmpty(emp, ['Nombre del jefe inmediato','Nombre del Jefe Imediato','nombre_del_jefe_inmediato']);
 
-    // Fill referencias laborales cells explicitly if keys exist
-    const refNombre = emp['Nombre de la Empresa (Ultimo Trabajo)'] || emp['Nombre Empresa'] || emp['nombre_empresa'] || emp['nombre_de_la_empresa_ultimo_trabajo'] || '';
-    const refDireccion = emp['Dirección Empresa'] || emp['Direccion de la empresa'] || emp['direccion_empresa'] || '';
-    const refInicio = emp['Inicio en la empresa'] || emp['Inicio laboral en la empresa'] || emp['inicio_en_la_empresa'] || '';
-    const refFin = emp['Fin en la empresa'] || emp['Fin Laboral en la empresa'] || emp['fin_en_la_empresa'] || '';
-    const refMotivo = emp['Motivo del retiro'] || emp['motivo_del_retiro'] || '';
-    const refJefe = emp['Nombre del jefe inmediato'] || emp['Nombre del Jefe Imediato'] || emp['nombre_del_jefe_inmediato'] || '';
-
-    setIfExists('ref_nombre_empresa', refNombre);
-    setIfExists('ref_direccion_empresa', refDireccion);
-    setIfExists('ref_inicio_empresa', refInicio);
-    setIfExists('ref_fin_empresa', refFin);
-    setIfExists('ref_motivo_retiro', refMotivo);
-    setIfExists('ref_nombre_jefe', refJefe);
+    setCellText('ref_nombre_empresa', refNombre);
+    setCellText('ref_direccion_empresa', refDireccion);
+    setCellText('ref_inicio_empresa', refInicio);
+    setCellText('ref_fin_empresa', refFin);
+    setCellText('ref_motivo_retiro', refMotivo);
+    setCellText('ref_nombre_jefe', refJefe);
 
     // Fecha de nacimiento normalization (ISO -> DD/MM/YYYY)
     const rawFn = emp['Fecha de nacimiento'] || emp['fecha_nacimiento'] || '';
@@ -509,13 +456,21 @@
       const d = rawFn.slice(0,10).split('-');
       if (d.length === 3) setIfExists('fecha_nacimiento', `${d[2]}/${d[1]}/${d[0]}`);
       else setIfExists('fecha_nacimiento', rawFn);
-    } else {
-      setIfExists('fecha_nacimiento', rawFn || '');
+    } else setIfExists('fecha_nacimiento', rawFn || '');
+  }
+
+  function getFirstNonEmpty(obj, keys){
+    for (const k of keys){
+      if (!k) continue;
+      if (obj.hasOwnProperty(k) && obj[k] !== undefined && obj[k] !== null && String(obj[k]).trim() !== '') return obj[k];
+      const nk = normalizeKeyToId(k);
+      if (obj.hasOwnProperty(nk) && obj[nk] !== undefined && String(obj[nk]).trim() !== '') return obj[nk];
     }
+    return '';
   }
 
   function clearAll(){
-    // clear all inputs in the form
+    // clear inputs
     const inputs = document.querySelectorAll('#fichaForm input');
     inputs.forEach(i => i.value = '');
     // clear ref cells
@@ -542,8 +497,7 @@
       if (Array.isArray(rows) && rows.length){
         rows.forEach(r => {
           const o = document.createElement('option');
-          // try common properties
-          o.value = r.dpi || r['Numero de DPI'] || r.Numero_de_DPI || r.Numero_de_DPI || r['Numero_de_DPI'] || '';
+          o.value = r.dpi || r['Numero de DPI'] || r.Numero_de_DPI || r.numero_de_dpi || r.dpi || '';
           const name = r.full_name || r.fullname || ((r.Nombre || '') + ' ' + (r.Apellidos || '')).trim() || o.value;
           o.text = name;
           selectEl.appendChild(o);
@@ -576,15 +530,15 @@
       clearAll();
     }
 
-    // photo
+    // foto
     try {
       const rp = await fetch(apiFotoBase + encodeURIComponent(dpi), { cache: 'no-store' });
-      if (!rp.ok) throw new Error('photo fetch error');
-      const jp = await rp.json();
-      if (jp && jp.url) {
-        if (fotoEl) fotoEl.src = `${jp.url}?t=${Date.now()}`;
-      } else {
-        if (fotoEl) fotoEl.src = placeholder || fotoEl.getAttribute('data-original') || fotoEl.src;
+      if (rp.ok) {
+        const jp = await rp.json();
+        if (jp && jp.url && fotoEl) fotoEl.src = `${jp.url}?t=${Date.now()}`;
+        else if (fotoEl) fotoEl.src = placeholder || fotoEl.getAttribute('data-original') || fotoEl.src;
+      } else if (fotoEl) {
+        fotoEl.src = placeholder || fotoEl.getAttribute('data-original') || fotoEl.src;
       }
     } catch (err) {
       if (fotoEl) fotoEl.src = placeholder || fotoEl.getAttribute('data-original') || fotoEl.src;
