@@ -49,22 +49,264 @@
   </table>
 </div>
 
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 <script>
+/*
+ about.html page script
+ - Buttons always enabled except Edit (Edit enables only after double-click selects the row)
+ - Add creates a new row with cells editable immediately (except protected columns)
+ - Double-click on a row selects it and enables Edit
+ - Edit enables editing of the whole row (except protected columns: DPI, Nombre, Apellidos)
+ - Save sends JSON to /guardar_academico with empty strings for empty fields
+ - Cancel reverts or removes new row
+*/
 document.addEventListener('DOMContentLoaded', () => {
-  // registrarTabla(idTabla, columnas, endpoint, campos, bloqueadas)
-  // bloqueadas: índices de columnas que NO se pueden editar (0 = DPI, 1 = Nombre, 2 = Apellidos)
-  window.registrarTabla(
-    'tablaAcademico',
-    7,
-    '/guardar_academico',
-    [
-      "Numero de DPI","Nombre","Apellidos",
-      "Nivel de estudios","Profesi\u00f3n u Oficio",
-      "Colegio o establecimiento","Cursos o titulos adicionales"
-    ],
-    [0,1,2]
-  );
+  const TABLE_ID = 'tablaAcademico';
+  const ENDPOINT = '/guardar_academico';
+  const COL_COUNT = 7;
+  const PROTECTED = [0,1,2]; // indices that cannot be edited (DPI, Nombre, Apellidos)
+
+  const btnAgregar = document.getElementById('btnAgregar');
+  const btnEditar  = document.getElementById('btnEditar');
+  const btnGuardar = document.getElementById('btnGuardar');
+  const btnCancelar= document.getElementById('btnCancelar');
+  const tabla = document.getElementById(TABLE_ID);
+
+  let selectedRow = null;
+  let originalCells = null;
+  let editing = false;
+  let isNewRow = false;
+
+  // initial buttons state: all enabled except Edit (per your request)
+  if (btnAgregar) btnAgregar.disabled = false;
+  if (btnEditar)  btnEditar.disabled = true;
+  if (btnGuardar) btnGuardar.disabled = true;
+  if (btnCancelar) btnCancelar.disabled = true;
+
+  function flash(msg, type='info') {
+    const id = 'aboutFlash';
+    const prev = document.getElementById(id);
+    if (prev) prev.remove();
+    const div = document.createElement('div');
+    div.id = id;
+    div.className = `alert alert-${type} py-1 px-2 small position-fixed`;
+    div.style.top = '16px';
+    div.style.right = '16px';
+    div.style.zIndex = 2200;
+    div.innerText = msg;
+    document.body.appendChild(div);
+    setTimeout(()=> div.remove(), 2200);
+  }
+
+  function safeTrim(v){ return v == null ? '' : String(v).trim(); }
+
+  function selectRow(tr) {
+    if (!tr) return;
+    if (selectedRow && selectedRow !== tr) selectedRow.classList.remove('table-active');
+    selectedRow = tr;
+    selectedRow.classList.add('table-active');
+    // enable Edit only on selection (user wanted Edit enabled after selecting the whole row via double-click)
+    // here we rely on double-click handler to set btnEditar; single click will NOT enable Edit
+    // but we still set Cancel enabled and Save disabled until editing begins
+    if (btnGuardar) btnGuardar.disabled = true;
+    if (btnCancelar) btnCancelar.disabled = false;
+  }
+
+  // add new row: cells editable immediately except protected columns
+  function agregarFila() {
+    if (!tabla) return;
+    const tb = tabla.querySelector('tbody');
+    if (!tb) return;
+
+    // remove placeholder row if exists
+    const placeholder = tb.querySelector('tr td[colspan]');
+    if (placeholder) placeholder.parentElement.remove();
+
+    const tr = document.createElement('tr');
+    for (let i=0;i<COL_COUNT;i++){
+      const td = document.createElement('td');
+      td.innerText = '';
+      // make editable immediately except protected columns
+      if (!PROTECTED.includes(i)) {
+        td.contentEditable = true;
+        td.style.backgroundColor = '#fff3cd';
+      } else {
+        td.contentEditable = false;
+      }
+      td.tabIndex = 0;
+      tr.appendChild(td);
+    }
+    tb.insertBefore(tr, tb.firstChild);
+
+    // select and set editing state
+    if (selectedRow) selectedRow.classList.remove('table-active');
+    selectedRow = tr;
+    selectedRow.classList.add('table-active');
+    editing = true;
+    isNewRow = true;
+    originalCells = null;
+    if (btnEditar) btnEditar.disabled = true;
+    if (btnGuardar) btnGuardar.disabled = false;
+    if (btnCancelar) btnCancelar.disabled = false;
+
+    // focus first editable cell (first non-protected)
+    const firstEditable = Array.from(tr.cells).find((c,idx)=> !PROTECTED.includes(idx));
+    if (firstEditable) firstEditable.focus();
+  }
+
+  // enable editing for all non-protected cells in selected row
+  function editarFila() {
+    if (!selectedRow) { flash('Selecciona una fila primero', 'warning'); return; }
+    if (editing) return;
+    editing = true;
+    originalCells = Array.from(selectedRow.cells).map(td=> td.innerText);
+    selectedRow.querySelectorAll('td').forEach((td, idx) => {
+      if (!PROTECTED.includes(idx)) {
+        td.contentEditable = true;
+        td.style.backgroundColor = '#fff3cd';
+      } else {
+        td.contentEditable = false;
+      }
+    });
+    if (btnEditar) btnEditar.disabled = true;
+    if (btnGuardar) btnGuardar.disabled = false;
+    if (btnCancelar) btnCancelar.disabled = false;
+    // focus first editable
+    const firstEditable = Array.from(selectedRow.cells).find((c,idx)=> !PROTECTED.includes(idx));
+    if (firstEditable) firstEditable.focus();
+  }
+
+  // cancel edit or remove new row
+  function cancelarEdicion() {
+    if (!selectedRow) return;
+    if (isNewRow) {
+      const p = selectedRow.parentNode;
+      if (p) p.removeChild(selectedRow);
+    } else if (editing && originalCells) {
+      selectedRow.querySelectorAll('td').forEach((td, i) => {
+        td.innerText = originalCells[i] || '';
+        td.contentEditable = false;
+        td.style.backgroundColor = '';
+      });
+      selectedRow.classList.remove('table-active');
+    } else {
+      // ensure row locked
+      selectedRow.querySelectorAll('td').forEach(td => { td.contentEditable = false; td.style.backgroundColor = ''; });
+      selectedRow.classList.remove('table-active');
+    }
+
+    // reset state and buttons
+    selectedRow = null;
+    originalCells = null;
+    editing = false;
+    isNewRow = false;
+    if (btnEditar) btnEditar.disabled = true;
+    if (btnGuardar) btnGuardar.disabled = true;
+    if (btnCancelar) btnCancelar.disabled = true;
+  }
+
+  // build payload and send to endpoint. Empty cells -> empty string ""
+  async function guardarEdicion() {
+    if (!selectedRow) return;
+    // read cells
+    const cells = Array.from(selectedRow.cells);
+    // collect values (always strings, empty => "")
+    const values = cells.map(td => safeTrim(td.innerText));
+
+    const payload = {
+      "Numero de DPI": values[0] || "",
+      "Nivel de estudios": values[3] || "",
+      "Profesi\u00f3n u Oficio": values[4] || "",
+      "Colegio o establecimiento": values[5] || "",
+      "Cursos o titulos adicionales": values[6] || "",
+      "nuevo": isNewRow
+    };
+
+    // DPI mandatory
+    if (!payload["Numero de DPI"] || payload["Numero de DPI"].trim() === "") {
+      flash('El campo Numero de DPI es obligatorio', 'danger');
+      return;
+    }
+
+    try {
+      const res = await fetch(ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const txt = await res.text().catch(()=>null);
+        throw new Error(`${res.status} ${txt || res.statusText}`);
+      }
+      // on success: lock editable cells and remove highlight
+      cells.forEach((td,idx) => {
+        td.contentEditable = false;
+        td.style.backgroundColor = '';
+      });
+      editing = false;
+      isNewRow = false;
+      selectedRow.classList.remove('table-active');
+      selectedRow = null;
+      originalCells = null;
+      if (btnEditar) btnEditar.disabled = true;
+      if (btnGuardar) btnGuardar.disabled = true;
+      if (btnCancelar) btnCancelar.disabled = true;
+      flash('Guardado correctamente', 'success');
+    } catch (err) {
+      console.error('guardar error', err);
+      flash('Error al guardar: ' + (err.message || err), 'danger');
+    }
+  }
+
+  // single-click selects row but DOES NOT enable Edit (per request). Double-click selects row and enables Edit.
+  if (tabla) {
+    tabla.addEventListener('click', (ev) => {
+      const tr = ev.target.closest('tr');
+      if (!tr || !tr.parentElement) return;
+      // ignore header row
+      if (tr.parentElement.tagName !== 'TBODY') return;
+      // if editing and user clicked another row, ignore selection change
+      if (editing && selectedRow && tr !== selectedRow) return;
+      // single click selects
+      selectRow(tr);
+    });
+
+    tabla.addEventListener('dblclick', (ev) => {
+      const tr = ev.target.closest('tr');
+      if (!tr || !tr.parentElement) return;
+      if (tr.parentElement.tagName !== 'TBODY') return;
+      // on double click we select and enable Edit button
+      selectRow(tr);
+      // enable edit button (user wanted Edit enabled after selecting row with two clicks)
+      if (btnEditar) btnEditar.disabled = false;
+    });
+  }
+
+  // attach unique listeners to avoid duplicate handlers if script runs twice
+  function attachUniqueButton(btn, handler) {
+    if (!btn) return;
+    const parent = btn.parentNode;
+    if (!parent) { btn.addEventListener('click', handler); return; }
+    const clean = btn.cloneNode(true);
+    parent.replaceChild(clean, btn);
+    clean.addEventListener('click', (e)=> { e.stopPropagation(); handler(e); });
+    return clean;
+  }
+
+  attachUniqueButton(btnAgregar, () => agregarFila());
+  attachUniqueButton(btnEditar,  () => editarFila());
+  attachUniqueButton(btnGuardar, () => guardarEdicion());
+  attachUniqueButton(btnCancelar,() => cancelarEdicion());
+
+  // ensure protected columns are not editable when server-rendered rows exist
+  // (they'll be locked unless explicitly set to edit state)
+  Array.from(document.querySelectorAll(`#${TABLE_ID} tbody tr`)).forEach(tr => {
+    tr.querySelectorAll('td').forEach((td, idx) => {
+      if (PROTECTED.includes(idx)) {
+        td.contentEditable = false;
+      }
+    });
+  });
+
 });
 </script>
 {% endblock %}
