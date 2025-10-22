@@ -31,46 +31,28 @@
       {% if empleados %}
         {% for e in empleados %}
         <tr>
-          <td>{{ e['Numero de DPI'] }}</td>
-          <td>{{ e['Nombre'] }}</td>
-          <td>{{ e['Apellidos'] }}</td>
-          <td>{{ e.get('Nivel de estudios') }}</td>
-          <td>{{ e.get('Profesión u Oficio') }}</td>
-          <td>{{ e.get('Colegio o establecimiento') }}</td>
-          <td>{{ e.get('Cursos o titulos adicionales') }}</td>
+          <td>{{ e['Numero de DPI']|default('') }}</td>
+          <td>{{ e.get('Nombre')|default('') }}</td>
+          <td>{{ e.get('Apellidos')|default('') }}</td>
+          <td>{{ e.get('Nivel de estudios')|default('') }}</td>
+          <td>{{ e.get('Profesión u Oficio')|default('') }}</td>
+          <td>{{ e.get('Colegio o establecimiento')|default('') }}</td>
+          <td>{{ e.get('Cursos o titulos adicionales')|default('') }}</td>
         </tr>
         {% endfor %}
       {% else %}
-        <tr>
-          <td colspan="7" class="text-center text-muted">No hay registros. Usa "Agregar" para crear la primera fila.</td>
-        </tr>
+        <tr><td colspan="7" class="text-center text-muted">No hay registros. Usa "Agregar" para crear la primera fila.</td></tr>
       {% endif %}
     </tbody>
   </table>
 </div>
 
 <script>
-/*
-  about.html — integración con main.js (shared)
-  Requisitos aplicados:
-  - botones siempre habilitados excepto Editar (Edit se habilita tras dblclick en fila)
-  - Agregar crea fila nueva con celdas editables (excepto DPI/Nombre/Apellidos)
-  - Editar activa edición de fila seleccionada (excepto DPI/Nombre/Apellidos)
-  - Guardar usa endpoint /guardar_academico y el main.js realiza POST; si DPI existe backend debe actualizar
-  - Campos vacíos se envían como cadenas vacías "" (no "None")
-  - No incluye panel de fotos
-*/
 (function () {
   const TABLE_ID = 'tablaAcademico';
   const ENDPOINT = '/guardar_academico';
-  const COLS = 7;
-  const BLOQUEADAS = [0,1,2]; // índices no editables: DPI, Nombre, Apellidos
-
-  const btnAgregar = document.getElementById('btnAgregar');
-  const btnEditar  = document.getElementById('btnEditar');
-  const btnGuardar = document.getElementById('btnGuardar');
-  const btnCancelar= document.getElementById('btnCancelar');
-  const tabla = document.getElementById(TABLE_ID);
+  const COLUMNS = 7;
+  const BLOQUEADAS = [0,1,2]; // DPI, Nombre, Apellidos
 
   function flash(msg, type='info') {
     const id = 'aboutFlash';
@@ -81,18 +63,17 @@
     d.className = `alert alert-${type} py-1 px-2 small position-fixed`;
     d.style.top = '16px';
     d.style.right = '16px';
-    d.style.zIndex = 3200;
+    d.style.zIndex = 3000;
     d.innerText = msg;
     document.body.appendChild(d);
     setTimeout(()=> d.remove(), 1800);
   }
 
-  // Intenta registrar la tabla cuando window.registrarTabla esté disponible
   function tryRegister(retries = 20) {
     if (window.registrarTabla && typeof window.registrarTabla === 'function') {
       window.registrarTabla(
         TABLE_ID,
-        COLS,
+        COLUMNS,
         ENDPOINT,
         [
           "Numero de DPI","Nombre","Apellidos",
@@ -102,56 +83,43 @@
         BLOQUEADAS
       );
 
-      // Forzar estados solicitados
+      // requested button states
+      const btnAgregar = document.getElementById('btnAgregar');
+      const btnEditar  = document.getElementById('btnEditar');
+      const btnGuardar = document.getElementById('btnGuardar');
+      const btnCancelar= document.getElementById('btnCancelar');
       if (btnAgregar) btnAgregar.disabled = false;
-      if (btnEditar)  btnEditar.disabled = true;  // se habilita al dblclick
-      if (btnGuardar) btnGuardar.disabled = false; // accesible
-      if (btnCancelar) btnCancelar.disabled = false; // accesible
+      if (btnEditar)  btnEditar.disabled = true;
+      if (btnGuardar) btnGuardar.disabled = false;
+      if (btnCancelar) btnCancelar.disabled = false;
 
-      // Si main.js expone __MAIN_TABLA, usamos esas funciones; si no, la registración de registrarTabla
-      // en main.js se encargará de conectar los botones automáticamente. Aquí añadimos handlers de respaldo.
-      function safe(fnName) {
-        if (window.__MAIN_TABLA && typeof window.__MAIN_TABLA[fnName] === 'function') return window.__MAIN_TABLA[fnName];
-        return null;
-      }
+      // fallback attachments: call window.__MAIN_TABLA functions if main.js didn't attach handlers
+      const addFn = window.__MAIN_TABLA && window.__MAIN_TABLA.agregarFila ? window.__MAIN_TABLA.agregarFila : null;
+      const editFn = window.__MAIN_TABLA && window.__MAIN_TABLA.editarFila ? window.__MAIN_TABLA.editarFila : null;
+      const saveFn = window.__MAIN_TABLA && window.__MAIN_TABLA.guardarFila ? window.__MAIN_TABLA.guardarFila : null;
+      const cancelFn = window.__MAIN_TABLA && window.__MAIN_TABLA.cancelar ? window.__MAIN_TABLA.cancelar : null;
 
-      const addFn = safe('agregarFila');
-      const editFn = safe('editarFila');
-      const saveFn = safe('guardarFila');
-      const cancelFn = safe('cancelar');
-
-      // attach fallback handlers only if not already attached by main.js
-      if (btnAgregar && addFn) {
-        if (!btnAgregar.dataset.mainAttached) {
-          btnAgregar.addEventListener('click', (e) => { e.stopPropagation(); addFn(); });
-          btnAgregar.dataset.mainAttached = '1';
-        }
-      }
-      if (btnEditar && editFn) {
-        if (!btnEditar.dataset.mainAttached) {
-          btnEditar.addEventListener('click', (e) => { e.stopPropagation(); editFn(); });
-          btnEditar.dataset.mainAttached = '1';
-        }
-      }
-      if (btnGuardar && saveFn) {
-        if (!btnGuardar.dataset.mainAttached) {
-          btnGuardar.addEventListener('click', (e) => { e.stopPropagation(); saveFn(); });
-          btnGuardar.dataset.mainAttached = '1';
-        }
-      }
-      if (btnCancelar && cancelFn) {
-        if (!btnCancelar.dataset.mainAttached) {
-          btnCancelar.addEventListener('click', (e) => { e.stopPropagation(); cancelFn(); });
-          btnCancelar.dataset.mainAttached = '1';
-        }
+      function safeAttach(id, fn) {
+        const el = document.getElementById(id);
+        if (!el || !fn) return;
+        if (el.dataset.mainAttached) return;
+        el.addEventListener('click', (e) => { e.stopPropagation(); fn(); });
+        el.dataset.mainAttached = '1';
       }
 
-      // Ensure double-click enables Edit button if main.js did not
+      safeAttach('btnAgregar', addFn);
+      safeAttach('btnEditar', editFn);
+      safeAttach('btnGuardar', saveFn);
+      safeAttach('btnCancelar', cancelFn);
+
+      // ensure dblclick enables Edit (defensive)
+      const tabla = document.getElementById(TABLE_ID);
       if (tabla) {
-        tabla.addEventListener('dblclick', (ev) => {
-          const tr = ev.target.closest('tr');
+        tabla.addEventListener('dblclick', (e) => {
+          const tr = e.target.closest('tr');
           if (!tr || tr.parentElement.tagName !== 'TBODY') return;
-          if (btnEditar) btnEditar.disabled = false;
+          const be = document.getElementById('btnEditar');
+          if (be) be.disabled = false;
         });
       }
 
@@ -160,7 +128,7 @@
 
     if (retries <= 0) {
       console.error('registrarTabla no disponible después de esperar main.js');
-      flash('Error inicializando tabla (registrarTabla no disponible)', 'danger');
+      flash('Error inicializando la tabla', 'danger');
       return;
     }
     setTimeout(() => tryRegister(retries - 1), 100);
