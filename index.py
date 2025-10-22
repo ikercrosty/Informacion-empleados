@@ -73,7 +73,7 @@ def requerir_login():
         "login", "static", "db_test", "db-test",
         "guardar_empleado", "guardar_academico", "guardar_conyugue",
         "guardar_emergencia", "guardar_laboral", "guardar_medica",
-        "api_foto", "subir_foto", "eliminar_foto", "api_empleados_list", "api_empleado_get"
+        "api_foto", "subir_foto", "eliminar_foto", "api_empleados_list", "api_empleado_get", "api_empleados"
     }
     endpoint = request.endpoint or ""
     base_endpoint = endpoint.split(".")[0] if "." in endpoint else endpoint
@@ -126,46 +126,169 @@ def home():
         return redirect(url_for("menu"))
     return redirect(url_for("login"))
 
-# Lista simplificada de empleados para el combobox (JSON)
-@app.route("/api/empleados")
+# ---------------- API lista / creación ----------------
+@app.route("/api/empleados", methods=["GET", "POST"])
 def api_empleados_list():
+    if request.method == "GET":
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT `Numero de DPI` as dpi,
+                       COALESCE(CONCAT(`Nombre`, ' ', `Apellidos`), `Nombre`, `Apellidos`) as full_name
+                FROM empleados_info
+                WHERE `Nombre` IS NOT NULL OR `Apellidos` IS NOT NULL
+                ORDER BY `Apellidos`, `Nombre`
+            """)
+            rows = cursor.fetchall()
+            cursor.close()
+            conn.close()
+            return jsonify(rows)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    # POST: crear empleado (compatibilidad con frontend)
+    # Reusa la lógica de guardar_empleado: leer JSON y procesar la inserción
     try:
+        data = request.get_json() or {}
+        # Force flag nuevo=true for creations coming from this endpoint if front sent nuevo
+        if data.get("nuevo") is None:
+            data["nuevo"] = True
+        # Insert using same core logic as guardar_empleado to avoid duplication
+        # We'll perform the insert here directly (simpler and clearer)
+        dpi_val = data.get("Numero de DPI") or data.get("dpi")
+        if not dpi_val:
+            return jsonify({"mensaje": "El campo DPI es obligatorio"}), 400
+
         conn = get_db_connection()
         cursor = conn.cursor()
+        # check exists
+        cursor.execute("SELECT `Numero de DPI` FROM empleados_info WHERE `Numero de DPI`=%s", (dpi_val,))
+        existe = cursor.fetchone()
+        if existe:
+            cursor.close()
+            conn.close()
+            return jsonify({"mensaje": "Empleado ya existe"}), 409
+
+        nombre = data.get("Nombre") or data.get("nombre")
+        apellidos = data.get("Apellidos") or data.get("apellidos")
+        apellidos_casada = data.get("Apellidos de casada") or data.get("apellidos_casada")
+        estado_civil = data.get("Estado Civil") or data.get("estado_civil")
+        nacionalidad = data.get("Nacionalidad") or data.get("nacionalidad")
+        departamento = data.get("Departamento") or data.get("departamento")
+        fecha_nacimiento = data.get("Fecha de nacimiento") or data.get("fecha_nacimiento")
+        lugar_nacimiento = data.get("Lugar de nacimiento") or data.get("lugar_nacimiento")
+        iggs = data.get("Numero de Afiliación del IGGS") or data.get("iggs")
+        direccion = data.get("Dirección del Domicilio") or data.get("direccion")
+        telefono = data.get("Numero de Telefono") or data.get("telefono")
+        religion = data.get("Religión") or data.get("religion")
+        correo = data.get("Correo Electronico") or data.get("correo")
+        puesto = data.get("Puesto de trabajo") or data.get("puesto")
+        contrato = data.get("Tipo de contrato") or data.get("contrato")
+        jornada = data.get("Jornada laboral") or data.get("jornada")
+        duracion = data.get("Duración del trabajo") or data.get("duracion")
+        inicio = data.get("Fecha de inicio laboral") or data.get("inicio")
+        dias = data.get("Dias Laborales") or data.get("dias")
+
         cursor.execute("""
-            SELECT `Numero de DPI` as dpi,
-                   COALESCE(CONCAT(`Nombre`, ' ', `Apellidos`), `Nombre`, `Apellidos`) as full_name
-            FROM empleados_info
-            WHERE `Nombre` IS NOT NULL OR `Apellidos` IS NOT NULL
-            ORDER BY `Apellidos`, `Nombre`
-        """)
-        rows = cursor.fetchall()
+            INSERT INTO empleados_info (
+                `Numero de DPI`, `Nombre`, `Apellidos`, `Apellidos de casada`, `Estado Civil`,
+                `Nacionalidad`, `Departamento`, `Fecha de nacimiento`,
+                `Lugar de nacimiento`, `Numero de Afiliación del IGGS`, `Dirección del Domicilio`,
+                `Numero de Telefono`, `Religión`, `Correo Electronico`, `Puesto de trabajo`,
+                `Tipo de contrato`, `Jornada laboral`, `Duración del trabajo`,
+                `Fecha de inicio laboral`, `Dias Laborales`
+            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+        """, (
+            dpi_val, nombre, apellidos, apellidos_casada, estado_civil,
+            nacionalidad, departamento, fecha_nacimiento,
+            lugar_nacimiento, iggs, direccion,
+            telefono, religion, correo, puesto,
+            contrato, jornada, duracion,
+            inicio, dias
+        ))
+        conn.commit()
         cursor.close()
         conn.close()
-        return jsonify(rows)
+        return jsonify({"mensaje": "Empleado agregado correctamente"})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"mensaje": f"Error: {e}"}), 500
+
 
 # Devuelve todos los campos relevantes de un empleado por DPI
-@app.route("/api/empleado/<dpi>")
+@app.route("/api/empleado/<dpi>", methods=["GET", "PUT"])
 def api_empleado_get(dpi):
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT *
-            FROM empleados_info
-            WHERE `Numero de DPI` = %s
-            LIMIT 1
-        """, (dpi,))
-        row = cursor.fetchone()
-        cursor.close()
-        conn.close()
-        if not row:
-            return jsonify({"error": "Empleado no encontrado"}), 404
-        return jsonify(row)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    if request.method == "GET":
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT *
+                FROM empleados_info
+                WHERE `Numero de DPI` = %s
+                LIMIT 1
+            """, (dpi,))
+            row = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            if not row:
+                return jsonify({"error": "Empleado no encontrado"}), 404
+            return jsonify(row)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    # PUT: actualizar empleado (compatibilidad)
+    if request.method == "PUT":
+        data = request.get_json() or {}
+        dpi_val = dpi
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            nombre = data.get("Nombre") or data.get("nombre")
+            apellidos = data.get("Apellidos") or data.get("apellidos")
+            apellidos_casada = data.get("Apellidos de casada") or data.get("apellidos_casada")
+            estado_civil = data.get("Estado Civil") or data.get("estado_civil")
+            nacionalidad = data.get("Nacionalidad") or data.get("nacionalidad")
+            departamento = data.get("Departamento") or data.get("departamento")
+            fecha_nacimiento = data.get("Fecha de nacimiento") or data.get("fecha_nacimiento")
+            lugar_nacimiento = data.get("Lugar de nacimiento") or data.get("lugar_nacimiento")
+            iggs = data.get("Numero de Afiliación del IGGS") or data.get("iggs")
+            direccion = data.get("Dirección del Domicilio") or data.get("direccion")
+            telefono = data.get("Numero de Telefono") or data.get("telefono")
+            religion = data.get("Religión") or data.get("religion")
+            correo = data.get("Correo Electronico") or data.get("correo")
+            puesto = data.get("Puesto de trabajo") or data.get("puesto")
+            contrato = data.get("Tipo de contrato") or data.get("contrato")
+            jornada = data.get("Jornada laboral") or data.get("jornada")
+            duracion = data.get("Duración del trabajo") or data.get("duracion")
+            inicio = data.get("Fecha de inicio laboral") or data.get("inicio")
+            dias = data.get("Dias Laborales") or data.get("dias")
+
+            cursor.execute("""
+                UPDATE empleados_info
+                SET `Nombre`=%s, `Apellidos`=%s, `Apellidos de casada`=%s, `Estado Civil`=%s,
+                    `Nacionalidad`=%s, `Departamento`=%s, `Fecha de nacimiento`=%s,
+                    `Lugar de nacimiento`=%s, `Numero de Afiliación del IGGS`=%s,
+                    `Dirección del Domicilio`=%s, `Numero de Telefono`=%s, `Religión`=%s,
+                    `Correo Electronico`=%s, `Puesto de trabajo`=%s, `Tipo de contrato`=%s,
+                    `Jornada laboral`=%s, `Duración del trabajo`=%s, `Fecha de inicio laboral`=%s,
+                    `Dias Laborales`=%s
+                WHERE `Numero de DPI`=%s
+            """, (
+                nombre, apellidos, apellidos_casada, estado_civil,
+                nacionalidad, departamento, fecha_nacimiento,
+                lugar_nacimiento, iggs,
+                direccion, telefono, religion,
+                correo, puesto, contrato,
+                jornada, duracion, inicio,
+                dias, dpi_val
+            ))
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return jsonify({"mensaje": "Empleado actualizado correctamente"})
+        except Exception as e:
+            return jsonify({"mensaje": f"Error: {e}"}), 500
 
 
 @app.route("/about")
@@ -739,21 +862,18 @@ def subir_foto():
 
     dpi = request.form.get("dpi")
     if not dpi:
-        flash("Debe seleccionar un empleado (DPI)", "warning")
-        return redirect(url_for("home"))
+        # return JSON for AJAX or redirect for form submit; here return JSON (frontend uses fetch)
+        return jsonify({"error": "Debe seleccionar un empleado (DPI)"}), 400
 
     if "foto" not in request.files:
-        flash("No se seleccionó archivo", "warning")
-        return redirect(url_for("home"))
+        return jsonify({"error": "No se seleccionó archivo"}), 400
 
     file = request.files.get("foto")
     if not file or file.filename.strip() == "":
-        flash("Archivo vacío", "warning")
-        return redirect(url_for("home"))
+        return jsonify({"error": "Archivo vacío"}), 400
 
     if not allowed_file(file.filename):
-        flash("Tipo de archivo no permitido", "danger")
-        return redirect(url_for("home"))
+        return jsonify({"error": "Tipo de archivo no permitido"}), 400
 
     orig_name = secure_filename(file.filename)
     ts = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
@@ -804,21 +924,21 @@ def subir_foto():
         cursor.close()
         conn.close()
 
-        flash("Foto guardada correctamente", "success")
         print(f"Foto guardada: {final_name}", file=sys.stderr)
+        img_url = url_for('static', filename=f"fotos/{final_name}")
+        # Always return JSON: frontend uses fetch and expects JSON
+        return jsonify({"url": img_url})
     except Exception as e:
-        flash(f"Error al procesar/guardar la foto: {e}", "danger")
         print("ERROR en subir_foto:", e, file=sys.stderr)
-
-    return redirect(url_for("home"))
+        return jsonify({"error": f"Error al procesar/guardar la foto: {e}"}), 500
 
 
 @app.route("/eliminar_foto", methods=["POST"])
 def eliminar_foto():
-    dpi = request.form.get("dpi")
+    # Accept both form submit and JSON body
+    dpi = request.form.get("dpi") or (request.get_json() or {}).get("dpi")
     if not dpi:
-        flash("Debe seleccionar un empleado (DPI)", "warning")
-        return redirect(url_for("home"))
+        return jsonify({"error": "Debe seleccionar un empleado (DPI)"}), 400
 
     try:
         conn = get_db_connection()
@@ -836,16 +956,16 @@ def eliminar_foto():
                     pass
             cursor.execute("UPDATE empleados_info SET `foto`=NULL WHERE `Numero de DPI`=%s", (dpi,))
             conn.commit()
-            flash("Foto eliminada", "success")
+            cursor.close()
+            conn.close()
+            # Return JSON for AJAX clients
+            return jsonify({"ok": True})
         else:
-            flash("No existe foto para ese empleado", "info")
-
-        cursor.close()
-        conn.close()
+            cursor.close()
+            conn.close()
+            return jsonify({"ok": False, "message": "No existe foto para ese empleado"}), 200
     except Exception as e:
-        flash(f"Error al eliminar foto: {e}", "danger")
-
-    return redirect(url_for("home"))
+        return jsonify({"error": f"Error al eliminar foto: {e}"}), 500
 
 
 if __name__ == "__main__":
