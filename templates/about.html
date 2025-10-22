@@ -49,62 +49,48 @@
   </table>
 </div>
 
-<!-- Include shared behavior AFTER the DOM elements above -->
+<!-- 1) Carga el script compartido EXACTAMENTE una vez y desde la ruta correcta -->
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
+<!-- 2) Llama a registrarTabla solo DESPUÉS de que main.js se haya cargado -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  // Register the table so main.js can wire selection / dblclick and use its API
-  // registrarTabla(idTabla, columnas, endpoint, campos, bloqueadas)
-  window.registrarTabla(
-    'tablaAcademico',
-    7,
-    '/guardar_academico',
-    [
-      "Numero de DPI","Nombre","Apellidos",
-      "Nivel de estudios","Profesión u Oficio",
-      "Colegio o establecimiento","Cursos o titulos adicionales"
-    ],
-    [0,1,2] // columnas bloqueadas: DPI, Nombre, Apellidos
-  );
+  // Espera a que main.js haya definido window.registrarTabla
+  function tryRegister(retries = 10) {
+    if (window.registrarTabla && typeof window.registrarTabla === 'function') {
+      // registrarTabla(idTabla, columnas, endpoint, campos, bloqueadas)
+      window.registrarTabla(
+        'tablaAcademico',
+        7,
+        '/guardar_academico',
+        [
+          "Numero de DPI","Nombre","Apellidos",
+          "Nivel de estudios","Profesión u Oficio",
+          "Colegio o establecimiento","Cursos o titulos adicionales"
+        ],
+        [0,1,2] // bloquear DPI, Nombre, Apellidos
+      );
 
-  // Ensure buttons are enabled per your request:
-  const btnAgregar = document.getElementById('btnAgregar');
-  const btnEditar  = document.getElementById('btnEditar');
-  const btnGuardar = document.getElementById('btnGuardar');
-  const btnCancelar= document.getElementById('btnCancelar');
-
-  if (btnAgregar) btnAgregar.disabled = false;
-  if (btnEditar)  btnEditar.disabled = true;   // only enabled after double-click (main.js dblclick enables it)
-  if (btnGuardar) btnGuardar.disabled = false;  // keep available
-  if (btnCancelar) btnCancelar.disabled = false; // keep available
-
-  // If main.js did not attach listeners (rare), attach fallback handlers that call the same functions inside main.js:
-  // main.js attaches handlers to btnAgregar, btnEditar, btnGuardar, btnCancelar at load time when it finds elements.
-  // The fallback below is safe: it only attaches if the button has no 'data-handler-attached' marker.
-  function safeAttach(btn, ev, fnName) {
-    if (!btn) return;
-    if (btn.dataset.handlerAttached) return;
-    btn.addEventListener(ev, (e) => {
-      e.stopPropagation();
-      // Some main.js versions expose helpers; try to call expected functions if present,
-      // otherwise trigger a click on the handlers already in main.js (if any).
-      // We call the click to ensure existing listeners run.
-      btn.click();
-    });
-    btn.dataset.handlerAttached = '1';
+      // Forzar estado de botones según tu petición
+      const btnAgregar = document.getElementById('btnAgregar');
+      const btnEditar  = document.getElementById('btnEditar');
+      const btnGuardar = document.getElementById('btnGuardar');
+      const btnCancelar= document.getElementById('btnCancelar');
+      if (btnAgregar) btnAgregar.disabled = false;
+      if (btnEditar)  btnEditar.disabled = true;  // se habilita con doble click (main.js)
+      if (btnGuardar) btnGuardar.disabled = false; // disponible
+      if (btnCancelar) btnCancelar.disabled = false; // disponible
+      return;
+    }
+    if (retries <= 0) {
+      console.error("registrarTabla no está disponible después de esperar main.js");
+      return;
+    }
+    // reintenta en 100ms
+    setTimeout(() => tryRegister(retries - 1), 100);
   }
 
-  // Provide a small visual cue when user double-click enables Edit (main.js should do this)
-  const tabla = document.getElementById('tablaAcademico');
-  if (tabla) {
-    tabla.addEventListener('dblclick', (e) => {
-      // ensure Edit button enabled after user double-clicks a row (in case main.js didn't)
-      if (btnEditar) btnEditar.disabled = false;
-    });
-  }
-
-  // Nothing else to force; main.js manages the rest (select, edit, save) through registrarTabla.
+  tryRegister(20); // espera hasta ~2s en total
 });
 </script>
 {% endblock %}
