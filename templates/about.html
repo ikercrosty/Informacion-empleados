@@ -49,255 +49,62 @@
   </table>
 </div>
 
-<script>
-/* about.html behavior:
- - Add creates a new row; its editable cells are enabled immediately except protected columns (DPI, Nombre, Apellidos).
- - Single click selects a row (no Edit enabled).
- - Double click selects the row and enables Edit button.
- - Edit enables editing of the entire row (except protected columns).
- - Save posts JSON to /guardar_academico. Empty cells => "" . DPI required.
- - Cancel reverts changes or removes newly added row.
- - Listeners replaced (unique) to avoid duplicates.
-*/
-document.addEventListener('DOMContentLoaded', () => {
-  const TABLE_ID = 'tablaAcademico';
-  const ENDPOINT = '/guardar_academico';
-  const COL_COUNT = 7;
-  const PROTECTED = [0,1,2]; // DPI, Nombre, Apellidos
+<!-- Include shared behavior AFTER the DOM elements above -->
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Register the table so main.js can wire selection / dblclick and use its API
+  // registrarTabla(idTabla, columnas, endpoint, campos, bloqueadas)
+  window.registrarTabla(
+    'tablaAcademico',
+    7,
+    '/guardar_academico',
+    [
+      "Numero de DPI","Nombre","Apellidos",
+      "Nivel de estudios","Profesión u Oficio",
+      "Colegio o establecimiento","Cursos o titulos adicionales"
+    ],
+    [0,1,2] // columnas bloqueadas: DPI, Nombre, Apellidos
+  );
+
+  // Ensure buttons are enabled per your request:
   const btnAgregar = document.getElementById('btnAgregar');
   const btnEditar  = document.getElementById('btnEditar');
   const btnGuardar = document.getElementById('btnGuardar');
   const btnCancelar= document.getElementById('btnCancelar');
-  const tabla = document.getElementById(TABLE_ID);
 
-  let selectedRow = null;
-  let originalCells = null;
-  let editing = false;
-  let isNewRow = false;
+  if (btnAgregar) btnAgregar.disabled = false;
+  if (btnEditar)  btnEditar.disabled = true;   // only enabled after double-click (main.js dblclick enables it)
+  if (btnGuardar) btnGuardar.disabled = false;  // keep available
+  if (btnCancelar) btnCancelar.disabled = false; // keep available
 
-  function flash(msg, type='info') {
-    const id = 'aboutFlash';
-    const prev = document.getElementById(id);
-    if (prev) prev.remove();
-    const div = document.createElement('div');
-    div.id = id;
-    div.className = `alert alert-${type} py-1 px-2 small position-fixed`;
-    div.style.top = '16px';
-    div.style.right = '16px';
-    div.style.zIndex = 2200;
-    div.innerText = msg;
-    document.body.appendChild(div);
-    setTimeout(()=> div.remove(), 2000);
-  }
-
-  const safeTrim = v => (v == null ? '' : String(v).trim());
-
-  // Utility: replace node to ensure single listener
-  function replaceAndAttach(btn, handler) {
-    if (!btn) return null;
-    const p = btn.parentNode;
-    if (!p) { btn.addEventListener('click', handler); return btn; }
-    const clean = btn.cloneNode(true);
-    p.replaceChild(clean, btn);
-    clean.addEventListener('click', (e)=> { e.stopPropagation(); handler(e); });
-    return clean;
-  }
-
-  // Select row (single click) — does not enable Edit
-  function selectRow(tr) {
-    if (!tr) return;
-    if (selectedRow && selectedRow !== tr) selectedRow.classList.remove('table-active');
-    selectedRow = tr;
-    selectedRow.classList.add('table-active');
-    // keep Edit disabled until double-click
-    if (btnGuardar) btnGuardar.disabled = false; // user wanted Save enabled always
-    if (btnCancelar) btnCancelar.disabled = false;
-  }
-
-  // Add row: create empty row and enable editing for non-protected cells immediately
-  function agregarFila() {
-    if (!tabla) return;
-    const tb = tabla.querySelector('tbody');
-    if (!tb) return;
-    const placeholder = tb.querySelector('tr td[colspan]');
-    if (placeholder) placeholder.parentElement.remove();
-
-    const tr = document.createElement('tr');
-    for (let i=0;i<COL_COUNT;i++){
-      const td = document.createElement('td');
-      td.innerText = '';
-      td.tabIndex = 0;
-      if (!PROTECTED.includes(i)) {
-        td.contentEditable = true;
-        td.style.backgroundColor = '#fff3cd';
-      } else {
-        td.contentEditable = false;
-      }
-      tr.appendChild(td);
-    }
-    tb.insertBefore(tr, tb.firstChild);
-
-    if (selectedRow) selectedRow.classList.remove('table-active');
-    selectedRow = tr;
-    selectedRow.classList.add('table-active');
-
-    editing = true;
-    isNewRow = true;
-    originalCells = null;
-
-    // Buttons: Edit disabled until double-click on row; Save and Cancel active
-    if (btnEditar) btnEditar.disabled = true;
-    if (btnGuardar) btnGuardar.disabled = false;
-    if (btnCancelar) btnCancelar.disabled = false;
-
-    // focus first editable
-    const firstEditable = Array.from(tr.cells).find((c,idx)=> !PROTECTED.includes(idx));
-    if (firstEditable) firstEditable.focus();
-  }
-
-  // Edit row: enable editing of non-protected cells
-  function editarFila() {
-    if (!selectedRow) { flash('Selecciona una fila primero', 'warning'); return; }
-    if (editing) return;
-    editing = true;
-    originalCells = Array.from(selectedRow.cells).map(td => td.innerText);
-    selectedRow.querySelectorAll('td').forEach((td, idx) => {
-      if (!PROTECTED.includes(idx)) {
-        td.contentEditable = true;
-        td.style.backgroundColor = '#fff3cd';
-      } else {
-        td.contentEditable = false;
-      }
+  // If main.js did not attach listeners (rare), attach fallback handlers that call the same functions inside main.js:
+  // main.js attaches handlers to btnAgregar, btnEditar, btnGuardar, btnCancelar at load time when it finds elements.
+  // The fallback below is safe: it only attaches if the button has no 'data-handler-attached' marker.
+  function safeAttach(btn, ev, fnName) {
+    if (!btn) return;
+    if (btn.dataset.handlerAttached) return;
+    btn.addEventListener(ev, (e) => {
+      e.stopPropagation();
+      // Some main.js versions expose helpers; try to call expected functions if present,
+      // otherwise trigger a click on the handlers already in main.js (if any).
+      // We call the click to ensure existing listeners run.
+      btn.click();
     });
-    if (btnEditar) btnEditar.disabled = true;
-    if (btnGuardar) btnGuardar.disabled = false;
-    if (btnCancelar) btnCancelar.disabled = false;
-    const firstEditable = Array.from(selectedRow.cells).find((c,idx)=> !PROTECTED.includes(idx));
-    if (firstEditable) firstEditable.focus();
+    btn.dataset.handlerAttached = '1';
   }
 
-  // Cancel editing or remove new row
-  function cancelarEdicion() {
-    if (!selectedRow) return;
-    if (isNewRow) {
-      const p = selectedRow.parentNode;
-      if (p) p.removeChild(selectedRow);
-    } else if (editing && originalCells) {
-      selectedRow.querySelectorAll('td').forEach((td, i) => {
-        td.innerText = originalCells[i] || '';
-        td.contentEditable = false;
-        td.style.backgroundColor = '';
-      });
-      selectedRow.classList.remove('table-active');
-    } else {
-      selectedRow.querySelectorAll('td').forEach(td => { td.contentEditable = false; td.style.backgroundColor = ''; });
-      selectedRow.classList.remove('table-active');
-    }
-
-    selectedRow = null;
-    originalCells = null;
-    editing = false;
-    isNewRow = false;
-
-    // Buttons: Add enabled, Edit disabled (no selection), Save & Cancel disabled
-    if (btnEditar) btnEditar.disabled = true;
-    if (btnGuardar) btnGuardar.disabled = false; // keep Save enabled per request (but it will do nothing without row)
-    if (btnCancelar) btnCancelar.disabled = true;
-  }
-
-  // Save: build payload using table column mapping and POST to ENDPOINT
-  async function guardarEdicion() {
-    // If no row selected but Save clicked, ignore silently
-    if (!selectedRow) { flash('Selecciona o agrega una fila antes de guardar', 'warning'); return; }
-
-    const cells = Array.from(selectedRow.cells);
-    const values = cells.map(td => safeTrim(td.innerText));
-    // Build payload specifically for about fields
-    const payload = {
-      "Numero de DPI": values[0] || "",
-      "Nivel de estudios": values[3] || "",
-      "Profesión u Oficio": values[4] || "",
-      "Colegio o establecimiento": values[5] || "",
-      "Cursos o titulos adicionales": values[6] || "",
-      "nuevo": isNewRow
-    };
-
-    // DPI required
-    if (!payload["Numero de DPI"] || payload["Numero de DPI"].trim() === "") {
-      flash('El campo Numero de DPI es obligatorio', 'danger');
-      return;
-    }
-
-    try {
-      const res = await fetch(ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) {
-        const txt = await res.text().catch(()=>null);
-        throw new Error(`${res.status} ${txt || res.statusText}`);
-      }
-
-      // lock editable cells and clear highlight
-      cells.forEach((td, idx) => {
-        td.contentEditable = false;
-        td.style.backgroundColor = '';
-      });
-
-      // reset state
-      selectedRow.classList.remove('table-active');
-      selectedRow = null;
-      editing = false;
-      isNewRow = false;
-      originalCells = null;
-
-      if (btnEditar) btnEditar.disabled = true;
-      if (btnGuardar) btnGuardar.disabled = false; // remains enabled per your request
-      if (btnCancelar) btnCancelar.disabled = true;
-
-      flash('Guardado correctamente', 'success');
-    } catch (err) {
-      console.error('guardar error', err);
-      flash('Error al guardar: ' + (err.message || err), 'danger');
-    }
-  }
-
-  // Attach table handlers: single click selects, double click enables Edit
+  // Provide a small visual cue when user double-click enables Edit (main.js should do this)
+  const tabla = document.getElementById('tablaAcademico');
   if (tabla) {
-    tabla.addEventListener('click', (ev) => {
-      const tr = ev.target.closest('tr');
-      if (!tr || tr.parentElement.tagName !== 'TBODY') return;
-      if (editing && selectedRow && tr !== selectedRow) return; // ignore selection changes while editing another row
-      selectRow(tr);
-    });
-
-    tabla.addEventListener('dblclick', (ev) => {
-      const tr = ev.target.closest('tr');
-      if (!tr || tr.parentElement.tagName !== 'TBODY') return;
-      selectRow(tr);
-      if (btnEditar) btnEditar.disabled = false; // enable Edit on double-click selection
+    tabla.addEventListener('dblclick', (e) => {
+      // ensure Edit button enabled after user double-clicks a row (in case main.js didn't)
+      if (btnEditar) btnEditar.disabled = false;
     });
   }
 
-  // Replace buttons to ensure unique listeners and attach handlers
-  replaceAndAttach(btnAgregar, agregarFila);
-  replaceAndAttach(btnEditar,  editarFila);
-  replaceAndAttach(btnGuardar, guardarEdicion);
-  replaceAndAttach(btnCancelar, cancelarEdicion);
-
-  // Make sure protected columns are not editable on initial render
-  Array.from(document.querySelectorAll(`#${TABLE_ID} tbody tr`)).forEach(tr => {
-    tr.querySelectorAll('td').forEach((td, idx) => {
-      if (PROTECTED.includes(idx)) td.contentEditable = false;
-    });
-  });
-
-  // Ensure Save and Cancel are usable per user's request (enabled by default)
-  if (btnGuardar) btnGuardar.disabled = false;
-  if (btnCancelar) btnCancelar.disabled = false;
-
+  // Nothing else to force; main.js manages the rest (select, edit, save) through registrarTabla.
 });
 </script>
 {% endblock %}
