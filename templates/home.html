@@ -14,7 +14,7 @@
     <hr class="my-3">
 
     <div class="row g-3">
-      <!-- Tabla: ocupa la mayor parte -->
+      <!-- Tabla -->
       <div class="col-12 col-lg-9">
         <div class="card shadow-sm border-0 h-100">
           <div class="card-body p-2">
@@ -31,26 +31,26 @@
               <table id="tablaEmpleados" class="table table-sm table-hover table-bordered w-100 mb-0">
                 <thead class="small" style="background-color:#000000; color:#ffffff;">
                   <tr>
-                    <th class="align-middle">DPI</th>
-                    <th class="align-middle">Nombre</th>
-                    <th class="align-middle">Apellidos</th>
-                    <th class="align-middle">Apellidos de casada</th>
-                    <th class="align-middle">Estado Civil</th>
-                    <th class="align-middle">Nacionalidad</th>
-                    <th class="align-middle">Departamento</th>
-                    <th class="align-middle">Fecha de nacimiento</th>
-                    <th class="align-middle">Lugar de nacimiento</th>
-                    <th class="align-middle">Numero IGSS</th>
-                    <th class="align-middle">Dirección</th>
-                    <th class="align-middle">Telefono</th>
-                    <th class="align-middle">Religión</th>
-                    <th class="align-middle">Correo</th>
-                    <th class="align-middle">Puesto</th>
-                    <th class="align-middle">Tipo de contrato</th>
-                    <th class="align-middle">Jornada laboral</th>
-                    <th class="align-middle">Duración del trabajo</th>
-                    <th class="align-middle">Fecha de inicio laboral</th>
-                    <th class="align-middle">Dias Laborales</th>
+                    <th>DPI</th>
+                    <th>Nombre</th>
+                    <th>Apellidos</th>
+                    <th>Apellidos de casada</th>
+                    <th>Estado Civil</th>
+                    <th>Nacionalidad</th>
+                    <th>Departamento</th>
+                    <th>Fecha de nacimiento</th>
+                    <th>Lugar de nacimiento</th>
+                    <th>Numero IGSS</th>
+                    <th>Dirección</th>
+                    <th>Telefono</th>
+                    <th>Religión</th>
+                    <th>Correo</th>
+                    <th>Puesto</th>
+                    <th>Tipo de contrato</th>
+                    <th>Jornada laboral</th>
+                    <th>Duración del trabajo</th>
+                    <th>Fecha de inicio laboral</th>
+                    <th>Dias Laborales</th>
                   </tr>
                 </thead>
                 <tbody class="small">
@@ -86,12 +86,12 @@
                   {% endif %}
                 </tbody>
               </table>
-            </div> <!-- .table-responsive -->
-          </div> <!-- .card-body -->
-        </div> <!-- .card -->
-      </div> <!-- .col-lg-9 -->
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <!-- Panel de foto centrado (derecha) -->
+      <!-- Panel de foto -->
       <div class="col-12 col-lg-3 d-flex align-items-start">
         <div class="card shadow-sm border-0 w-100">
           <div class="card-body d-flex flex-column align-items-center">
@@ -99,13 +99,13 @@
 
             <div class="mb-3 d-flex justify-content-center w-100">
               <img id="fotoEmpleado"
-                   src="{{ url_for('static', filename='imagenes/default.png') }}"
+                   src="{{ url_for('static', filename='imagenes/default.jpg') }}"
                    alt="Foto empleado"
                    class="rounded"
                    style="width:220px;height:220px;object-fit:cover;border:1px solid #ddd;background:#f5f5f5;">
             </div>
 
-            <form id="formSubirFoto" method="post" enctype="multipart/form-data" action="/subir_foto" class="w-100" style="max-width:260px; display:none;">
+            <form id="formSubirFoto" method="post" enctype="multipart/form-data" action="{{ url_for('subir_foto') }}" class="w-100" style="max-width:260px; display:none;">
               <input type="hidden" name="dpi" id="inputDpiForUpload" value="">
               <div class="form-group mb-2">
                 <input id="fileFoto" name="foto" type="file" accept="image/*" class="form-control form-control-sm">
@@ -113,7 +113,7 @@
               <button id="btnSubirFoto" type="button" class="btn btn-primary btn-sm w-100">Subir foto</button>
             </form>
 
-            <form id="formEliminarFoto" method="post" action="/eliminar_foto" class="w-100" style="max-width:260px; display:none; margin-top:12px;">
+            <form id="formEliminarFoto" method="post" action="{{ url_for('eliminar_foto') }}" class="w-100" style="max-width:260px; display:none; margin-top:12px;">
               <input type="hidden" name="dpi" id="inputDpiForDelete" value="">
               <button id="btnEliminarFoto" type="button" class="btn btn-outline-danger btn-sm w-100">Eliminar foto</button>
             </form>
@@ -123,12 +123,11 @@
             </small>
           </div>
         </div>
-      </div> <!-- .col-lg-3 -->
-    </div> <!-- .row -->
-  </div> <!-- .jumbotron -->
-</div> <!-- .container-fluid -->
+      </div>
+    </div>
+  </div>
+</div>
 
-<!-- Script: selección, edición inline, agregar fila y gestión de imagen -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const tabla = document.getElementById('tablaEmpleados');
@@ -146,8 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnSubirFoto = document.getElementById('btnSubirFoto');
   const btnEliminarFoto = document.getElementById('btnEliminarFoto');
 
-  // ruta consistente al default; asegúrate que static/fotos/default.png exista
-  const DEFAULT_SRC = "{{ url_for('static', filename='imagenes/default.png') }}";
+  const DEFAULT_SRC = "{{ url_for('static', filename='imagenes/default.jpg') }}";
 
   let selectedRow = null;
   let originalCells = null;
@@ -175,10 +173,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (btnCancelar) btnCancelar.disabled = true;
   }
 
-  // Inicial
   resetPanelToDefault();
 
-  // Preview local cuando se selecciona archivo
   if (fileFoto) {
     fileFoto.addEventListener('change', (e) => {
       const f = e.target.files[0];
@@ -189,16 +185,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Agregar: inserta fila vacía editable
   if (btnAgregar) {
     btnAgregar.addEventListener('click', () => {
       const tb = tabla.querySelector('tbody');
-      if (!tb) {
-        flashMessage('Tabla no encontrada. Recarga la página.', 'danger');
-        return;
-      }
+      if (!tb) { flashMessage('Tabla no disponible. Recarga la página.', 'danger'); return; }
 
-      // eliminar fila placeholder si existe
       const placeholder = tb.querySelector('tr td[colspan]');
       if (placeholder) placeholder.parentElement.remove();
 
@@ -218,21 +209,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Doble clic: seleccionar fila y cargar foto
   if (tabla) {
-    tabla.addEventListener('dblclick', async (ev) => {
+    tabla.addEventListener('click', async (ev) => {
       const tr = ev.target.closest('tr');
       if (!tr || !tr.cells.length) return;
 
-      if (editing && selectedRow && tr !== selectedRow) cancelEdit();
+      if (editing && selectedRow && tr !== selectedRow) return;
 
-      if (selectedRow === tr) {
-        clearSelectionUI();
-        resetPanelToDefault();
-        return;
-      }
-
-      if (selectedRow) selectedRow.classList.remove('table-active');
+      if (selectedRow && selectedRow !== tr) selectedRow.classList.remove('table-active');
       selectedRow = tr;
       selectedRow.classList.add('table-active');
       if (btnEditar) btnEditar.disabled = false;
@@ -259,16 +243,17 @@ document.addEventListener("DOMContentLoaded", () => {
           fotoEmpleado.src = DEFAULT_SRC;
           if (formSubir) formSubir.style.display = "block";
           if (formEliminar) formEliminar.style.display = "none";
+          if (fileFoto) fileFoto.value = "";
         }
       } catch (err) {
         fotoEmpleado.src = DEFAULT_SRC;
         if (formSubir) formSubir.style.display = "block";
         if (formEliminar) formEliminar.style.display = "none";
+        if (fileFoto) fileFoto.value = "";
       }
     });
   }
 
-  // Click fuera resetea panel (si no estamos editando)
   document.addEventListener('click', (e) => {
     const insideTable = e.target.closest('#tablaEmpleados');
     const insideControls = e.target.closest('#formSubirFoto') || e.target.closest('#formEliminarFoto') || e.target.closest('#fileFoto');
@@ -277,7 +262,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Edit inline
   function startEdit() {
     if (!selectedRow || editing) return;
     editing = true;
@@ -327,19 +311,33 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     try {
-      const method = isNewRow ? 'POST' : 'PUT';
-      const url = isNewRow ? '/api/empleados' : `/api/empleado/${encodeURIComponent(dpi)}`;
-      const res = await fetch(url, {
-        method: method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      let res;
+      if (!isNewRow) {
+        res = await fetch(`/api/empleado/${encodeURIComponent(dpi)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.status === 405) {
+          res = await fetch('/api/empleados', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        }
+      } else {
+        res = await fetch('/api/empleados', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
+
       if (!res.ok) {
         const txt = await res.text().catch(()=>null);
         throw new Error(`${res.status} ${txt || res.statusText}`);
       }
 
-      // actualizar fila con valores guardados
       selectedRow.querySelectorAll('td').forEach((td, idx) => {
         const v = Object.values(payload)[idx];
         td.innerText = v !== undefined ? v : '';
@@ -374,7 +372,6 @@ document.addEventListener("DOMContentLoaded", () => {
     resetPanelToDefault();
   }
 
-  // subir foto via AJAX y mostrar inmediatamente
   if (btnSubirFoto) {
     btnSubirFoto.addEventListener('click', async () => {
       const dpi = inputDpiUpload.value && inputDpiUpload.value.trim();
@@ -406,7 +403,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // eliminar foto
   if (btnEliminarFoto) {
     btnEliminarFoto.addEventListener('click', async () => {
       const dpi = inputDpiDelete.value && inputDpiDelete.value.trim();
@@ -428,7 +424,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // util
   function escapeHtml(str) {
     if (str == null) return '';
     return String(str).replace(/[&<>"'`=\/]/g, function(s) {
@@ -450,7 +445,6 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(()=> container.remove(), 3000);
   }
 
-  // botones
   if (btnEditar) btnEditar.addEventListener('click', startEdit);
   if (btnGuardar) btnGuardar.addEventListener('click', saveEdit);
   if (btnCancelar) btnCancelar.addEventListener('click', cancelEdit);
