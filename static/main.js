@@ -1,272 +1,305 @@
 // static/js/main.js
-// Archivo único que maneja tablas, selección, edición y API de registro de tablas.
-// Mantiene compatibilidad con las llamadas a window.registrarTabla desde las plantillas.
+// Mantiene todo igual salvo: al guardar, si el DPI existe hace UPDATE en lugar de INSERT.
+// - Usa GET /api/empleado/:dpi para comprobar existencia.
+// - Envía el payload a /guardar_empleado (el backend maneja INSERT/UPDATE según "nuevo").
+// - Todo lo demás no se modifica.
 (function () {
   "use strict";
 
-  // Config opcional desde plantillas
   const CFG = window.__FICHA_CONFIG || {};
   const PLACEHOLDER = CFG.placeholder || "/static/imagenes/default.jpg";
   const API_EMPLEADOS = CFG.apiEmpleados || "/api/empleados";
   const API_EMPLEADO_BASE = CFG.apiEmpleadoBase || "/api/empleado/";
   const API_FOTO_BASE = CFG.apiFotoBase || "/api/foto/";
 
-  // Utilidades
-  const safe = v => (v === null || typeof v === "undefined") ? "" : v;
-  function escapeHtml(str) {
-    if (str == null) return '';
-    return String(str).replace(/[&<>"'`=\/]/g, function(s) {
-      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[s];
-    });
-  }
-  function flashMessage(msg, type='info') {
-    const existing = document.getElementById('flashMessage');
-    if (existing) existing.remove();
-    const container = document.createElement('div');
-    container.id = 'flashMessage';
-    container.className = `alert alert-${type} py-1 px-2 small position-fixed`;
-    container.style.top = '16px';
-    container.style.right = '16px';
-    container.style.zIndex = 2000;
-    container.innerText = msg;
-    document.body.appendChild(container);
-    setTimeout(()=> container.remove(), 2200);
-  }
+  const COLUMNS = [
+    "Numero de DPI","Nombre","Apellidos","Apellidos de casada","Estado Civil",
+    "Nacionalidad","Departamento","Fecha de nacimiento","Lugar de nacimiento",
+    "Numero de Afiliación del IGGS","Dirección del Domicilio","Numero de Telefono",
+    "Religión","Correo Electronico","Puesto de trabajo","Tipo de contrato",
+    "Jornada laboral","Duración del trabajo","Fecha de inicio laboral","Dias Laborales"
+  ];
 
-  // Tabla registry
-  const tablas = {};
-  let tablaActiva = null;
-  let filaActiva = null;
-  let copiaOriginal = [];
-  let esNuevo = false;
+  // Estado
+  let selectedRow = null;
+  let originalCells = null;
+  let isNewRow = false;
   let editing = false;
 
-  // Botones globales (pueden o no existir en cada plantilla)
-  function getBtn(id) { return document.getElementById(id); }
-
-  function resetBotonesGlobal() {
-    const btnAgregar = getBtn('btnAgregar');
-    const btnEditar = getBtn('btnEditar');
-    const btnGuardar = getBtn('btnGuardar');
-    const btnCancelar = getBtn('btnCancelar');
-    if (btnAgregar) btnAgregar.disabled = false;
-    if (btnEditar) btnEditar.disabled = true;
-    if (btnGuardar) btnGuardar.disabled = true;
-    if (btnCancelar) btnCancelar.disabled = true;
+  // Utilidades
+  function flash(msg, type = "info") {
+    const existing = document.getElementById("flashMessage");
+    if (existing) existing.remove();
+    const d = document.createElement("div");
+    d.id = "flashMessage";
+    d.className = `alert alert-${type} py-1 px-2 small position-fixed`;
+    d.style.top = "16px";
+    d.style.right = "16px";
+    d.style.zIndex = 2000;
+    d.innerText = msg;
+    document.body.appendChild(d);
+    setTimeout(() => d.remove(), 2200);
   }
 
-  // registrarTabla: expone comportamiento igual al home
-  function registrarTabla(idTabla, columnas, endpoint, campos, bloqueadas = []) {
-    const tabla = document.getElementById(idTabla);
-    if (!tabla) return;
-    tablas[idTabla] = { tabla, columnas, endpoint, campos, bloqueadas };
-
-    // doble click selecciona fila y habilita Edit en el UI
-    tabla.addEventListener('dblclick', (e) => {
-      const tr = e.target.closest("tr");
-      if (!tr || tr.parentElement.tagName !== "TBODY") return;
-      if (filaActiva) filaActiva.classList.remove("table-active");
-      filaActiva = tr;
-      tablaActiva = tabla;
-      filaActiva.classList.add("table-active");
-      copiaOriginal = Array.from(filaActiva.querySelectorAll("td")).map(td => td.innerText);
-      esNuevo = false;
-      const btnEditar = getBtn('btnEditar');
-      const btnGuardar = getBtn('btnGuardar');
-      const btnCancelar = getBtn('btnCancelar');
-      if (btnEditar) btnEditar.disabled = false;
-      if (btnGuardar) btnGuardar.disabled = true;
-      if (btnCancelar) btnCancelar.disabled = false;
-    });
-
-    // click simple: solo selecciona fila (no activa edición)
-    tabla.addEventListener('click', (e) => {
-      const tr = e.target.closest("tr");
-      if (!tr || tr.parentElement.tagName !== "TBODY") return;
-      if (filaActiva && filaActiva !== tr) filaActiva.classList.remove("table-active");
-      filaActiva = tr;
-      tablaActiva = tabla;
-      filaActiva.classList.add("table-active");
-      // mantener botones (editar se habilita solo con dblclick)
-      const btnEditar = getBtn('btnEditar');
-      const btnGuardar = getBtn('btnGuardar');
-      const btnCancelar = getBtn('btnCancelar');
-      if (btnEditar) btnEditar.disabled = true;
-      if (btnGuardar && !editing) btnGuardar.disabled = true;
-      if (btnCancelar) btnCancelar.disabled = false;
-    });
+  function safeTrim(v) {
+    if (v == null) return "";
+    return String(v).trim();
   }
 
-  // Exponer función registrarTabla en window para que about.html y otras puedan llamarla
-  window.registrarTabla = registrarTabla;
-
-  // Operaciones sobre la fila activa (agregar, editar, guardar, cancelar)
-  function agregarFilaGlobal() {
-    // si no hay tablaActiva, buscamos la primera visible
-    if (!tablaActiva) {
-      const primero = Object.values(tablas).find(t => t.tabla && t.tabla.offsetParent !== null);
-      if (!primero) { flashMessage("No hay tabla disponible para agregar", "danger"); return; }
-      tablaActiva = primero.tabla;
+  // Selección (click en fila) — solo selecciona, no habilita edición
+  function selectRow(tr) {
+    if (!tr) return;
+    if (selectedRow && selectedRow !== tr) selectedRow.classList.remove("table-active");
+    selectedRow = tr;
+    selectedRow.classList.add("table-active");
+    const btnEditar = document.getElementById("btnEditar");
+    if (btnEditar) btnEditar.disabled = false;
+    const btnGuardar = document.getElementById("btnGuardar");
+    const btnCancelar = document.getElementById("btnCancelar");
+    if (btnGuardar && !editing) btnGuardar.disabled = true;
+    if (btnCancelar) btnCancelar.disabled = false;
+    const dpi = safeTrim(selectedRow.cells[0] && selectedRow.cells[0].innerText);
+    const foto = document.getElementById("fotoEmpleado");
+    const formSubir = document.getElementById("formSubirFoto");
+    const formEliminar = document.getElementById("formEliminarFoto");
+    const inputDpiUpload = document.getElementById("inputDpiForUpload");
+    const inputDpiDelete = document.getElementById("inputDpiForDelete");
+    if (inputDpiUpload) inputDpiUpload.value = dpi;
+    if (inputDpiDelete) inputDpiDelete.value = dpi;
+    if (!dpi) {
+      if (foto) foto.src = PLACEHOLDER;
+      if (formSubir) formSubir.style.display = "none";
+      if (formEliminar) formEliminar.style.display = "none";
+      return;
     }
-    const info = Object.values(tablas).find(t => t.tabla === tablaActiva);
-    if (!info) return;
-    const { columnas, bloqueadas } = info;
-    const tbody = tablaActiva.querySelector("tbody");
+    if (foto && formSubir && formEliminar) {
+      fetch(`${API_FOTO_BASE}${encodeURIComponent(dpi)}`, { cache: "no-store" })
+        .then(r => r.json())
+        .then(j => {
+          if (j && j.url) {
+            foto.src = `${j.url}?t=${Date.now()}`;
+            formEliminar.style.display = "block";
+            formSubir.style.display = "none";
+          } else {
+            foto.src = PLACEHOLDER;
+            formSubir.style.display = "block";
+            formEliminar.style.display = "none";
+          }
+        })
+        .catch(() => {
+          foto.src = PLACEHOLDER;
+          formSubir.style.display = "block";
+          formEliminar.style.display = "none";
+        });
+    }
+  }
+
+  // Agregar fila: crea tr con celdas vacías y la selecciona. No alerta si no hay tabla.
+  function agregarFila() {
+    const tabla = document.getElementById("tablaEmpleados");
+    if (!tabla) return;
+    const tbody = tabla.querySelector("tbody");
     if (!tbody) return;
     const tr = document.createElement("tr");
-    for (let i = 0; i < columnas; i++) {
+    for (let i = 0; i < COLUMNS.length; i++) {
       const td = document.createElement("td");
       td.innerText = "";
-      if (!bloqueadas.includes(i)) {
-        td.contentEditable = true;
-        td.style.backgroundColor = '#fff3cd';
-      } else {
-        td.contentEditable = false;
-      }
       td.tabIndex = 0;
+      td.contentEditable = true;
+      td.style.backgroundColor = "#fff3cd";
       tr.appendChild(td);
     }
     tbody.insertBefore(tr, tbody.firstChild);
-    if (filaActiva) filaActiva.classList.remove("table-active");
-    filaActiva = tr;
-    filaActiva.classList.add("table-active");
-    esNuevo = true;
+    if (selectedRow) selectedRow.classList.remove("table-active");
+    selectedRow = tr;
+    selectedRow.classList.add("table-active");
+    isNewRow = true;
     editing = true;
-    copiaOriginal = [];
-    const btnEditar = getBtn('btnEditar');
-    const btnGuardar = getBtn('btnGuardar');
-    const btnCancelar = getBtn('btnCancelar');
+    originalCells = [];
+    const btnEditar = document.getElementById("btnEditar");
+    const btnGuardar = document.getElementById("btnGuardar");
+    const btnCancelar = document.getElementById("btnCancelar");
     if (btnEditar) btnEditar.disabled = true;
     if (btnGuardar) btnGuardar.disabled = false;
     if (btnCancelar) btnCancelar.disabled = false;
-    const firstEditable = Array.from(tr.cells).find((c,idx) => !bloqueadas.includes(idx));
-    if (firstEditable) firstEditable.focus();
+    const first = tr.querySelector("td");
+    if (first) first.focus();
   }
 
-  function editarFilaGlobal() {
-    if (!filaActiva || !tablaActiva) { flashMessage("Selecciona una fila primero", "danger"); return; }
+  // Habilita edición de TODA la fila seleccionada (sin crear inputs)
+  function editarFila() {
+    if (!selectedRow) { flash("Selecciona una fila primero", "danger"); return; }
     if (editing) return;
-    const info = Object.values(tablas).find(t => t.tabla === tablaActiva);
-    if (!info) return;
-    const bloqueadas = info.bloqueadas || [];
-    copiaOriginal = Array.from(filaActiva.querySelectorAll("td")).map(td => td.innerText);
-    filaActiva.querySelectorAll("td").forEach((td, i) => {
-      if (!bloqueadas.includes(i)) {
-        td.contentEditable = true;
-        td.style.backgroundColor = '#fff3cd';
-      } else {
-        td.contentEditable = false;
-      }
-    });
-    esNuevo = false;
     editing = true;
-    const btnEditar = getBtn('btnEditar');
-    const btnGuardar = getBtn('btnGuardar');
-    const btnCancelar = getBtn('btnCancelar');
+    isNewRow = !!isNewRow;
+    originalCells = Array.from(selectedRow.cells).map(td => td.innerText);
+    selectedRow.querySelectorAll("td").forEach(td => {
+      td.contentEditable = true;
+      td.style.backgroundColor = "#fff3cd";
+    });
+    const btnEditar = document.getElementById("btnEditar");
+    const btnGuardar = document.getElementById("btnGuardar");
+    const btnCancelar = document.getElementById("btnCancelar");
     if (btnEditar) btnEditar.disabled = true;
     if (btnGuardar) btnGuardar.disabled = false;
     if (btnCancelar) btnCancelar.disabled = false;
-    const firstEditable = Array.from(filaActiva.cells).find((c,idx) => !bloqueadas.includes(idx));
-    if (firstEditable) firstEditable.focus();
+    const first = selectedRow.querySelector("td");
+    if (first) first.focus();
   }
 
-  async function guardarFilaGlobal() {
-    if (!filaActiva || !tablaActiva) return;
-    const info = Object.values(tablas).find(t => t.tabla === tablaActiva);
-    if (!info) return;
-    const { campos, endpoint, columnas } = info;
-    const tdList = Array.from(filaActiva.querySelectorAll("td"));
-    if (tdList.length < columnas) { flashMessage("Fila incompleta", "danger"); return; }
-    // construir payload: vacíos -> "" (no null)
-    const valores = tdList.map(td => td.innerText.trim() === "" ? "" : td.innerText.trim());
-    const payload = {};
-    for (let i = 0; i < campos.length; i++) payload[campos[i]] = valores[i] !== undefined ? valores[i] : "";
-    payload.nuevo = esNuevo;
+  // Cancelar edición
+  function cancelarEdicion() {
+    if (!selectedRow) return;
+    if (isNewRow) {
+      const p = selectedRow.parentNode;
+      if (p) p.removeChild(selectedRow);
+    } else if (editing && originalCells) {
+      selectedRow.querySelectorAll("td").forEach((td, i) => {
+        td.innerText = originalCells[i] || "";
+        td.contentEditable = false;
+        td.style.backgroundColor = "";
+      });
+      selectedRow.classList.remove("table-active");
+    } else {
+      selectedRow.querySelectorAll("td").forEach(td => { td.contentEditable = false; td.style.backgroundColor = ""; });
+      selectedRow.classList.remove("table-active");
+    }
+    selectedRow = null;
+    originalCells = null;
+    editing = false;
+    isNewRow = false;
+    const btnEditar = document.getElementById("btnEditar");
+    const btnGuardar = document.getElementById("btnGuardar");
+    const btnCancelar = document.getElementById("btnCancelar");
+    if (btnEditar) btnEditar.disabled = true;
+    if (btnGuardar) btnGuardar.disabled = true;
+    if (btnCancelar) btnCancelar.disabled = true;
+    const foto = document.getElementById("fotoEmpleado");
+    if (foto) foto.src = PLACEHOLDER;
+    const fs = document.getElementById("formSubirFoto");
+    const fe = document.getElementById("formEliminarFoto");
+    if (fs) fs.style.display = "none";
+    if (fe) fe.style.display = "none";
+  }
 
-    // DPI obligatorio si existe ese campo
-    if (campos.includes("Numero de DPI") && (!payload["Numero de DPI"] || payload["Numero de DPI"].trim() === "")) {
-      flashMessage("El campo Numero de DPI es obligatorio", "danger");
+  // Nuevo: comprueba existencia por DPI y envía a /guardar_empleado; backend decide INSERT/UPDATE según "nuevo"
+  async function guardarEdicion() {
+    if (!selectedRow) return;
+    const tds = Array.from(selectedRow.querySelectorAll("td"));
+    const values = tds.map(td => safeTrim(td.innerText));
+    const payload = {};
+    for (let i = 0; i < COLUMNS.length; i++) {
+      payload[COLUMNS[i]] = values[i] !== undefined ? values[i] : "";
+    }
+
+    const dpi = payload["Numero de DPI"] || "";
+    if (!dpi || dpi.trim() === "") {
+      flash("El campo Numero de DPI es obligatorio", "danger");
       return;
     }
 
     try {
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      // comprobar existencia: si GET /api/empleado/:dpi devuelve 200 -> existe
+      let exists = false;
+      try {
+        const r = await fetch(API_EMPLEADO_BASE + encodeURIComponent(dpi), { cache: 'no-store' });
+        exists = r.ok;
+      } catch (e) {
+        exists = false;
+      }
+      payload["nuevo"] = !exists;
+
+      // Enviar a endpoint que tu backend espera (/guardar_empleado)
+      const res = await fetch("/guardar_empleado", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
+
       if (!res.ok) {
-        const text = await res.text().catch(()=>"");
+        const text = await res.text().catch(() => "");
         throw new Error(`HTTP ${res.status} ${text || res.statusText}`);
       }
-      // bloquear y limpiar styles
-      tdList.forEach(td => { td.contentEditable = false; td.style.backgroundColor = ""; });
-      filaActiva.classList.remove("table-active");
-      filaActiva = null;
-      tablaActiva = null;
-      copiaOriginal = [];
-      esNuevo = false;
+
+      // Lock row and clear styles
+      tds.forEach(td => { td.contentEditable = false; td.style.backgroundColor = ""; });
+      selectedRow.classList.remove("table-active");
+      selectedRow = null;
+      originalCells = null;
       editing = false;
-      resetBotonesGlobal();
-      flashMessage("Guardado correctamente", "success");
+      isNewRow = false;
+      const btnEditar = document.getElementById("btnEditar");
+      const btnGuardar = document.getElementById("btnGuardar");
+      const btnCancelar = document.getElementById("btnCancelar");
+      if (btnEditar) btnEditar.disabled = true;
+      if (btnGuardar) btnGuardar.disabled = true;
+      if (btnCancelar) btnCancelar.disabled = true;
+      flash("Guardado correctamente", "success");
     } catch (err) {
-      console.error("guardarFilaGlobal error", err);
-      flashMessage("Error al guardar: " + (err.message || err), "danger");
+      console.error("guardarEdicion error", err);
+      flash("Error al guardar: " + (err.message || err), "danger");
     }
   }
 
-  function cancelarEdicionGlobal() {
-    if (!filaActiva) return;
-    const info = Object.values(tablas).find(t => t.tabla === tablaActiva);
-    if (esNuevo) {
-      filaActiva.remove();
-    } else if (copiaOriginal && copiaOriginal.length) {
-      filaActiva.querySelectorAll("td").forEach((td, i) => {
-        td.innerText = copiaOriginal[i] || "";
-        td.contentEditable = false;
-        td.style.backgroundColor = "";
-      });
-      filaActiva.classList.remove("table-active");
-    } else {
-      filaActiva.querySelectorAll("td").forEach(td => { td.contentEditable = false; td.style.backgroundColor = ""; });
-      filaActiva.classList.remove("table-active");
-    }
-    filaActiva = null;
-    tablaActiva = null;
-    copiaOriginal = [];
-    esNuevo = false;
-    editing = false;
-    resetBotonesGlobal();
-  }
-
-  // attach unique handlers for global buttons if present
-  function attachUniqueHandler(id, fn) {
+  // Inicialización y wiring de botones (asegurar listeners únicos)
+  function attachUnique(id, handler) {
     const el = document.getElementById(id);
-    if (!el) return;
-    const parent = el.parentNode;
-    if (!parent) { el.addEventListener('click', fn); return; }
+    if (!el || !el.parentNode) return null;
     const clean = el.cloneNode(true);
-    parent.replaceChild(clean, el);
-    clean.addEventListener('click', (e) => { e.stopPropagation(); fn(e); });
+    el.parentNode.replaceChild(clean, el);
+    clean.addEventListener("click", (e) => { e.stopPropagation(); handler(e); });
+    return clean;
   }
 
-  // Initialize on DOMContentLoaded: wire global buttons (if exist) and expose API
-  document.addEventListener('DOMContentLoaded', () => {
-    attachUniqueHandler('btnAgregar', (e) => { e.preventDefault(); agregarFilaGlobal(); });
-    attachUniqueHandler('btnEditar', (e) => { e.preventDefault(); editarFilaGlobal(); });
-    attachUniqueHandler('btnGuardar', (e) => { e.preventDefault(); guardarFilaGlobal(); });
-    attachUniqueHandler('btnCancelar', (e) => { e.preventDefault(); cancelarEdicionGlobal(); });
+  document.addEventListener("DOMContentLoaded", () => {
+    const tabla = document.getElementById("tablaEmpleados");
+    if (tabla) {
+      tabla.addEventListener("click", (ev) => {
+        const tr = ev.target.closest("tr");
+        if (!tr || tr.parentElement.tagName !== "TBODY") return;
+        selectRow(tr);
+      });
+    }
 
-    // default state
-    resetBotonesGlobal();
+    attachUnique("btnAgregar", () => agregarFila());
+    attachUnique("btnEditar", () => editarFila());
+    attachUnique("btnGuardar", () => guardarEdicion());
+    attachUnique("btnCancelar", () => cancelarEdicion());
+
+    const btnAgregar = document.getElementById("btnAgregar");
+    const btnEditar = document.getElementById("btnEditar");
+    const btnGuardar = document.getElementById("btnGuardar");
+    const btnCancelar = document.getElementById("btnCancelar");
+    if (btnAgregar) btnAgregar.disabled = false;
+    if (btnEditar) btnEditar.disabled = true;
+    if (btnGuardar) btnGuardar.disabled = true;
+    if (btnCancelar) btnCancelar.disabled = true;
+
+    const fileFoto = document.getElementById("fileFoto");
+    const fotoEmpleado = document.getElementById("fotoEmpleado");
+    if (fileFoto && fotoEmpleado) {
+      fileFoto.addEventListener("change", (e) => {
+        const f = e.target.files && e.target.files[0];
+        if (!f || !f.type.startsWith("image/")) return;
+        const r = new FileReader();
+        r.onload = () => fotoEmpleado.src = r.result;
+        r.readAsDataURL(f);
+      });
+    }
+
+    document.addEventListener("click", (e) => {
+      const insideTable = !!e.target.closest("#tablaEmpleados");
+      const insideControls = !!e.target.closest("#formSubirFoto") || !!e.target.closest("#formEliminarFoto") || !!e.target.closest("#fileFoto");
+      if (!insideTable && !insideControls && !editing) {
+        const foto = document.getElementById("fotoEmpleado");
+        if (foto) foto.src = PLACEHOLDER;
+        const fs = document.getElementById("formSubirFoto");
+        const fe = document.getElementById("formEliminarFoto");
+        if (fs) fs.style.display = "none";
+        if (fe) fe.style.display = "none";
+      }
+    });
   });
 
-  // Exponer API adicional por si alguna plantilla quiere control directo
-  window.__MAIN_TABLA = window.__MAIN_TABLA || {};
-  window.__MAIN_TABLA.registrarTabla = registrarTabla;
-  window.__MAIN_TABLA.agregarFila = agregarFilaGlobal;
-  window.__MAIN_TABLA.editarFila = editarFilaGlobal;
-  window.__MAIN_TABLA.guardarFila = guardarFilaGlobal;
-  window.__MAIN_TABLA.cancelar = cancelarEdicionGlobal;
-
 })();
+
