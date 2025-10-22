@@ -456,22 +456,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 </script>
-<script>
-(function waitRegister(){
-  const meta = {
-    id: 'tablaEmpleados',            // debe coincidir con el id del <table> en home.html
-    cols: 20,                        // ajusta al número de columnas visibles en home (usa tu COLUMNS si es distinto)
-    endpoint: '/guardar_empleado',
-    campos: [
-      "Numero de DPI","Nombre","Apellidos","Apellidos de casada","Estado Civil",
-      "Nacionalidad","Departamento","Fecha de nacimiento","Lugar de nacimiento",
-      "Numero de Afiliación del IGGS","Dirección del Domicilio","Numero de Telefono",
-      "Religión","Correo Electronico","Puesto de trabajo","Tipo de contrato",
-      "Jornada laboral","Duración del trabajo","Fecha de inicio laboral","Dias Laborales"
-    ],
-    bloqueadas: [0,1,2]              // DPI, Nombre, Apellidos bloqueadas
-  };
 
+<script>
+  
   function tryRegister(n=20){
     if (window.registrarTabla && typeof window.registrarTabla === 'function') {
       window.registrarTabla(meta.id, meta.cols, meta.endpoint, meta.campos, meta.bloqueadas);
@@ -488,8 +475,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ()=>tryRegister(20));
-  else tryRegister(20);
-})();
+  else tryRegister(20);;
 </script>
 
 
