@@ -1,305 +1,224 @@
 // static/js/main.js
-// Mantiene todo igual salvo: al guardar, si el DPI existe hace UPDATE en lugar de INSERT.
-// - Usa GET /api/empleado/:dpi para comprobar existencia.
-// - Envía el payload a /guardar_empleado (el backend maneja INSERT/UPDATE según "nuevo").
-// - Todo lo demás no se modifica.
-(function () {
+// Minimal shared table engine that always exposes registrarTabla and __MAIN_TABLA.
+// Keeps behavior lightweight and defensive so templates (about.html) can call registrarTabla reliably.
+(function(){
   "use strict";
 
-  const CFG = window.__FICHA_CONFIG || {};
-  const PLACEHOLDER = CFG.placeholder || "/static/imagenes/default.jpg";
-  const API_EMPLEADOS = CFG.apiEmpleados || "/api/empleados";
-  const API_EMPLEADO_BASE = CFG.apiEmpleadoBase || "/api/empleado/";
-  const API_FOTO_BASE = CFG.apiFotoBase || "/api/foto/";
+  // Registry storage
+  const registry = {};
+  let activeTable = null;
+  let activeRow = null;
 
-  const COLUMNS = [
-    "Numero de DPI","Nombre","Apellidos","Apellidos de casada","Estado Civil",
-    "Nacionalidad","Departamento","Fecha de nacimiento","Lugar de nacimiento",
-    "Numero de Afiliación del IGGS","Dirección del Domicilio","Numero de Telefono",
-    "Religión","Correo Electronico","Puesto de trabajo","Tipo de contrato",
-    "Jornada laboral","Duración del trabajo","Fecha de inicio laboral","Dias Laborales"
-  ];
+  // Default no-op endpoints and placeholders
+  const DEFAULTS = {
+    placeholder: "/static/imagenes/default.jpg"
+  };
 
-  // Estado
-  let selectedRow = null;
-  let originalCells = null;
-  let isNewRow = false;
-  let editing = false;
-
-  // Utilidades
-  function flash(msg, type = "info") {
-    const existing = document.getElementById("flashMessage");
-    if (existing) existing.remove();
-    const d = document.createElement("div");
-    d.id = "flashMessage";
+  // Small flash helper
+  function flash(msg, type='info') {
+    const id = '__flash_main';
+    const prev = document.getElementById(id);
+    if (prev) prev.remove();
+    const d = document.createElement('div');
+    d.id = id;
     d.className = `alert alert-${type} py-1 px-2 small position-fixed`;
-    d.style.top = "16px";
-    d.style.right = "16px";
-    d.style.zIndex = 2000;
+    d.style.top = '12px';
+    d.style.right = '12px';
+    d.style.zIndex = 9999;
     d.innerText = msg;
     document.body.appendChild(d);
-    setTimeout(() => d.remove(), 2200);
+    setTimeout(()=> d.remove(), 2000);
   }
 
-  function safeTrim(v) {
-    if (v == null) return "";
-    return String(v).trim();
-  }
-
-  // Selección (click en fila) — solo selecciona, no habilita edición
-  function selectRow(tr) {
-    if (!tr) return;
-    if (selectedRow && selectedRow !== tr) selectedRow.classList.remove("table-active");
-    selectedRow = tr;
-    selectedRow.classList.add("table-active");
-    const btnEditar = document.getElementById("btnEditar");
-    if (btnEditar) btnEditar.disabled = false;
-    const btnGuardar = document.getElementById("btnGuardar");
-    const btnCancelar = document.getElementById("btnCancelar");
-    if (btnGuardar && !editing) btnGuardar.disabled = true;
-    if (btnCancelar) btnCancelar.disabled = false;
-    const dpi = safeTrim(selectedRow.cells[0] && selectedRow.cells[0].innerText);
-    const foto = document.getElementById("fotoEmpleado");
-    const formSubir = document.getElementById("formSubirFoto");
-    const formEliminar = document.getElementById("formEliminarFoto");
-    const inputDpiUpload = document.getElementById("inputDpiForUpload");
-    const inputDpiDelete = document.getElementById("inputDpiForDelete");
-    if (inputDpiUpload) inputDpiUpload.value = dpi;
-    if (inputDpiDelete) inputDpiDelete.value = dpi;
-    if (!dpi) {
-      if (foto) foto.src = PLACEHOLDER;
-      if (formSubir) formSubir.style.display = "none";
-      if (formEliminar) formEliminar.style.display = "none";
+  // registrarTabla: expone la tabla al motor compartido
+  function registrarTabla(idTabla, columnas, endpoint, campos, bloqueadas){
+    const el = document.getElementById(idTabla);
+    if (!el) {
+      console.warn("registrarTabla: tabla no encontrada", idTabla);
       return;
     }
-    if (foto && formSubir && formEliminar) {
-      fetch(`${API_FOTO_BASE}${encodeURIComponent(dpi)}`, { cache: "no-store" })
-        .then(r => r.json())
-        .then(j => {
-          if (j && j.url) {
-            foto.src = `${j.url}?t=${Date.now()}`;
-            formEliminar.style.display = "block";
-            formSubir.style.display = "none";
-          } else {
-            foto.src = PLACEHOLDER;
-            formSubir.style.display = "block";
-            formEliminar.style.display = "none";
-          }
-        })
-        .catch(() => {
-          foto.src = PLACEHOLDER;
-          formSubir.style.display = "block";
-          formEliminar.style.display = "none";
-        });
-    }
+
+    registry[idTabla] = { tabla: el, columnas: columnas||0, endpoint: endpoint||'', campos: campos||[], bloqueadas: bloqueadas||[] };
+
+    // Click/dblclick handlers (idempotentes)
+    el.addEventListener('click', (e) => {
+      const tr = e.target.closest('tr');
+      if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+      if (activeRow && activeRow !== tr) activeRow.classList.remove('table-active');
+      activeRow = tr;
+      activeTable = el;
+      activeRow.classList.add('table-active');
+      // leave edit disabled; templates expect enabling on dblclick
+      const btnEditar = document.getElementById('btnEditar');
+      const btnGuardar = document.getElementById('btnGuardar');
+      const btnCancelar = document.getElementById('btnCancelar');
+      if (btnEditar) btnEditar.disabled = true;
+      if (btnGuardar && !tr.dataset.editing) btnGuardar.disabled = true;
+      if (btnCancelar) btnCancelar.disabled = false;
+    });
+
+    el.addEventListener('dblclick', (e) => {
+      const tr = e.target.closest('tr');
+      if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+      if (activeRow && activeRow !== tr) activeRow.classList.remove('table-active');
+      activeRow = tr;
+      activeTable = el;
+      activeRow.classList.add('table-active');
+      const btnEditar = document.getElementById('btnEditar');
+      if (btnEditar) btnEditar.disabled = false;
+    });
   }
 
-  // Agregar fila: crea tr con celdas vacías y la selecciona. No alerta si no hay tabla.
-  function agregarFila() {
-    const tabla = document.getElementById("tablaEmpleados");
-    if (!tabla) return;
-    const tbody = tabla.querySelector("tbody");
-    if (!tbody) return;
-    const tr = document.createElement("tr");
-    for (let i = 0; i < COLUMNS.length; i++) {
-      const td = document.createElement("td");
+  // expose functions for templates and fallback handlers
+  function agregarFila(){
+    if (!activeTable) {
+      // try to pick a visible registered table
+      const first = Object.values(registry).find(r=> r.tabla && r.tabla.offsetParent !== null);
+      if (!first) { flash("No hay tabla registrada para agregar", "danger"); return; }
+      activeTable = first.tabla;
+    }
+    const tbody = activeTable.querySelector('tbody');
+    if (!tbody) { flash("tbody no encontrado", "danger"); return; }
+    const info = Object.values(registry).find(r=> r.tabla === activeTable) || {};
+    const cols = info.columnas || 0;
+    const tr = document.createElement('tr');
+    for (let i=0;i<cols;i++){
+      const td = document.createElement('td');
       td.innerText = "";
-      td.tabIndex = 0;
-      td.contentEditable = true;
-      td.style.backgroundColor = "#fff3cd";
+      if (!((info.bloqueadas||[]).includes(i))) {
+        td.contentEditable = true;
+        td.style.backgroundColor = '#fff3cd';
+      } else {
+        td.contentEditable = false;
+      }
       tr.appendChild(td);
     }
     tbody.insertBefore(tr, tbody.firstChild);
-    if (selectedRow) selectedRow.classList.remove("table-active");
-    selectedRow = tr;
-    selectedRow.classList.add("table-active");
-    isNewRow = true;
-    editing = true;
-    originalCells = [];
-    const btnEditar = document.getElementById("btnEditar");
-    const btnGuardar = document.getElementById("btnGuardar");
-    const btnCancelar = document.getElementById("btnCancelar");
-    if (btnEditar) btnEditar.disabled = true;
-    if (btnGuardar) btnGuardar.disabled = false;
-    if (btnCancelar) btnCancelar.disabled = false;
-    const first = tr.querySelector("td");
-    if (first) first.focus();
+    if (activeRow) activeRow.classList.remove('table-active');
+    activeRow = tr;
+    activeRow.classList.add('table-active');
+    activeRow.dataset.new = '1';
+    activeRow.dataset.editing = '1';
+    // enable Save/Cancel, disable Edit
+    const be = document.getElementById('btnEditar');
+    const bg = document.getElementById('btnGuardar');
+    const bc = document.getElementById('btnCancelar');
+    if (be) be.disabled = true;
+    if (bg) bg.disabled = false;
+    if (bc) bc.disabled = false;
   }
 
-  // Habilita edición de TODA la fila seleccionada (sin crear inputs)
-  function editarFila() {
-    if (!selectedRow) { flash("Selecciona una fila primero", "danger"); return; }
-    if (editing) return;
-    editing = true;
-    isNewRow = !!isNewRow;
-    originalCells = Array.from(selectedRow.cells).map(td => td.innerText);
-    selectedRow.querySelectorAll("td").forEach(td => {
-      td.contentEditable = true;
-      td.style.backgroundColor = "#fff3cd";
-    });
-    const btnEditar = document.getElementById("btnEditar");
-    const btnGuardar = document.getElementById("btnGuardar");
-    const btnCancelar = document.getElementById("btnCancelar");
-    if (btnEditar) btnEditar.disabled = true;
-    if (btnGuardar) btnGuardar.disabled = false;
-    if (btnCancelar) btnCancelar.disabled = false;
-    const first = selectedRow.querySelector("td");
-    if (first) first.focus();
-  }
-
-  // Cancelar edición
-  function cancelarEdicion() {
-    if (!selectedRow) return;
-    if (isNewRow) {
-      const p = selectedRow.parentNode;
-      if (p) p.removeChild(selectedRow);
-    } else if (editing && originalCells) {
-      selectedRow.querySelectorAll("td").forEach((td, i) => {
-        td.innerText = originalCells[i] || "";
+  function editarFila(){
+    if (!activeRow) { flash("Selecciona una fila primero", "danger"); return; }
+    if (activeRow.dataset.editing === '1') return;
+    activeRow.dataset.editing = '1';
+    const info = Object.values(registry).find(r=> r.tabla === activeTable) || {};
+    const bloqueadas = info.bloqueadas || [];
+    Array.from(activeRow.cells).forEach((td,i)=>{
+      if (!bloqueadas.includes(i)) {
+        td.contentEditable = true;
+        td.style.backgroundColor = '#fff3cd';
+      } else {
         td.contentEditable = false;
-        td.style.backgroundColor = "";
-      });
-      selectedRow.classList.remove("table-active");
-    } else {
-      selectedRow.querySelectorAll("td").forEach(td => { td.contentEditable = false; td.style.backgroundColor = ""; });
-      selectedRow.classList.remove("table-active");
-    }
-    selectedRow = null;
-    originalCells = null;
-    editing = false;
-    isNewRow = false;
-    const btnEditar = document.getElementById("btnEditar");
-    const btnGuardar = document.getElementById("btnGuardar");
-    const btnCancelar = document.getElementById("btnCancelar");
-    if (btnEditar) btnEditar.disabled = true;
-    if (btnGuardar) btnGuardar.disabled = true;
-    if (btnCancelar) btnCancelar.disabled = true;
-    const foto = document.getElementById("fotoEmpleado");
-    if (foto) foto.src = PLACEHOLDER;
-    const fs = document.getElementById("formSubirFoto");
-    const fe = document.getElementById("formEliminarFoto");
-    if (fs) fs.style.display = "none";
-    if (fe) fe.style.display = "none";
+      }
+    });
+    const be = document.getElementById('btnEditar');
+    const bg = document.getElementById('btnGuardar');
+    const bc = document.getElementById('btnCancelar');
+    if (be) be.disabled = true;
+    if (bg) bg.disabled = false;
+    if (bc) bc.disabled = false;
   }
 
-  // Nuevo: comprueba existencia por DPI y envía a /guardar_empleado; backend decide INSERT/UPDATE según "nuevo"
-  async function guardarEdicion() {
-    if (!selectedRow) return;
-    const tds = Array.from(selectedRow.querySelectorAll("td"));
-    const values = tds.map(td => safeTrim(td.innerText));
+  async function guardarFila(){
+    if (!activeRow || !activeTable) { flash("No hay fila seleccionada", "danger"); return; }
+    const info = Object.values(registry).find(r=> r.tabla === activeTable) || {};
+    const campos = info.campos || [];
+    const endpoint = info.endpoint || '';
+    const values = Array.from(activeRow.cells).map(td=> td.innerText === null ? "" : td.innerText.trim());
+    // build payload mapping campos -> values (leave empty strings if empty)
     const payload = {};
-    for (let i = 0; i < COLUMNS.length; i++) {
-      payload[COLUMNS[i]] = values[i] !== undefined ? values[i] : "";
+    for (let i=0;i<campos.length;i++){
+      payload[campos[i]] = values[i] !== undefined ? values[i] : "";
     }
-
-    const dpi = payload["Numero de DPI"] || "";
-    if (!dpi || dpi.trim() === "") {
-      flash("El campo Numero de DPI es obligatorio", "danger");
-      return;
-    }
-
+    // ensure DPI exists
+    if ((payload['Numero de DPI']||"").trim() === "") { flash("El campo Numero de DPI es obligatorio", "danger"); return; }
+    // decide nuevo based on presence of data-new flag
+    payload.nuevo = activeRow.dataset.new === '1' ? true : false;
+    // fallback endpoint if none provided
+    const url = endpoint || '/guardar_academico' ;
     try {
-      // comprobar existencia: si GET /api/empleado/:dpi devuelve 200 -> existe
-      let exists = false;
-      try {
-        const r = await fetch(API_EMPLEADO_BASE + encodeURIComponent(dpi), { cache: 'no-store' });
-        exists = r.ok;
-      } catch (e) {
-        exists = false;
-      }
-      payload["nuevo"] = !exists;
-
-      // Enviar a endpoint que tu backend espera (/guardar_empleado)
-      const res = await fetch("/guardar_empleado", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-
       if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        throw new Error(`HTTP ${res.status} ${text || res.statusText}`);
+        const t = await res.text().catch(()=>res.statusText);
+        throw new Error(`${res.status} ${t}`);
       }
-
-      // Lock row and clear styles
-      tds.forEach(td => { td.contentEditable = false; td.style.backgroundColor = ""; });
-      selectedRow.classList.remove("table-active");
-      selectedRow = null;
-      originalCells = null;
-      editing = false;
-      isNewRow = false;
-      const btnEditar = document.getElementById("btnEditar");
-      const btnGuardar = document.getElementById("btnGuardar");
-      const btnCancelar = document.getElementById("btnCancelar");
-      if (btnEditar) btnEditar.disabled = true;
-      if (btnGuardar) btnGuardar.disabled = true;
-      if (btnCancelar) btnCancelar.disabled = true;
+      // lock cells and reset UI
+      Array.from(activeRow.cells).forEach(td=> { td.contentEditable = false; td.style.backgroundColor = ""; });
+      activeRow.classList.remove('table-active');
+      delete activeRow.dataset.editing;
+      delete activeRow.dataset.new;
+      activeRow = null;
+      activeTable = null;
+      const be = document.getElementById('btnEditar');
+      const bg = document.getElementById('btnGuardar');
+      const bc = document.getElementById('btnCancelar');
+      if (be) be.disabled = true;
+      if (bg) bg.disabled = true;
+      if (bc) bc.disabled = true;
       flash("Guardado correctamente", "success");
     } catch (err) {
-      console.error("guardarEdicion error", err);
-      flash("Error al guardar: " + (err.message || err), "danger");
+      console.error("guardarFila error", err);
+      flash("Error al guardar: " + (err.message||err), "danger");
     }
   }
 
-  // Inicialización y wiring de botones (asegurar listeners únicos)
-  function attachUnique(id, handler) {
+  function cancelar(){
+    if (!activeRow) return;
+    if (activeRow.dataset.new === '1') {
+      const p = activeRow.parentNode;
+      if (p) p.removeChild(activeRow);
+    } else {
+      activeRow.querySelectorAll('td').forEach(td => { td.contentEditable = false; td.style.backgroundColor = ""; });
+      activeRow.classList.remove('table-active');
+    }
+    activeRow = null;
+    activeTable = null;
+    const be = document.getElementById('btnEditar');
+    const bg = document.getElementById('btnGuardar');
+    const bc = document.getElementById('btnCancelar');
+    if (be) be.disabled = true;
+    if (bg) bg.disabled = true;
+    if (bc) bc.disabled = true;
+  }
+
+  // attach safe single handlers to global buttons (idempotent)
+  function attachOnce(id, fn){
     const el = document.getElementById(id);
-    if (!el || !el.parentNode) return null;
-    const clean = el.cloneNode(true);
-    el.parentNode.replaceChild(clean, el);
-    clean.addEventListener("click", (e) => { e.stopPropagation(); handler(e); });
-    return clean;
+    if (!el) return;
+    if (el.dataset.attached) return;
+    el.addEventListener('click', (e)=>{ e.stopPropagation(); fn(); });
+    el.dataset.attached = '1';
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
-    const tabla = document.getElementById("tablaEmpleados");
-    if (tabla) {
-      tabla.addEventListener("click", (ev) => {
-        const tr = ev.target.closest("tr");
-        if (!tr || tr.parentElement.tagName !== "TBODY") return;
-        selectRow(tr);
-      });
-    }
-
-    attachUnique("btnAgregar", () => agregarFila());
-    attachUnique("btnEditar", () => editarFila());
-    attachUnique("btnGuardar", () => guardarEdicion());
-    attachUnique("btnCancelar", () => cancelarEdicion());
-
-    const btnAgregar = document.getElementById("btnAgregar");
-    const btnEditar = document.getElementById("btnEditar");
-    const btnGuardar = document.getElementById("btnGuardar");
-    const btnCancelar = document.getElementById("btnCancelar");
-    if (btnAgregar) btnAgregar.disabled = false;
-    if (btnEditar) btnEditar.disabled = true;
-    if (btnGuardar) btnGuardar.disabled = true;
-    if (btnCancelar) btnCancelar.disabled = true;
-
-    const fileFoto = document.getElementById("fileFoto");
-    const fotoEmpleado = document.getElementById("fotoEmpleado");
-    if (fileFoto && fotoEmpleado) {
-      fileFoto.addEventListener("change", (e) => {
-        const f = e.target.files && e.target.files[0];
-        if (!f || !f.type.startsWith("image/")) return;
-        const r = new FileReader();
-        r.onload = () => fotoEmpleado.src = r.result;
-        r.readAsDataURL(f);
-      });
-    }
-
-    document.addEventListener("click", (e) => {
-      const insideTable = !!e.target.closest("#tablaEmpleados");
-      const insideControls = !!e.target.closest("#formSubirFoto") || !!e.target.closest("#formEliminarFoto") || !!e.target.closest("#fileFoto");
-      if (!insideTable && !insideControls && !editing) {
-        const foto = document.getElementById("fotoEmpleado");
-        if (foto) foto.src = PLACEHOLDER;
-        const fs = document.getElementById("formSubirFoto");
-        const fe = document.getElementById("formEliminarFoto");
-        if (fs) fs.style.display = "none";
-        if (fe) fe.style.display = "none";
-      }
-    });
+  document.addEventListener('DOMContentLoaded', ()=> {
+    attachOnce('btnAgregar', agregarFila);
+    attachOnce('btnEditar', editarFila);
+    attachOnce('btnGuardar', guardarFila);
+    attachOnce('btnCancelar', cancelar);
   });
 
-})();
+  // Public API
+  window.registrarTabla = registrarTabla;
+  window.__MAIN_TABLA = window.__MAIN_TABLA || {};
+  window.__MAIN_TABLA.registrarTabla = registrarTabla;
+  window.__MAIN_TABLA.agregarFila = agregarFila;
+  window.__MAIN_TABLA.editarFila = editarFila;
+  window.__MAIN_TABLA.guardarFila = guardarFila;
+  window.__MAIN_TABLA.cancelar = cancelar;
 
+})();
