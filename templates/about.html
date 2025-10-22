@@ -51,19 +51,29 @@
 
 <script>
 /*
-  about.html registration script
-  - Waits for window.registrarTabla to be available (main.js is loaded in layout at end).
-  - Then registers the table with protected columns [0,1,2] (DPI, Nombre, Apellidos).
-  - Forces buttons state per your request (buttons active; Edit only enabled after dblclick selection).
+  about.html — integración con main.js (shared)
+  Requisitos aplicados:
+  - botones siempre habilitados excepto Editar (Edit se habilita tras dblclick en fila)
+  - Agregar crea fila nueva con celdas editables (excepto DPI/Nombre/Apellidos)
+  - Editar activa edición de fila seleccionada (excepto DPI/Nombre/Apellidos)
+  - Guardar usa endpoint /guardar_academico y el main.js realiza POST; si DPI existe backend debe actualizar
+  - Campos vacíos se envían como cadenas vacías "" (no "None")
+  - No incluye panel de fotos
 */
 (function () {
   const TABLE_ID = 'tablaAcademico';
   const ENDPOINT = '/guardar_academico';
-  const COLUMNS = 7;
-  const BLOQUEADAS = [0,1,2]; // DPI, Nombre, Apellidos
+  const COLS = 7;
+  const BLOQUEADAS = [0,1,2]; // índices no editables: DPI, Nombre, Apellidos
+
+  const btnAgregar = document.getElementById('btnAgregar');
+  const btnEditar  = document.getElementById('btnEditar');
+  const btnGuardar = document.getElementById('btnGuardar');
+  const btnCancelar= document.getElementById('btnCancelar');
+  const tabla = document.getElementById(TABLE_ID);
 
   function flash(msg, type='info') {
-    const id = 'about_flash';
+    const id = 'aboutFlash';
     const prev = document.getElementById(id);
     if (prev) prev.remove();
     const d = document.createElement('div');
@@ -71,18 +81,18 @@
     d.className = `alert alert-${type} py-1 px-2 small position-fixed`;
     d.style.top = '16px';
     d.style.right = '16px';
-    d.style.zIndex = 3000;
+    d.style.zIndex = 3200;
     d.innerText = msg;
     document.body.appendChild(d);
-    setTimeout(()=> d.remove(), 2000);
+    setTimeout(()=> d.remove(), 1800);
   }
 
+  // Intenta registrar la tabla cuando window.registrarTabla esté disponible
   function tryRegister(retries = 20) {
     if (window.registrarTabla && typeof window.registrarTabla === 'function') {
-      // register table; main.js will handle selection, edit, save, cancel behaviors
       window.registrarTabla(
         TABLE_ID,
-        COLUMNS,
+        COLS,
         ENDPOINT,
         [
           "Numero de DPI","Nombre","Apellidos",
@@ -92,61 +102,55 @@
         BLOQUEADAS
       );
 
-      // Ensure buttons exist and set requested default states
-      const btnAgregar = document.getElementById('btnAgregar');
-      const btnEditar  = document.getElementById('btnEditar');
-      const btnGuardar = document.getElementById('btnGuardar');
-      const btnCancelar= document.getElementById('btnCancelar');
-
+      // Forzar estados solicitados
       if (btnAgregar) btnAgregar.disabled = false;
-      if (btnEditar)  btnEditar.disabled = true;   // main.js enables on dblclick
-      if (btnGuardar) btnGuardar.disabled = false;  // you wanted Save available
-      if (btnCancelar) btnCancelar.disabled = false;
+      if (btnEditar)  btnEditar.disabled = true;  // se habilita al dblclick
+      if (btnGuardar) btnGuardar.disabled = false; // accesible
+      if (btnCancelar) btnCancelar.disabled = false; // accesible
 
-      // Attach fallback handlers only if main.js didn't attach (safety)
-      function safeAttach(id, fn) {
-        const el = document.getElementById(id);
-        if (!el) return;
-        if (el.dataset.mainAttached) return;
-        el.addEventListener('click', (e) => { e.stopPropagation(); fn(e); });
-        el.dataset.mainAttached = '1';
+      // Si main.js expone __MAIN_TABLA, usamos esas funciones; si no, la registración de registrarTabla
+      // en main.js se encargará de conectar los botones automáticamente. Aquí añadimos handlers de respaldo.
+      function safe(fnName) {
+        if (window.__MAIN_TABLA && typeof window.__MAIN_TABLA[fnName] === 'function') return window.__MAIN_TABLA[fnName];
+        return null;
       }
 
-      // Provide local handlers that call the global API if available
-      safeAttach('btnAgregar', () => {
-        if (window.__MAIN_TABLA && window.__MAIN_TABLA.agregarFila) {
-          window.__MAIN_TABLA.agregarFila();
-        } else {
-          flash('Función de agregar no disponible', 'warning');
-        }
-      });
-      safeAttach('btnEditar', () => {
-        if (window.__MAIN_TABLA && window.__MAIN_TABLA.editarFila) {
-          window.__MAIN_TABLA.editarFila();
-        } else {
-          flash('Función de editar no disponible', 'warning');
-        }
-      });
-      safeAttach('btnGuardar', () => {
-        if (window.__MAIN_TABLA && window.__MAIN_TABLA.guardarFila) {
-          window.__MAIN_TABLA.guardarFila();
-        } else {
-          flash('Función de guardar no disponible', 'warning');
-        }
-      });
-      safeAttach('btnCancelar', () => {
-        if (window.__MAIN_TABLA && window.__MAIN_TABLA.cancelar) {
-          window.__MAIN_TABLA.cancelar();
-        } else {
-          flash('Función de cancelar no disponible', 'warning');
-        }
-      });
+      const addFn = safe('agregarFila');
+      const editFn = safe('editarFila');
+      const saveFn = safe('guardarFila');
+      const cancelFn = safe('cancelar');
 
-      // Make sure double-click on row enables Edit button in case main.js didn't
-      const tabla = document.getElementById(TABLE_ID);
+      // attach fallback handlers only if not already attached by main.js
+      if (btnAgregar && addFn) {
+        if (!btnAgregar.dataset.mainAttached) {
+          btnAgregar.addEventListener('click', (e) => { e.stopPropagation(); addFn(); });
+          btnAgregar.dataset.mainAttached = '1';
+        }
+      }
+      if (btnEditar && editFn) {
+        if (!btnEditar.dataset.mainAttached) {
+          btnEditar.addEventListener('click', (e) => { e.stopPropagation(); editFn(); });
+          btnEditar.dataset.mainAttached = '1';
+        }
+      }
+      if (btnGuardar && saveFn) {
+        if (!btnGuardar.dataset.mainAttached) {
+          btnGuardar.addEventListener('click', (e) => { e.stopPropagation(); saveFn(); });
+          btnGuardar.dataset.mainAttached = '1';
+        }
+      }
+      if (btnCancelar && cancelFn) {
+        if (!btnCancelar.dataset.mainAttached) {
+          btnCancelar.addEventListener('click', (e) => { e.stopPropagation(); cancelFn(); });
+          btnCancelar.dataset.mainAttached = '1';
+        }
+      }
+
+      // Ensure double-click enables Edit button if main.js did not
       if (tabla) {
-        tabla.addEventListener('dblclick', (e) => {
-          const btnEditar = document.getElementById('btnEditar');
+        tabla.addEventListener('dblclick', (ev) => {
+          const tr = ev.target.closest('tr');
+          if (!tr || tr.parentElement.tagName !== 'TBODY') return;
           if (btnEditar) btnEditar.disabled = false;
         });
       }
@@ -156,13 +160,12 @@
 
     if (retries <= 0) {
       console.error('registrarTabla no disponible después de esperar main.js');
-      flash('Error: comportamiento de tabla no inicializado', 'danger');
+      flash('Error inicializando tabla (registrarTabla no disponible)', 'danger');
       return;
     }
     setTimeout(() => tryRegister(retries - 1), 100);
   }
 
-  // Start after DOM ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => tryRegister(20));
   } else {
