@@ -297,7 +297,7 @@
   </form>
 </div>
 
-<!-- Configuración -->
+<!-- Configuración que necesita main.js -->
 <script>
   window.__FICHA_CONFIG = {
     placeholder: "{{ url_for('static', filename='placeholder.png') }}",
@@ -321,7 +321,6 @@
 
   function normalizeKeyToId(key){
     if (!key) return '';
-    // remove accents and lowercase
     const map = { 'á':'a','é':'e','í':'i','ó':'o','ú':'u','Á':'a','É':'e','Í':'i','Ó':'o','Ú':'u','ñ':'n','Ñ':'n','ü':'u','Ü':'u' };
     let s = String(key).trim();
     s = s.split('').map(c => map[c] || c).join('');
@@ -358,10 +357,109 @@
     return false;
   }
 
+  function getFirstNonEmpty(obj, keys){
+    for (const k of keys){
+      if (!k) continue;
+      if (obj.hasOwnProperty(k) && obj[k] !== undefined && obj[k] !== null && String(obj[k]).trim() !== '') return obj[k];
+      const nk = normalizeKeyToId(k);
+      if (obj.hasOwnProperty(nk) && obj[nk] !== undefined && String(obj[nk]).trim() !== '') return obj[nk];
+    }
+    return '';
+  }
+
+  // New: robust nested spouse/emergency mapping helper
+  function getNested(obj, pathCandidates) {
+    if (!obj || typeof obj !== 'object') return '';
+    for (const p of pathCandidates) {
+      if (!p) continue;
+      if (p.indexOf('.') !== -1) {
+        const parts = p.split('.');
+        let cur = obj;
+        let ok = true;
+        for (const part of parts) {
+          if (cur && typeof cur === 'object' && (part in cur)) cur = cur[part];
+          else { ok = false; break; }
+        }
+        if (ok && cur !== undefined && cur !== null && String(cur).trim() !== '') return cur;
+      } else {
+        if (p in obj && obj[p] !== undefined && obj[p] !== null && String(obj[p]).trim() !== '') return obj[p];
+      }
+      const nk = p.normalize ? p.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : p;
+      const nk2 = nk.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_\.]/g,'');
+      if (nk2 in obj && obj[nk2] !== undefined && obj[nk2] !== null && String(obj[nk2]).trim() !== '') return obj[nk2];
+    }
+    return '';
+  }
+
+  function fillSpouseAndEmergency(emp) {
+    if (!emp || typeof emp !== 'object') return;
+
+    const spousePaths = [
+      'conyuge', 'conyugue', 'datos_conyuge', 'datos_cónyuge', 'spouse', 'esposo', 'esposa'
+    ];
+    let spouseObj = null;
+    for (const p of spousePaths) {
+      if (p in emp && emp[p] && typeof emp[p] === 'object') { spouseObj = emp[p]; break; }
+      const nk = p.normalize ? p.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : p;
+      const nk2 = nk.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+      if (nk2 in emp && emp[nk2] && typeof emp[nk2] === 'object') { spouseObj = emp[nk2]; break; }
+    }
+
+    if (spouseObj) {
+      const tel = getFirstNonEmpty(spouseObj, ['telefono','tel','telefono_del_conyuge','telefono_conyuge','teléfono','telefono_contacto','phone','mobile']);
+      const mail = getFirstNonEmpty(spouseObj, ['correo','email','correo_electronico','correo_del_conyuge','correo_conyuge','email_conyuge']);
+      if (tel) setIfExists('conyuge_telefono', tel);
+      if (mail) setIfExists('conyuge_correo', mail);
+    } else {
+      trySetMany(emp,
+        ['Teléfono del cónyuge','Telefono del conyuge','Telefono del conyugue','telefono_del_conyuge','telefono_conyuge','tel_conyuge','telefono_conyugue','phone_conyuge'],
+        'conyuge_telefono');
+      trySetMany(emp,
+        ['Correo del cónyuge','Correo del conyugue','correo_del_conyuge','correo_conyuge','email_conyuge','email_del_conyuge','correo_conyugue'],
+        'conyuge_correo');
+    }
+
+    const emergencyPaths = ['contacto_emergencia','contactoEmergencia','emergency_contact','contacto'];
+    let emObj = null;
+    for (const p of emergencyPaths) {
+      if (p in emp && emp[p] && typeof emp[p] === 'object') { emObj = emp[p]; break; }
+      const nk = p.normalize ? p.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : p;
+      const nk2 = nk.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+      if (nk2 in emp && emp[nk2] && typeof emp[nk2] === 'object') { emObj = emp[nk2]; break; }
+    }
+
+    if (emObj) {
+      const nombre = getFirstNonEmpty(emObj, ['nombre','first_name','nombre_contacto','nombre_del_contacto']);
+      const apellidos = getFirstNonEmpty(emObj, ['apellidos','apellido','last_name','apellidos_contacto','apellidos_del_contacto']);
+      const tel = getFirstNonEmpty(emObj, ['telefono','tel','telefono_emergencia','telefono_de_emergencia']);
+      if (nombre) setIfExists('contacto_nombre', nombre);
+      if (apellidos) setIfExists('contacto_apellidos', apellidos);
+      if (tel) setIfExists('contacto_telefono', tel);
+    } else {
+      trySetMany(emp,
+        ['Nombre contacto','Nombre contacto de emergencia','nombre_contacto','nombre_del_contacto','contacto_nombre','nombrecontacto'],
+        'contacto_nombre');
+      trySetMany(emp,
+        ['Apellidos contacto','Apellidos contacto de emergencia','apellidos_contacto','apellidos_del_contacto','contacto_apellidos'],
+        'contacto_apellidos');
+      trySetMany(emp,
+        ['Teléfono de emergencia','Telefono de emergencia','telefono_de_emergencia','telefono_emergencia','contacto_telefono','numero_de_telefono_de_emergencia'],
+        'contacto_telefono');
+    }
+
+    if ((!document.getElementById('contacto_nombre').value || document.getElementById('contacto_nombre').value.trim()==='') &&
+        emp['Contacto de emergencia'] && typeof emp['Contacto de emergencia'] === 'string') {
+      const parts = emp['Contacto de emergencia'].trim().split(/\s+/);
+      if (parts.length) {
+        setIfExists('contacto_nombre', parts[0]);
+        if (parts.length > 1) setIfExists('contacto_apellidos', parts.slice(1).join(' '));
+      }
+    }
+  }
+
   function fillFields(emp){
     if (!emp || typeof emp !== 'object') return;
 
-    // Direct explicit sets for common exact keys (original DB names)
     const explicit = {
       dpi: ['Numero de DPI','Numero_de_DPI','Numero_de_Dpi','numero_de_dpi','dpi'],
       nombre: ['Nombre','nombre','full_name','fullName'],
@@ -371,7 +469,7 @@
       nacionalidad: ['Nacionalidad','nacionalidad'],
       departamento: ['Departamento','departamento'],
       lugar_nacimiento: ['Lugar de nacimiento','Lugar_de_nacimiento','lugar_de_nacimiento'],
-      iggs: ['Numero de Afiliación del IGGS','Numero de Afiliacion del IGGS','Numero IGSS','numero_igg','numero_iggs'],
+      iggs: ['Numero de Afiliación del IGGS','Numero de Afiliacion del IGGS','Numero IGSS','numero_igg','numero_iggs','Numero de Afiliacion del IGGS'],
       direccion: ['Dirección del Domicilio','Direccion del Domicilio','direccion','Dirección'],
       telefono: ['Numero de Telefono','Numero de Teléfono','Telefono','telefono','numero_de_telefono'],
       correo: ['Correo Electronico','Correo electrónico','Correo','correo','correo_electronico'],
@@ -386,21 +484,18 @@
       nivel_estudios: ['Nivel de estudios','nivel_de_estudios'],
       profesion: ['Profesión u Oficio','Profesion u Oficio','profesion_u_oficio'],
       colegio: ['Colegio o establecimiento','colegio_o_establecimiento','colegio'],
-      cursos: ['Cursos o títulos adicionales','Cursos o titulos adicionales','Cursos o titulos adicionales','Cursos','cursos','cursos_o_titulos_adicionales'],
+      cursos: ['Cursos o títulos adicionales','Cursos o titulos adicionales','Cursos','cursos','cursos_o_titulos_adicionales'],
 
-      // cónyuge
       conyuge_nombres: ['Nombres del cónyuge','Nombres del conyugue','nombres_del_conyuge','conyuge_nombres'],
       conyuge_apellidos: ['Apellidos del cónyuge','Apellidos del conyugue','apellidos_del_conyuge','conyuge_apellidos'],
       conyuge_direccion: ['Dirección del cónyuge','Direccion del conyugue','direccion_del_conyuge','conyuge_direccion'],
       conyuge_telefono: ['Teléfono del cónyuge','Telefono del conyugue','telefono_del_conyuge','conyuge_telefono','telefono_conyuge'],
       conyuge_correo: ['Correo del cónyuge','Correo del conyugue','correo_del_conyuge','conyuge_correo','correo_conyuge'],
 
-      // emergencia
       contacto_nombre: ['Nombre contacto','Nombre contacto de emergencia','nombre_contacto','contacto_nombre'],
       contacto_apellidos: ['Apellidos contacto','Apellidos contacto de emergencia','apellidos_contacto','contacto_apellidos'],
       contacto_telefono: ['Teléfono de emergencia','Telefono de emergencia','Numero de telefono de emergencia','telefono_de_emergencia','contacto_telefono'],
 
-      // referencias laborales (varios nombres)
       ref_nombre_empresa: ['Nombre Empresa','Nombre de la Empresa (Ultimo Trabajo)','nombre_empresa','nombre_de_la_empresa_ultimo_trabajo'],
       ref_direccion_empresa: ['Dirección Empresa','Direccion de la empresa','direccion_empresa'],
       ref_inicio_empresa: ['Inicio en la empresa','Inicio laboral en la empresa','inicio_en_la_empresa'],
@@ -408,34 +503,28 @@
       ref_motivo_retiro: ['Motivo del retiro','motivo_del_retiro'],
       ref_nombre_jefe: ['Nombre del jefe inmediato','Nombre del Jefe Imediato','nombre_del_jefe_inmediato'],
 
-      // medicos
       padece_enfermedad: ['Padece alguna enfermedad','padece_alguna_enfermedad'],
       tipo_enfermedad: ['Tipo de enfermedad','tipo_de_enfermedad'],
-      recibe_tratamiento: ['Recibe tratamiento','Recibe tratamiento medico','recibe_tratamiento'],
+      recibe_tratamiento: ['Recibe tratamiento','Recibe tratamiento medico','recibe_tratamiento','Recibe tratamiento medico'],
       nombre_tratamiento: ['Nombre del tratamiento','nombre_del_tratamiento'],
       alergico: ['Es alergico a algun medicamento','Es alérgico a algún medicamento','es_alergico_a_algun_medicamento'],
       medico_tratante: ['Nombre del medico Tratante','Nombre del médico tratante','nombre_del_medico_tratante'],
       tipo_sangre: ['Tipo de sangre','tipo_de_sangre']
     };
 
-    // Loop explicit map and set fields when found
     for (const id in explicit){
       const keys = explicit[id];
       trySetMany(emp, keys, id);
     }
 
-    // If some academic cursos field still empty, attempt to get from other keys
     trySetMany(emp, ['Cursos o títulos adicionales', 'Cursos o titulos adicionales', 'Cursos', 'cursos_o_titulos_adicionales', 'cursos'], 'cursos');
 
-    // Ensure spouse phone and email are set if present under other names
-    trySetMany(emp, ['Telefono del conyuge','Telefono conyuge','Teléfono del conyuge','tel_conyuge','conyuge_telefono'], 'conyuge_telefono');
+    trySetMany(emp, ['Telefono del conyuge','Telefono conyuge','Teléfono del cónyuge','tel_conyuge','conyuge_telefono'], 'conyuge_telefono');
     trySetMany(emp, ['Correo del conyuge','correo_conyuge','correo_del_conyuge','conyuge_correo'], 'conyuge_correo');
 
-    // Emergency name/apellidos fallbacks
     trySetMany(emp, ['Nombre contacto','nombre_contacto','contacto_nombre','nombre_contacto_de_emergencia'], 'contacto_nombre');
     trySetMany(emp, ['Apellidos contacto','apellidos_contacto','contacto_apellidos','apellidos_contacto_de_emergencia'], 'contacto_apellidos');
 
-    // Refs (set also into table cells)
     const refNombre = getFirstNonEmpty(emp, ['Nombre Empresa','Nombre de la Empresa (Ultimo Trabajo)','nombre_empresa']);
     const refDireccion = getFirstNonEmpty(emp, ['Dirección Empresa','Direccion de la empresa','direccion_empresa']);
     const refInicio = getFirstNonEmpty(emp, ['Inicio en la empresa','Inicio laboral en la empresa','inicio_en_la_empresa']);
@@ -450,35 +539,40 @@
     setCellText('ref_motivo_retiro', refMotivo);
     setCellText('ref_nombre_jefe', refJefe);
 
-    // Fecha de nacimiento normalization (ISO -> DD/MM/YYYY)
     const rawFn = emp['Fecha de nacimiento'] || emp['fecha_nacimiento'] || '';
     if (rawFn && rawFn.indexOf('-') !== -1 && rawFn.length >= 10){
       const d = rawFn.slice(0,10).split('-');
       if (d.length === 3) setIfExists('fecha_nacimiento', `${d[2]}/${d[1]}/${d[0]}`);
       else setIfExists('fecha_nacimiento', rawFn);
     } else setIfExists('fecha_nacimiento', rawFn || '');
-  }
 
-  function getFirstNonEmpty(obj, keys){
-    for (const k of keys){
-      if (!k) continue;
-      if (obj.hasOwnProperty(k) && obj[k] !== undefined && obj[k] !== null && String(obj[k]).trim() !== '') return obj[k];
-      const nk = normalizeKeyToId(k);
-      if (obj.hasOwnProperty(nk) && obj[nk] !== undefined && String(obj[nk]).trim() !== '') return obj[nk];
+    // Finally handle nested spouse/emergency robustly
+    fillSpouseAndEmergency(emp);
+
+    // Try auto-match leftover keys to inputs by normalized id
+    for (const k in emp) {
+      const nid = normalizeKeyToId(k);
+      // skip if already handled by explicit mapping
+      // if element exists with id equal to nid and empty, set it
+      const el = document.getElementById(nid);
+      if (el && el.tagName === 'INPUT' && (!el.value || el.value.trim()==='')) {
+        el.value = emp[k] == null ? '' : String(emp[k]);
+      }
+      const altId = nid.replace(/\s+/g,'_');
+      const el2 = document.getElementById(altId);
+      if (el2 && el2.tagName === 'INPUT' && (!el2.value || el2.value.trim()==='')) {
+        el2.value = emp[k] == null ? '' : String(emp[k]);
+      }
     }
-    return '';
   }
 
   function clearAll(){
-    // clear inputs
     const inputs = document.querySelectorAll('#fichaForm input');
     inputs.forEach(i => i.value = '');
-    // clear ref cells
     ['ref_nombre_empresa','ref_direccion_empresa','ref_inicio_empresa','ref_fin_empresa','ref_motivo_retiro','ref_nombre_jefe'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.innerText = '';
     });
-    // reset photo
     if (fotoEl) fotoEl.src = placeholder || fotoEl.getAttribute('data-original') || fotoEl.src;
     if (selectEl) selectEl.value = '';
   }
@@ -530,7 +624,6 @@
       clearAll();
     }
 
-    // foto
     try {
       const rp = await fetch(apiFotoBase + encodeURIComponent(dpi), { cache: 'no-store' });
       if (rp.ok) {
