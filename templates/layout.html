@@ -117,8 +117,8 @@
         </li>
       {% else %}
         <!-- En páginas de información de empleados: menú completo como antes -->
-        <li class="nav-item {% if request.path == '/' %}active{% endif %}">
-          <a class="nav-link text-white border-bottom" href="{{ url_for('home') }}">
+        <li class="nav-item {% if request.path == '/empleados' %}active{% endif %}">
+          <a class="nav-link text-white border-bottom" href="{{ url_for('empleados') }}">
             <i class="fas fa-id-card"></i> Datos Personales
           </a>
         </li>
