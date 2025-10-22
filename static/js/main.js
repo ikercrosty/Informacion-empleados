@@ -30,6 +30,31 @@
     setTimeout(()=> d.remove(), 2000);
   }
 
+  // Helper: update Save button enabled state based on whether activeRow has any editable cells
+  function updateSaveButtonState() {
+    const bg = document.getElementById('btnGuardar');
+    if (!bg) return;
+    if (!activeRow) { bg.disabled = true; return; }
+    const editableExists = Array.from(activeRow.cells).some(td => td.isContentEditable === true);
+    bg.disabled = !editableExists;
+  }
+
+  // Finish editing without saving: remove contentEditable from cells, keep values, clear editing flags
+  function finishEditingWithoutSave() {
+    if (!activeRow) return;
+    // remove contentEditable and background highlight from all cells
+    Array.from(activeRow.cells).forEach(td => {
+      td.contentEditable = false;
+      td.style.backgroundColor = '';
+    });
+    // clear editing marker so other flows see it's not editing
+    if (activeRow.dataset) {
+      delete activeRow.dataset.editing;
+    }
+    // disable save, keep activeRow selected (do not remove new row)
+    updateSaveButtonState();
+  }
+
   // registrarTabla: expone la tabla al motor compartido
   function registrarTabla(idTabla, columnas, endpoint, campos, bloqueadas){
     const el = document.getElementById(idTabla);
@@ -71,6 +96,11 @@
 
   // expose functions for templates and fallback handlers
   function agregarFila(){
+    // defensiva: si ya hay una fila nueva en edición, no crear otra
+    if (activeRow && activeRow.dataset && activeRow.dataset.new === '1') {
+      return;
+    }
+
     if (!activeTable) {
       // try to pick a visible registered table
       const first = Object.values(registry).find(r=> r.tabla && r.tabla.offsetParent !== null);
@@ -106,6 +136,7 @@
     if (be) be.disabled = true;
     if (bg) bg.disabled = false;
     if (bc) bc.disabled = false;
+    updateSaveButtonState();
   }
 
   function editarFila(){
@@ -128,6 +159,7 @@
     if (be) be.disabled = true;
     if (bg) bg.disabled = false;
     if (bc) bc.disabled = false;
+    updateSaveButtonState();
   }
 
   async function guardarFila(){
@@ -205,11 +237,46 @@
     el.dataset.attached = '1';
   }
 
-  document.addEventListener('DOMContentLoaded', ()=> {
+  // Click outside handler: when editing and user clicks outside table or controls, end editing (no save)
+  function documentClickOutsideHandler(e) {
+    if (!activeRow) return;
+    // If there are no editable cells, nothing to do
+    const isEditing = activeRow.dataset && activeRow.dataset.editing === '1';
+    if (!isEditing) return;
+
+    const clickedInsideTable = !!e.target.closest('table');
+    const clickedControl = !!e.target.closest('#btnAgregar') || !!e.target.closest('#btnEditar') ||
+                           !!e.target.closest('#btnGuardar') || !!e.target.closest('#btnCancelar') ||
+                           !!e.target.closest('#formSubirFoto') || !!e.target.closest('#formEliminarFoto') ||
+                           !!e.target.closest('#fileFoto');
+
+    if (!clickedInsideTable && !clickedControl) {
+      // finish edit without saving: remove contentEditable and editing flag
+      Array.from(activeRow.cells).forEach(td => { td.contentEditable = false; td.style.backgroundColor = ''; });
+      delete activeRow.dataset.editing;
+      // keep activeRow selected but Save disabled
+      updateSaveButtonState();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
     attachOnce('btnAgregar', agregarFila);
     attachOnce('btnEditar', editarFila);
     attachOnce('btnGuardar', guardarFila);
     attachOnce('btnCancelar', cancelar);
+
+    // global document click handler to end inline editing when clicking outside
+    // attach only once
+    if (!document.body.dataset.mainClickAttached) {
+      document.addEventListener('click', documentClickOutsideHandler);
+      document.body.dataset.mainClickAttached = '1';
+    }
+
+    // also observe mutations on activeRow cells to update Save button state (user typing)
+    // use input/keydown on document to trigger update since contentEditable changes on key events
+    document.addEventListener('input', () => updateSaveButtonState(), true);
+    document.addEventListener('keydown', () => updateSaveButtonState(), true);
+    document.addEventListener('keyup', () => updateSaveButtonState(), true);
   });
 
   // Public API
