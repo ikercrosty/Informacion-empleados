@@ -61,12 +61,10 @@
           <label class="form-label">Fecha de nacimiento</label>
           {% set fn = e.get('Fecha de nacimiento') if e else None %}
           {% if fn %}
-            {# Caso ISO YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS -> tomar primeros 10 y reordenar #}
             {% if '-' in fn and fn[:4].isdigit() %}
               {% set dpart = fn[:10].split('-') %}
               {% set fecha_nac = dpart[2] ~ '/' ~ dpart[1] ~ '/' ~ dpart[0] %}
             {% else %}
-              {# Caso estilo 'Tue, 03 Jul 1990 00:00:00 GMT' o '03 Jul 1990' -> detectar día, mes abreviado y año #}
               {% set months = {'Jan':'01','Feb':'02','Mar':'03','Apr':'04','May':'05','Jun':'06','Jul':'07','Aug':'08','Sep':'09','Oct':'10','Nov':'11','Dec':'12',
                                'enero':'01','febrero':'02','marzo':'03','abril':'04','mayo':'05','junio':'06','julio':'07','agosto':'08','septiembre':'09','octubre':'10','noviembre':'11','diciembre':'12'} %}
               {% set tokens = fn.replace(',', ' ').split() %}
@@ -246,12 +244,12 @@
           </thead>
           <tbody>
             <tr>
-              <td>{{ e.get('Nombre Empresa') if e else '' }}</td>
-              <td>{{ e.get('Dirección Empresa') if e else '' }}</td>
-              <td>{{ e.get('Inicio en la empresa') if e else '' }}</td>
-              <td>{{ e.get('Fin en la empresa') if e else '' }}</td>
-              <td>{{ e.get('Motivo del retiro') if e else '' }}</td>
-              <td>{{ e.get('Nombre del jefe inmediato') if e else '' }}</td>
+              <td id="ref_nombre_empresa">{{ e.get('Nombre Empresa') if e else '' }}</td>
+              <td id="ref_direccion_empresa">{{ e.get('Dirección Empresa') if e else '' }}</td>
+              <td id="ref_inicio_empresa">{{ e.get('Inicio en la empresa') if e else '' }}</td>
+              <td id="ref_fin_empresa">{{ e.get('Fin en la empresa') if e else '' }}</td>
+              <td id="ref_motivo_retiro">{{ e.get('Motivo del retiro') if e else '' }}</td>
+              <td id="ref_nombre_jefe">{{ e.get('Nombre del jefe inmediato') if e else '' }}</td>
             </tr>
           </tbody>
         </table>
@@ -309,6 +307,7 @@
     apiFotoBase: "/api/foto/"
   };
 </script>
+
 <script>
 (function(){
   const cfg = window.__FICHA_CONFIG || {};
@@ -317,177 +316,224 @@
   const apiFotoBase = cfg.apiFotoBase || '/api/foto/';
   const placeholder = cfg.placeholder || '';
 
-  // Elementos
   const selectEl = document.getElementById('empleadoSelect');
   const fotoEl = document.getElementById('fotoEmpleado');
   const btnClear = document.getElementById('btnClear');
 
-  // Map of form fields by key -> element id in the template
-  const FIELD_MAP = {
-    "Numero de DPI": "dpi",
-    "Nombre": "nombre",
-    "Apellidos": "apellidos",
-    "Apellidos de casada": "apellidos_casada",
-    "Estado Civil": "estado_civil",
-    "Nacionalidad": "nacionalidad",
-    "Departamento": "departamento",
-    "Fecha de nacimiento": "fecha_nacimiento",
-    "Lugar de nacimiento": "lugar_nacimiento",
-    "Numero de Afiliación del IGGS": "iggs",
-    "Dirección del Domicilio": "direccion",
-    "Numero de Telefono": "telefono",
-    "Correo Electronico": "correo",
-    "Religión": "religion",
-    "Puesto de trabajo": "puesto",
-    "Tipo de contrato": "tipo_contrato",
-    "Jornada laboral": "jornada",
-    "Duración del trabajo": "duracion",
-    "Fecha de inicio laboral": "fecha_inicio",
-    "Dias Laborales": "dias_laborales",
+  // Helper: normalize key to id-like token (remove accents, lowercase, underscores)
+  function normalizeKeyToId(key){
+    if (!key) return '';
+    // remove accents
+    const accents = {'á':'a','é':'e','í':'i','ó':'o','ú':'u','Á':'a','É':'e','Í':'i','Ó':'o','Ú':'u','ñ':'n','Ñ':'n','ü':'u','Ü':'u'};
+    let s = String(key).trim();
+    s = s.replace(/[\u00C0-\u017F]/g, function(c){
+      return accents[c] || c.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    });
+    s = s.toLowerCase();
+    s = s.replace(/[^a-z0-9\s_-]/g,''); // remove punctuation
+    s = s.replace(/\s+/g,'_');
+    return s;
+  }
 
-    // académico
-    "Nivel de estudios": "nivel_estudios",
-    "Profesión u Oficio": "profesion",
-    "Colegio o establecimiento": "colegio",
-    "Cursos o títulos adicionales": "cursos",
-
-    // cónyuge
-    "Nombres del cónyuge": "conyuge_nombres",
-    "Apellidos del cónyuge": "conyuge_apellidos",
-    "Dirección del cónyuge": "conyuge_direccion",
-    "Teléfono del cónyuge": "conyuge_telefono",
-    "Correo del cónyuge": "conyuge_correo",
-
-    // emergencia
-    "Nombre contacto": "contacto_nombre",
-    "Apellidos contacto": "contacto_apellidos",
-    "Numero de telefono de emergencia": "contacto_telefono",
-    "Teléfono de emergencia": "contacto_telefono", // alternate key
-
-    // laboral / referencias
-    "Nombre Empresa": null, // in table row, different template keys; handled below
-    "Dirección Empresa": null,
-    "Inicio en la empresa": null,
-    "Fin en la empresa": null,
-    "Motivo del retiro": null,
-    "Nombre del jefe inmediato": null,
-    "Nombre Empresa": "Nombre Empresa",
-    "Dirección Empresa": "Dirección Empresa",
-    "Inicio en la empresa": "Inicio en la empresa",
-    "Fin en la empresa": "Fin en la empresa",
-    "Motivo del retiro": "Motivo del retiro",
-    "Nombre del jefe inmediato": "Nombre del jefe inmediato",
-
-    // médica
-    "Padece alguna enfermedad": "padece_enfermedad",
-    "Tipo de enfermedad": "tipo_enfermedad",
-    "Recibe tratamiento medico": "recibe_tratamiento",
-    "Nombre del tratamiento": "nombre_tratamiento",
-    "Es alergico a algun medicamento": "alergico",
-    "Nombre del medico Tratante": "medico_tratante",
-    "Tipo de sangre": "tipo_sangre"
-  };
-
-  // Safe helper to set input value if element exists
-  function setFieldById(id, value) {
+  function setIfExists(id, value){
     if (!id) return;
     const el = document.getElementById(id);
     if (!el) return;
     el.value = value == null ? '' : String(value);
   }
 
-  // Normalize server keys to the template names used in DB (best-effort)
-  function normalizeKey(k){
-    if (!k) return k;
-    return k.trim();
+  // Explicit mapping for known variants (keys returned by your API -> input ids)
+  const explicitMap = {
+    // main personal
+    'numero_de_dpi': 'dpi',
+    'nombre': 'nombre',
+    'apellidos': 'apellidos',
+    'apellidos_de_casada': 'apellidos_casada',
+    'estado_civil': 'estado_civil',
+    'nacionalidad': 'nacionalidad',
+    'departamento': 'departamento',
+    'fecha_de_nacimiento': 'fecha_nacimiento',
+    'lugar_de_nacimiento': 'lugar_nacimiento',
+    'numero_de_afiliacion_del_iggs': 'iggs',
+    'numero_iggs': 'iggs',
+    'direccion_del_domicilio': 'direccion',
+    'direccion': 'direccion',
+    'numero_de_telefono': 'telefono',
+    'telefono': 'telefono',
+    'correo_electronico': 'correo',
+    'correo': 'correo',
+    'religion': 'religion',
+    // laboral
+    'puesto_de_trabajo': 'puesto',
+    'tipo_de_contrato': 'tipo_contrato',
+    'jornada_laboral': 'jornada',
+    'duracion_del_trabajo': 'duracion',
+    'fecha_de_inicio_laboral': 'fecha_inicio',
+    'dias_laborales': 'dias_laborales',
+    // academico
+    'nivel_de_estudios': 'nivel_estudios',
+    'profesion_u_oficio': 'profesion',
+    'colegio_o_establecimiento': 'colegio',
+    'cursos_o_titulos_adicionales': 'cursos',
+    'cursos_o_titulos_adicionales': 'cursos',
+    // conyuge variants
+    'nombres_del_conyuge': 'conyuge_nombres',
+    'apellidos_del_conyuge': 'conyuge_apellidos',
+    'direccion_del_conyuge': 'conyuge_direccion',
+    'direccion_conyuge': 'conyuge_direccion',
+    'telefono_del_conyuge': 'conyuge_telefono',
+    'telefono_conyuge': 'conyuge_telefono',
+    'correo_del_conyuge': 'conyuge_correo',
+    'correo_conyuge': 'conyuge_correo',
+    // emergencia variants
+    'nombre_contacto': 'contacto_nombre',
+    'nombre_contacto_de_emergencia': 'contacto_nombre',
+    'apellidos_contacto': 'contacto_apellidos',
+    'apellidos_contacto_de_emergencia': 'contacto_apellidos',
+    'telefono_de_emergencia': 'contacto_telefono',
+    'numero_de_telefono_de_emergencia': 'contacto_telefono',
+    // referencias laborales (table cells)
+    'nombre_empresa': 'ref_nombre_empresa',
+    'nombre_de_la_empresa_ultimo_trabajo': 'ref_nombre_empresa',
+    'direccion_empresa': 'ref_direccion_empresa',
+    'direccion_de_la_empresa': 'ref_direccion_empresa',
+    'inicio_en_la_empresa': 'ref_inicio_empresa',
+    'inicio_laboral_en_la_empresa': 'ref_inicio_empresa',
+    'fin_en_la_empresa': 'ref_fin_empresa',
+    'fin_laboral_en_la_empresa': 'ref_fin_empresa',
+    'motivo_del_retiro': 'ref_motivo_retiro',
+    'nombre_del_jefe_inmediato': 'ref_nombre_jefe',
+    'nombre_del_jefe_imediato': 'ref_nombre_jefe',
+    // medicos
+    'padece_alguna_enfermedad': 'padece_enfermedad',
+    'tipo_de_enfermedad': 'tipo_enfermedad',
+    'recibe_tratamiento': 'recibe_tratamiento',
+    'nombre_del_tratamiento': 'nombre_tratamiento',
+    'es_alergico_a_algun_medicamento': 'alergico',
+    'nombre_del_medico_tratante': 'medico_tratante',
+    'tipo_de_sangre': 'tipo_sangre'
+  };
+
+  // Try to set many possible keys for a single field (helper)
+  function trySetMany(emp, possibleKeys, id){
+    for (const k of possibleKeys){
+      if (emp.hasOwnProperty(k) && emp[k] !== undefined && emp[k] !== null && String(emp[k]).trim() !== '') {
+        setIfExists(id, emp[k]);
+        return true;
+      }
+    }
+    return false;
   }
 
-  // Fill all mapped fields from a returned employee object
+  // Fill fields from employee object with robust matching
   function fillFields(emp){
-    // set all mapped keys
-    Object.keys(FIELD_MAP).forEach(serverKey => {
-      const fieldId = FIELD_MAP[serverKey];
-      if (!fieldId) return;
-      const val = emp.hasOwnProperty(serverKey) ? emp[serverKey] : (emp[serverKey.replace(/ /g, ' ')] || '');
-      setFieldById(fieldId, val);
-    });
+    if (!emp || typeof emp !== 'object') return;
 
-    // Some DB columns differ in name in templates — handle common alternates:
-    setFieldById('iggs', emp['Numero de Afiliación del IGGS'] || emp['Numero de Afiliacion del IGGS'] || emp['Numero IGSS'] || '');
-    setFieldById('direccion', emp['Dirección del Domicilio'] || emp['Direccion del Domicilio'] || emp['Dirección'] || '');
-    setFieldById('telefono', emp['Numero de Telefono'] || emp['Numero de Telefono'] || emp['Telefono'] || '');
-    setFieldById('correo', emp['Correo Electronico'] || emp['Correo'] || '');
-    setFieldById('religion', emp['Religión'] || emp['Religion'] || '');
-    setFieldById('dias_laborales', emp['Dias Laborales'] || emp['Dias Laborales'] || '');
-
-    // laboral references table: write directly into the cells if present
-    const refMap = {
-      "Nombre Empresa": emp['Nombre Empresa'] || emp['Nombre de la Empresa (Ultimo Trabajo)'] || '',
-      "Dirección Empresa": emp['Dirección Empresa'] || emp['Direccion de la empresa'] || emp['Dirección de la empresa'] || '',
-      "Inicio en la empresa": emp['Inicio en la empresa'] || emp['Inicio laboral en la empresa'] || '',
-      "Fin en la empresa": emp['Fin en la empresa'] || emp['Fin Laboral en la empresa'] || '',
-      "Motivo del retiro": emp['Motivo del retiro'] || '',
-      "Nombre del jefe inmediato": emp['Nombre del jefe inmediato'] || emp['Nombre del Jefe Imediato'] || ''
-    };
-    // find the referencias laborales table and set its first row cells
-    const refTable = document.querySelector('table.table.table-sm.table-borderless');
-    if (refTable) {
-      const tbody = refTable.tBodies[0];
-      if (tbody && tbody.rows && tbody.rows[0]) {
-        const cells = tbody.rows[0].cells;
-        const keys = Object.keys(refMap);
-        for (let i=0;i<keys.length;i++){
-          if (cells[i]) cells[i].innerText = refMap[keys[i]] || '';
-        }
+    // First, explicit map
+    for (const rawKey in emp){
+      const idByExplicit = explicitMap[normalizeKeyToId(rawKey)];
+      if (idByExplicit) {
+        setIfExists(idByExplicit, emp[rawKey]);
       }
     }
 
-    // Fecha de nacimiento: convert ISO YYYY-MM-DD to DD/MM/YYYY if needed (the template expects DD/MM/YYYY)
+    // Ensure common fallbacks for spouse, emergency and cursos if not set
+    // Cursos: try several possible API keys
+    trySetMany(emp, ['Cursos o títulos adicionales','Cursos o titulos adicionales','Cursos','cursos_o_titulos_adicionales','cursos_o_titulos_adicionales','cursos'], 'cursos');
+
+    // Cónyuge: several variants
+    trySetMany(emp,
+      ['Nombres del cónyuge','Nombres del conyugue','nombres_del_conyuge','nombres_del_conyugue','conyuge_nombres','nombres_conyuge'],
+      'conyuge_nombres');
+    trySetMany(emp,
+      ['Apellidos del cónyuge','Apellidos del conyugue','apellidos_del_conyuge','conyuge_apellidos','apellidos_conyuge'],
+      'conyuge_apellidos');
+    trySetMany(emp,
+      ['Dirección del cónyuge','Direccion del conyugue','direccion_del_conyuge','direccion_conyuge','conyuge_direccion'],
+      'conyuge_direccion');
+    trySetMany(emp,
+      ['Teléfono del cónyuge','Telefono del conyugue','telefono_del_conyuge','telefono_conyuge','conyuge_telefono'],
+      'conyuge_telefono');
+    trySetMany(emp,
+      ['Correo del cónyuge','Correo del conyugue','correo_del_conyuge','correo_conyuge','conyuge_correo'],
+      'conyuge_correo');
+
+    // Emergencia: several variants
+    trySetMany(emp,
+      ['Nombre contacto','Nombre contacto de emergencia','nombre_contacto','nombre_contacto_de_emergencia'],
+      'contacto_nombre');
+    trySetMany(emp,
+      ['Apellidos contacto','Apellidos contacto de emergencia','apellidos_contacto','apellidos_contacto_de_emergencia'],
+      'contacto_apellidos');
+    trySetMany(emp,
+      ['Teléfono de emergencia','Teléfono de emergencia','Numero de telefono de emergencia','telefono_de_emergencia','numero_de_telefono_de_emergencia'],
+      'contacto_telefono');
+
+    // If explicit mapping didn't cover all keys, try normalized auto-fill for inputs that exist
+    for (const k in emp) {
+      const nid = normalizeKeyToId(k);
+      // skip if explicit map already handled
+      if (explicitMap[nid]) continue;
+      const candidateId = nid; // e.g., "nombre", "telefono"
+      const el = document.getElementById(candidateId);
+      if (el && el.tagName === 'INPUT') {
+        // only set if empty currently
+        if (!el.value || el.value.trim() === '') el.value = emp[k] == null ? '' : String(emp[k]);
+      }
+      // also check underscore-variants mapping to elements in template (some ids use underscores)
+      const altId = candidateId.replace(/\s+/g,'_');
+      const el2 = document.getElementById(altId);
+      if (el2 && el2.tagName === 'INPUT') {
+        if (!el2.value || el2.value.trim() === '') el2.value = emp[k] == null ? '' : String(emp[k]);
+      }
+    }
+
+    // Fill referencias laborales cells explicitly if keys exist
+    const refNombre = emp['Nombre de la Empresa (Ultimo Trabajo)'] || emp['Nombre Empresa'] || emp['nombre_empresa'] || emp['nombre_de_la_empresa_ultimo_trabajo'] || '';
+    const refDireccion = emp['Dirección Empresa'] || emp['Direccion de la empresa'] || emp['direccion_empresa'] || '';
+    const refInicio = emp['Inicio en la empresa'] || emp['Inicio laboral en la empresa'] || emp['inicio_en_la_empresa'] || '';
+    const refFin = emp['Fin en la empresa'] || emp['Fin Laboral en la empresa'] || emp['fin_en_la_empresa'] || '';
+    const refMotivo = emp['Motivo del retiro'] || emp['motivo_del_retiro'] || '';
+    const refJefe = emp['Nombre del jefe inmediato'] || emp['Nombre del Jefe Imediato'] || emp['nombre_del_jefe_inmediato'] || '';
+
+    setIfExists('ref_nombre_empresa', refNombre);
+    setIfExists('ref_direccion_empresa', refDireccion);
+    setIfExists('ref_inicio_empresa', refInicio);
+    setIfExists('ref_fin_empresa', refFin);
+    setIfExists('ref_motivo_retiro', refMotivo);
+    setIfExists('ref_nombre_jefe', refJefe);
+
+    // Fecha de nacimiento normalization (ISO -> DD/MM/YYYY)
     const rawFn = emp['Fecha de nacimiento'] || emp['fecha_nacimiento'] || '';
     if (rawFn && rawFn.indexOf('-') !== -1 && rawFn.length >= 10){
       const d = rawFn.slice(0,10).split('-');
-      if (d.length === 3) setFieldById('fecha_nacimiento', `${d[2]}/${d[1]}/${d[0]}`);
-      else setFieldById('fecha_nacimiento', rawFn);
-    } else setFieldById('fecha_nacimiento', rawFn || '');
-
-    // Otros campos no listed in FIELD_MAP: try to set by direct element id if matches key
-    // (safe noop if element not found)
-    for (const k in emp) {
-      if (!Object.values(FIELD_MAP).includes(k) && typeof k === 'string') {
-        const possibleId = k.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g,'');
-        const el = document.getElementById(possibleId);
-        if (el && el.tagName === 'INPUT') el.value = emp[k] || '';
-      }
+      if (d.length === 3) setIfExists('fecha_nacimiento', `${d[2]}/${d[1]}/${d[0]}`);
+      else setIfExists('fecha_nacimiento', rawFn);
+    } else {
+      setIfExists('fecha_nacimiento', rawFn || '');
     }
   }
 
-  // Clear all fields (restore placeholder image)
   function clearAll(){
-    // clear mapped inputs
-    Object.values(FIELD_MAP).forEach(id => { if (id) setFieldById(id, ''); });
-    // clear reference row if present
-    const refTable = document.querySelector('table.table.table-sm.table-borderless');
-    if (refTable) {
-      const tbody = refTable.tBodies[0];
-      if (tbody && tbody.rows && tbody.rows[0]) {
-        Array.from(tbody.rows[0].cells).forEach(td => td.innerText = '');
-      }
-    }
+    // clear all inputs in the form
+    const inputs = document.querySelectorAll('#fichaForm input');
+    inputs.forEach(i => i.value = '');
+    // clear ref cells
+    ['ref_nombre_empresa','ref_direccion_empresa','ref_inicio_empresa','ref_fin_empresa','ref_motivo_retiro','ref_nombre_jefe'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerText = '';
+    });
     // reset photo
     if (fotoEl) fotoEl.src = placeholder || fotoEl.getAttribute('data-original') || fotoEl.src;
-    // reset select
     if (selectEl) selectEl.value = '';
   }
 
-  // Populate select with [{dpi, full_name}]
   async function loadEmpleadoList(){
     if (!selectEl) return;
     try {
       const res = await fetch(apiList, { cache: 'no-store' });
       if (!res.ok) throw new Error('error retrieving list');
       const rows = await res.json();
-      // expected rows: [{dpi: '...', full_name:'...'}]
-      // clear existing options
       selectEl.innerHTML = '';
       const emptyOpt = document.createElement('option');
       emptyOpt.value = '';
@@ -496,8 +542,10 @@
       if (Array.isArray(rows) && rows.length){
         rows.forEach(r => {
           const o = document.createElement('option');
-          o.value = r.dpi || r.Numero_de_DPI || r['Numero de DPI'] || r.dpi;
-          o.text = (r.full_name || r.fullname || r.Nombre || r.full_name === undefined) ? (r.full_name || ( (r.Nombre||'') + ' ' + (r.Apellidos||'') ).trim() ) : String(o.value);
+          // try common properties
+          o.value = r.dpi || r['Numero de DPI'] || r.Numero_de_DPI || r.Numero_de_DPI || r['Numero_de_DPI'] || '';
+          const name = r.full_name || r.fullname || ((r.Nombre || '') + ' ' + (r.Apellidos || '')).trim() || o.value;
+          o.text = name;
           selectEl.appendChild(o);
         });
       } else {
@@ -507,31 +555,28 @@
         selectEl.appendChild(none);
       }
     } catch (err) {
-      console.error('loadEmpleadoList', err);
       selectEl.innerHTML = '';
       const errOpt = document.createElement('option');
       errOpt.value = '';
       errOpt.text = 'Error cargando empleados';
       selectEl.appendChild(errOpt);
+      console.error('loadEmpleadoList', err);
     }
   }
 
-  // Fetch full employee by dpi and fill
   async function loadEmpleado(dpi){
     if (!dpi) { clearAll(); return; }
     try {
-      // fetch employee data
       const r = await fetch(apiEmpleadoBase + encodeURIComponent(dpi), { cache:'no-store' });
       if (!r.ok) throw new Error('empleado not found');
       const emp = await r.json();
       fillFields(emp);
     } catch (err) {
       console.error('loadEmpleado', err);
-      // still try to clear fields and show placeholder
       clearAll();
     }
 
-    // fetch photo
+    // photo
     try {
       const rp = await fetch(apiFotoBase + encodeURIComponent(dpi), { cache: 'no-store' });
       if (!rp.ok) throw new Error('photo fetch error');
@@ -546,7 +591,6 @@
     }
   }
 
-  // Event listeners
   if (selectEl) {
     selectEl.addEventListener('change', function(){
       const dpi = (this.value || '').trim();
@@ -558,19 +602,16 @@
   if (btnClear) {
     btnClear.addEventListener('click', function(){
       clearAll();
-      // also reset select
       if (selectEl) selectEl.value = '';
     });
   }
 
-  // Initialize: remember original src, load list
   if (fotoEl && !fotoEl.getAttribute('data-original')) {
     fotoEl.setAttribute('data-original', fotoEl.src || placeholder);
   }
   loadEmpleadoList();
 })();
 </script>
-
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 {% endblock %}
