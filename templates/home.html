@@ -185,7 +185,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // PROTECCIÓN: evitar adjuntar el listener dos veces
   if (btnAgregar) {
     if (!btnAgregar.dataset.listenerAttached) {
       btnAgregar.addEventListener('click', () => {
@@ -207,9 +206,10 @@ document.addEventListener("DOMContentLoaded", () => {
         selectedRow = tr;
         selectedRow.classList.add('table-active');
         isNewRow = true;
-        startEdit();
+
+        // Start edit inline (no inputs) — make cells contentEditable
+        startEditInline();
       });
-      // marque para no adjuntar otra vez si el script se ejecuta dos veces
       btnAgregar.dataset.listenerAttached = '1';
     }
   }
@@ -267,52 +267,59 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  function startEdit() {
+  // NEW: startEditInline — make TDs contentEditable (no inputs)
+  function startEditInline() {
     if (!selectedRow || editing) return;
     editing = true;
     originalCells = Array.from(selectedRow.cells).map(td => td.innerText);
     selectedRow.querySelectorAll('td').forEach((td, idx) => {
-      const text = td.innerText || '';
+      // keep DPI readonly if editing existing row (not new)
       if (idx === 0 && !isNewRow) {
-        td.innerHTML = `<input class="form-control form-control-sm" value="${escapeHtml(text)}" readonly>`;
+        td.contentEditable = false;
+        td.style.backgroundColor = '';
       } else {
-        td.innerHTML = `<input class="form-control form-control-sm" value="${escapeHtml(text)}">`;
+        td.contentEditable = true;
+        td.style.backgroundColor = '#fff3cd';
       }
     });
     if (btnEditar) btnEditar.disabled = true;
     if (btnGuardar) btnGuardar.disabled = false;
     if (btnCancelar) btnCancelar.disabled = false;
-    const firstEditable = selectedRow.querySelector('td input:not([readonly])');
-    if (firstEditable) firstEditable.focus();
+    // focus first editable cell
+    const firstEditable = selectedRow.querySelector('td[contenteditable="true"]');
+    if (firstEditable) {
+      try { firstEditable.focus(); } catch (e) {}
+    }
   }
 
+  // UPDATED saveEdit: read values from td.innerText (not inputs)
   async function saveEdit() {
     if (!selectedRow || !editing) return;
-    const inputs = Array.from(selectedRow.querySelectorAll('td input'));
-    const dpi = (inputs[0] && inputs[0].value || '').trim();
+    const tds = Array.from(selectedRow.querySelectorAll('td'));
+    const dpi = (tds[0] && tds[0].innerText || '').trim();
     if (!dpi) { flashMessage('DPI es obligatorio', 'danger'); return; }
 
     const payload = {
       "Numero de DPI": dpi,
-      "Nombre": inputs[1] ? inputs[1].value.trim() : '',
-      "Apellidos": inputs[2] ? inputs[2].value.trim() : '',
-      "Apellidos de casada": inputs[3] ? inputs[3].value.trim() : '',
-      "Estado Civil": inputs[4] ? inputs[4].value.trim() : '',
-      "Nacionalidad": inputs[5] ? inputs[5].value.trim() : '',
-      "Departamento": inputs[6] ? inputs[6].value.trim() : '',
-      "Fecha de nacimiento": inputs[7] ? inputs[7].value.trim() : '',
-      "Lugar de nacimiento": inputs[8] ? inputs[8].value.trim() : '',
-      "Numero de Afiliación del IGGS": inputs[9] ? inputs[9].value.trim() : '',
-      "Dirección del Domicilio": inputs[10] ? inputs[10].value.trim() : '',
-      "Numero de Telefono": inputs[11] ? inputs[11].value.trim() : '',
-      "Religión": inputs[12] ? inputs[12].value.trim() : '',
-      "Correo Electronico": inputs[13] ? inputs[13].value.trim() : '',
-      "Puesto de trabajo": inputs[14] ? inputs[14].value.trim() : '',
-      "Tipo de contrato": inputs[15] ? inputs[15].value.trim() : '',
-      "Jornada laboral": inputs[16] ? inputs[16].value.trim() : '',
-      "Duración del trabajo": inputs[17] ? inputs[17].value.trim() : '',
-      "Fecha de inicio laboral": inputs[18] ? inputs[18].value.trim() : '',
-      "Dias Laborales": inputs[19] ? inputs[19].value.trim() : ''
+      "Nombre": tds[1] ? tds[1].innerText.trim() : '',
+      "Apellidos": tds[2] ? tds[2].innerText.trim() : '',
+      "Apellidos de casada": tds[3] ? tds[3].innerText.trim() : '',
+      "Estado Civil": tds[4] ? tds[4].innerText.trim() : '',
+      "Nacionalidad": tds[5] ? tds[5].innerText.trim() : '',
+      "Departamento": tds[6] ? tds[6].innerText.trim() : '',
+      "Fecha de nacimiento": tds[7] ? tds[7].innerText.trim() : '',
+      "Lugar de nacimiento": tds[8] ? tds[8].innerText.trim() : '',
+      "Numero de Afiliación del IGGS": tds[9] ? tds[9].innerText.trim() : '',
+      "Dirección del Domicilio": tds[10] ? tds[10].innerText.trim() : '',
+      "Numero de Telefono": tds[11] ? tds[11].innerText.trim() : '',
+      "Religión": tds[12] ? tds[12].innerText.trim() : '',
+      "Correo Electronico": tds[13] ? tds[13].innerText.trim() : '',
+      "Puesto de trabajo": tds[14] ? tds[14].innerText.trim() : '',
+      "Tipo de contrato": tds[15] ? tds[15].innerText.trim() : '',
+      "Jornada laboral": tds[16] ? tds[16].innerText.trim() : '',
+      "Duración del trabajo": tds[17] ? tds[17].innerText.trim() : '',
+      "Fecha de inicio laboral": tds[18] ? tds[18].innerText.trim() : '',
+      "Dias Laborales": tds[19] ? tds[19].innerText.trim() : ''
     };
 
     try {
@@ -343,9 +350,10 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error(`${res.status} ${txt || res.statusText}`);
       }
 
-      selectedRow.querySelectorAll('td').forEach((td, idx) => {
-        const v = Object.values(payload)[idx];
-        td.innerText = v !== undefined ? v : '';
+      // After success, lock cells (remove contentEditable) and clear styles
+      selectedRow.querySelectorAll('td').forEach((td) => {
+        td.contentEditable = false;
+        td.style.backgroundColor = '';
       });
 
       editing = false;
@@ -353,8 +361,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (btnGuardar) btnGuardar.disabled = true;
       if (btnEditar) btnEditar.disabled = false;
       flashMessage('Guardado correctamente', 'success');
+      // keep selection cleared to match previous behavior
+      if (selectedRow) { selectedRow.classList.remove('table-active'); selectedRow = null; }
     } catch (err) {
-      flashMessage('Error al guardar: ' + err.message, 'danger');
+      flashMessage('Error al guardar: ' + (err.message || err), 'danger');
     }
   }
 
@@ -363,6 +373,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (editing && originalCells) {
       selectedRow.querySelectorAll('td').forEach((td, idx) => {
         td.innerText = originalCells[idx] || '';
+        td.contentEditable = false;
+        td.style.backgroundColor = '';
       });
     }
     if (isNewRow && selectedRow && selectedRow.parentNode) {
@@ -370,7 +382,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     editing = false;
     isNewRow = false;
-    if (btnEditar) btnEditar.disabled = selectedRow ? false : true;
+    if (btnEditar) btnEditar.disabled = true;
     if (btnGuardar) btnGuardar.disabled = true;
     if (btnCancelar) btnCancelar.disabled = true;
     if (selectedRow) { selectedRow.classList.remove('table-active'); selectedRow = null; }
@@ -450,7 +462,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(()=> container.remove(), 3000);
   }
 
-  if (btnEditar) btnEditar.addEventListener('click', startEdit);
+  if (btnEditar) btnEditar.addEventListener('click', startEditInline);
   if (btnGuardar) btnGuardar.addEventListener('click', saveEdit);
   if (btnCancelar) btnCancelar.addEventListener('click', cancelEdit);
 
@@ -458,7 +470,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 
 <script>
-  
+
   function tryRegister(n=20){
     if (window.registrarTabla && typeof window.registrarTabla === 'function') {
       window.registrarTabla(meta.id, meta.cols, meta.endpoint, meta.campos, meta.bloqueadas);
