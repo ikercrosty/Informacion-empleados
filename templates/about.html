@@ -94,7 +94,7 @@
       if (btnCancelar) btnCancelar.disabled = false;
 
       // fallback attachments: call window.__MAIN_TABLA functions if main.js didn't attach handlers
-      const addFn = window.__MAIN_TABLA && window.__MAIN_TABLA.agregarFila ? window.__MAIN_TABLA.agregarFila : null;
+     
       const editFn = window.__MAIN_TABLA && window.__MAIN_TABLA.editarFila ? window.__MAIN_TABLA.editarFila : null;
       const saveFn = window.__MAIN_TABLA && window.__MAIN_TABLA.guardarFila ? window.__MAIN_TABLA.guardarFila : null;
       const cancelFn = window.__MAIN_TABLA && window.__MAIN_TABLA.cancelar ? window.__MAIN_TABLA.cancelar : null;
