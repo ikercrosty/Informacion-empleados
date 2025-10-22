@@ -1,4 +1,6 @@
 {% extends "layout.html" %}
+{% block title %}Información Académica{% endblock %}
+
 {% block content %}
 <div class="jumbotron">
   <h1 class="display-4">Información Académica</h1>
@@ -26,17 +28,23 @@
       </tr>
     </thead>
     <tbody>
-      {% for e in empleados %}
-      <tr>
-        <td>{{ e['Numero de DPI'] }}</td>
-        <td>{{ e['Nombre'] }}</td>
-        <td>{{ e['Apellidos'] }}</td>
-        <td>{{ e.get('Nivel de estudios') }}</td>
-        <td>{{ e.get('Profesión u Oficio') }}</td>
-        <td>{{ e.get('Colegio o establecimiento') }}</td>
-        <td>{{ e.get('Cursos o titulos adicionales') }}</td>
-      </tr>
-      {% endfor %}
+      {% if empleados %}
+        {% for e in empleados %}
+        <tr>
+          <td>{{ e['Numero de DPI'] }}</td>
+          <td>{{ e['Nombre'] }}</td>
+          <td>{{ e['Apellidos'] }}</td>
+          <td>{{ e.get('Nivel de estudios') }}</td>
+          <td>{{ e.get('Profesi\u00f3n u Oficio') }}</td>
+          <td>{{ e.get('Colegio o establecimiento') }}</td>
+          <td>{{ e.get('Cursos o titulos adicionales') }}</td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="7" class="text-center text-muted">No hay registros. Usa "Agregar" para crear la primera fila.</td>
+        </tr>
+      {% endif %}
     </tbody>
   </table>
 </div>
