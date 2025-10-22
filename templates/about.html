@@ -49,48 +49,125 @@
   </table>
 </div>
 
-<!-- 1) Carga el script compartido EXACTAMENTE una vez y desde la ruta correcta -->
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
-
-<!-- 2) Llama a registrarTabla solo DESPUÉS de que main.js se haya cargado -->
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  // Espera a que main.js haya definido window.registrarTabla
-  function tryRegister(retries = 10) {
+/*
+  about.html registration script
+  - Waits for window.registrarTabla to be available (main.js is loaded in layout at end).
+  - Then registers the table with protected columns [0,1,2] (DPI, Nombre, Apellidos).
+  - Forces buttons state per your request (buttons active; Edit only enabled after dblclick selection).
+*/
+(function () {
+  const TABLE_ID = 'tablaAcademico';
+  const ENDPOINT = '/guardar_academico';
+  const COLUMNS = 7;
+  const BLOQUEADAS = [0,1,2]; // DPI, Nombre, Apellidos
+
+  function flash(msg, type='info') {
+    const id = 'about_flash';
+    const prev = document.getElementById(id);
+    if (prev) prev.remove();
+    const d = document.createElement('div');
+    d.id = id;
+    d.className = `alert alert-${type} py-1 px-2 small position-fixed`;
+    d.style.top = '16px';
+    d.style.right = '16px';
+    d.style.zIndex = 3000;
+    d.innerText = msg;
+    document.body.appendChild(d);
+    setTimeout(()=> d.remove(), 2000);
+  }
+
+  function tryRegister(retries = 20) {
     if (window.registrarTabla && typeof window.registrarTabla === 'function') {
-      // registrarTabla(idTabla, columnas, endpoint, campos, bloqueadas)
+      // register table; main.js will handle selection, edit, save, cancel behaviors
       window.registrarTabla(
-        'tablaAcademico',
-        7,
-        '/guardar_academico',
+        TABLE_ID,
+        COLUMNS,
+        ENDPOINT,
         [
           "Numero de DPI","Nombre","Apellidos",
           "Nivel de estudios","Profesión u Oficio",
           "Colegio o establecimiento","Cursos o titulos adicionales"
         ],
-        [0,1,2] // bloquear DPI, Nombre, Apellidos
+        BLOQUEADAS
       );
 
-      // Forzar estado de botones según tu petición
+      // Ensure buttons exist and set requested default states
       const btnAgregar = document.getElementById('btnAgregar');
       const btnEditar  = document.getElementById('btnEditar');
       const btnGuardar = document.getElementById('btnGuardar');
       const btnCancelar= document.getElementById('btnCancelar');
+
       if (btnAgregar) btnAgregar.disabled = false;
-      if (btnEditar)  btnEditar.disabled = true;  // se habilita con doble click (main.js)
-      if (btnGuardar) btnGuardar.disabled = false; // disponible
-      if (btnCancelar) btnCancelar.disabled = false; // disponible
+      if (btnEditar)  btnEditar.disabled = true;   // main.js enables on dblclick
+      if (btnGuardar) btnGuardar.disabled = false;  // you wanted Save available
+      if (btnCancelar) btnCancelar.disabled = false;
+
+      // Attach fallback handlers only if main.js didn't attach (safety)
+      function safeAttach(id, fn) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (el.dataset.mainAttached) return;
+        el.addEventListener('click', (e) => { e.stopPropagation(); fn(e); });
+        el.dataset.mainAttached = '1';
+      }
+
+      // Provide local handlers that call the global API if available
+      safeAttach('btnAgregar', () => {
+        if (window.__MAIN_TABLA && window.__MAIN_TABLA.agregarFila) {
+          window.__MAIN_TABLA.agregarFila();
+        } else {
+          flash('Función de agregar no disponible', 'warning');
+        }
+      });
+      safeAttach('btnEditar', () => {
+        if (window.__MAIN_TABLA && window.__MAIN_TABLA.editarFila) {
+          window.__MAIN_TABLA.editarFila();
+        } else {
+          flash('Función de editar no disponible', 'warning');
+        }
+      });
+      safeAttach('btnGuardar', () => {
+        if (window.__MAIN_TABLA && window.__MAIN_TABLA.guardarFila) {
+          window.__MAIN_TABLA.guardarFila();
+        } else {
+          flash('Función de guardar no disponible', 'warning');
+        }
+      });
+      safeAttach('btnCancelar', () => {
+        if (window.__MAIN_TABLA && window.__MAIN_TABLA.cancelar) {
+          window.__MAIN_TABLA.cancelar();
+        } else {
+          flash('Función de cancelar no disponible', 'warning');
+        }
+      });
+
+      // Make sure double-click on row enables Edit button in case main.js didn't
+      const tabla = document.getElementById(TABLE_ID);
+      if (tabla) {
+        tabla.addEventListener('dblclick', (e) => {
+          const btnEditar = document.getElementById('btnEditar');
+          if (btnEditar) btnEditar.disabled = false;
+        });
+      }
+
       return;
     }
+
     if (retries <= 0) {
-      console.error("registrarTabla no está disponible después de esperar main.js");
+      console.error('registrarTabla no disponible después de esperar main.js');
+      flash('Error: comportamiento de tabla no inicializado', 'danger');
       return;
     }
-    // reintenta en 100ms
     setTimeout(() => tryRegister(retries - 1), 100);
   }
 
-  tryRegister(20); // espera hasta ~2s en total
-});
+  // Start after DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => tryRegister(20));
+  } else {
+    tryRegister(20);
+  }
+})();
 </script>
 {% endblock %}
