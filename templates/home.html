@@ -99,7 +99,7 @@
 
             <div class="mb-3 d-flex justify-content-center w-100">
               <img id="fotoEmpleado"
-                   src="{{ url_for('static', filename='fotos/default.png') }}"
+                   src="{{ url_for('static', filename='imagenes/default.png') }}"
                    alt="Foto empleado"
                    class="rounded"
                    style="width:220px;height:220px;object-fit:cover;border:1px solid #ddd;background:#f5f5f5;">
@@ -147,7 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnEliminarFoto = document.getElementById('btnEliminarFoto');
 
   // ruta consistente al default; asegúrate que static/fotos/default.png exista
-  const DEFAULT_SRC = "{{ url_for('static', filename='fotos/default.png') }}";
+  const DEFAULT_SRC = "{{ url_for('static', filename='imagenes/default.png') }}";
 
   let selectedRow = null;
   let originalCells = null;
