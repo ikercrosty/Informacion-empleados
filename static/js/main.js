@@ -210,6 +210,30 @@
     attachOnce('btnEditar', editarFila);
     attachOnce('btnGuardar', guardarFila);
     attachOnce('btnCancelar', cancelar);
+
+    // NEW: click outside registered tables -> clear selection if not editing
+    if (!document.body.dataset.mainOutsideHandler) {
+      document.addEventListener('click', (e) => {
+        if (!activeRow) return;
+        // if row is in editing mode, do not clear selection here
+        if (activeRow.dataset && activeRow.dataset.editing === '1') return;
+        // clicked inside any registered table?
+        const clickedInsideRegisteredTable = Object.values(registry).some(r => {
+          try { return r.tabla && r.tabla.contains(e.target); } catch(_) { return false; }
+        });
+        // clicked on control buttons we care about?
+        const clickedControl = !!e.target.closest('#btnAgregar') || !!e.target.closest('#btnEditar') ||
+                               !!e.target.closest('#btnGuardar') || !!e.target.closest('#btnCancelar') ||
+                               !!e.target.closest('#formSubirFoto') || !!e.target.closest('#formEliminarFoto') ||
+                               !!e.target.closest('#fileFoto');
+        if (!clickedInsideRegisteredTable && !clickedControl) {
+          try { activeRow.classList.remove('table-active'); } catch(_) {}
+          activeRow = null;
+          // keep activeTable as is; main flows will reset it when necessary
+        }
+      }, true);
+      document.body.dataset.mainOutsideHandler = '1';
+    }
   });
 
   // Public API
