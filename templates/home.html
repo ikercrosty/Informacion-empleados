@@ -3,217 +3,255 @@
 
 {% block content %}
 <div class="container-fluid py-4">
-  <div class="jumbotron p-4 rounded-3 bg-white shadow-sm">
+  <!-- Jumbotron solo con el encabezado -->
+  <div class="jumbotron p-4 rounded-3 bg-white shadow-sm mb-3">
     <div class="d-flex flex-column flex-md-row align-items-start gap-3">
       <div class="flex-grow-1">
         <h1 class="h3 mb-1">Datos personales</h1>
         <p class="text-muted mb-0">Lista de empleados y foto del empleado seleccionado</p>
       </div>
     </div>
+  </div>
 
-    <hr class="my-3">
+  <!-- Card blanco que contiene tabla, botones y foto (tabla arriba, foto centrada abajo) -->
+  <div class="card shadow-sm border-0 bg-white">
+    <div class="card-body p-3">
+      <!-- Botones y tabla (tabla ocupa todo el ancho del fondo blanco) -->
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="btn-group">
+          <button id="btnAgregar" class="btn btn-success btn-sm">Agregar</button>
+          <button id="btnEditar" class="btn btn-primary btn-sm" disabled>Editar</button>
+          <button id="btnGuardar" class="btn btn-success btn-sm" disabled>Guardar</button>
+          <button id="btnCancelar" class="btn btn-secondary btn-sm" disabled>Cancelar</button>
+        </div>
+      </div>
 
-    <div class="row g-3">
-      <!-- Tabla -->
-      <div class="col-12 col-lg-9">
-        <div class="card shadow-sm border-0 h-100">
-          <div class="card-body p-2">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <div class="btn-group">
-                <button id="btnAgregar" class="btn btn-success btn-sm">Agregar</button>
-                <button id="btnEditar" class="btn btn-primary btn-sm" disabled>Editar</button>
-                <button id="btnGuardar" class="btn btn-success btn-sm" disabled>Guardar</button>
-                <button id="btnCancelar" class="btn btn-secondary btn-sm" disabled>Cancelar</button>
+      <div class="table-responsive">
+        <table id="tablaEmpleados" class="table table-sm table-hover table-bordered w-100 mb-0">
+          <thead class="small" style="background-color:#000000; color:#ffffff;">
+            <tr>
+              <th>DPI</th>
+              <th>Nombre</th>
+              <th>Apellidos</th>
+              <th>Apellidos de casada</th>
+              <th>Estado Civil</th>
+              <th>Nacionalidad</th>
+              <th>Departamento</th>
+              <th>Fecha de nacimiento</th>
+              <th>Lugar de nacimiento</th>
+              <th>Numero IGSS</th>
+              <th>Dirección</th>
+              <th>Telefono</th>
+              <th>Religión</th>
+              <th>Correo</th>
+              <th>Puesto</th>
+              <th>Tipo de contrato</th>
+              <th>Jornada laboral</th>
+              <th>Duración del trabajo</th>
+              <th>Fecha de inicio laboral</th>
+              <th>Dias Laborales</th>
+            </tr>
+          </thead>
+          <tbody class="small">
+            {% if empleados %}
+              {% for e in empleados %}
+              <tr>
+                <td>{{ e['Numero de DPI'] }}</td>
+                <td>{{ e.get('Nombre') }}</td>
+                <td>{{ e.get('Apellidos') }}</td>
+                <td>{{ e.get('Apellidos de casada') }}</td>
+                <td>{{ e.get('Estado Civil') }}</td>
+                <td>{{ e.get('Nacionalidad') }}</td>
+                <td>{{ e.get('Departamento') }}</td>
+                <td>{{ e.get('Fecha de nacimiento') }}</td>
+                <td>{{ e.get('Lugar de nacimiento') }}</td>
+                <td>{{ e.get('Numero de Afiliación del IGGS') }}</td>
+                <td>{{ e.get('Dirección del Domicilio') }}</td>
+                <td>{{ e.get('Numero de Telefono') }}</td>
+                <td>{{ e.get('Religión') }}</td>
+                <td>{{ e.get('Correo Electronico') }}</td>
+                <td>{{ e.get('Puesto de trabajo') }}</td>
+                <td>{{ e.get('Tipo de contrato') }}</td>
+                <td>{{ e.get('Jornada laboral') }}</td>
+                <td>{{ e.get('Duración del trabajo') }}</td>
+                <td>{{ e.get('Fecha de inicio laboral') }}</td>
+                <td>{{ e.get('Dias Laborales') }}</td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="20" class="text-center text-muted">No hay empleados. Usa "Agregar" para crear la primera fila.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Foto centrada debajo de la tabla, dentro del mismo fondo blanco -->
+      <div class="mt-4 d-flex justify-content-center">
+        <div class="w-100" style="max-width:320px;">
+          <div class="card shadow-sm border-0">
+            <div class="card-body d-flex flex-column align-items-center">
+              <h5 class="mb-3">Foto del empleado</h5>
+
+              <div class="mb-3 d-flex justify-content-center w-100">
+                <img id="fotoEmpleado"
+                     src="{{ url_for('static', filename='imagenes/default.jpg') }}"
+                     alt="Foto empleado"
+                     class="rounded"
+                     style="width:220px;height:220px;object-fit:cover;border:1px solid #ddd;background:#f5f5f5;">
               </div>
-            </div>
 
-            <div class="table-responsive">
-              <table id="tablaEmpleados" class="table table-sm table-hover table-bordered w-100 mb-0">
-                <thead class="small" style="background-color:#000000; color:#ffffff;">
-                  <tr>
-                    <th>DPI</th>
-                    <th>Nombre</th>
-                    <th>Apellidos</th>
-                    <th>Apellidos de casada</th>
-                    <th>Estado Civil</th>
-                    <th>Nacionalidad</th>
-                    <th>Departamento</th>
-                    <th>Fecha de nacimiento</th>
-                    <th>Lugar de nacimiento</th>
-                    <th>Numero IGSS</th>
-                    <th>Dirección</th>
-                    <th>Telefono</th>
-                    <th>Religión</th>
-                    <th>Correo</th>
-                    <th>Puesto</th>
-                    <th>Tipo de contrato</th>
-                    <th>Jornada laboral</th>
-                    <th>Duración del trabajo</th>
-                    <th>Fecha de inicio laboral</th>
-                    <th>Dias Laborales</th>
-                  </tr>
-                </thead>
-                <tbody class="small">
-                  {% if empleados %}
-                    {% for e in empleados %}
-                    <tr>
-                      <td>{{ e['Numero de DPI'] }}</td>
-                      <td>{{ e.get('Nombre') }}</td>
-                      <td>{{ e.get('Apellidos') }}</td>
-                      <td>{{ e.get('Apellidos de casada') }}</td>
-                      <td>{{ e.get('Estado Civil') }}</td>
-                      <td>{{ e.get('Nacionalidad') }}</td>
-                      <td>{{ e.get('Departamento') }}</td>
-                      <td>{{ e.get('Fecha de nacimiento') }}</td>
-                      <td>{{ e.get('Lugar de nacimiento') }}</td>
-                      <td>{{ e.get('Numero de Afiliación del IGGS') }}</td>
-                      <td>{{ e.get('Dirección del Domicilio') }}</td>
-                      <td>{{ e.get('Numero de Telefono') }}</td>
-                      <td>{{ e.get('Religión') }}</td>
-                      <td>{{ e.get('Correo Electronico') }}</td>
-                      <td>{{ e.get('Puesto de trabajo') }}</td>
-                      <td>{{ e.get('Tipo de contrato') }}</td>
-                      <td>{{ e.get('Jornada laboral') }}</td>
-                      <td>{{ e.get('Duración del trabajo') }}</td>
-                      <td>{{ e.get('Fecha de inicio laboral') }}</td>
-                      <td>{{ e.get('Dias Laborales') }}</td>
-                    </tr>
-                    {% endfor %}
-                  {% else %}
-                    <tr>
-                      <td colspan="20" class="text-center text-muted">No hay empleados. Usa "Agregar" para crear la primera fila.</td>
-                    </tr>
-                  {% endif %}
-                </tbody>
-              </table>
+              <form id="formSubirFoto" method="post" enctype="multipart/form-data" action="{{ url_for('subir_foto') }}" class="w-100" style="max-width:260px; display:none;">
+                <input type="hidden" name="dpi" id="inputDpiForUpload" value="">
+                <div class="form-group mb-2">
+                  <input id="fileFoto" name="foto" type="file" accept="image/*" class="form-control form-control-sm">
+                </div>
+                <button id="btnSubirFoto" type="button" class="btn btn-primary btn-sm w-100">Subir foto</button>
+              </form>
+
+              <form id="formEliminarFoto" method="post" action="{{ url_for('eliminar_foto') }}" class="w-100" style="max-width:260px; display:none; margin-top:12px;">
+                <input type="hidden" name="dpi" id="inputDpiForDelete" value="">
+                <button id="btnEliminarFoto" type="button" class="btn btn-outline-danger btn-sm w-100">Eliminar foto</button>
+              </form>
+
+              <small id="fotoHint" class="text-muted mt-3 text-center">
+                Selecciona una fila de la tabla para gestionar la foto del empleado.
+              </small>
             </div>
           </div>
         </div>
       </div>
-
-      <!-- Panel de foto -->
-      <div class="col-12 col-lg-3 d-flex align-items-start">
-        <div class="card shadow-sm border-0 w-100">
-          <div class="card-body d-flex flex-column align-items-center">
-            <h5 class="mb-3">Foto del empleado</h5>
-
-            <div class="mb-3 d-flex justify-content-center w-100">
-              <img id="fotoEmpleado"
-                   src="{{ url_for('static', filename='imagenes/default.jpg') }}"
-                   alt="Foto empleado"
-                   class="rounded"
-                   style="width:220px;height:220px;object-fit:cover;border:1px solid #ddd;background:#f5f5f5;">
-            </div>
-
-            <form id="formSubirFoto" method="post" enctype="multipart/form-data" action="{{ url_for('subir_foto') }}" class="w-100" style="max-width:260px; display:none;">
-              <input type="hidden" name="dpi" id="inputDpiForUpload" value="">
-              <div class="form-group mb-2">
-                <input id="fileFoto" name="foto" type="file" accept="image/*" class="form-control form-control-sm">
-              </div>
-              <button id="btnSubirFoto" type="button" class="btn btn-primary btn-sm w-100">Subir foto</button>
-            </form>
-
-            <form id="formEliminarFoto" method="post" action="{{ url_for('eliminar_foto') }}" class="w-100" style="max-width:260px; display:none; margin-top:12px;">
-              <input type="hidden" name="dpi" id="inputDpiForDelete" value="">
-              <button id="btnEliminarFoto" type="button" class="btn btn-outline-danger btn-sm w-100">Eliminar foto</button>
-            </form>
-
-            <small id="fotoHint" class="text-muted mt-3 text-center">
-              Selecciona una fila de la tabla para gestionar la foto del empleado.
-            </small>
-          </div>
-        </div>
-      </div>
+      <!-- /Foto -->
     </div>
   </div>
+  <!-- /Card -->
 </div>
 
 <script>
-(function(){
-  // Register table with shared main.js like about/emergencia pages.
-  // Keep DPI/Nombre/Apellidos editable in home (no bloqueadas).
-  const TABLE_ID = 'tablaEmpleados';
-  const ENDPOINT = '/guardar_empleado';
-  const COLUMNS = 20;
-  const BLOQUEADAS = []; // home: no locked columns
+document.addEventListener("DOMContentLoaded", () => {
+  const tabla = document.getElementById('tablaEmpleados');
+  const fotoEmpleado = document.getElementById('fotoEmpleado');
+  const inputDpiUpload = document.getElementById('inputDpiForUpload');
+  const inputDpiDelete = document.getElementById('inputDpiForDelete');
+  const formSubir = document.getElementById('formSubirFoto');
+  const formEliminar = document.getElementById('formEliminarFoto');
+  const fileFoto = document.getElementById('fileFoto');
 
-  const CAMPOS = [
-    "Numero de DPI","Nombre","Apellidos","Apellidos de casada","Estado Civil",
-    "Nacionalidad","Departamento","Fecha de nacimiento","Lugar de nacimiento",
-    "Numero de Afiliación del IGGS","Dirección del Domicilio","Numero de Telefono",
-    "Religión","Correo Electronico","Puesto de trabajo","Tipo de contrato",
-    "Jornada laboral","Duración del trabajo","Fecha de inicio laboral","Dias Laborales"
-  ];
+  const btnAgregar = document.getElementById('btnAgregar');
+  const btnEditar = document.getElementById('btnEditar');
+  const btnGuardar = document.getElementById('btnGuardar');
+  const btnCancelar = document.getElementById('btnCancelar');
+  const btnSubirFoto = document.getElementById('btnSubirFoto');
+  const btnEliminarFoto = document.getElementById('btnEliminarFoto');
 
-  function tryRegister(retries = 20){
-    if (window.registrarTabla && typeof window.registrarTabla === 'function') {
-      window.registrarTabla(TABLE_ID, COLUMNS, ENDPOINT, CAMPOS, BLOQUEADAS);
+  const DEFAULT_SRC = "{{ url_for('static', filename='imagenes/default.jpg') }}";
 
-      // set initial button states like other pages (main.js will wire handlers)
-      const btnAgregar = document.getElementById('btnAgregar');
-      const btnEditar  = document.getElementById('btnEditar');
-      const btnGuardar = document.getElementById('btnGuardar');
-      const btnCancelar= document.getElementById('btnCancelar');
-      if (btnAgregar) btnAgregar.disabled = false;
-      if (btnEditar)  btnEditar.disabled = true;
-      if (btnGuardar) btnGuardar.disabled = true;
-      if (btnCancelar) btnCancelar.disabled = true;
+  let selectedRow = null;
+  let originalCells = null;
+  let editing = false;
+  let isNewRow = false;
 
-      // attach photo selection & controls
-      attachPhotoSelection();
-      attachPhotoControls();
-      return;
-    }
-    if (retries <= 0) {
-      console.error('registrarTabla no disponible para tablaEmpleados');
-      return;
-    }
-    setTimeout(()=> tryRegister(retries - 1), 100);
+  function resetPanelToDefault() {
+    if (fotoEmpleado) fotoEmpleado.src = DEFAULT_SRC;
+    if (inputDpiUpload) inputDpiUpload.value = "";
+    if (inputDpiDelete) inputDpiDelete.value = "";
+    if (formSubir) formSubir.style.display = "none";
+    if (formEliminar) formEliminar.style.display = "none";
+    if (fileFoto) fileFoto.value = "";
+    clearSelectionUI();
   }
 
-  // Photo panel behaviour: select row -> request /api/foto/:dpi and show/hide upload/delete
-  function attachPhotoSelection(){
-    const tabla = document.getElementById(TABLE_ID);
-    if (!tabla) return;
+  function clearSelectionUI() {
+    if (selectedRow) selectedRow.classList.remove('table-active');
+    selectedRow = null;
+    originalCells = null;
+    editing = false;
+    isNewRow = false;
+    if (btnEditar) btnEditar.disabled = true;
+    if (btnGuardar) btnGuardar.disabled = true;
+    if (btnCancelar) btnCancelar.disabled = true;
+  }
+
+  resetPanelToDefault();
+
+  if (fileFoto) {
+    fileFoto.addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if (!f || !f.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => { fotoEmpleado.src = ev.target.result; };
+      reader.readAsDataURL(f);
+    });
+  }
+
+  if (btnAgregar) {
+    if (!btnAgregar.dataset.listenerAttached) {
+      btnAgregar.addEventListener('click', () => {
+        const tb = tabla.querySelector('tbody');
+        if (!tb) { flashMessage('Tabla no disponible. Recarga la página.', 'danger'); return; }
+
+        const placeholder = tb.querySelector('tr td[colspan]');
+        if (placeholder) placeholder.parentElement.remove();
+
+        const tr = document.createElement('tr');
+        for (let i = 0; i < 20; i++) {
+          const td = document.createElement('td');
+          td.textContent = '';
+          tr.appendChild(td);
+        }
+        tb.insertBefore(tr, tb.firstChild);
+
+        if (selectedRow) selectedRow.classList.remove('table-active');
+        selectedRow = tr;
+        selectedRow.classList.add('table-active');
+        isNewRow = true;
+
+        // Start edit inline (no inputs) — make cells contentEditable
+        startEditInline();
+      });
+      btnAgregar.dataset.listenerAttached = '1';
+    }
+  }
+
+  if (tabla) {
     tabla.addEventListener('click', async (ev) => {
       const tr = ev.target.closest('tr');
-      if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+      if (!tr || !tr.cells.length) return;
+
+      if (editing && selectedRow && tr !== selectedRow) return;
+
+      if (selectedRow && selectedRow !== tr) selectedRow.classList.remove('table-active');
+      selectedRow = tr;
+      selectedRow.classList.add('table-active');
+      if (btnEditar) btnEditar.disabled = false;
+      if (btnGuardar) btnGuardar.disabled = true;
+      if (btnCancelar) btnCancelar.disabled = false;
 
       const dpi = (tr.cells[0] && tr.cells[0].innerText || '').trim();
-      const fotoEmpleado = document.getElementById('fotoEmpleado');
-      const inputDpiUpload = document.getElementById('inputDpiForUpload');
-      const inputDpiDelete = document.getElementById('inputDpiForDelete');
-      const formSubir = document.getElementById('formSubirFoto');
-      const formEliminar = document.getElementById('formEliminarFoto');
-      const fileFoto = document.getElementById('fileFoto');
-
-      if (inputDpiUpload) inputDpiUpload.value = dpi || '';
-      if (inputDpiDelete) inputDpiDelete.value = dpi || '';
-
       if (!dpi) {
-        if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
-        if (formSubir) formSubir.style.display = "none";
-        if (formEliminar) formEliminar.style.display = "none";
-        if (fileFoto) fileFoto.value = "";
+        resetPanelToDefault();
         return;
       }
+      if (inputDpiUpload) inputDpiUpload.value = dpi;
+      if (inputDpiDelete) inputDpiDelete.value = dpi;
 
       try {
         const r = await fetch(`/api/foto/${encodeURIComponent(dpi)}`, { cache: 'no-store' });
         if (!r.ok) throw new Error('no-photo');
         const j = await r.json();
         if (j && j.url) {
-          if (fotoEmpleado) fotoEmpleado.src = `${j.url}?t=${Date.now()}`;
+          fotoEmpleado.src = `${j.url}?t=${Date.now()}`;
           if (formSubir) formSubir.style.display = "none";
           if (formEliminar) formEliminar.style.display = "block";
         } else {
-          if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
+          fotoEmpleado.src = DEFAULT_SRC;
           if (formSubir) formSubir.style.display = "block";
           if (formEliminar) formEliminar.style.display = "none";
           if (fileFoto) fileFoto.value = "";
         }
       } catch (err) {
-        if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
+        fotoEmpleado.src = DEFAULT_SRC;
         if (formSubir) formSubir.style.display = "block";
         if (formEliminar) formEliminar.style.display = "none";
         if (fileFoto) fileFoto.value = "";
@@ -221,104 +259,234 @@
     });
   }
 
-  // Photo upload/delete handlers (idempotent)
-  function attachPhotoControls(){
-    const fileFoto = document.getElementById('fileFoto');
-    if (fileFoto && !fileFoto.dataset.attached) {
-      fileFoto.addEventListener('change', (e) => {
-        const f = e.target.files && e.target.files[0];
-        if (!f || !f.type.startsWith('image/')) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => { const fotoEmpleado = document.getElementById('fotoEmpleado'); if (fotoEmpleado) fotoEmpleado.src = ev.target.result; };
-        reader.readAsDataURL(f);
-      });
-      fileFoto.dataset.attached = '1';
+  document.addEventListener('click', (e) => {
+    const insideTable = e.target.closest('#tablaEmpleados');
+    const insideControls = e.target.closest('#formSubirFoto') || e.target.closest('#formEliminarFoto') || e.target.closest('#fileFoto');
+    if (!insideTable && !insideControls && !editing) {
+      resetPanelToDefault();
     }
+  });
 
-    const btnSubirFoto = document.getElementById('btnSubirFoto');
-    const formSubir = document.getElementById('formSubirFoto');
-    const inputDpiUpload = document.getElementById('inputDpiForUpload');
-    if (btnSubirFoto && !btnSubirFoto.dataset.attached) {
-      btnSubirFoto.addEventListener('click', async () => {
-        const dpi = inputDpiUpload && inputDpiUpload.value && inputDpiUpload.value.trim();
-        const fileFotoEl = document.getElementById('fileFoto');
-        if (!dpi) return flash('Selecciona una fila con DPI antes de subir foto', 'danger');
-        if (!fileFotoEl || !fileFotoEl.files || !fileFotoEl.files[0]) return flash('Selecciona un archivo de imagen', 'danger');
-        const fd = new FormData();
-        fd.append('dpi', dpi);
-        fd.append('foto', fileFotoEl.files[0]);
-        try {
-          const res = await fetch(formSubir.action || '/subir_foto', { method: 'POST', body: fd });
-          if (!res.ok) {
-            const t = await res.text().catch(()=>null);
-            throw new Error(`${res.status} ${t||res.statusText}`);
-          }
-          const j = await res.json();
-          if (j && j.url) {
-            const fotoEmpleado = document.getElementById('fotoEmpleado');
-            if (fotoEmpleado) fotoEmpleado.src = `${j.url}?t=${Date.now()}`;
-            if (formSubir) formSubir.style.display = "none";
-            const formEliminar = document.getElementById('formEliminarFoto');
-            if (formEliminar) formEliminar.style.display = "block";
-            flash('Foto subida', 'success');
-          } else throw new Error('Respuesta inesperada del servidor');
-        } catch (err) {
-          flash('Error al subir foto: ' + (err.message||err), 'danger');
-        }
-      });
-      btnSubirFoto.dataset.attached = '1';
+  // NEW: startEditInline — make TDs contentEditable (no inputs)
+  function startEditInline() {
+    if (!selectedRow || editing) return;
+    editing = true;
+    originalCells = Array.from(selectedRow.cells).map(td => td.innerText);
+    selectedRow.querySelectorAll('td').forEach((td, idx) => {
+      // keep DPI readonly if editing existing row (not new)
+      if (idx === 0 && !isNewRow) {
+        td.contentEditable = false;
+        td.style.backgroundColor = '';
+      } else {
+        td.contentEditable = true;
+        td.style.backgroundColor = '#fff3cd';
+      }
+    });
+    if (btnEditar) btnEditar.disabled = true;
+    if (btnGuardar) btnGuardar.disabled = false;
+    if (btnCancelar) btnCancelar.disabled = false;
+    // focus first editable cell
+    const firstEditable = selectedRow.querySelector('td[contenteditable="true"]');
+    if (firstEditable) {
+      try { firstEditable.focus(); } catch (e) {}
     }
+  }
 
-    const btnEliminarFoto = document.getElementById('btnEliminarFoto');
-    const formEliminar = document.getElementById('formEliminarFoto');
-    const inputDpiDelete = document.getElementById('inputDpiForDelete');
-    if (btnEliminarFoto && !btnEliminarFoto.dataset.attached) {
-      btnEliminarFoto.addEventListener('click', async () => {
-        const dpi = inputDpiDelete && inputDpiDelete.value && inputDpiDelete.value.trim();
-        if (!dpi) return flash('No hay DPI seleccionado', 'danger');
-        try {
-          const res = await fetch(formEliminar.action || '/eliminar_foto', {
+  // UPDATED saveEdit: read values from td.innerText (not inputs)
+  async function saveEdit() {
+    if (!selectedRow || !editing) return;
+    const tds = Array.from(selectedRow.querySelectorAll('td'));
+    const dpi = (tds[0] && tds[0].innerText || '').trim();
+    if (!dpi) { flashMessage('DPI es obligatorio', 'danger'); return; }
+
+    const payload = {
+      "Numero de DPI": dpi,
+      "Nombre": tds[1] ? tds[1].innerText.trim() : '',
+      "Apellidos": tds[2] ? tds[2].innerText.trim() : '',
+      "Apellidos de casada": tds[3] ? tds[3].innerText.trim() : '',
+      "Estado Civil": tds[4] ? tds[4].innerText.trim() : '',
+      "Nacionalidad": tds[5] ? tds[5].innerText.trim() : '',
+      "Departamento": tds[6] ? tds[6].innerText.trim() : '',
+      "Fecha de nacimiento": tds[7] ? tds[7].innerText.trim() : '',
+      "Lugar de nacimiento": tds[8] ? tds[8].innerText.trim() : '',
+      "Numero de Afiliación del IGGS": tds[9] ? tds[9].innerText.trim() : '',
+      "Dirección del Domicilio": tds[10] ? tds[10].innerText.trim() : '',
+      "Numero de Telefono": tds[11] ? tds[11].innerText.trim() : '',
+      "Religión": tds[12] ? tds[12].innerText.trim() : '',
+      "Correo Electronico": tds[13] ? tds[13].innerText.trim() : '',
+      "Puesto de trabajo": tds[14] ? tds[14].innerText.trim() : '',
+      "Tipo de contrato": tds[15] ? tds[15].innerText.trim() : '',
+      "Jornada laboral": tds[16] ? tds[16].innerText.trim() : '',
+      "Duración del trabajo": tds[17] ? tds[17].innerText.trim() : '',
+      "Fecha de inicio laboral": tds[18] ? tds[18].innerText.trim() : '',
+      "Dias Laborales": tds[19] ? tds[19].innerText.trim() : ''
+    };
+
+    try {
+      let res;
+      if (!isNewRow) {
+        res = await fetch(`/api/empleado/${encodeURIComponent(dpi)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.status === 405) {
+          res = await fetch('/api/empleados', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ dpi })
+            body: JSON.stringify(payload)
           });
-          if (!res.ok) throw new Error('error');
-          const fotoEmpleado = document.getElementById('fotoEmpleado');
-          if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
-          if (formSubir) formSubir.style.display = "block";
-          if (formEliminar) formEliminar.style.display = "none";
-          flash('Foto eliminada', 'success');
-        } catch (err) {
-          flash('Error al eliminar foto', 'danger');
         }
+      } else {
+        res = await fetch('/api/empleados', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
+
+      if (!res.ok) {
+        const txt = await res.text().catch(()=>null);
+        throw new Error(`${res.status} ${txt || res.statusText}`);
+      }
+
+      // After success, lock cells (remove contentEditable) and clear styles
+      selectedRow.querySelectorAll('td').forEach((td) => {
+        td.contentEditable = false;
+        td.style.backgroundColor = '';
       });
-      btnEliminarFoto.dataset.attached = '1';
+
+      editing = false;
+      isNewRow = false;
+      if (btnGuardar) btnGuardar.disabled = true;
+      if (btnEditar) btnEditar.disabled = false;
+      flashMessage('Guardado correctamente', 'success');
+      // keep selection cleared to match previous behavior
+      if (selectedRow) { selectedRow.classList.remove('table-active'); selectedRow = null; }
+    } catch (err) {
+      flashMessage('Error al guardar: ' + (err.message || err), 'danger');
     }
   }
 
-  // small flash helper used here
-  function flash(msg, type='info') {
-    const id = '__home_flash';
-    const prev = document.getElementById(id);
-    if (prev) prev.remove();
-    const d = document.createElement('div');
-    d.id = id;
-    d.className = `alert alert-${type} py-1 px-2 small position-fixed`;
-    d.style.top = '12px';
-    d.style.right = '12px';
-    d.style.zIndex = 9999;
-    d.innerText = msg;
-    document.body.appendChild(d);
-    setTimeout(()=> d.remove(), 2000);
+  function cancelEdit() {
+    if (!selectedRow) return;
+    if (editing && originalCells) {
+      selectedRow.querySelectorAll('td').forEach((td, idx) => {
+        td.innerText = originalCells[idx] || '';
+        td.contentEditable = false;
+        td.style.backgroundColor = '';
+      });
+    }
+    if (isNewRow && selectedRow && selectedRow.parentNode) {
+      selectedRow.parentNode.removeChild(selectedRow);
+    }
+    editing = false;
+    isNewRow = false;
+    if (btnEditar) btnEditar.disabled = true;
+    if (btnGuardar) btnGuardar.disabled = true;
+    if (btnCancelar) btnCancelar.disabled = true;
+    if (selectedRow) { selectedRow.classList.remove('table-active'); selectedRow = null; }
+    resetPanelToDefault();
   }
 
-  // expose flash for inner handlers
-  window.__home_flash = { flash };
+  if (btnSubirFoto) {
+    btnSubirFoto.addEventListener('click', async () => {
+      const dpi = inputDpiUpload.value && inputDpiUpload.value.trim();
+      if (!dpi) { flashMessage('Selecciona una fila con DPI antes de subir foto', 'danger'); return; }
+      if (!fileFoto || !fileFoto.files || !fileFoto.files[0]) { flashMessage('Selecciona un archivo de imagen', 'danger'); return; }
+
+      const fd = new FormData();
+      fd.append('dpi', dpi);
+      fd.append('foto', fileFoto.files[0]);
+
+      try {
+        const res = await fetch(formSubir.action || '/subir_foto', { method: 'POST', body: fd });
+        if (!res.ok) {
+          const t = await res.text().catch(()=>null);
+          throw new Error(`${res.status} ${t||res.statusText}`);
+        }
+        const j = await res.json();
+        if (j && j.url) {
+          fotoEmpleado.src = `${j.url}?t=${Date.now()}`;
+          formSubir.style.display = "none";
+          formEliminar.style.display = "block";
+          flashMessage('Foto subida', 'success');
+        } else {
+          throw new Error('Respuesta inesperada del servidor');
+        }
+      } catch (err) {
+        flashMessage('Error al subir foto: ' + err.message, 'danger');
+      }
+    });
+  }
+
+  if (btnEliminarFoto) {
+    btnEliminarFoto.addEventListener('click', async () => {
+      const dpi = inputDpiDelete.value && inputDpiDelete.value.trim();
+      if (!dpi) { flashMessage('No hay DPI seleccionado', 'danger'); return; }
+      try {
+        const res = await fetch(formEliminar.action || '/eliminar_foto', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dpi })
+        });
+        if (!res.ok) throw new Error('error');
+        fotoEmpleado.src = DEFAULT_SRC;
+        formSubir.style.display = "block";
+        formEliminar.style.display = "none";
+        flashMessage('Foto eliminada', 'success');
+      } catch (err) {
+        flashMessage('Error al eliminar foto', 'danger');
+      }
+    });
+  }
+
+  function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str).replace(/[&<>"'`=\/]/g, function(s) {
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[s];
+    });
+  }
+
+  function flashMessage(msg, type='info') {
+    const existing = document.getElementById('flashMessage');
+    if (existing) existing.remove();
+    const container = document.createElement('div');
+    container.id = 'flashMessage';
+    container.className = `alert alert-${type} py-1 px-2 small position-fixed`;
+    container.style.top = '16px';
+    container.style.right = '16px';
+    container.style.zIndex = 2000;
+    container.innerText = msg;
+    document.body.appendChild(container);
+    setTimeout(()=> container.remove(), 3000);
+  }
+
+  if (btnEditar) btnEditar.addEventListener('click', startEditInline);
+  if (btnGuardar) btnGuardar.addEventListener('click', saveEdit);
+  if (btnCancelar) btnCancelar.addEventListener('click', cancelEdit);
+
+});
+</script>
+
+<script>
+  function tryRegister(n=20){
+    if (window.registrarTabla && typeof window.registrarTabla === 'function') {
+      window.registrarTabla(meta.id, meta.cols, meta.endpoint, meta.campos, meta.bloqueadas);
+      document.getElementById('btnAgregar').disabled = false;
+      document.getElementById('btnEditar').disabled  = true;
+      document.getElementById('btnGuardar').disabled = false;
+      document.getElementById('btnCancelar').disabled= false;
+      return;
+    }
+    if (n>0) setTimeout(()=>tryRegister(n-1),100);
+    else {
+      console.error('registrarTabla no disponible para tablaEmpleados');
+    }
+  }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ()=>tryRegister(20));
-  else tryRegister(20);
-
-})();
+  else tryRegister(20);;
 </script>
 
 {% endblock %}
