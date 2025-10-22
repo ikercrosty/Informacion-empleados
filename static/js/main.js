@@ -1,10 +1,11 @@
 // static/js/main.js
-// Reglas aplicadas:
-// - Click en fila solo selecciona la fila; no habilita celdas.
-// - Al presionar "Editar" se activan TODAS las celdas de la fila (sin crear inputs).
-// - Las celdas se editan directamente (contentEditable) — no aparecen textboxes feos.
-// - Al guardar se envían cadenas vacías "" para campos vacíos. Nunca se envía null/None.
-// - Listener único en botones (se reemplaza el nodo del botón Agregar para limpiar listeners previos).
+// Comportamiento solicitado:
+// - Todos los botones habilitados siempre excepto "Editar" que se habilita solo al seleccionar fila.
+// - Al "Agregar" la nueva fila aparece y sus celdas quedan editables de inmediato (sin inputs).
+// - Al "Editar" se habilitan todas las celdas de la fila seleccionada (sin inputs).
+// - Guardar nunca envía null/None: campos vacíos se envían como cadena vacía "".
+// - DPI es obligatorio para guardar.
+// - Evita listeners duplicados (clonando nodos de control al iniciar).
 (function () {
   "use strict";
 
@@ -12,6 +13,7 @@
   const PLACEHOLDER = CFG.placeholder || "/static/imagenes/default.jpg";
   const API_EMPLEADOS = CFG.apiEmpleados || "/api/empleados";
   const API_FOTO_BASE = CFG.apiFotoBase || "/api/foto/";
+
   const COLUMNS = [
     "Numero de DPI","Nombre","Apellidos","Apellidos de casada","Estado Civil",
     "Nacionalidad","Departamento","Fecha de nacimiento","Lugar de nacimiento",
@@ -26,7 +28,7 @@
   let isNewRow = false;
   let editing = false;
 
-  // Util
+  // Utilidades
   function flash(msg, type = "info") {
     const existing = document.getElementById("flashMessage");
     if (existing) existing.remove();
@@ -38,29 +40,29 @@
     d.style.zIndex = 2000;
     d.innerText = msg;
     document.body.appendChild(d);
-    setTimeout(() => d.remove(), 2500);
+    setTimeout(() => d.remove(), 2200);
   }
 
-  function escapeHtml(str) {
-    if (str == null) return "";
-    return String(str).replace(/[&<>"'`=\/]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[s]));
+  function safeTrim(v) {
+    if (v == null) return "";
+    return String(v).trim();
   }
 
-  // Selección de fila (solo selecciona)
+  // Selección (click en fila) — solo selecciona, no habilita edición
   function selectRow(tr) {
     if (!tr) return;
     if (selectedRow && selectedRow !== tr) selectedRow.classList.remove("table-active");
     selectedRow = tr;
     selectedRow.classList.add("table-active");
-    // actualización UI botones
     const btnEditar = document.getElementById("btnEditar");
+    if (btnEditar) btnEditar.disabled = false;
+    // Guardar y Cancelar se mantienen disponibles según estado:
     const btnGuardar = document.getElementById("btnGuardar");
     const btnCancelar = document.getElementById("btnCancelar");
-    if (btnEditar) btnEditar.disabled = false;
-    if (btnGuardar) btnGuardar.disabled = true;
+    if (btnGuardar && !editing) btnGuardar.disabled = true; // no hay edición aún
     if (btnCancelar) btnCancelar.disabled = false;
-    // actualizar panel de foto (silencioso, mantiene comportamiento previo)
-    const dpi = (tr.cells[0] && tr.cells[0].innerText || "").trim();
+    // actualizar panel de foto con DPI si existe
+    const dpi = safeTrim(selectedRow.cells[0] && selectedRow.cells[0].innerText);
     const foto = document.getElementById("fotoEmpleado");
     const formSubir = document.getElementById("formSubirFoto");
     const formEliminar = document.getElementById("formEliminarFoto");
@@ -74,8 +76,7 @@
       if (formEliminar) formEliminar.style.display = "none";
       return;
     }
-    // fetch foto
-    if (foto && (formSubir && formEliminar)) {
+    if (foto && formSubir && formEliminar) {
       fetch(`${API_FOTO_BASE}${encodeURIComponent(dpi)}`, { cache: "no-store" })
         .then(r => r.json())
         .then(j => {
@@ -97,55 +98,50 @@
     }
   }
 
-  // Agregar fila: crea tr con celdas vacías y la selecciona. No alerta si no hay tabla.
+  // Crear fila nueva: celdas vacías y todas EDITABLES de inmediato (sin inputs)
   function agregarFila() {
     const tabla = document.getElementById("tablaEmpleados");
     if (!tabla) return;
     const tbody = tabla.querySelector("tbody");
     if (!tbody) return;
+
     const tr = document.createElement("tr");
     for (let i = 0; i < COLUMNS.length; i++) {
       const td = document.createElement("td");
       td.innerText = "";
-      td.tabIndex = 0; // permite focus para empezar a teclear
+      td.tabIndex = 0; // permite focus y tipeo directo
+      td.contentEditable = true;
+      td.style.backgroundColor = "#fff3cd";
       tr.appendChild(td);
     }
     tbody.insertBefore(tr, tbody.firstChild);
+
+    // seleccionar y colocar en estado edición
+    if (selectedRow) selectedRow.classList.remove("table-active");
+    selectedRow = tr;
+    selectedRow.classList.add("table-active");
     isNewRow = true;
-    selectRow(tr);
-    // preparar para edición inmediata: habilitar guardar y cancelar, pero no activar contentEditable hasta Edit
+    editing = true;
+    originalCells = []; // no hay original
+    const btnEditar = document.getElementById("btnEditar");
     const btnGuardar = document.getElementById("btnGuardar");
     const btnCancelar = document.getElementById("btnCancelar");
-    const btnEditar = document.getElementById("btnEditar");
-    if (btnEditar) btnEditar.disabled = true;
+    if (btnEditar) btnEditar.disabled = true; // editar no aplica hasta seleccionar otra fila
     if (btnGuardar) btnGuardar.disabled = false;
     if (btnCancelar) btnCancelar.disabled = false;
-    // place focus on first cell ready to type (without forcing contentEditable)
+    // focus en la primera celda
     const first = tr.querySelector("td");
-    if (first) {
-      // give a visual cue for typing
-      first.focus();
-      // allow typing by toggling contentEditable on focus only for that cell (temporary)
-      // but we DO NOT want clicks to auto-enable editing for other cells, so do minimal
-      first.addEventListener("focus", function oneFocus() {
-        if (!editing) {
-          first.contentEditable = true;
-          first.style.backgroundColor = "#fff3cd";
-        }
-        first.removeEventListener("focus", oneFocus);
-      });
-    }
+    if (first) first.focus();
   }
 
-  // Habilita edición de TODA la fila seleccionada (sin crear inputs)
+  // Habilitar edición de TODA la fila seleccionada (sin crear inputs)
   function editarFila() {
-    if (!selectedRow) { flash("Selecciona una fila primero", "danger"); return; }
+    if (!selectedRow) { flash("Selecciona una fila antes de editar", "danger"); return; }
     if (editing) return;
     editing = true;
-    isNewRow = !!isNewRow; // mantener bandera
+    isNewRow = !!isNewRow;
     originalCells = Array.from(selectedRow.cells).map(td => td.innerText);
-    // make each cell contentEditable except maybe DPI if you want to lock; here we allow editing but keep DPI required on save
-    selectedRow.querySelectorAll("td").forEach((td, idx) => {
+    selectedRow.querySelectorAll("td").forEach(td => {
       td.contentEditable = true;
       td.style.backgroundColor = "#fff3cd";
     });
@@ -155,70 +151,67 @@
     if (btnEditar) btnEditar.disabled = true;
     if (btnGuardar) btnGuardar.disabled = false;
     if (btnCancelar) btnCancelar.disabled = false;
-    // focus first editable cell
+    // focus first cell
     const first = selectedRow.querySelector("td");
-    if (first) { first.focus(); }
+    if (first) first.focus();
   }
 
-  // Cancelar edición
+  // Cancelar edición: si era nueva fila la elimina; si no, restaura valores
   function cancelarEdicion() {
     if (!selectedRow) return;
-    if (editing && originalCells) {
+    if (isNewRow) {
+      const p = selectedRow.parentNode;
+      if (p) p.removeChild(selectedRow);
+    } else if (editing && originalCells) {
       selectedRow.querySelectorAll("td").forEach((td, i) => {
         td.innerText = originalCells[i] || "";
         td.contentEditable = false;
         td.style.backgroundColor = "";
       });
-    } else if (isNewRow) {
-      // si era nueva y no se quería guardar, quitarla
-      const parent = selectedRow.parentNode;
-      if (parent) parent.removeChild(selectedRow);
+      selectedRow.classList.remove("table-active");
     } else {
-      // asegurar que no queden celdas editables
+      // asegurar que celdas no queden editables
       selectedRow.querySelectorAll("td").forEach(td => { td.contentEditable = false; td.style.backgroundColor = ""; });
+      selectedRow.classList.remove("table-active");
     }
     // reset estado
-    selectedRow.classList.remove("table-active");
     selectedRow = null;
     originalCells = null;
     editing = false;
     isNewRow = false;
-    // reset botones
+    // botones: todos habilitados excepto editar (no hay fila seleccionada)
     const btnEditar = document.getElementById("btnEditar");
     const btnGuardar = document.getElementById("btnGuardar");
     const btnCancelar = document.getElementById("btnCancelar");
     if (btnEditar) btnEditar.disabled = true;
     if (btnGuardar) btnGuardar.disabled = true;
     if (btnCancelar) btnCancelar.disabled = true;
-    // reset foto panel
+    // reset photo panel
     const foto = document.getElementById("fotoEmpleado");
     if (foto) foto.src = PLACEHOLDER;
-    const formSubir = document.getElementById("formSubirFoto");
-    const formEliminar = document.getElementById("formEliminarFoto");
-    if (formSubir) formSubir.style.display = "none";
-    if (formEliminar) formEliminar.style.display = "none";
+    const fs = document.getElementById("formSubirFoto");
+    const fe = document.getElementById("formEliminarFoto");
+    if (fs) fs.style.display = "none";
+    if (fe) fe.style.display = "none";
   }
 
-  // Guardar: leer td.innerText; si está vacío enviar "" (nunca null); DPI obligatorio no vacío
+  // Guardar: construir payload con "" para celdas vacías; validar DPI non-empty
   async function guardarEdicion() {
     if (!selectedRow) return;
-    // collect values from tds in order
+    // leer celdas
     const tds = Array.from(selectedRow.querySelectorAll("td"));
-    const values = tds.map(td => {
-      const v = (td.innerText || "").trim();
-      return v === "" ? "" : v;
-    });
-    // build payload according to COLUMNS
+    const values = tds.map(td => safeTrim(td.innerText));
+    // construir payload usando COLUMNS; vacíos => ""
     const payload = {};
     for (let i = 0; i < COLUMNS.length; i++) {
       payload[COLUMNS[i]] = values[i] !== undefined ? values[i] : "";
     }
     payload["nuevo"] = !!isNewRow;
 
-    // DPI mandatory
+    // DPI obligatorio
     if (!payload["Numero de DPI"] || payload["Numero de DPI"].trim() === "") {
       flash("El campo Numero de DPI es obligatorio", "danger");
-      // keep editing to allow user to fix
+      // mantener edición para corregir DPI
       return;
     }
 
@@ -229,18 +222,17 @@
         body: JSON.stringify(payload)
       });
       if (!res.ok) {
-        const text = await res.text().catch(()=>"");
-        throw new Error(`${res.status} ${text || res.statusText}`);
+        const text = await res.text().catch(() => "");
+        throw new Error(`HTTP ${res.status} ${text || res.statusText}`);
       }
-      // on success: lock cells and clear styles
+      // on success: lock row and clear styles
       tds.forEach(td => { td.contentEditable = false; td.style.backgroundColor = ""; });
-      // reset state
       selectedRow.classList.remove("table-active");
       selectedRow = null;
       originalCells = null;
       editing = false;
       isNewRow = false;
-      // reset buttons
+      // botones: all enabled except edit (no selection)
       const btnEditar = document.getElementById("btnEditar");
       const btnGuardar = document.getElementById("btnGuardar");
       const btnCancelar = document.getElementById("btnCancelar");
@@ -254,34 +246,44 @@
     }
   }
 
-  // Wire listeners once DOM ready
+  // Inicialización y wiring de botones (asegurar listeners únicos)
+  function attachUnique(id, handler) {
+    const el = document.getElementById(id);
+    if (!el || !el.parentNode) return null;
+    const clean = el.cloneNode(true);
+    el.parentNode.replaceChild(clean, el);
+    clean.addEventListener("click", (e) => { e.stopPropagation(); handler(e); });
+    return clean;
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
-    // table row click -> select only
+    // tabla click: seleccionar fila (solo selección)
     const tabla = document.getElementById("tablaEmpleados");
     if (tabla) {
       tabla.addEventListener("click", (ev) => {
         const tr = ev.target.closest("tr");
         if (!tr || tr.parentElement.tagName !== "TBODY") return;
-        // do not enable editing here; only select
         selectRow(tr);
       });
     }
 
-    // Attach unique listeners to control buttons (replace node to clear prior listeners)
-    const attachUnique = (id, handler) => {
-      const el = document.getElementById(id);
-      if (!el || !el.parentNode) return;
-      const clean = el.cloneNode(true);
-      el.parentNode.replaceChild(clean, el);
-      clean.addEventListener("click", (e) => { e.stopPropagation(); handler(e); });
-    };
-
+    // Attach buttons ensuring uniqueness
     attachUnique("btnAgregar", () => agregarFila());
     attachUnique("btnEditar", () => editarFila());
     attachUnique("btnGuardar", () => guardarEdicion());
     attachUnique("btnCancelar", () => cancelarEdicion());
 
-    // Also ensure photo forms and file preview remain functional (minimal, non-intrusive)
+    // Inicial: todos los botones habilitados salvo Editar que depende de seleccion
+    const btnAgregar = document.getElementById("btnAgregar");
+    const btnEditar = document.getElementById("btnEditar");
+    const btnGuardar = document.getElementById("btnGuardar");
+    const btnCancelar = document.getElementById("btnCancelar");
+    if (btnAgregar) btnAgregar.disabled = false;
+    if (btnEditar) btnEditar.disabled = true;
+    if (btnGuardar) btnGuardar.disabled = true;
+    if (btnCancelar) btnCancelar.disabled = true;
+
+    // file preview for foto
     const fileFoto = document.getElementById("fileFoto");
     const fotoEmpleado = document.getElementById("fotoEmpleado");
     if (fileFoto && fotoEmpleado) {
@@ -294,7 +296,7 @@
       });
     }
 
-    // clicking outside table resets photo panel only if not editing
+    // clicking outside table resets photo panel if not editing
     document.addEventListener("click", (e) => {
       const insideTable = !!e.target.closest("#tablaEmpleados");
       const insideControls = !!e.target.closest("#formSubirFoto") || !!e.target.closest("#formEliminarFoto") || !!e.target.closest("#fileFoto");
