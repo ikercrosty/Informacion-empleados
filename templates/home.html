@@ -1,142 +1,184 @@
 {% extends "layout.html" %}
-{% block title %}Datos personales{% endblock %}
+{% block title %}Inicio{% endblock %}
 
 {% block content %}
-<div class="jumbotron">
-  <h1 class="display-4">Datos personales</h1>
-  <p class="lead">Datos personales del empleado</p>
-</div>
-
-<div class="row">
-  <!-- Tabla y botones (izquierda) -->
-  <div class="col-md-8">
-    <div class="mb-3 d-flex flex-wrap">
-      <button id="btnAgregar" type="button" class="btn btn-success btn-sm mr-2 mb-2">Agregar</button>
-      <button id="btnEditar" type="button" class="btn btn-primary btn-sm mr-2 mb-2" disabled>Editar</button>
-      <button id="btnGuardar" type="button" class="btn btn-success btn-sm mr-2 mb-2" disabled>Guardar</button>
-      <button id="btnCancelar" type="button" class="btn btn-secondary btn-sm mb-2" disabled>Cancelar</button>
-    </div>
-
-    <div class="table-responsive">
-      <table id="tablaEmpleados" class="table table-bordered table-striped table-hover table-sm">
-        <thead class="thead-dark table-compact">
-          <tr>
-            <th>DPI</th>
-            <th>Nombre</th>
-            <th>Apellidos</th>
-            <th>Apellidos de casada</th>
-            <th>Estado Civil</th>
-            <th>Nacionalidad</th>
-            <th>Departamento</th>
-            <th>Fecha de nacimiento</th>
-            <th>Lugar de nacimiento</th>
-            <th>Numero IGSS</th>
-            <th>Dirección</th>
-            <th>Telefono</th>
-            <th>Religión</th>
-            <th>Correo</th>
-            <th>Puesto</th>
-            <th>Tipo de contrato</th>
-            <th>Jornada laboral</th>
-            <th>Duración del trabajo</th>
-            <th>Fecha de inicio laboral</th>
-            <th>Dias Laborales</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for e in empleados %}
-          <tr>
-            <td>{{ e['Numero de DPI'] }}</td>
-            <td>{{ e.get('Nombre') }}</td>
-            <td>{{ e.get('Apellidos') }}</td>
-            <td>{{ e.get('Apellidos de casada') }}</td>
-            <td>{{ e.get('Estado Civil') }}</td>
-            <td>{{ e.get('Nacionalidad') }}</td>
-            <td>{{ e.get('Departamento') }}</td>
-            <td>{{ e.get('Fecha de nacimiento') }}</td>
-            <td>{{ e.get('Lugar de nacimiento') }}</td>
-            <td>{{ e.get('Numero de Afiliación del IGGS') }}</td>
-            <td>{{ e.get('Dirección del Domicilio') }}</td>
-            <td>{{ e.get('Numero de Telefono') }}</td>
-            <td>{{ e.get('Religión') }}</td>
-            <td>{{ e.get('Correo Electronico') }}</td>
-            <td>{{ e.get('Puesto de trabajo') }}</td>
-            <td>{{ e.get('Tipo de contrato') }}</td>
-            <td>{{ e.get('Jornada laboral') }}</td>
-            <td>{{ e.get('Duración del trabajo') }}</td>
-            <td>{{ e.get('Fecha de inicio laboral') }}</td>
-            <td>{{ e.get('Dias Laborales') }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Panel de imagen (derecha) -->
-  <div class="col-md-4">
-    <div class="card p-3">
-      <h5 class="mb-3">Datos personales del empleado</h5>
-
-      <div class="text-center mb-3">
-        <img id="fotoEmpleado"
-             src="{{ url_for('static', filename='imagenes/default.png') }}"
-             alt="Foto empleado"
-             class="img-fluid rounded-circle"
-             style="width:160px;height:160px;object-fit:cover;">
+<div class="container-fluid py-4">
+  <div class="jumbotron p-4 rounded-3 bg-white shadow-sm">
+    <div class="d-flex flex-column flex-md-row align-items-start gap-3">
+      <div class="flex-grow-1">
+        <h1 class="h3 mb-1">Datos personales</h1>
+        <p class="text-muted mb-0">Lista de empleados y foto del empleado seleccionado</p>
       </div>
+    </div>
 
-      <!-- Upload controls (ocultos por defecto) -->
-      <div id="uploadControls" style="display:none;">
-        <form id="formSubirFoto" method="post" action="{{ url_for('subir_foto') }}" enctype="multipart/form-data">
-          <input type="hidden" name="dpi" id="inputDpiForUpload" value="">
-          <div class="form-group">
-            <input id="fileFoto" name="foto" type="file" accept="image/*" class="form-control-file">
+    <hr class="my-3">
+
+    <div class="row g-3">
+      <!-- Tabla: ocupa la mayor parte -->
+      <div class="col-12 col-lg-9">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body p-2">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div class="btn-group">
+                <button id="btnAgregar" class="btn btn-success btn-sm">Agregar</button>
+                <button id="btnEditar" class="btn btn-primary btn-sm" disabled>Editar</button>
+                <button id="btnGuardar" class="btn btn-success btn-sm" disabled>Guardar</button>
+                <button id="btnCancelar" class="btn btn-secondary btn-sm" disabled>Cancelar</button>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table id="tablaEmpleados" class="table table-sm table-hover table-bordered w-100 mb-0">
+                <thead class="small" style="background-color:#000000; color:#ffffff;">
+                  <tr>
+                    <th class="align-middle">DPI</th>
+                    <th class="align-middle">Nombre</th>
+                    <th class="align-middle">Apellidos</th>
+                    <th class="align-middle">Apellidos de casada</th>
+                    <th class="align-middle">Estado Civil</th>
+                    <th class="align-middle">Nacionalidad</th>
+                    <th class="align-middle">Departamento</th>
+                    <th class="align-middle">Fecha de nacimiento</th>
+                    <th class="align-middle">Lugar de nacimiento</th>
+                    <th class="align-middle">Numero IGSS</th>
+                    <th class="align-middle">Dirección</th>
+                    <th class="align-middle">Telefono</th>
+                    <th class="align-middle">Religión</th>
+                    <th class="align-middle">Correo</th>
+                    <th class="align-middle">Puesto</th>
+                    <th class="align-middle">Tipo de contrato</th>
+                    <th class="align-middle">Jornada laboral</th>
+                    <th class="align-middle">Duración del trabajo</th>
+                    <th class="align-middle">Fecha de inicio laboral</th>
+                    <th class="align-middle">Dias Laborales</th>
+                  </tr>
+                </thead>
+                <tbody class="small">
+                  {% if empleados %}
+                    {% for e in empleados %}
+                    <tr>
+                      <td>{{ e['Numero de DPI'] }}</td>
+                      <td>{{ e.get('Nombre') }}</td>
+                      <td>{{ e.get('Apellidos') }}</td>
+                      <td>{{ e.get('Apellidos de casada') }}</td>
+                      <td>{{ e.get('Estado Civil') }}</td>
+                      <td>{{ e.get('Nacionalidad') }}</td>
+                      <td>{{ e.get('Departamento') }}</td>
+                      <td>{{ e.get('Fecha de nacimiento') }}</td>
+                      <td>{{ e.get('Lugar de nacimiento') }}</td>
+                      <td>{{ e.get('Numero de Afiliación del IGGS') }}</td>
+                      <td>{{ e.get('Dirección del Domicilio') }}</td>
+                      <td>{{ e.get('Numero de Telefono') }}</td>
+                      <td>{{ e.get('Religión') }}</td>
+                      <td>{{ e.get('Correo Electronico') }}</td>
+                      <td>{{ e.get('Puesto de trabajo') }}</td>
+                      <td>{{ e.get('Tipo de contrato') }}</td>
+                      <td>{{ e.get('Jornada laboral') }}</td>
+                      <td>{{ e.get('Duración del trabajo') }}</td>
+                      <td>{{ e.get('Fecha de inicio laboral') }}</td>
+                      <td>{{ e.get('Dias Laborales') }}</td>
+                    </tr>
+                    {% endfor %}
+                  {% else %}
+                    <tr>
+                      <td colspan="20" class="text-center text-muted">No hay empleados. Usa "Agregar" para crear la primera fila.</td>
+                    </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div> <!-- .table-responsive -->
+          </div> <!-- .card-body -->
+        </div> <!-- .card -->
+      </div> <!-- .col-lg-9 -->
+
+      <!-- Panel de foto centrado (derecha) -->
+      <div class="col-12 col-lg-3 d-flex align-items-start">
+        <div class="card shadow-sm border-0 w-100">
+          <div class="card-body d-flex flex-column align-items-center">
+            <h5 class="mb-3">Foto del empleado</h5>
+
+            <div class="mb-3 d-flex justify-content-center w-100">
+              <img id="fotoEmpleado"
+                   src="{{ url_for('static', filename='fotos/default.png') }}"
+                   alt="Foto empleado"
+                   class="rounded"
+                   style="width:220px;height:220px;object-fit:cover;border:1px solid #ddd;background:#f5f5f5;">
+            </div>
+
+            <form id="formSubirFoto" method="post" enctype="multipart/form-data" action="/subir_foto" class="w-100" style="max-width:260px; display:none;">
+              <input type="hidden" name="dpi" id="inputDpiForUpload" value="">
+              <div class="form-group mb-2">
+                <input id="fileFoto" name="foto" type="file" accept="image/*" class="form-control form-control-sm">
+              </div>
+              <button id="btnSubirFoto" type="button" class="btn btn-primary btn-sm w-100">Subir foto</button>
+            </form>
+
+            <form id="formEliminarFoto" method="post" action="/eliminar_foto" class="w-100" style="max-width:260px; display:none; margin-top:12px;">
+              <input type="hidden" name="dpi" id="inputDpiForDelete" value="">
+              <button id="btnEliminarFoto" type="button" class="btn btn-outline-danger btn-sm w-100">Eliminar foto</button>
+            </form>
+
+            <small id="fotoHint" class="text-muted mt-3 text-center">
+              Selecciona una fila de la tabla para gestionar la foto del empleado.
+            </small>
           </div>
-          <button id="btnSubirFoto" type="submit" class="btn btn-primary btn-block">Subir Foto</button>
-        </form>
-      </div>
+        </div>
+      </div> <!-- .col-lg-3 -->
+    </div> <!-- .row -->
+  </div> <!-- .jumbotron -->
+</div> <!-- .container-fluid -->
 
-      <!-- Delete control (oculto por defecto) -->
-      <div id="deleteControl" style="display:none;">
-        <form id="formEliminarFoto" method="post" action="{{ url_for('eliminar_foto') }}">
-          <input type="hidden" name="dpi" id="inputDpiForDelete" value="">
-          <button id="btnEliminarFoto" type="submit" class="btn btn-outline-danger btn-block">Eliminar Foto</button>
-        </form>
-      </div>
-
-      <small class="text-muted mt-3 d-block">
-        Selecciona una fila de la tabla para gestionar la foto del empleado.
-      </small>
-    </div>
-  </div>
-</div>
-
+<!-- Script: selección, edición inline, agregar fila y gestión de imagen -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const tabla = document.getElementById('tablaEmpleados');
   const fotoEmpleado = document.getElementById('fotoEmpleado');
   const inputDpiUpload = document.getElementById('inputDpiForUpload');
   const inputDpiDelete = document.getElementById('inputDpiForDelete');
-  const uploadControls = document.getElementById('uploadControls');
-  const deleteControl = document.getElementById('deleteControl');
+  const formSubir = document.getElementById('formSubirFoto');
+  const formEliminar = document.getElementById('formEliminarFoto');
   const fileFoto = document.getElementById('fileFoto');
 
-  const DEFAULT_SRC = "{{ url_for('static', filename='imagenes/default.png') }}";
+  const btnAgregar = document.getElementById('btnAgregar');
+  const btnEditar = document.getElementById('btnEditar');
+  const btnGuardar = document.getElementById('btnGuardar');
+  const btnCancelar = document.getElementById('btnCancelar');
+  const btnSubirFoto = document.getElementById('btnSubirFoto');
+  const btnEliminarFoto = document.getElementById('btnEliminarFoto');
+
+  // ruta consistente al default; asegúrate que static/fotos/default.png exista
+  const DEFAULT_SRC = "{{ url_for('static', filename='fotos/default.png') }}";
+
+  let selectedRow = null;
+  let originalCells = null;
+  let editing = false;
+  let isNewRow = false;
 
   function resetPanelToDefault() {
-    fotoEmpleado.src = DEFAULT_SRC;
-    inputDpiUpload.value = "";
-    inputDpiDelete.value = "";
-    uploadControls.style.display = "none";
-    deleteControl.style.display = "none";
+    if (fotoEmpleado) fotoEmpleado.src = DEFAULT_SRC;
+    if (inputDpiUpload) inputDpiUpload.value = "";
+    if (inputDpiDelete) inputDpiDelete.value = "";
+    if (formSubir) formSubir.style.display = "none";
+    if (formEliminar) formEliminar.style.display = "none";
     if (fileFoto) fileFoto.value = "";
+    clearSelectionUI();
   }
 
-  // Estado inicial: no fila seleccionada
+  function clearSelectionUI() {
+    if (selectedRow) selectedRow.classList.remove('table-active');
+    selectedRow = null;
+    originalCells = null;
+    editing = false;
+    isNewRow = false;
+    if (btnEditar) btnEditar.disabled = true;
+    if (btnGuardar) btnGuardar.disabled = true;
+    if (btnCancelar) btnCancelar.disabled = true;
+  }
+
+  // Inicial
   resetPanelToDefault();
 
-  // Preview local cuando el usuario selecciona archivo para subir
+  // Preview local cuando se selecciona archivo
   if (fileFoto) {
     fileFoto.addEventListener('change', (e) => {
       const f = e.target.files[0];
@@ -147,55 +189,274 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Manejo de selección de fila
-  if (tabla) {
-    tabla.addEventListener('click', (ev) => {
-      const tr = ev.target.closest('tr');
-      if (!tr || !tr.cells.length) return;
-      const dpi = tr.cells[0].innerText.trim();
-      if (!dpi) return;
+  // Agregar: inserta fila vacía editable
+  if (btnAgregar) {
+    btnAgregar.addEventListener('click', () => {
+      const tb = tabla.querySelector('tbody');
+      if (!tb) {
+        flashMessage('Tabla no encontrada. Recarga la página.', 'danger');
+        return;
+      }
 
-      // Set hidden inputs DPI
-      inputDpiUpload.value = dpi;
-      inputDpiDelete.value = dpi;
+      // eliminar fila placeholder si existe
+      const placeholder = tb.querySelector('tr td[colspan]');
+      if (placeholder) placeholder.parentElement.remove();
 
-      // Llamar API para validar si existe foto y que el archivo realmente exista
-      fetch(`/api/foto/${encodeURIComponent(dpi)}`)
-        .then(r => r.json())
-        .then(j => {
-          // API antigua puede devolver {foto: filename} o nueva versión {foto,url}
-          const url = j && (j.url || (j.foto ? `/static/fotos/${j.foto}` : null));
-          if (url) {
-            // Añadimos una cache-busting query con timestamp para evitar mostrar icono roto por cached 404
-            fotoEmpleado.src = `${url}?t=${Date.now()}`;
-            uploadControls.style.display = "none";
-            deleteControl.style.display = "block";
-          } else {
-            // No hay foto registrada o no existe en disco
-            fotoEmpleado.src = DEFAULT_SRC;
-            uploadControls.style.display = "block";
-            deleteControl.style.display = "none";
-            if (fileFoto) fileFoto.value = "";
-          }
-        })
-        .catch(() => {
-          // En caso de error tratamos como sin foto
-          fotoEmpleado.src = DEFAULT_SRC;
-          uploadControls.style.display = "block";
-          deleteControl.style.display = "none";
-          if (fileFoto) fileFoto.value = "";
-        });
+      const tr = document.createElement('tr');
+      for (let i = 0; i < 20; i++) {
+        const td = document.createElement('td');
+        td.textContent = '';
+        tr.appendChild(td);
+      }
+      tb.insertBefore(tr, tb.firstChild);
+
+      if (selectedRow) selectedRow.classList.remove('table-active');
+      selectedRow = tr;
+      selectedRow.classList.add('table-active');
+      isNewRow = true;
+      startEdit();
     });
   }
 
-  // Si el usuario hace click fuera de la tabla y fuera de controles, reestablecer estado por defecto
+  // Doble clic: seleccionar fila y cargar foto
+  if (tabla) {
+    tabla.addEventListener('dblclick', async (ev) => {
+      const tr = ev.target.closest('tr');
+      if (!tr || !tr.cells.length) return;
+
+      if (editing && selectedRow && tr !== selectedRow) cancelEdit();
+
+      if (selectedRow === tr) {
+        clearSelectionUI();
+        resetPanelToDefault();
+        return;
+      }
+
+      if (selectedRow) selectedRow.classList.remove('table-active');
+      selectedRow = tr;
+      selectedRow.classList.add('table-active');
+      if (btnEditar) btnEditar.disabled = false;
+      if (btnGuardar) btnGuardar.disabled = true;
+      if (btnCancelar) btnCancelar.disabled = false;
+
+      const dpi = (tr.cells[0] && tr.cells[0].innerText || '').trim();
+      if (!dpi) {
+        resetPanelToDefault();
+        return;
+      }
+      if (inputDpiUpload) inputDpiUpload.value = dpi;
+      if (inputDpiDelete) inputDpiDelete.value = dpi;
+
+      try {
+        const r = await fetch(`/api/foto/${encodeURIComponent(dpi)}`, { cache: 'no-store' });
+        if (!r.ok) throw new Error('no-photo');
+        const j = await r.json();
+        if (j && j.url) {
+          fotoEmpleado.src = `${j.url}?t=${Date.now()}`;
+          if (formSubir) formSubir.style.display = "none";
+          if (formEliminar) formEliminar.style.display = "block";
+        } else {
+          fotoEmpleado.src = DEFAULT_SRC;
+          if (formSubir) formSubir.style.display = "block";
+          if (formEliminar) formEliminar.style.display = "none";
+        }
+      } catch (err) {
+        fotoEmpleado.src = DEFAULT_SRC;
+        if (formSubir) formSubir.style.display = "block";
+        if (formEliminar) formEliminar.style.display = "none";
+      }
+    });
+  }
+
+  // Click fuera resetea panel (si no estamos editando)
   document.addEventListener('click', (e) => {
     const insideTable = e.target.closest('#tablaEmpleados');
-    const insideControls = e.target.closest('#uploadControls') || e.target.closest('#deleteControl');
-    if (!insideTable && !insideControls) {
+    const insideControls = e.target.closest('#formSubirFoto') || e.target.closest('#formEliminarFoto') || e.target.closest('#fileFoto');
+    if (!insideTable && !insideControls && !editing) {
       resetPanelToDefault();
     }
   });
+
+  // Edit inline
+  function startEdit() {
+    if (!selectedRow || editing) return;
+    editing = true;
+    originalCells = Array.from(selectedRow.cells).map(td => td.innerText);
+    selectedRow.querySelectorAll('td').forEach((td, idx) => {
+      const text = td.innerText || '';
+      if (idx === 0 && !isNewRow) {
+        td.innerHTML = `<input class="form-control form-control-sm" value="${escapeHtml(text)}" readonly>`;
+      } else {
+        td.innerHTML = `<input class="form-control form-control-sm" value="${escapeHtml(text)}">`;
+      }
+    });
+    if (btnEditar) btnEditar.disabled = true;
+    if (btnGuardar) btnGuardar.disabled = false;
+    if (btnCancelar) btnCancelar.disabled = false;
+    const firstEditable = selectedRow.querySelector('td input:not([readonly])');
+    if (firstEditable) firstEditable.focus();
+  }
+
+  async function saveEdit() {
+    if (!selectedRow || !editing) return;
+    const inputs = Array.from(selectedRow.querySelectorAll('td input'));
+    const dpi = (inputs[0] && inputs[0].value || '').trim();
+    if (!dpi) { flashMessage('DPI es obligatorio', 'danger'); return; }
+
+    const payload = {
+      "Numero de DPI": dpi,
+      "Nombre": inputs[1] ? inputs[1].value.trim() : '',
+      "Apellidos": inputs[2] ? inputs[2].value.trim() : '',
+      "Apellidos de casada": inputs[3] ? inputs[3].value.trim() : '',
+      "Estado Civil": inputs[4] ? inputs[4].value.trim() : '',
+      "Nacionalidad": inputs[5] ? inputs[5].value.trim() : '',
+      "Departamento": inputs[6] ? inputs[6].value.trim() : '',
+      "Fecha de nacimiento": inputs[7] ? inputs[7].value.trim() : '',
+      "Lugar de nacimiento": inputs[8] ? inputs[8].value.trim() : '',
+      "Numero de Afiliación del IGGS": inputs[9] ? inputs[9].value.trim() : '',
+      "Dirección del Domicilio": inputs[10] ? inputs[10].value.trim() : '',
+      "Numero de Telefono": inputs[11] ? inputs[11].value.trim() : '',
+      "Religión": inputs[12] ? inputs[12].value.trim() : '',
+      "Correo Electronico": inputs[13] ? inputs[13].value.trim() : '',
+      "Puesto de trabajo": inputs[14] ? inputs[14].value.trim() : '',
+      "Tipo de contrato": inputs[15] ? inputs[15].value.trim() : '',
+      "Jornada laboral": inputs[16] ? inputs[16].value.trim() : '',
+      "Duración del trabajo": inputs[17] ? inputs[17].value.trim() : '',
+      "Fecha de inicio laboral": inputs[18] ? inputs[18].value.trim() : '',
+      "Dias Laborales": inputs[19] ? inputs[19].value.trim() : ''
+    };
+
+    try {
+      const method = isNewRow ? 'POST' : 'PUT';
+      const url = isNewRow ? '/api/empleados' : `/api/empleado/${encodeURIComponent(dpi)}`;
+      const res = await fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const txt = await res.text().catch(()=>null);
+        throw new Error(`${res.status} ${txt || res.statusText}`);
+      }
+
+      // actualizar fila con valores guardados
+      selectedRow.querySelectorAll('td').forEach((td, idx) => {
+        const v = Object.values(payload)[idx];
+        td.innerText = v !== undefined ? v : '';
+      });
+
+      editing = false;
+      isNewRow = false;
+      if (btnGuardar) btnGuardar.disabled = true;
+      if (btnEditar) btnEditar.disabled = false;
+      flashMessage('Guardado correctamente', 'success');
+    } catch (err) {
+      flashMessage('Error al guardar: ' + err.message, 'danger');
+    }
+  }
+
+  function cancelEdit() {
+    if (!selectedRow) return;
+    if (editing && originalCells) {
+      selectedRow.querySelectorAll('td').forEach((td, idx) => {
+        td.innerText = originalCells[idx] || '';
+      });
+    }
+    if (isNewRow && selectedRow && selectedRow.parentNode) {
+      selectedRow.parentNode.removeChild(selectedRow);
+    }
+    editing = false;
+    isNewRow = false;
+    if (btnEditar) btnEditar.disabled = selectedRow ? false : true;
+    if (btnGuardar) btnGuardar.disabled = true;
+    if (btnCancelar) btnCancelar.disabled = true;
+    if (selectedRow) { selectedRow.classList.remove('table-active'); selectedRow = null; }
+    resetPanelToDefault();
+  }
+
+  // subir foto via AJAX y mostrar inmediatamente
+  if (btnSubirFoto) {
+    btnSubirFoto.addEventListener('click', async () => {
+      const dpi = inputDpiUpload.value && inputDpiUpload.value.trim();
+      if (!dpi) { flashMessage('Selecciona una fila con DPI antes de subir foto', 'danger'); return; }
+      if (!fileFoto || !fileFoto.files || !fileFoto.files[0]) { flashMessage('Selecciona un archivo de imagen', 'danger'); return; }
+
+      const fd = new FormData();
+      fd.append('dpi', dpi);
+      fd.append('foto', fileFoto.files[0]);
+
+      try {
+        const res = await fetch(formSubir.action || '/subir_foto', { method: 'POST', body: fd });
+        if (!res.ok) {
+          const t = await res.text().catch(()=>null);
+          throw new Error(`${res.status} ${t||res.statusText}`);
+        }
+        const j = await res.json();
+        if (j && j.url) {
+          fotoEmpleado.src = `${j.url}?t=${Date.now()}`;
+          formSubir.style.display = "none";
+          formEliminar.style.display = "block";
+          flashMessage('Foto subida', 'success');
+        } else {
+          throw new Error('Respuesta inesperada del servidor');
+        }
+      } catch (err) {
+        flashMessage('Error al subir foto: ' + err.message, 'danger');
+      }
+    });
+  }
+
+  // eliminar foto
+  if (btnEliminarFoto) {
+    btnEliminarFoto.addEventListener('click', async () => {
+      const dpi = inputDpiDelete.value && inputDpiDelete.value.trim();
+      if (!dpi) { flashMessage('No hay DPI seleccionado', 'danger'); return; }
+      try {
+        const res = await fetch(formEliminar.action || '/eliminar_foto', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dpi })
+        });
+        if (!res.ok) throw new Error('error');
+        fotoEmpleado.src = DEFAULT_SRC;
+        formSubir.style.display = "block";
+        formEliminar.style.display = "none";
+        flashMessage('Foto eliminada', 'success');
+      } catch (err) {
+        flashMessage('Error al eliminar foto', 'danger');
+      }
+    });
+  }
+
+  // util
+  function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str).replace(/[&<>"'`=\/]/g, function(s) {
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[s];
+    });
+  }
+
+  function flashMessage(msg, type='info') {
+    const existing = document.getElementById('flashMessage');
+    if (existing) existing.remove();
+    const container = document.createElement('div');
+    container.id = 'flashMessage';
+    container.className = `alert alert-${type} py-1 px-2 small position-fixed`;
+    container.style.top = '16px';
+    container.style.right = '16px';
+    container.style.zIndex = 2000;
+    container.innerText = msg;
+    document.body.appendChild(container);
+    setTimeout(()=> container.remove(), 3000);
+  }
+
+  // botones
+  if (btnEditar) btnEditar.addEventListener('click', startEdit);
+  if (btnGuardar) btnGuardar.addEventListener('click', saveEdit);
+  if (btnCancelar) btnCancelar.addEventListener('click', cancelEdit);
+
 });
 </script>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 {% endblock %}
