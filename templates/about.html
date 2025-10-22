@@ -41,23 +41,22 @@
   </table>
 </div>
 
-
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   // registrarTabla(idTabla, columnas, endpoint, campos, bloqueadas)
+  // bloqueadas: índices de columnas que NO se pueden editar (0 = DPI, 1 = Nombre, 2 = Apellidos)
   window.registrarTabla(
     'tablaAcademico',
     7,
     '/guardar_academico',
     [
       "Numero de DPI","Nombre","Apellidos",
-      "Nivel de estudios","Profesión u Oficio",
+      "Nivel de estudios","Profesi\u00f3n u Oficio",
       "Colegio o establecimiento","Cursos o titulos adicionales"
     ],
-    [] // columnas bloqueadas (ej: [0] para DPI read-only)
+    [0,1,2]
   );
 });
 </script>
-
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 {% endblock %}
