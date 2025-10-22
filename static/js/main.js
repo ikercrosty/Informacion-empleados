@@ -71,6 +71,11 @@
 
   // expose functions for templates and fallback handlers
   function agregarFila(){
+    // defensiva: si ya hay una fila nueva en edición, no crear otra
+    if (activeRow && activeRow.dataset && activeRow.dataset.new === '1') {
+      return;
+    }
+
     if (!activeTable) {
       // try to pick a visible registered table
       const first = Object.values(registry).find(r=> r.tabla && r.tabla.offsetParent !== null);
@@ -205,7 +210,7 @@
     el.dataset.attached = '1';
   }
 
-  document.addEventListener('DOMContentLoaded', ()=> {
+  document.addEventListener('DOMContentLoaded', () => {
     attachOnce('btnAgregar', agregarFila);
     attachOnce('btnEditar', editarFila);
     attachOnce('btnGuardar', guardarFila);

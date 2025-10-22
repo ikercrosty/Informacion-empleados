@@ -475,6 +475,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function tryRegister(n=20){
     if (window.registrarTabla && typeof window.registrarTabla === 'function') {
       window.registrarTabla(meta.id, meta.cols, meta.endpoint, meta.campos, meta.bloqueadas);
+      document.getElementById('btnAgregar').disabled = false;
       document.getElementById('btnEditar').disabled  = true;
       document.getElementById('btnGuardar').disabled = false;
       document.getElementById('btnCancelar').disabled= false;
