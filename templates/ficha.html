@@ -22,86 +22,24 @@
 
   <form id="fichaForm" class="card shadow-sm border-0 mb-4">
     <div class="card-body p-4">
-
+      <!-- (form fields identical to your last version) -->
       <!-- DATOS PERSONALES -->
       <h5 class="mb-3">DATOS PERSONALES</h5>
       <div class="row g-3">
-        <div class="col-md-3">
-          <label class="form-label">Número de DPI</label>
-          <input id="dpi" value="{{ e['Numero de DPI'] if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Nombre</label>
-          <input id="nombre" value="{{ e.get('Nombre') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Apellidos</label>
-          <input id="apellidos" value="{{ e.get('Apellidos') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Apellidos de casada</label>
-          <input id="apellidos_casada" value="{{ e.get('Apellidos de casada') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
+        <div class="col-md-3"><label class="form-label">Número de DPI</label><input id="dpi" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3"><label class="form-label">Nombre</label><input id="nombre" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3"><label class="form-label">Apellidos</label><input id="apellidos" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3"><label class="form-label">Apellidos de casada</label><input id="apellidos_casada" class="form-control form-control-sm" readonly></div>
 
-        <div class="col-md-3">
-          <label class="form-label">Estado Civil</label>
-          <input id="estado_civil" value="{{ e.get('Estado Civil') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Nacionalidad</label>
-          <input id="nacionalidad" value="{{ e.get('Nacionalidad') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Departamento</label>
-          <input id="departamento" value="{{ e.get('Departamento') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
+        <div class="col-md-3"><label class="form-label">Estado Civil</label><input id="estado_civil" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3"><label class="form-label">Nacionalidad</label><input id="nacionalidad" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3"><label class="form-label">Departamento</label><input id="departamento" class="form-control form-control-sm" readonly></div>
 
-        <div class="col-md-3">
-          <label class="form-label">Fecha de nacimiento</label>
-          {% set fn = e.get('Fecha de nacimiento') if e else None %}
-          {% if fn %}
-            {% if '-' in fn and fn[:4].isdigit() %}
-              {% set dpart = fn[:10].split('-') %}
-              {% set fecha_nac = dpart[2] ~ '/' ~ dpart[1] ~ '/' ~ dpart[0] %}
-            {% else %}
-              {% set months = {'Jan':'01','Feb':'02','Mar':'03','Apr':'04','May':'05','Jun':'06','Jul':'07','Aug':'08','Sep':'09','Oct':'10','Nov':'11','Dec':'12',
-                               'enero':'01','febrero':'02','marzo':'03','abril':'04','mayo':'05','junio':'06','julio':'07','agosto':'08','septiembre':'09','octubre':'10','noviembre':'11','diciembre':'12'} %}
-              {% set tokens = fn.replace(',', ' ').split() %}
-              {% set day=None %}{% set mon=None %}{% set year=None %}
-              {% for t in tokens %}
-                {% if day is none and t.isdigit() and 1 <= t|int <= 31 %}
-                  {% set day = ("%02d"|format(t|int)) %}
-                {% elif mon is none and (t[:3].capitalize() in months or t.lower() in months) %}
-                  {% set key = t[:3].capitalize() if t[:3].capitalize() in months else t.lower() %}
-                  {% set mon = months[key] %}
-                {% elif year is none and t.isdigit() and (t|length == 4) %}
-                  {% set year = t %}
-                {% endif %}
-              {% endfor %}
-              {% if day and mon and year %}
-                {% set fecha_nac = day ~ '/' ~ mon ~ '/' ~ year %}
-              {% else %}
-                {% set fecha_nac = fn %}
-              {% endif %}
-            {% endif %}
-          {% else %}
-            {% set fecha_nac = '' %}
-          {% endif %}
-          <input id="fecha_nacimiento" value="{{ fecha_nac }}" class="form-control form-control-sm" readonly>
-        </div>
+        <div class="col-md-3"><label class="form-label">Fecha de nacimiento</label><input id="fecha_nacimiento" class="form-control form-control-sm" readonly></div>
 
-        <div class="col-md-4">
-          <label class="form-label">Lugar de nacimiento</label>
-          <input id="lugar_nacimiento" value="{{ e.get('Lugar de nacimiento') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Número de Afiliación IGSS</label>
-          <input id="iggs" value="{{ e.get('Numero de Afiliación del IGGS') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Religión</label>
-          <input id="religion" value="{{ e.get('Religión') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
+        <div class="col-md-4"><label class="form-label">Lugar de nacimiento</label><input id="lugar_nacimiento" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-4"><label class="form-label">Número de Afiliación IGSS</label><input id="iggs" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-4"><label class="form-label">Religión</label><input id="religion" class="form-control form-control-sm" readonly></div>
       </div>
 
       <hr class="my-4">
@@ -109,51 +47,23 @@
       <!-- DOMICILIO Y CONTACTO -->
       <h5 class="mb-3">DOMICILIO Y CONTACTO</h5>
       <div class="row g-3">
-        <div class="col-md-6">
-          <label class="form-label">Dirección del Domicilio</label>
-          <input id="direccion" value="{{ e.get('Dirección del Domicilio') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Número de Teléfono</label>
-          <input id="telefono" value="{{ e.get('Numero de Telefono') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Correo Electrónico</label>
-          <input id="correo" value="{{ e.get('Correo Electronico') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
+        <div class="col-md-6"><label class="form-label">Dirección del Domicilio</label><input id="direccion" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3"><label class="form-label">Número de Teléfono</label><input id="telefono" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3"><label class="form-label">Correo Electrónico</label><input id="correo" class="form-control form-control-sm" readonly></div>
       </div>
 
       <hr class="my-4">
 
       <!-- DATOS LABORALES -->
       <h5 class="mb-3">Datos Laborales (Exclusivo de la administración)</h5>
-      <div class="text-muted small mb-3">Administración será la encargada de llenar este apartado.</div>
       <div class="row g-3">
-        <div class="col-md-3">
-          <label class="form-label">Puesto de trabajo</label>
-          <input id="puesto" value="{{ e.get('Puesto de trabajo') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Tipo de contrato</label>
-          <input id="tipo_contrato" value="{{ e.get('Tipo de contrato') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Jornada laboral</label>
-          <input id="jornada" value="{{ e.get('Jornada laboral') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Duración del contrato</label>
-          <input id="duracion" value="{{ e.get('Duración del trabajo') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
+        <div class="col-md-3"><label class="form-label">Puesto de trabajo</label><input id="puesto" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3"><label class="form-label">Tipo de contrato</label><input id="tipo_contrato" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3"><label class="form-label">Jornada laboral</label><input id="jornada" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3"><label class="form-label">Duración del contrato</label><input id="duracion" class="form-control form-control-sm" readonly></div>
 
-        <div class="col-md-3">
-          <label class="form-label">Fecha de inicio laboral</label>
-          <input id="fecha_inicio" value="{{ e.get('Fecha de inicio laboral') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Días laborales</label>
-          <input id="dias_laborales" value="{{ e.get('Dias Laborales') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
+        <div class="col-md-3"><label class="form-label">Fecha de inicio laboral</label><input id="fecha_inicio" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3"><label class="form-label">Días laborales</label><input id="dias_laborales" class="form-control form-control-sm" readonly></div>
       </div>
 
       <hr class="my-4">
@@ -161,22 +71,10 @@
       <!-- INFORMACIÓN ACADÉMICA -->
       <h5 class="mb-3">INFORMACIÓN ACADÉMICA</h5>
       <div class="row g-3">
-        <div class="col-md-3">
-          <label class="form-label">Nivel de estudios</label>
-          <input id="nivel_estudios" value="{{ e.get('Nivel de estudios') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Profesión u Oficio</label>
-          <input id="profesion" value="{{ e.get('Profesión u Oficio') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Colegio o establecimiento</label>
-          <input id="colegio" value="{{ e.get('Colegio o establecimiento') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Cursos o títulos adicionales</label>
-          <input id="cursos" value="{{ e.get('Cursos o títulos adicionales') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
+        <div class="col-md-3"><label class="form-label">Nivel de estudios</label><input id="nivel_estudios" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3"><label class="form-label">Profesión u Oficio</label><input id="profesion" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3"><label class="form-label">Colegio o establecimiento</label><input id="colegio" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3"><label class="form-label">Cursos o títulos adicionales</label><input id="cursos" class="form-control form-control-sm" readonly></div>
       </div>
 
       <hr class="my-4">
@@ -184,26 +82,11 @@
       <!-- DATOS DEL CÓNYUGE -->
       <h5 class="mb-3">DATOS DEL CÓNYUGE</h5>
       <div class="row g-3">
-        <div class="col-md-3">
-          <label class="form-label">Nombres del cónyuge</label>
-          <input id="conyuge_nombres" value="{{ e.get('Nombres del cónyuge') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Apellidos del cónyuge</label>
-          <input id="conyuge_apellidos" value="{{ e.get('Apellidos del cónyuge') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Dirección del cónyuge</label>
-          <input id="conyuge_direccion" value="{{ e.get('Dirección del cónyuge') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Teléfono del cónyuge</label>
-          <input id="conyuge_telefono" value="{{ e.get('Teléfono del cónyuge') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-4 mt-2">
-          <label class="form-label">Correo del cónyuge</label>
-          <input id="conyuge_correo" value="{{ e.get('Correo del cónyuge') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
+        <div class="col-md-3"><label class="form-label">Nombres del cónyuge</label><input id="conyuge_nombres" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3"><label class="form-label">Apellidos del cónyuge</label><input id="conyuge_apellidos" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3"><label class="form-label">Dirección del cónyuge</label><input id="conyuge_direccion" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3"><label class="form-label">Teléfono del cónyuge</label><input id="conyuge_telefono" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-4 mt-2"><label class="form-label">Correo del cónyuge</label><input id="conyuge_correo" class="form-control form-control-sm" readonly></div>
       </div>
 
       <hr class="my-4">
@@ -211,18 +94,9 @@
       <!-- CONTACTO DE EMERGENCIA -->
       <h5 class="mb-3">CONTACTO DE EMERGENCIA</h5>
       <div class="row g-3">
-        <div class="col-md-3">
-          <label class="form-label">Nombre contacto</label>
-          <input id="contacto_nombre" value="{{ e.get('Nombre contacto') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Apellidos contacto</label>
-          <input id="contacto_apellidos" value="{{ e.get('Apellidos contacto') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Teléfono de emergencia</label>
-          <input id="contacto_telefono" value="{{ e.get('Teléfono de emergencia') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
+        <div class="col-md-3"><label class="form-label">Nombre contacto</label><input id="contacto_nombre" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3"><label class="form-label">Apellidos contacto</label><input id="contacto_apellidos" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3"><label class="form-label">Teléfono de emergencia</label><input id="contacto_telefono" class="form-control form-control-sm" readonly></div>
       </div>
 
       <hr class="my-4">
@@ -243,12 +117,12 @@
           </thead>
           <tbody>
             <tr>
-              <td id="ref_nombre_empresa">{{ e.get('Nombre Empresa') if e else '' }}</td>
-              <td id="ref_direccion_empresa">{{ e.get('Dirección Empresa') if e else '' }}</td>
-              <td id="ref_inicio_empresa">{{ e.get('Inicio en la empresa') if e else '' }}</td>
-              <td id="ref_fin_empresa">{{ e.get('Fin en la empresa') if e else '' }}</td>
-              <td id="ref_motivo_retiro">{{ e.get('Motivo del retiro') if e else '' }}</td>
-              <td id="ref_nombre_jefe">{{ e.get('Nombre del jefe inmediato') if e else '' }}</td>
+              <td id="ref_nombre_empresa"></td>
+              <td id="ref_direccion_empresa"></td>
+              <td id="ref_inicio_empresa"></td>
+              <td id="ref_fin_empresa"></td>
+              <td id="ref_motivo_retiro"></td>
+              <td id="ref_nombre_jefe"></td>
             </tr>
           </tbody>
         </table>
@@ -259,51 +133,30 @@
       <!-- REFERENCIAS MÉDICAS -->
       <h5 class="mb-3">REFERENCIAS MÉDICAS</h5>
       <div class="row g-3">
-        <div class="col-md-3">
-          <label class="form-label">¿Padece alguna enfermedad?</label>
-          <input id="padece_enfermedad" value="{{ e.get('Padece alguna enfermedad') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Tipo de enfermedad</label>
-          <input id="tipo_enfermedad" value="{{ e.get('Tipo de enfermedad') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Recibe tratamiento</label>
-          <input id="recibe_tratamiento" value="{{ e.get('Recibe tratamiento') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Nombre del tratamiento</label>
-          <input id="nombre_tratamiento" value="{{ e.get('Nombre del tratamiento') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
+        <div class="col-md-3"><label class="form-label">¿Padece alguna enfermedad?</label><input id="padece_enfermedad" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3"><label class="form-label">Tipo de enfermedad</label><input id="tipo_enfermedad" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3"><label class="form-label">Recibe tratamiento</label><input id="recibe_tratamiento" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-3"><label class="form-label">Nombre del tratamiento</label><input id="nombre_tratamiento" class="form-control form-control-sm" readonly></div>
 
-        <div class="col-md-4 mt-3">
-          <label class="form-label">¿Es alérgico a algún medicamento?</label>
-          <input id="alergico" value="{{ e.get('Es alérgico a algún medicamento') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-4 mt-3">
-          <label class="form-label">Nombre del médico tratante</label>
-          <input id="medico_tratante" value="{{ e.get('Nombre del médico tratante') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
-        <div class="col-md-4 mt-3">
-          <label class="form-label">Tipo de sangre</label>
-          <input id="tipo_sangre" value="{{ e.get('Tipo de sangre') if e else '' }}" class="form-control form-control-sm" readonly>
-        </div>
+        <div class="col-md-4 mt-3"><label class="form-label">¿Es alérgico a algún medicamento?</label><input id="alergico" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-4 mt-3"><label class="form-label">Nombre del médico tratante</label><input id="medico_tratante" class="form-control form-control-sm" readonly></div>
+        <div class="col-md-4 mt-3"><label class="form-label">Tipo de sangre</label><input id="tipo_sangre" class="form-control form-control-sm" readonly></div>
       </div>
 
-      <div class="mt-4 text-end">
-        <button type="button" id="btnClear" class="btn btn-outline-secondary btn-sm">Limpiar</button>
-      </div>
+      <div class="mt-4 text-end"><button type="button" id="btnClear" class="btn btn-outline-secondary btn-sm">Limpiar</button></div>
     </div>
   </form>
 </div>
 
-<!-- Configuración que necesita main.js -->
 <script>
   window.__FICHA_CONFIG = {
     placeholder: "{{ url_for('static', filename='placeholder.png') }}",
     apiEmpleados: "/api/empleados",
     apiEmpleadoBase: "/api/empleado/",
-    apiFotoBase: "/api/foto/"
+    apiFotoBase: "/api/foto/",
+    // additional endpoints to try when spouse/emergency are missing
+    apiConyugeCandidates: ["/api/conyuge/","/api/conyugue/","/api/datos_conyuge/"],
+    apiEmergenciaCandidates: ["/api/emergencia/","/api/contacto_emergencia/","/api/contacto/"]
   };
 </script>
 
@@ -314,6 +167,8 @@
   const apiEmpleadoBase = cfg.apiEmpleadoBase || '/api/empleado/';
   const apiFotoBase = cfg.apiFotoBase || '/api/foto/';
   const placeholder = cfg.placeholder || '';
+  const apiConyugeCandidates = cfg.apiConyugeCandidates || [];
+  const apiEmergenciaCandidates = cfg.apiEmergenciaCandidates || [];
 
   const selectEl = document.getElementById('empleadoSelect');
   const fotoEl = document.getElementById('fotoEmpleado');
@@ -367,92 +222,84 @@
     return '';
   }
 
-  // New: robust nested spouse/emergency mapping helper
-  function getNested(obj, pathCandidates) {
-    if (!obj || typeof obj !== 'object') return '';
-    for (const p of pathCandidates) {
-      if (!p) continue;
-      if (p.indexOf('.') !== -1) {
-        const parts = p.split('.');
-        let cur = obj;
-        let ok = true;
-        for (const part of parts) {
-          if (cur && typeof cur === 'object' && (part in cur)) cur = cur[part];
-          else { ok = false; break; }
-        }
-        if (ok && cur !== undefined && cur !== null && String(cur).trim() !== '') return cur;
-      } else {
-        if (p in obj && obj[p] !== undefined && obj[p] !== null && String(obj[p]).trim() !== '') return obj[p];
+  async function tryFetchCandidates(candidates, dpi){
+    for (const base of candidates){
+      try {
+        const url = base.endsWith('/') ? (base + encodeURIComponent(dpi)) : (base + '/' + encodeURIComponent(dpi));
+        const r = await fetch(url, { cache: 'no-store' });
+        if (!r.ok) continue;
+        const j = await r.json();
+        // accept object or array with first element
+        if (Array.isArray(j) && j.length) return j[0];
+        if (j && typeof j === 'object') return j;
+      } catch(e){
+        continue;
       }
-      const nk = p.normalize ? p.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : p;
-      const nk2 = nk.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_\.]/g,'');
-      if (nk2 in obj && obj[nk2] !== undefined && obj[nk2] !== null && String(obj[nk2]).trim() !== '') return obj[nk2];
     }
-    return '';
+    return null;
   }
 
-  function fillSpouseAndEmergency(emp) {
-    if (!emp || typeof emp !== 'object') return;
+  function mergeIfEmpty(targetId, value){
+    const el = document.getElementById(targetId);
+    if (!el) return;
+    if (!el.value || String(el.value).trim() === '') el.value = value == null ? '' : String(value);
+  }
 
-    const spousePaths = [
-      'conyuge', 'conyugue', 'datos_conyuge', 'datos_cónyuge', 'spouse', 'esposo', 'esposa'
-    ];
+  function fillSpouseAndEmergency(emp){
+    // prefer nested objects inside emp
     let spouseObj = null;
-    for (const p of spousePaths) {
-      if (p in emp && emp[p] && typeof emp[p] === 'object') { spouseObj = emp[p]; break; }
-      const nk = p.normalize ? p.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : p;
-      const nk2 = nk.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
-      if (nk2 in emp && emp[nk2] && typeof emp[nk2] === 'object') { spouseObj = emp[nk2]; break; }
+    const spouseKeys = ['conyuge','conyugue','datos_conyuge','datos_cónyuge','spouse','esposo','esposa'];
+    for (const k of spouseKeys){
+      if (k in emp && emp[k] && typeof emp[k] === 'object') { spouseObj = emp[k]; break; }
+      const nk = normalizeKeyToId(k);
+      if (nk in emp && emp[nk] && typeof emp[nk] === 'object') { spouseObj = emp[nk]; break; }
+    }
+    if (spouseObj){
+      mergeIfEmpty('conyuge_nombres', getFirstNonEmpty(spouseObj, ['nombres','nombre','first_name']));
+      mergeIfEmpty('conyuge_apellidos', getFirstNonEmpty(spouseObj, ['apellidos','apellido','last_name']));
+      mergeIfEmpty('conyuge_direccion', getFirstNonEmpty(spouseObj, ['direccion','direccion_completa','direccion_del_conyuge']));
+      mergeIfEmpty('conyuge_telefono', getFirstNonEmpty(spouseObj, ['telefono','tel','mobile']));
+      mergeIfEmpty('conyuge_correo', getFirstNonEmpty(spouseObj, ['correo','email']));
     }
 
-    if (spouseObj) {
-      const tel = getFirstNonEmpty(spouseObj, ['telefono','tel','telefono_del_conyuge','telefono_conyuge','teléfono','telefono_contacto','phone','mobile']);
-      const mail = getFirstNonEmpty(spouseObj, ['correo','email','correo_electronico','correo_del_conyuge','correo_conyuge','email_conyuge']);
-      if (tel) setIfExists('conyuge_telefono', tel);
-      if (mail) setIfExists('conyuge_correo', mail);
-    } else {
-      trySetMany(emp,
-        ['Teléfono del cónyuge','Telefono del conyuge','Telefono del conyugue','telefono_del_conyuge','telefono_conyuge','tel_conyuge','telefono_conyugue','phone_conyuge'],
-        'conyuge_telefono');
-      trySetMany(emp,
-        ['Correo del cónyuge','Correo del conyugue','correo_del_conyuge','correo_conyuge','email_conyuge','email_del_conyuge','correo_conyugue'],
-        'conyuge_correo');
-    }
-
-    const emergencyPaths = ['contacto_emergencia','contactoEmergencia','emergency_contact','contacto'];
     let emObj = null;
-    for (const p of emergencyPaths) {
-      if (p in emp && emp[p] && typeof emp[p] === 'object') { emObj = emp[p]; break; }
-      const nk = p.normalize ? p.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : p;
-      const nk2 = nk.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
-      if (nk2 in emp && emp[nk2] && typeof emp[nk2] === 'object') { emObj = emp[nk2]; break; }
+    const emKeys = ['contacto_emergencia','contactoEmergencia','emergency_contact','contacto'];
+    for (const k of emKeys){
+      if (k in emp && emp[k] && typeof emp[k] === 'object') { emObj = emp[k]; break; }
+      const nk = normalizeKeyToId(k);
+      if (nk in emp && emp[nk] && typeof emp[nk] === 'object') { emObj = emp[nk]; break; }
+    }
+    if (emObj){
+      mergeIfEmpty('contacto_nombre', getFirstNonEmpty(emObj, ['nombre','first_name']));
+      mergeIfEmpty('contacto_apellidos', getFirstNonEmpty(emObj, ['apellidos','apellido','last_name']));
+      mergeIfEmpty('contacto_telefono', getFirstNonEmpty(emObj, ['telefono','tel','mobile']));
+    }
+  }
+
+  async function fillMissingSpouseAndEmergencyFromEndpoints(dpi){
+    // Try spouse endpoints if spouse fields still empty
+    const needSpousePhone = !document.getElementById('conyuge_telefono').value;
+    const needSpouseEmail = !document.getElementById('conyuge_correo').value;
+    const needContactoNombre = !document.getElementById('contacto_nombre').value;
+    const needContactoApellidos = !document.getElementById('contacto_apellidos').value;
+
+    if (needSpousePhone || needSpouseEmail){
+      const sp = await tryFetchCandidates(apiConyugeCandidates, dpi);
+      if (sp){
+        mergeIfEmpty('conyuge_nombres', getFirstNonEmpty(sp, ['Nombres del conyugue','Nombres del cónyuge','nombres','nombre']));
+        mergeIfEmpty('conyuge_apellidos', getFirstNonEmpty(sp, ['Apellidos del conyugue','Apellidos del cónyuge','apellidos']));
+        mergeIfEmpty('conyuge_direccion', getFirstNonEmpty(sp, ['Dirección del conyugue','direccion','direccion_del_conyuge']));
+        mergeIfEmpty('conyuge_telefono', getFirstNonEmpty(sp, ['Telefono del conyugue','telefono','tel','telefono_conyuge']));
+        mergeIfEmpty('conyuge_correo', getFirstNonEmpty(sp, ['Correo del conyugue','correo','email','correo_conyuge']));
+      }
     }
 
-    if (emObj) {
-      const nombre = getFirstNonEmpty(emObj, ['nombre','first_name','nombre_contacto','nombre_del_contacto']);
-      const apellidos = getFirstNonEmpty(emObj, ['apellidos','apellido','last_name','apellidos_contacto','apellidos_del_contacto']);
-      const tel = getFirstNonEmpty(emObj, ['telefono','tel','telefono_emergencia','telefono_de_emergencia']);
-      if (nombre) setIfExists('contacto_nombre', nombre);
-      if (apellidos) setIfExists('contacto_apellidos', apellidos);
-      if (tel) setIfExists('contacto_telefono', tel);
-    } else {
-      trySetMany(emp,
-        ['Nombre contacto','Nombre contacto de emergencia','nombre_contacto','nombre_del_contacto','contacto_nombre','nombrecontacto'],
-        'contacto_nombre');
-      trySetMany(emp,
-        ['Apellidos contacto','Apellidos contacto de emergencia','apellidos_contacto','apellidos_del_contacto','contacto_apellidos'],
-        'contacto_apellidos');
-      trySetMany(emp,
-        ['Teléfono de emergencia','Telefono de emergencia','telefono_de_emergencia','telefono_emergencia','contacto_telefono','numero_de_telefono_de_emergencia'],
-        'contacto_telefono');
-    }
-
-    if ((!document.getElementById('contacto_nombre').value || document.getElementById('contacto_nombre').value.trim()==='') &&
-        emp['Contacto de emergencia'] && typeof emp['Contacto de emergencia'] === 'string') {
-      const parts = emp['Contacto de emergencia'].trim().split(/\s+/);
-      if (parts.length) {
-        setIfExists('contacto_nombre', parts[0]);
-        if (parts.length > 1) setIfExists('contacto_apellidos', parts.slice(1).join(' '));
+    if (needContactoNombre || needContactoApellidos){
+      const em = await tryFetchCandidates(apiEmergenciaCandidates, dpi);
+      if (em){
+        mergeIfEmpty('contacto_nombre', getFirstNonEmpty(em, ['Nombre contacto','nombre','first_name']));
+        mergeIfEmpty('contacto_apellidos', getFirstNonEmpty(em, ['Apellidos contacto','apellidos','last_name']));
+        mergeIfEmpty('contacto_telefono', getFirstNonEmpty(em, ['Telefono de emergencia','telefono','tel']));
       }
     }
   }
@@ -460,121 +307,99 @@
   function fillFields(emp){
     if (!emp || typeof emp !== 'object') return;
 
-    const explicit = {
-      dpi: ['Numero de DPI','Numero_de_DPI','Numero_de_Dpi','numero_de_dpi','dpi'],
-      nombre: ['Nombre','nombre','full_name','fullName'],
-      apellidos: ['Apellidos','apellidos','surname'],
-      apellidos_casada: ['Apellidos de casada','Apellidos_de_casada','apellidos_de_casada'],
-      estado_civil: ['Estado Civil','Estado_Civil','estado_civil'],
-      nacionalidad: ['Nacionalidad','nacionalidad'],
-      departamento: ['Departamento','departamento'],
-      lugar_nacimiento: ['Lugar de nacimiento','Lugar_de_nacimiento','lugar_de_nacimiento'],
-      iggs: ['Numero de Afiliación del IGGS','Numero de Afiliacion del IGGS','Numero IGSS','numero_igg','numero_iggs','Numero de Afiliacion del IGGS'],
-      direccion: ['Dirección del Domicilio','Direccion del Domicilio','direccion','Dirección'],
-      telefono: ['Numero de Telefono','Numero de Teléfono','Telefono','telefono','numero_de_telefono'],
-      correo: ['Correo Electronico','Correo electrónico','Correo','correo','correo_electronico'],
-      religion: ['Religión','Religion','religion'],
-      puesto: ['Puesto de trabajo','puesto','puesto_de_trabajo'],
-      tipo_contrato: ['Tipo de contrato','tipo_de_contrato'],
-      jornada: ['Jornada laboral','jornada_laboral'],
-      duracion: ['Duración del trabajo','Duracion del trabajo','duracion_del_trabajo'],
-      fecha_inicio: ['Fecha de inicio laboral','fecha_inicio_laboral','fecha_inicio'],
-      dias_laborales: ['Dias Laborales','dias_laborales'],
+    // basic mapping attempts
+    trySetMany(emp, ['Numero de DPI','Numero_de_DPI','dpi','numero_de_dpi'], 'dpi');
+    trySetMany(emp, ['Nombre','nombre','full_name'], 'nombre');
+    trySetMany(emp, ['Apellidos','apellidos','surname'], 'apellidos');
+    trySetMany(emp, ['Apellidos de casada','apellidos_de_casada'], 'apellidos_casada');
+    trySetMany(emp, ['Estado Civil','estado_civil'], 'estado_civil');
+    trySetMany(emp, ['Nacionalidad','nacionalidad'], 'nacionalidad');
+    trySetMany(emp, ['Departamento','departamento'], 'departamento');
+    trySetMany(emp, ['Lugar de nacimiento','lugar_de_nacimiento'], 'lugar_nacimiento');
+    trySetMany(emp, ['Numero de Afiliación del IGGS','Numero de Afiliacion del IGGS','Numero IGSS'], 'iggs');
 
-      nivel_estudios: ['Nivel de estudios','nivel_de_estudios'],
-      profesion: ['Profesión u Oficio','Profesion u Oficio','profesion_u_oficio'],
-      colegio: ['Colegio o establecimiento','colegio_o_establecimiento','colegio'],
-      cursos: ['Cursos o títulos adicionales','Cursos o titulos adicionales','Cursos','cursos','cursos_o_titulos_adicionales'],
+    trySetMany(emp, ['Dirección del Domicilio','Direccion del Domicilio','direccion'], 'direccion');
+    trySetMany(emp, ['Numero de Telefono','Numero de Teléfono','Telefono','telefono','telefono_personal'], 'telefono');
+    trySetMany(emp, ['Correo Electronico','Correo','correo','email'], 'correo');
 
-      conyuge_nombres: ['Nombres del cónyuge','Nombres del conyugue','nombres_del_conyuge','conyuge_nombres'],
-      conyuge_apellidos: ['Apellidos del cónyuge','Apellidos del conyugue','apellidos_del_conyuge','conyuge_apellidos'],
-      conyuge_direccion: ['Dirección del cónyuge','Direccion del conyugue','direccion_del_conyuge','conyuge_direccion'],
-      conyuge_telefono: ['Teléfono del cónyuge','Telefono del conyugue','telefono_del_conyuge','conyuge_telefono','telefono_conyuge'],
-      conyuge_correo: ['Correo del cónyuge','Correo del conyugue','correo_del_conyuge','conyuge_correo','correo_conyuge'],
+    trySetMany(emp, ['Puesto de trabajo','puesto','puesto_de_trabajo'], 'puesto');
+    trySetMany(emp, ['Tipo de contrato','tipo_de_contrato'], 'tipo_contrato');
+    trySetMany(emp, ['Jornada laboral','jornada_laboral'], 'jornada');
+    trySetMany(emp, ['Duración del trabajo','Duracion del trabajo','duracion_del_trabajo'], 'duracion');
+    trySetMany(emp, ['Fecha de inicio laboral','fecha_inicio_laboral','fecha_inicio'], 'fecha_inicio');
+    trySetMany(emp, ['Dias Laborales','dias_laborales'], 'dias_laborales');
 
-      contacto_nombre: ['Nombre contacto','Nombre contacto de emergencia','nombre_contacto','contacto_nombre'],
-      contacto_apellidos: ['Apellidos contacto','Apellidos contacto de emergencia','apellidos_contacto','contacto_apellidos'],
-      contacto_telefono: ['Teléfono de emergencia','Telefono de emergencia','Numero de telefono de emergencia','telefono_de_emergencia','contacto_telefono'],
+    trySetMany(emp, ['Nivel de estudios','nivel_de_estudios'], 'nivel_estudios');
+    trySetMany(emp, ['Profesión u Oficio','Profesion u Oficio','profesion_u_oficio'], 'profesion');
+    trySetMany(emp, ['Colegio o establecimiento','colegio_o_establecimiento'], 'colegio');
+    trySetMany(emp, ['Cursos o títulos adicionales','Cursos o titulos adicionales','Cursos','cursos'], 'cursos');
 
-      ref_nombre_empresa: ['Nombre Empresa','Nombre de la Empresa (Ultimo Trabajo)','nombre_empresa','nombre_de_la_empresa_ultimo_trabajo'],
-      ref_direccion_empresa: ['Dirección Empresa','Direccion de la empresa','direccion_empresa'],
-      ref_inicio_empresa: ['Inicio en la empresa','Inicio laboral en la empresa','inicio_en_la_empresa'],
-      ref_fin_empresa: ['Fin en la empresa','Fin Laboral en la empresa','fin_en_la_empresa'],
-      ref_motivo_retiro: ['Motivo del retiro','motivo_del_retiro'],
-      ref_nombre_jefe: ['Nombre del jefe inmediato','Nombre del Jefe Imediato','nombre_del_jefe_inmediato'],
+    // spouse fields (may be in emp or in separate endpoint)
+    trySetMany(emp, ['Nombres del cónyuge','Nombres del conyugue','conyuge_nombres','nombres_del_conyuge'], 'conyuge_nombres');
+    trySetMany(emp, ['Apellidos del cónyuge','Apellidos del conyugue','conyuge_apellidos','apellidos_del_conyuge'], 'conyuge_apellidos');
+    trySetMany(emp, ['Dirección del cónyuge','Direccion del conyugue','conyuge_direccion'], 'conyuge_direccion');
+    trySetMany(emp, ['Teléfono del cónyuge','Telefono del conyugue','conyuge_telefono','telefono_conyuge'], 'conyuge_telefono');
+    trySetMany(emp, ['Correo del cónyuge','Correo_del_conyuge','conyuge_correo','correo_conyuge','email_conyuge'], 'conyuge_correo');
 
-      padece_enfermedad: ['Padece alguna enfermedad','padece_alguna_enfermedad'],
-      tipo_enfermedad: ['Tipo de enfermedad','tipo_de_enfermedad'],
-      recibe_tratamiento: ['Recibe tratamiento','Recibe tratamiento medico','recibe_tratamiento','Recibe tratamiento medico'],
-      nombre_tratamiento: ['Nombre del tratamiento','nombre_del_tratamiento'],
-      alergico: ['Es alergico a algun medicamento','Es alérgico a algún medicamento','es_alergico_a_algun_medicamento'],
-      medico_tratante: ['Nombre del medico Tratante','Nombre del médico tratante','nombre_del_medico_tratante'],
-      tipo_sangre: ['Tipo de sangre','tipo_de_sangre']
-    };
+    // emergency (may be in emp or separate)
+    trySetMany(emp, ['Nombre contacto','nombre_contacto','contacto_nombre'], 'contacto_nombre');
+    trySetMany(emp, ['Apellidos contacto','apellidos_contacto','contacto_apellidos'], 'contacto_apellidos');
+    trySetMany(emp, ['Teléfono de emergencia','Telefono de emergencia','contacto_telefono','telefono_de_emergencia'], 'contacto_telefono');
 
-    for (const id in explicit){
-      const keys = explicit[id];
-      trySetMany(emp, keys, id);
-    }
+    // referencias laborales
+    setCellText('ref_nombre_empresa', getFirstNonEmpty(emp, ['Nombre Empresa','Nombre de la Empresa (Ultimo Trabajo)','nombre_empresa']));
+    setCellText('ref_direccion_empresa', getFirstNonEmpty(emp, ['Dirección Empresa','Direccion de la empresa','direccion_empresa']));
+    setCellText('ref_inicio_empresa', getFirstNonEmpty(emp, ['Inicio en la empresa','Inicio laboral en la empresa','inicio_en_la_empresa']));
+    setCellText('ref_fin_empresa', getFirstNonEmpty(emp, ['Fin en la empresa','Fin Laboral en la empresa','fin_en_la_empresa']));
+    setCellText('ref_motivo_retiro', getFirstNonEmpty(emp, ['Motivo del retiro','motivo_del_retiro']));
+    setCellText('ref_nombre_jefe', getFirstNonEmpty(emp, ['Nombre del jefe inmediato','Nombre del Jefe Imediato','nombre_del_jefe_inmediato']));
 
-    trySetMany(emp, ['Cursos o títulos adicionales', 'Cursos o titulos adicionales', 'Cursos', 'cursos_o_titulos_adicionales', 'cursos'], 'cursos');
+    // medicos
+    trySetMany(emp, ['Padece alguna enfermedad','padece_alguna_enfermedad'], 'padece_enfermedad');
+    trySetMany(emp, ['Tipo de enfermedad','tipo_de_enfermedad'], 'tipo_enfermedad');
+    trySetMany(emp, ['Recibe tratamiento','Recibe tratamiento medico','recibe_tratamiento'], 'recibe_tratamiento');
+    trySetMany(emp, ['Nombre del tratamiento','nombre_del_tratamiento'], 'nombre_tratamiento');
+    trySetMany(emp, ['Es alérgico a algún medicamento','Es alergico a algun medicamento','es_alergico_a_algun_medicamento'], 'alergico');
+    trySetMany(emp, ['Nombre del médico tratante','Nombre del medico Tratante','nombre_del_medico_tratante'], 'medico_tratante');
+    trySetMany(emp, ['Tipo de sangre','tipo_de_sangre'], 'tipo_sangre');
 
-    trySetMany(emp, ['Telefono del conyuge','Telefono conyuge','Teléfono del cónyuge','tel_conyuge','conyuge_telefono'], 'conyuge_telefono');
-    trySetMany(emp, ['Correo del conyuge','correo_conyuge','correo_del_conyuge','conyuge_correo'], 'conyuge_correo');
-
-    trySetMany(emp, ['Nombre contacto','nombre_contacto','contacto_nombre','nombre_contacto_de_emergencia'], 'contacto_nombre');
-    trySetMany(emp, ['Apellidos contacto','apellidos_contacto','contacto_apellidos','apellidos_contacto_de_emergencia'], 'contacto_apellidos');
-
-    const refNombre = getFirstNonEmpty(emp, ['Nombre Empresa','Nombre de la Empresa (Ultimo Trabajo)','nombre_empresa']);
-    const refDireccion = getFirstNonEmpty(emp, ['Dirección Empresa','Direccion de la empresa','direccion_empresa']);
-    const refInicio = getFirstNonEmpty(emp, ['Inicio en la empresa','Inicio laboral en la empresa','inicio_en_la_empresa']);
-    const refFin = getFirstNonEmpty(emp, ['Fin en la empresa','Fin Laboral en la empresa','fin_en_la_empresa']);
-    const refMotivo = getFirstNonEmpty(emp, ['Motivo del retiro','motivo_del_retiro']);
-    const refJefe = getFirstNonEmpty(emp, ['Nombre del jefe inmediato','Nombre del Jefe Imediato','nombre_del_jefe_inmediato']);
-
-    setCellText('ref_nombre_empresa', refNombre);
-    setCellText('ref_direccion_empresa', refDireccion);
-    setCellText('ref_inicio_empresa', refInicio);
-    setCellText('ref_fin_empresa', refFin);
-    setCellText('ref_motivo_retiro', refMotivo);
-    setCellText('ref_nombre_jefe', refJefe);
-
+    // fecha de nacimiento format ISO -> DD/MM/YYYY if present
     const rawFn = emp['Fecha de nacimiento'] || emp['fecha_nacimiento'] || '';
     if (rawFn && rawFn.indexOf('-') !== -1 && rawFn.length >= 10){
       const d = rawFn.slice(0,10).split('-');
       if (d.length === 3) setIfExists('fecha_nacimiento', `${d[2]}/${d[1]}/${d[0]}`);
       else setIfExists('fecha_nacimiento', rawFn);
-    } else setIfExists('fecha_nacimiento', rawFn || '');
+    } else if (rawFn) setIfExists('fecha_nacimiento', rawFn);
 
-    // Finally handle nested spouse/emergency robustly
+    // try nested spouse/emergency within emp
     fillSpouseAndEmergency(emp);
-
-    // Try auto-match leftover keys to inputs by normalized id
-    for (const k in emp) {
-      const nid = normalizeKeyToId(k);
-      // skip if already handled by explicit mapping
-      // if element exists with id equal to nid and empty, set it
-      const el = document.getElementById(nid);
-      if (el && el.tagName === 'INPUT' && (!el.value || el.value.trim()==='')) {
-        el.value = emp[k] == null ? '' : String(emp[k]);
-      }
-      const altId = nid.replace(/\s+/g,'_');
-      const el2 = document.getElementById(altId);
-      if (el2 && el2.tagName === 'INPUT' && (!el2.value || el2.value.trim()==='')) {
-        el2.value = emp[k] == null ? '' : String(emp[k]);
-      }
-    }
   }
 
-  function clearAll(){
-    const inputs = document.querySelectorAll('#fichaForm input');
-    inputs.forEach(i => i.value = '');
-    ['ref_nombre_empresa','ref_direccion_empresa','ref_inicio_empresa','ref_fin_empresa','ref_motivo_retiro','ref_nombre_jefe'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.innerText = '';
-    });
-    if (fotoEl) fotoEl.src = placeholder || fotoEl.getAttribute('data-original') || fotoEl.src;
-    if (selectEl) selectEl.value = '';
+  async function tryFillAll(dpi){
+    // main employee
+    try {
+      const r = await fetch(apiEmpleadoBase + encodeURIComponent(dpi), { cache:'no-store' });
+      if (!r.ok) throw new Error('empleado not found');
+      const emp = await r.json();
+      fillFields(emp);
+    } catch (err) {
+      console.error('loadEmpleado', err);
+    }
+
+    // photo
+    try {
+      const rp = await fetch(apiFotoBase + encodeURIComponent(dpi), { cache: 'no-store' });
+      if (rp.ok) {
+        const jp = await rp.json();
+        if (jp && jp.url && fotoEl) fotoEl.src = `${jp.url}?t=${Date.now()}`;
+        else if (fotoEl) fotoEl.src = placeholder || fotoEl.getAttribute('data-original') || fotoEl.src;
+      } else if (fotoEl) fotoEl.src = placeholder || fotoEl.getAttribute('data-original') || fotoEl.src;
+    } catch (err) {
+      if (fotoEl) fotoEl.src = placeholder || fotoEl.getAttribute('data-original') || fotoEl.src;
+    }
+
+    // if spouse/emergency fields still empty, try endpoints that list spouse/emergency
+    await fillMissingSpouseAndEmergencyFromEndpoints(dpi);
   }
 
   async function loadEmpleadoList(){
@@ -612,37 +437,25 @@
     }
   }
 
-  async function loadEmpleado(dpi){
-    if (!dpi) { clearAll(); return; }
-    try {
-      const r = await fetch(apiEmpleadoBase + encodeURIComponent(dpi), { cache:'no-store' });
-      if (!r.ok) throw new Error('empleado not found');
-      const emp = await r.json();
-      fillFields(emp);
-    } catch (err) {
-      console.error('loadEmpleado', err);
-      clearAll();
-    }
-
-    try {
-      const rp = await fetch(apiFotoBase + encodeURIComponent(dpi), { cache: 'no-store' });
-      if (rp.ok) {
-        const jp = await rp.json();
-        if (jp && jp.url && fotoEl) fotoEl.src = `${jp.url}?t=${Date.now()}`;
-        else if (fotoEl) fotoEl.src = placeholder || fotoEl.getAttribute('data-original') || fotoEl.src;
-      } else if (fotoEl) {
-        fotoEl.src = placeholder || fotoEl.getAttribute('data-original') || fotoEl.src;
-      }
-    } catch (err) {
-      if (fotoEl) fotoEl.src = placeholder || fotoEl.getAttribute('data-original') || fotoEl.src;
-    }
+  function clearAll(){
+    const inputs = document.querySelectorAll('#fichaForm input');
+    inputs.forEach(i => i.value = '');
+    ['ref_nombre_empresa','ref_direccion_empresa','ref_inicio_empresa','ref_fin_empresa','ref_motivo_retiro','ref_nombre_jefe'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerText = '';
+    });
+    if (fotoEl) fotoEl.src = placeholder || fotoEl.getAttribute('data-original') || fotoEl.src;
+    if (selectEl) selectEl.value = '';
   }
 
   if (selectEl) {
     selectEl.addEventListener('change', function(){
       const dpi = (this.value || '').trim();
       if (!dpi) { clearAll(); return; }
-      loadEmpleado(dpi);
+      // clear previous
+      const inputs = document.querySelectorAll('#fichaForm input');
+      inputs.forEach(i => i.value = '');
+      tryFillAll(dpi);
     });
   }
 
