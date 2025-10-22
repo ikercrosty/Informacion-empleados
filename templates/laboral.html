@@ -1,4 +1,6 @@
 {% extends "layout.html" %}
+{% block title %}Referencias Laborales{% endblock %}
+
 {% block content %}
 <div class="jumbotron">
   <h1 class="display-4">Referencias Laborales</h1>
@@ -8,59 +10,65 @@
 <div class="mb-3">
   <button id="btnAgregar" type="button" class="btn btn-success btn-sm">Agregar</button>
   <button id="btnEditar" type="button" class="btn btn-primary btn-sm" disabled>Editar</button>
-  <button id="btnGuardar" type="button" class="btn btn-success btn-sm" disabled>Guardar</button>
-  <button id="btnCancelar" type="button" class="btn btn-secondary btn-sm" disabled>Cancelar</button>
+  <button id="btnGuardar" type="button" class="btn btn-success btn-sm">Guardar</button>
+  <button id="btnCancelar" type="button" class="btn btn-secondary btn-sm">Cancelar</button>
 </div>
 
 <div class="table-responsive">
-  <table id="tablaLaboral" class="table table-bordered table-striped table-hover table-sm">
+  <table id="tablaLaboral" class="table table-bordered table-striped table-hover table-sm" data-endpoint="/guardar_laboral">
     <thead class="thead-dark">
       <tr>
-        <th>DPI</th>
-        <th>Nombre</th>
-        <th>Apellidos</th>
-        <th>Nombre Empresa</th>
-        <th>Dirección Empresa</th>
-        <th>Inicio en la empresa</th>
-        <th>Fin en la empresa</th>
-        <th>Motivo del retiro</th>
-        <th>Nombre del jefe inmediato</th>
+        <th>DPI</th><th>Nombre</th><th>Apellidos</th>
+        <th>Nombre Empresa</th><th>Dirección Empresa</th><th>Inicio en la empresa</th>
+        <th>Fin en la empresa</th><th>Motivo del retiro</th><th>Nombre del jefe inmediato</th>
       </tr>
     </thead>
     <tbody>
       {% for e in empleados %}
       <tr>
-        <td>{{ e['Numero de DPI'] }}</td>
-        <td>{{ e['Nombre'] }}</td>
-        <td>{{ e['Apellidos'] }}</td>
-        <td>{{ e.get('Nombre de la Empresa (Ultimo Trabajo)') }}</td>
-        <td>{{ e.get('Direccion de la empresa') }}</td>
-        <td>{{ e.get('Inicio laboral en la empresa') }}</td>
-        <td>{{ e.get('Fin Laboral en la empresa') }}</td>
-        <td>{{ e.get('Motivo del retiro') }}</td>
-        <td>{{ e.get('Nombre del Jefe Imediato') }}</td>
+        <td>{{ e['Numero de DPI']|default('') }}</td>
+        <td>{{ e.get('Nombre')|default('') }}</td>
+        <td>{{ e.get('Apellidos')|default('') }}</td>
+        <td>{{ e.get('Nombre de la Empresa (Ultimo Trabajo)')|default('') }}</td>
+        <td>{{ e.get('Direccion de la empresa')|default('') }}</td>
+        <td>{{ e.get('Inicio laboral en la empresa')|default('') }}</td>
+        <td>{{ e.get('Fin Laboral en la empresa')|default('') }}</td>
+        <td>{{ e.get('Motivo del retiro')|default('') }}</td>
+        <td>{{ e.get('Nombre del Jefe Imediato')|default('') }}</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
 
-<script src="{{ url_for('static', filename='main.js') }}"></script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  window.registrarTabla(
-    'tablaLaboral',
-    9,
-    '/guardar_laboral',
-    [
+(function waitRegister(){
+  const meta = {
+    id: 'tablaLaboral',
+    cols: 9,
+    endpoint: '/guardar_laboral',
+    campos: [
       "Numero de DPI","Nombre","Apellidos",
       "Nombre de la Empresa (Ultimo Trabajo)","Direccion de la empresa",
       "Inicio laboral en la empresa","Fin Laboral en la empresa",
       "Motivo del retiro","Nombre del Jefe Imediato"
     ],
-    []
-  );
-});
+    bloqueadas: [0,1,2]
+  };
+  function tryRegister(n=20){
+    if (window.registrarTabla) {
+      window.registrarTabla(meta.id, meta.cols, meta.endpoint, meta.campos, meta.bloqueadas);
+      document.getElementById('btnAgregar').disabled = false;
+      document.getElementById('btnEditar').disabled  = true;
+      document.getElementById('btnGuardar').disabled = false;
+      document.getElementById('btnCancelar').disabled= false;
+      return;
+    }
+    if (n>0) setTimeout(()=>tryRegister(n-1),100);
+    else console.error('registrarTabla no disponible para tablaLaboral');
+  }
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', ()=>tryRegister(20));
+  else tryRegister(20);
+})();
 </script>
-
 {% endblock %}

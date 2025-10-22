@@ -1,4 +1,6 @@
 {% extends "layout.html" %}
+{% block title %}Referencias Médicas{% endblock %}
+
 {% block content %}
 <div class="jumbotron">
   <h1 class="display-4">Referencias Médicas</h1>
@@ -6,62 +8,67 @@
 </div>
 
 <div class="mb-3">
-  <button id="btnAgregar" type="button" class="btn btn-success">Agregar</button>
-  <button id="btnEditar" type="button" class="btn btn-primary" disabled>Editar</button>
-  <button id="btnGuardar" type="button" class="btn btn-success" disabled>Guardar</button>
-  <button id="btnCancelar" type="button" class="btn btn-secondary" disabled>Cancelar</button>
+  <button id="btnAgregar" type="button" class="btn btn-success btn-sm">Agregar</button>
+  <button id="btnEditar" type="button" class="btn btn-primary btn-sm" disabled>Editar</button>
+  <button id="btnGuardar" type="button" class="btn btn-success btn-sm">Guardar</button>
+  <button id="btnCancelar" type="button" class="btn btn-secondary btn-sm">Cancelar</button>
 </div>
 
 <div class="table-responsive">
-  <table id="tablaMedica" class="table table-bordered table-striped table-hover table-sm">
+  <table id="tablaMedica" class="table table-bordered table-striped table-hover table-sm" data-endpoint="/guardar_medica">
     <thead class="thead-dark">
       <tr>
-        <th>DPI</th>
-        <th>Nombre</th>
-        <th>Apellidos</th>
-        <th>Padece alguna enfermedad</th>
-        <th>Tipo de enfermedad</th>
-        <th>Recibe tratamiento</th>
-        <th>Nombre del tratamiento</th>
-        <th>Es alérgico a algún medicamento</th>
-        <th>Nombre del médico tratante</th>
-        <th>Tipo de sangre</th>
+        <th>DPI</th><th>Nombre</th><th>Apellidos</th>
+        <th>Padece alguna enfermedad</th><th>Tipo de enfermedad</th><th>Recibe tratamiento</th>
+        <th>Nombre del tratamiento</th><th>Es alérgico</th><th>Nombre del médico</th><th>Tipo de sangre</th>
       </tr>
     </thead>
     <tbody>
       {% for e in empleados %}
       <tr>
-        <td>{{ e['Numero de DPI'] }}</td>
-        <td>{{ e['Nombre'] }}</td>
-        <td>{{ e['Apellidos'] }}</td>
-        <td>{{ e.get('Padece alguna enfermedad') }}</td>
-        <td>{{ e.get('Tipo de enfermedad') }}</td>
-        <td>{{ e.get('Recibe tratamiento medico') }}</td>
-        <td>{{ e.get('Nombre del tratamiento') }}</td>
-        <td>{{ e.get('Es alergico a algun medicamento') }}</td>
-        <td>{{ e.get('Nombre del medico Tratante') }}</td>
-        <td>{{ e.get('Tipo de sangre') }}</td>
+        <td>{{ e['Numero de DPI']|default('') }}</td>
+        <td>{{ e.get('Nombre')|default('') }}</td>
+        <td>{{ e.get('Apellidos')|default('') }}</td>
+        <td>{{ e.get('Padece alguna enfermedad')|default('') }}</td>
+        <td>{{ e.get('Tipo de enfermedad')|default('') }}</td>
+        <td>{{ e.get('Recibe tratamiento medico')|default('') }}</td>
+        <td>{{ e.get('Nombre del tratamiento')|default('') }}</td>
+        <td>{{ e.get('Es alergico a algun medicamento')|default('') }}</td>
+        <td>{{ e.get('Nombre del medico Tratante')|default('') }}</td>
+        <td>{{ e.get('Tipo de sangre')|default('') }}</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
 
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  window.registrarTabla(
-    'tablaMedica',
-    10,
-    '/guardar_medica',
-    [
+(function waitRegister(){
+  const meta = {
+    id: 'tablaMedica',
+    cols: 10,
+    endpoint: '/guardar_medica',
+    campos: [
       "Numero de DPI","Nombre","Apellidos",
       "Padece alguna enfermedad","Tipo de enfermedad","Recibe tratamiento medico",
       "Nombre del tratamiento","Es alergico a algun medicamento","Nombre del medico Tratante","Tipo de sangre"
     ],
-    []
-  );
-});
+    bloqueadas: [0,1,2]
+  };
+  function tryRegister(n=20){
+    if (window.registrarTabla) {
+      window.registrarTabla(meta.id, meta.cols, meta.endpoint, meta.campos, meta.bloqueadas);
+      document.getElementById('btnAgregar').disabled = false;
+      document.getElementById('btnEditar').disabled  = true;
+      document.getElementById('btnGuardar').disabled = false;
+      document.getElementById('btnCancelar').disabled= false;
+      return;
+    }
+    if (n>0) setTimeout(()=>tryRegister(n-1),100);
+    else console.error('registrarTabla no disponible para tablaMedica');
+  }
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', ()=>tryRegister(20));
+  else tryRegister(20);
+})();
 </script>
-
 {% endblock %}
