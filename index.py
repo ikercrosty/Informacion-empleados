@@ -67,6 +67,17 @@ def get_db_connection():
         )
 
 
+# Helper: replace None values with empty strings in rows returned by cursor.fetchall()
+def sanitize_rows(rows):
+    out = []
+    for r in rows:
+        nr = {}
+        for k, v in r.items():
+            nr[k] = "" if v is None else v
+        out.append(nr)
+    return out
+
+
 @app.before_request
 def requerir_login():
     rutas_publicas = {
@@ -117,6 +128,8 @@ def empleados():
     empleados = cursor.fetchall()
     cursor.close()
     conn.close()
+
+    empleados = sanitize_rows(empleados)
     return render_template("home.html", empleados=empleados, usuario=session.get("usuario"))
 
 
@@ -125,6 +138,7 @@ def home():
     if "usuario" in session:
         return redirect(url_for("menu"))
     return redirect(url_for("login"))
+
 
 # ---------------- API lista / creación ----------------
 @app.route("/api/empleados", methods=["GET", "POST"])
@@ -143,26 +157,22 @@ def api_empleados_list():
             rows = cursor.fetchall()
             cursor.close()
             conn.close()
+            rows = sanitize_rows(rows)
             return jsonify(rows)
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
     # POST: crear empleado (compatibilidad con frontend)
-    # Reusa la lógica de guardar_empleado: leer JSON y procesar la inserción
     try:
         data = request.get_json() or {}
-        # Force flag nuevo=true for creations coming from this endpoint if front sent nuevo
         if data.get("nuevo") is None:
             data["nuevo"] = True
-        # Insert using same core logic as guardar_empleado to avoid duplication
-        # We'll perform the insert here directly (simpler and clearer)
         dpi_val = data.get("Numero de DPI") or data.get("dpi")
         if not dpi_val:
             return jsonify({"mensaje": "El campo DPI es obligatorio"}), 400
 
         conn = get_db_connection()
         cursor = conn.cursor()
-        # check exists
         cursor.execute("SELECT `Numero de DPI` FROM empleados_info WHERE `Numero de DPI`=%s", (dpi_val,))
         existe = cursor.fetchone()
         if existe:
@@ -233,6 +243,8 @@ def api_empleado_get(dpi):
             conn.close()
             if not row:
                 return jsonify({"error": "Empleado no encontrado"}), 404
+            # sanitize single row
+            row = {k: ("" if v is None else v) for k, v in row.items()}
             return jsonify(row)
         except Exception as e:
             return jsonify({"error": str(e)}), 500
@@ -305,6 +317,8 @@ def about():
     empleados = cursor.fetchall()
     cursor.close()
     conn.close()
+
+    empleados = sanitize_rows(empleados)
     return render_template("about.html", empleados=empleados, usuario=session.get("usuario"))
 
 
@@ -322,6 +336,8 @@ def conyugue():
     empleados = cursor.fetchall()
     cursor.close()
     conn.close()
+
+    empleados = sanitize_rows(empleados)
     return render_template("conyugue.html", empleados=empleados, usuario=session.get("usuario"))
 
 
@@ -339,6 +355,8 @@ def emergencia():
     empleados = cursor.fetchall()
     cursor.close()
     conn.close()
+
+    empleados = sanitize_rows(empleados)
     return render_template("emergencia.html", empleados=empleados, usuario=session.get("usuario"))
 
 
@@ -357,6 +375,8 @@ def laboral():
     empleados = cursor.fetchall()
     cursor.close()
     conn.close()
+
+    empleados = sanitize_rows(empleados)
     return render_template("laboral.html", empleados=empleados, usuario=session.get("usuario"))
 
 
@@ -374,6 +394,8 @@ def medica():
     empleados = cursor.fetchall()
     cursor.close()
     conn.close()
+
+    empleados = sanitize_rows(empleados)
     return render_template("medica.html", empleados=empleados, usuario=session.get("usuario"))
 
 
@@ -862,7 +884,6 @@ def subir_foto():
 
     dpi = request.form.get("dpi")
     if not dpi:
-        # return JSON for AJAX or redirect for form submit; here return JSON (frontend uses fetch)
         return jsonify({"error": "Debe seleccionar un empleado (DPI)"}), 400
 
     if "foto" not in request.files:
@@ -926,7 +947,6 @@ def subir_foto():
 
         print(f"Foto guardada: {final_name}", file=sys.stderr)
         img_url = url_for('static', filename=f"fotos/{final_name}")
-        # Always return JSON: frontend uses fetch and expects JSON
         return jsonify({"url": img_url})
     except Exception as e:
         print("ERROR en subir_foto:", e, file=sys.stderr)
@@ -935,7 +955,6 @@ def subir_foto():
 
 @app.route("/eliminar_foto", methods=["POST"])
 def eliminar_foto():
-    # Accept both form submit and JSON body
     dpi = request.form.get("dpi") or (request.get_json() or {}).get("dpi")
     if not dpi:
         return jsonify({"error": "Debe seleccionar un empleado (DPI)"}), 400
@@ -958,7 +977,6 @@ def eliminar_foto():
             conn.commit()
             cursor.close()
             conn.close()
-            # Return JSON for AJAX clients
             return jsonify({"ok": True})
         else:
             cursor.close()
