@@ -185,28 +185,33 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // PROTECCIÓN: evitar adjuntar el listener dos veces
   if (btnAgregar) {
-    btnAgregar.addEventListener('click', () => {
-      const tb = tabla.querySelector('tbody');
-      if (!tb) { flashMessage('Tabla no disponible. Recarga la página.', 'danger'); return; }
+    if (!btnAgregar.dataset.listenerAttached) {
+      btnAgregar.addEventListener('click', () => {
+        const tb = tabla.querySelector('tbody');
+        if (!tb) { flashMessage('Tabla no disponible. Recarga la página.', 'danger'); return; }
 
-      const placeholder = tb.querySelector('tr td[colspan]');
-      if (placeholder) placeholder.parentElement.remove();
+        const placeholder = tb.querySelector('tr td[colspan]');
+        if (placeholder) placeholder.parentElement.remove();
 
-      const tr = document.createElement('tr');
-      for (let i = 0; i < 20; i++) {
-        const td = document.createElement('td');
-        td.textContent = '';
-        tr.appendChild(td);
-      }
-      tb.insertBefore(tr, tb.firstChild);
+        const tr = document.createElement('tr');
+        for (let i = 0; i < 20; i++) {
+          const td = document.createElement('td');
+          td.textContent = '';
+          tr.appendChild(td);
+        }
+        tb.insertBefore(tr, tb.firstChild);
 
-      if (selectedRow) selectedRow.classList.remove('table-active');
-      selectedRow = tr;
-      selectedRow.classList.add('table-active');
-      isNewRow = true;
-      startEdit();
-    });
+        if (selectedRow) selectedRow.classList.remove('table-active');
+        selectedRow = tr;
+        selectedRow.classList.add('table-active');
+        isNewRow = true;
+        startEdit();
+      });
+      // marque para no adjuntar otra vez si el script se ejecuta dos veces
+      btnAgregar.dataset.listenerAttached = '1';
+    }
   }
 
   if (tabla) {

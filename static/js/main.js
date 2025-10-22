@@ -1,35 +1,27 @@
 // static/js/main.js
-// Reemplaza el contenido actual por este archivo.
-// Maneja:
-// - registro y edición de tablas (planilla)
-// - carga del select de empleados y llenado de ficha (normaliza claves JSON)
-// - subida/eliminación de fotos y actualización de vista
-// - UI global (sidebar, botones)
-// Las plantillas pueden sobrescribir rutas con window.__FICHA_CONFIG:
-// {
-//   placeholder: "/static/imagenes/default.png",
-//   apiEmpleados: "/api/empleados",
-//   apiEmpleadoBase: "/api/empleado/",
-//   apiFotoBase: "/api/foto/"
-// }
+// Versión corregida lista para pegar en VS Code
+// - Unifica placeholder en default.jpg
+// - Protecciones contra listeners duplicados (dataset.listenerAttached)
+// - Manejo consistente de subida/eliminación de fotos vía AJAX
+// - API endpoints configurables vía window.__FICHA_CONFIG
 
 (function () {
-  'use strict';
+  "use strict";
 
   // ---------------- Config global (puede ser sobrescrita por plantilla) ----------------
   const CFG = window.__FICHA_CONFIG || {};
-  const PLACEHOLDER = CFG.placeholder || '/static/imagenes/default.png';
-  const API_EMPLEADOS = CFG.apiEmpleados || '/api/empleados';
-  const API_EMPLEADO_BASE = CFG.apiEmpleadoBase || '/api/empleado/';
-  const API_FOTO_BASE = CFG.apiFotoBase || '/api/foto/';
+  const PLACEHOLDER = CFG.placeholder || "/static/imagenes/default.jpg";
+  const API_EMPLEADOS = CFG.apiEmpleados || "/api/empleados";
+  const API_EMPLEADO_BASE = CFG.apiEmpleadoBase || "/api/empleado/";
+  const API_FOTO_BASE = CFG.apiFotoBase || "/api/foto/";
 
-  const safe = v => (v === null || typeof v === 'undefined') ? '' : v;
+  const safe = v => (v === null || typeof v === "undefined") ? "" : v;
 
   // ---------------- Utilidades fetch JSON ----------------
   async function fetchJson(url, opts = {}) {
-    const res = await fetch(url, Object.assign({ cache: 'no-store' }, opts));
+    const res = await fetch(url, Object.assign({ cache: "no-store" }, opts));
     if (!res.ok) {
-      const text = await res.text().catch(() => '');
+      const text = await res.text().catch(() => "");
       const err = new Error(`HTTP ${res.status} ${text}`);
       err.status = res.status;
       throw err;
@@ -44,10 +36,10 @@
   let copiaOriginal = [];
   let esNuevo = false;
 
-  const btnAgregar = document.getElementById('btnAgregar');
-  const btnEditar  = document.getElementById('btnEditar');
-  const btnGuardar = document.getElementById('btnGuardar');
-  const btnCancelar= document.getElementById('btnCancelar');
+  const btnAgregar = document.getElementById("btnAgregar");
+  const btnEditar  = document.getElementById("btnEditar");
+  const btnGuardar = document.getElementById("btnGuardar");
+  const btnCancelar= document.getElementById("btnCancelar");
 
   function resetBotones() {
     if (!btnAgregar) return;
@@ -63,59 +55,58 @@
     if (!tabla) return;
     tablas[idTabla] = { tabla, columnas, endpoint, campos, bloqueadas };
 
-    tabla.addEventListener('dblclick', (e) => {
-      const tr = e.target.closest('tr');
-      if (!tr || tr.parentElement.tagName !== 'TBODY') return;
-      if (filaActiva) filaActiva.classList.remove('table-active');
+    tabla.addEventListener("dblclick", (e) => {
+      const tr = e.target.closest("tr");
+      if (!tr || tr.parentElement.tagName !== "TBODY") return;
+      if (filaActiva) filaActiva.classList.remove("table-active");
       filaActiva = tr;
       tablaActiva = tabla;
-      filaActiva.classList.add('table-active');
-      copiaOriginal = Array.from(filaActiva.querySelectorAll('td')).map(td => td.innerText);
+      filaActiva.classList.add("table-active");
+      copiaOriginal = Array.from(filaActiva.querySelectorAll("td")).map(td => td.innerText);
       esNuevo = false;
       if (btnEditar) btnEditar.disabled = false;
       if (btnGuardar) btnGuardar.disabled = true;
       if (btnCancelar) btnCancelar.disabled = false;
     });
 
-    if (idTabla === 'tablaEmpleados') {
-      tabla.addEventListener('click', (e) => {
-        const tr = e.target.closest('tr');
-        if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+    if (idTabla === "tablaEmpleados") {
+      tabla.addEventListener("click", (e) => {
+        const tr = e.target.closest("tr");
+        if (!tr || tr.parentElement.tagName !== "TBODY") return;
         const dpiCell = tr.cells && tr.cells[0];
         if (!dpiCell) return;
         const dpi = dpiCell.innerText.trim();
         if (!dpi) return;
 
-        const foto = document.getElementById('fotoEmpleado');
-        const formSubir = document.getElementById('formSubirFoto');
-        const formEliminar = document.getElementById('formEliminarFoto');
-        const inputDpiUpload = document.getElementById('inputDpiForUpload');
-        const inputDpiDelete = document.getElementById('inputDpiForDelete');
+        const foto = document.getElementById("fotoEmpleado");
+        const formSubir = document.getElementById("formSubirFoto");
+        const formEliminar = document.getElementById("formEliminarFoto");
+        const inputDpiUpload = document.getElementById("inputDpiForUpload");
+        const inputDpiDelete = document.getElementById("inputDpiForDelete");
         if (!foto || !formSubir || !formEliminar || !inputDpiUpload || !inputDpiDelete) return;
 
         inputDpiUpload.value = dpi;
         inputDpiDelete.value = dpi;
-        formSubir.style.display = 'none';
-        formEliminar.style.display = 'none';
+        formSubir.style.display = "none";
+        formEliminar.style.display = "none";
 
         fetch(`${API_FOTO_BASE}${encodeURIComponent(dpi)}`, { cache: 'no-store' })
           .then(r => r.json())
           .then(data => {
-            if (data && data.foto) {
-              const url = data.url ? data.url : `/static/fotos/${data.foto}`;
-              foto.src = `${url}?t=${Date.now()}`;
-              formEliminar.style.display = 'block';
-              formSubir.style.display = 'none';
+            if (data && data.url) {
+              foto.src = `${data.url}?t=${Date.now()}`;
+              formEliminar.style.display = "block";
+              formSubir.style.display = "none";
             } else {
               foto.src = PLACEHOLDER;
-              formSubir.style.display = 'block';
-              formEliminar.style.display = 'none';
+              formSubir.style.display = "block";
+              formEliminar.style.display = "none";
             }
           })
           .catch(() => {
             foto.src = PLACEHOLDER;
-            formSubir.style.display = 'block';
-            formEliminar.style.display = 'none';
+            formSubir.style.display = "block";
+            formEliminar.style.display = "none";
           });
       });
     }
@@ -246,7 +237,13 @@
     }
   }
 
-  if (btnAgregar) btnAgregar.addEventListener('click', agregarFila);
+  // Añadir protección para evitar listeners duplicados
+  if (btnAgregar) {
+    if (!btnAgregar.dataset.listenerAttached) {
+      btnAgregar.addEventListener('click', agregarFila);
+      btnAgregar.dataset.listenerAttached = '1';
+    }
+  }
   if (btnEditar)  btnEditar.addEventListener('click', editarFila);
   if (btnCancelar) btnCancelar.addEventListener('click', cancelarEdicion);
   if (btnGuardar) btnGuardar.addEventListener('click', guardarEdicion);
@@ -255,7 +252,6 @@
 
   // ---------------- FICHA (select, load, fill) con normalización de claves ----------------
 
-  // Normaliza una clave: quita acentos, signos y espacios, pasa a minúsculas
   function normalizeKey(k) {
     if (!k) return '';
     const from = 'ÁÀÂÄáàâäÉÈÊËéèêëÍÌÎÏíìîïÓÒÔÖóòôöÚÙÛÜúùûüÑñÇç';
@@ -266,7 +262,6 @@
     return s;
   }
 
-  // Convierte un registro a mapa normalizado
   function normalizedRecord(emp) {
     const map = {};
     if (!emp || typeof emp !== 'object') return map;
@@ -278,7 +273,6 @@
     return map;
   }
 
-  // Variantes normalizadas por campo del form
   const FIELD_VARIANTS = {
     dpi: ['numerodedpi','dpi','numero','id'],
     nombre: ['nombre','nombres','fullname','full_name'],
@@ -319,7 +313,6 @@
     }
   }
 
-  // Rellena inputs basándose en normalizedRecord y FIELD_VARIANTS
   async function fillFicha(emp) {
     if (!emp) return;
     try {
@@ -410,6 +403,7 @@
             alert('Error al subir: ' + res.status + ' ' + text);
             return;
           }
+          // Preferir leer JSON response (API corregida devuelve JSON). If redirect, fetch may follow.
           try {
             const j = await fetchJson(API_FOTO_BASE + encodeURIComponent(dpi) + '?t=' + Date.now());
             if (fotoEmpleado) {
@@ -488,7 +482,6 @@
 
   // ---------------- Auto-init ----------------
   document.addEventListener('DOMContentLoaded', () => {
-    // Planilla templates may call registrarTabla(...) after this file loads
     loadEmpleados().then(() => attachSelectListener()).catch(e => console.error(e));
     initUploadForms();
     initGlobalUI();
