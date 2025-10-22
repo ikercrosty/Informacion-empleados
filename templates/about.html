@@ -41,7 +41,7 @@
   </table>
 </div>
 
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   // registrarTabla(idTabla, columnas, endpoint, campos, bloqueadas)
@@ -58,4 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
   );
 });
 </script>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 {% endblock %}
