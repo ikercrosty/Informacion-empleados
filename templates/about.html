@@ -35,7 +35,7 @@
           <td>{{ e['Nombre'] }}</td>
           <td>{{ e['Apellidos'] }}</td>
           <td>{{ e.get('Nivel de estudios') }}</td>
-          <td>{{ e.get('Profesi\u00f3n u Oficio') }}</td>
+          <td>{{ e.get('Profesión u Oficio') }}</td>
           <td>{{ e.get('Colegio o establecimiento') }}</td>
           <td>{{ e.get('Cursos o titulos adicionales') }}</td>
         </tr>
@@ -51,19 +51,20 @@
 
 <script>
 /*
- about.html page script
- - Buttons always enabled except Edit (Edit enables only after double-click selects the row)
- - Add creates a new row with cells editable immediately (except protected columns)
- - Double-click on a row selects it and enables Edit
- - Edit enables editing of the whole row (except protected columns: DPI, Nombre, Apellidos)
- - Save sends JSON to /guardar_academico with empty strings for empty fields
+ about.html standalone script (complete)
+ - Buttons always enabled except Edit (Edit enabled after double-click on a row)
+ - Add creates a new row; its cells are editable immediately except protected columns
+ - Double-click selects a row and enables Edit button
+ - Edit enables editing of non-protected cells for the selected row (no textboxes)
+ - Save posts JSON to /guardar_academico (empty cells -> "" ; DPI required)
  - Cancel reverts or removes new row
+ - Protected columns: 0 (DPI), 1 (Nombre), 2 (Apellidos)
 */
 document.addEventListener('DOMContentLoaded', () => {
   const TABLE_ID = 'tablaAcademico';
   const ENDPOINT = '/guardar_academico';
   const COL_COUNT = 7;
-  const PROTECTED = [0,1,2]; // indices that cannot be edited (DPI, Nombre, Apellidos)
+  const PROTECTED = [0,1,2];
 
   const btnAgregar = document.getElementById('btnAgregar');
   const btnEditar  = document.getElementById('btnEditar');
@@ -76,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let editing = false;
   let isNewRow = false;
 
-  // initial buttons state: all enabled except Edit (per your request)
+  // initial state: buttons enabled except Edit (user required)
   if (btnAgregar) btnAgregar.disabled = false;
   if (btnEditar)  btnEditar.disabled = true;
   if (btnGuardar) btnGuardar.disabled = true;
@@ -94,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
     div.style.zIndex = 2200;
     div.innerText = msg;
     document.body.appendChild(div);
-    setTimeout(()=> div.remove(), 2200);
+    setTimeout(()=> div.remove(), 2000);
   }
 
   function safeTrim(v){ return v == null ? '' : String(v).trim(); }
@@ -104,20 +105,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (selectedRow && selectedRow !== tr) selectedRow.classList.remove('table-active');
     selectedRow = tr;
     selectedRow.classList.add('table-active');
-    // enable Edit only on selection (user wanted Edit enabled after selecting the whole row via double-click)
-    // here we rely on double-click handler to set btnEditar; single click will NOT enable Edit
-    // but we still set Cancel enabled and Save disabled until editing begins
+    // Edit remains disabled until double-click enables it
     if (btnGuardar) btnGuardar.disabled = true;
     if (btnCancelar) btnCancelar.disabled = false;
   }
 
-  // add new row: cells editable immediately except protected columns
   function agregarFila() {
     if (!tabla) return;
     const tb = tabla.querySelector('tbody');
     if (!tb) return;
 
-    // remove placeholder row if exists
     const placeholder = tb.querySelector('tr td[colspan]');
     if (placeholder) placeholder.parentElement.remove();
 
@@ -125,35 +122,33 @@ document.addEventListener('DOMContentLoaded', () => {
     for (let i=0;i<COL_COUNT;i++){
       const td = document.createElement('td');
       td.innerText = '';
-      // make editable immediately except protected columns
+      td.tabIndex = 0;
       if (!PROTECTED.includes(i)) {
         td.contentEditable = true;
         td.style.backgroundColor = '#fff3cd';
       } else {
         td.contentEditable = false;
       }
-      td.tabIndex = 0;
       tr.appendChild(td);
     }
     tb.insertBefore(tr, tb.firstChild);
 
-    // select and set editing state
     if (selectedRow) selectedRow.classList.remove('table-active');
     selectedRow = tr;
     selectedRow.classList.add('table-active');
     editing = true;
     isNewRow = true;
     originalCells = null;
+
     if (btnEditar) btnEditar.disabled = true;
     if (btnGuardar) btnGuardar.disabled = false;
     if (btnCancelar) btnCancelar.disabled = false;
 
-    // focus first editable cell (first non-protected)
+    // focus first editable cell
     const firstEditable = Array.from(tr.cells).find((c,idx)=> !PROTECTED.includes(idx));
     if (firstEditable) firstEditable.focus();
   }
 
-  // enable editing for all non-protected cells in selected row
   function editarFila() {
     if (!selectedRow) { flash('Selecciona una fila primero', 'warning'); return; }
     if (editing) return;
@@ -170,12 +165,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnEditar) btnEditar.disabled = true;
     if (btnGuardar) btnGuardar.disabled = false;
     if (btnCancelar) btnCancelar.disabled = false;
-    // focus first editable
     const firstEditable = Array.from(selectedRow.cells).find((c,idx)=> !PROTECTED.includes(idx));
     if (firstEditable) firstEditable.focus();
   }
 
-  // cancel edit or remove new row
   function cancelarEdicion() {
     if (!selectedRow) return;
     if (isNewRow) {
@@ -189,39 +182,33 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       selectedRow.classList.remove('table-active');
     } else {
-      // ensure row locked
       selectedRow.querySelectorAll('td').forEach(td => { td.contentEditable = false; td.style.backgroundColor = ''; });
       selectedRow.classList.remove('table-active');
     }
 
-    // reset state and buttons
     selectedRow = null;
     originalCells = null;
     editing = false;
     isNewRow = false;
+
     if (btnEditar) btnEditar.disabled = true;
     if (btnGuardar) btnGuardar.disabled = true;
     if (btnCancelar) btnCancelar.disabled = true;
   }
 
-  // build payload and send to endpoint. Empty cells -> empty string ""
   async function guardarEdicion() {
     if (!selectedRow) return;
-    // read cells
     const cells = Array.from(selectedRow.cells);
-    // collect values (always strings, empty => "")
     const values = cells.map(td => safeTrim(td.innerText));
-
     const payload = {
       "Numero de DPI": values[0] || "",
       "Nivel de estudios": values[3] || "",
-      "Profesi\u00f3n u Oficio": values[4] || "",
+      "Profesión u Oficio": values[4] || "",
       "Colegio o establecimiento": values[5] || "",
       "Cursos o titulos adicionales": values[6] || "",
       "nuevo": isNewRow
     };
 
-    // DPI mandatory
     if (!payload["Numero de DPI"] || payload["Numero de DPI"].trim() === "") {
       flash('El campo Numero de DPI es obligatorio', 'danger');
       return;
@@ -237,16 +224,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const txt = await res.text().catch(()=>null);
         throw new Error(`${res.status} ${txt || res.statusText}`);
       }
-      // on success: lock editable cells and remove highlight
-      cells.forEach((td,idx) => {
-        td.contentEditable = false;
-        td.style.backgroundColor = '';
-      });
-      editing = false;
-      isNewRow = false;
+      // lock cells
+      cells.forEach((td, idx) => { td.contentEditable = false; td.style.backgroundColor = ''; });
       selectedRow.classList.remove('table-active');
       selectedRow = null;
       originalCells = null;
+      editing = false;
+      isNewRow = false;
       if (btnEditar) btnEditar.disabled = true;
       if (btnGuardar) btnGuardar.disabled = true;
       if (btnCancelar) btnCancelar.disabled = true;
@@ -257,57 +241,46 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // single-click selects row but DOES NOT enable Edit (per request). Double-click selects row and enables Edit.
+  // table click: select row (single click); double-click enables Edit button
   if (tabla) {
     tabla.addEventListener('click', (ev) => {
       const tr = ev.target.closest('tr');
-      if (!tr || !tr.parentElement) return;
-      // ignore header row
-      if (tr.parentElement.tagName !== 'TBODY') return;
-      // if editing and user clicked another row, ignore selection change
+      if (!tr || tr.parentElement.tagName !== 'TBODY') return;
       if (editing && selectedRow && tr !== selectedRow) return;
-      // single click selects
       selectRow(tr);
     });
 
     tabla.addEventListener('dblclick', (ev) => {
       const tr = ev.target.closest('tr');
-      if (!tr || !tr.parentElement) return;
-      if (tr.parentElement.tagName !== 'TBODY') return;
-      // on double click we select and enable Edit button
+      if (!tr || tr.parentElement.tagName !== 'TBODY') return;
       selectRow(tr);
-      // enable edit button (user wanted Edit enabled after selecting row with two clicks)
       if (btnEditar) btnEditar.disabled = false;
     });
   }
 
-  // attach unique listeners to avoid duplicate handlers if script runs twice
-  function attachUniqueButton(btn, handler) {
+  // attach unique handlers (replace node to avoid duplicates)
+  function attachUnique(btn, handler) {
     if (!btn) return;
-    const parent = btn.parentNode;
-    if (!parent) { btn.addEventListener('click', handler); return; }
+    const p = btn.parentNode;
+    if (!p) { btn.addEventListener('click', handler); return; }
     const clean = btn.cloneNode(true);
-    parent.replaceChild(clean, btn);
-    clean.addEventListener('click', (e)=> { e.stopPropagation(); handler(e); });
+    p.replaceChild(clean, btn);
+    clean.addEventListener('click', (e)=>{ e.stopPropagation(); handler(e); });
     return clean;
   }
 
-  attachUniqueButton(btnAgregar, () => agregarFila());
-  attachUniqueButton(btnEditar,  () => editarFila());
-  attachUniqueButton(btnGuardar, () => guardarEdicion());
-  attachUniqueButton(btnCancelar,() => cancelarEdicion());
+  attachUnique(btnAgregar, () => agregarFila());
+  attachUnique(btnEditar,  () => editarFila());
+  attachUnique(btnGuardar, () => guardarEdicion());
+  attachUnique(btnCancelar,() => cancelarEdicion());
 
-  // ensure protected columns are not editable when server-rendered rows exist
-  // (they'll be locked unless explicitly set to edit state)
+  // ensure PROTECTED columns are not editable on initial render
   Array.from(document.querySelectorAll(`#${TABLE_ID} tbody tr`)).forEach(tr => {
     tr.querySelectorAll('td').forEach((td, idx) => {
-      if (PROTECTED.includes(idx)) {
-        td.contentEditable = false;
-      }
+      if (PROTECTED.includes(idx)) td.contentEditable = false;
     });
   });
 
 });
 </script>
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 {% endblock %}
