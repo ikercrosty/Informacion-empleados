@@ -48,4 +48,20 @@
 </div>
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  window.registrarTabla(
+    'tablaMedica',
+    10,
+    '/guardar_medica',
+    [
+      "Numero de DPI","Nombre","Apellidos",
+      "Padece alguna enfermedad","Tipo de enfermedad","Recibe tratamiento medico",
+      "Nombre del tratamiento","Es alergico a algun medicamento","Nombre del medico Tratante","Tipo de sangre"
+    ],
+    []
+  );
+});
+</script>
+
 {% endblock %}

@@ -40,4 +40,21 @@
 </div>
 
 <script src="{{ url_for('static', filename='main.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  window.registrarTabla(
+    'tablaEmergencia',
+    6,
+    '/guardar_emergencia',
+    [
+      "Numero de DPI","Nombre","Apellidos",
+      "Nombre del contacto de emergencia","Apellidos del contacto de emergencia",
+      "Numero de telefono de emergencia"
+    ],
+    []
+  );
+});
+</script>
+
+
 {% endblock %}

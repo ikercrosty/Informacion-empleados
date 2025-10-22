@@ -46,4 +46,21 @@
 </div>
 
 <script src="{{ url_for('static', filename='main.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  window.registrarTabla(
+    'tablaLaboral',
+    9,
+    '/guardar_laboral',
+    [
+      "Numero de DPI","Nombre","Apellidos",
+      "Nombre de la Empresa (Ultimo Trabajo)","Direccion de la empresa",
+      "Inicio laboral en la empresa","Fin Laboral en la empresa",
+      "Motivo del retiro","Nombre del Jefe Imediato"
+    ],
+    []
+  );
+});
+</script>
+
 {% endblock %}

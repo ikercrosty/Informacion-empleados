@@ -43,5 +43,21 @@
   </table>
 </div>
 
-<script src="{{ url_for('static', filename='main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  window.registrarTabla(
+    'tablaConyugue',
+    8,
+    '/guardar_conyugue',
+    [
+      "Numero de DPI","Nombre","Apellidos",
+      "Nombres del conyugue","Apellidos del conyugue",
+      "Direccion del conyugue","Numero de teléfono del conyugue","Correo electronico del conyugue"
+    ],
+    []
+  );
+});
+</script>
+
 {% endblock %}
