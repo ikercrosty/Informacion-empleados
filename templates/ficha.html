@@ -309,6 +309,268 @@
     apiFotoBase: "/api/foto/"
   };
 </script>
+<script>
+(function(){
+  const cfg = window.__FICHA_CONFIG || {};
+  const apiList = cfg.apiEmpleados || '/api/empleados';
+  const apiEmpleadoBase = cfg.apiEmpleadoBase || '/api/empleado/';
+  const apiFotoBase = cfg.apiFotoBase || '/api/foto/';
+  const placeholder = cfg.placeholder || '';
+
+  // Elementos
+  const selectEl = document.getElementById('empleadoSelect');
+  const fotoEl = document.getElementById('fotoEmpleado');
+  const btnClear = document.getElementById('btnClear');
+
+  // Map of form fields by key -> element id in the template
+  const FIELD_MAP = {
+    "Numero de DPI": "dpi",
+    "Nombre": "nombre",
+    "Apellidos": "apellidos",
+    "Apellidos de casada": "apellidos_casada",
+    "Estado Civil": "estado_civil",
+    "Nacionalidad": "nacionalidad",
+    "Departamento": "departamento",
+    "Fecha de nacimiento": "fecha_nacimiento",
+    "Lugar de nacimiento": "lugar_nacimiento",
+    "Numero de Afiliación del IGGS": "iggs",
+    "Dirección del Domicilio": "direccion",
+    "Numero de Telefono": "telefono",
+    "Correo Electronico": "correo",
+    "Religión": "religion",
+    "Puesto de trabajo": "puesto",
+    "Tipo de contrato": "tipo_contrato",
+    "Jornada laboral": "jornada",
+    "Duración del trabajo": "duracion",
+    "Fecha de inicio laboral": "fecha_inicio",
+    "Dias Laborales": "dias_laborales",
+
+    // académico
+    "Nivel de estudios": "nivel_estudios",
+    "Profesión u Oficio": "profesion",
+    "Colegio o establecimiento": "colegio",
+    "Cursos o títulos adicionales": "cursos",
+
+    // cónyuge
+    "Nombres del cónyuge": "conyuge_nombres",
+    "Apellidos del cónyuge": "conyuge_apellidos",
+    "Dirección del cónyuge": "conyuge_direccion",
+    "Teléfono del cónyuge": "conyuge_telefono",
+    "Correo del cónyuge": "conyuge_correo",
+
+    // emergencia
+    "Nombre contacto": "contacto_nombre",
+    "Apellidos contacto": "contacto_apellidos",
+    "Numero de telefono de emergencia": "contacto_telefono",
+    "Teléfono de emergencia": "contacto_telefono", // alternate key
+
+    // laboral / referencias
+    "Nombre Empresa": null, // in table row, different template keys; handled below
+    "Dirección Empresa": null,
+    "Inicio en la empresa": null,
+    "Fin en la empresa": null,
+    "Motivo del retiro": null,
+    "Nombre del jefe inmediato": null,
+    "Nombre Empresa": "Nombre Empresa",
+    "Dirección Empresa": "Dirección Empresa",
+    "Inicio en la empresa": "Inicio en la empresa",
+    "Fin en la empresa": "Fin en la empresa",
+    "Motivo del retiro": "Motivo del retiro",
+    "Nombre del jefe inmediato": "Nombre del jefe inmediato",
+
+    // médica
+    "Padece alguna enfermedad": "padece_enfermedad",
+    "Tipo de enfermedad": "tipo_enfermedad",
+    "Recibe tratamiento medico": "recibe_tratamiento",
+    "Nombre del tratamiento": "nombre_tratamiento",
+    "Es alergico a algun medicamento": "alergico",
+    "Nombre del medico Tratante": "medico_tratante",
+    "Tipo de sangre": "tipo_sangre"
+  };
+
+  // Safe helper to set input value if element exists
+  function setFieldById(id, value) {
+    if (!id) return;
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.value = value == null ? '' : String(value);
+  }
+
+  // Normalize server keys to the template names used in DB (best-effort)
+  function normalizeKey(k){
+    if (!k) return k;
+    return k.trim();
+  }
+
+  // Fill all mapped fields from a returned employee object
+  function fillFields(emp){
+    // set all mapped keys
+    Object.keys(FIELD_MAP).forEach(serverKey => {
+      const fieldId = FIELD_MAP[serverKey];
+      if (!fieldId) return;
+      const val = emp.hasOwnProperty(serverKey) ? emp[serverKey] : (emp[serverKey.replace(/ /g, ' ')] || '');
+      setFieldById(fieldId, val);
+    });
+
+    // Some DB columns differ in name in templates — handle common alternates:
+    setFieldById('iggs', emp['Numero de Afiliación del IGGS'] || emp['Numero de Afiliacion del IGGS'] || emp['Numero IGSS'] || '');
+    setFieldById('direccion', emp['Dirección del Domicilio'] || emp['Direccion del Domicilio'] || emp['Dirección'] || '');
+    setFieldById('telefono', emp['Numero de Telefono'] || emp['Numero de Telefono'] || emp['Telefono'] || '');
+    setFieldById('correo', emp['Correo Electronico'] || emp['Correo'] || '');
+    setFieldById('religion', emp['Religión'] || emp['Religion'] || '');
+    setFieldById('dias_laborales', emp['Dias Laborales'] || emp['Dias Laborales'] || '');
+
+    // laboral references table: write directly into the cells if present
+    const refMap = {
+      "Nombre Empresa": emp['Nombre Empresa'] || emp['Nombre de la Empresa (Ultimo Trabajo)'] || '',
+      "Dirección Empresa": emp['Dirección Empresa'] || emp['Direccion de la empresa'] || emp['Dirección de la empresa'] || '',
+      "Inicio en la empresa": emp['Inicio en la empresa'] || emp['Inicio laboral en la empresa'] || '',
+      "Fin en la empresa": emp['Fin en la empresa'] || emp['Fin Laboral en la empresa'] || '',
+      "Motivo del retiro": emp['Motivo del retiro'] || '',
+      "Nombre del jefe inmediato": emp['Nombre del jefe inmediato'] || emp['Nombre del Jefe Imediato'] || ''
+    };
+    // find the referencias laborales table and set its first row cells
+    const refTable = document.querySelector('table.table.table-sm.table-borderless');
+    if (refTable) {
+      const tbody = refTable.tBodies[0];
+      if (tbody && tbody.rows && tbody.rows[0]) {
+        const cells = tbody.rows[0].cells;
+        const keys = Object.keys(refMap);
+        for (let i=0;i<keys.length;i++){
+          if (cells[i]) cells[i].innerText = refMap[keys[i]] || '';
+        }
+      }
+    }
+
+    // Fecha de nacimiento: convert ISO YYYY-MM-DD to DD/MM/YYYY if needed (the template expects DD/MM/YYYY)
+    const rawFn = emp['Fecha de nacimiento'] || emp['fecha_nacimiento'] || '';
+    if (rawFn && rawFn.indexOf('-') !== -1 && rawFn.length >= 10){
+      const d = rawFn.slice(0,10).split('-');
+      if (d.length === 3) setFieldById('fecha_nacimiento', `${d[2]}/${d[1]}/${d[0]}`);
+      else setFieldById('fecha_nacimiento', rawFn);
+    } else setFieldById('fecha_nacimiento', rawFn || '');
+
+    // Otros campos no listed in FIELD_MAP: try to set by direct element id if matches key
+    // (safe noop if element not found)
+    for (const k in emp) {
+      if (!Object.values(FIELD_MAP).includes(k) && typeof k === 'string') {
+        const possibleId = k.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g,'');
+        const el = document.getElementById(possibleId);
+        if (el && el.tagName === 'INPUT') el.value = emp[k] || '';
+      }
+    }
+  }
+
+  // Clear all fields (restore placeholder image)
+  function clearAll(){
+    // clear mapped inputs
+    Object.values(FIELD_MAP).forEach(id => { if (id) setFieldById(id, ''); });
+    // clear reference row if present
+    const refTable = document.querySelector('table.table.table-sm.table-borderless');
+    if (refTable) {
+      const tbody = refTable.tBodies[0];
+      if (tbody && tbody.rows && tbody.rows[0]) {
+        Array.from(tbody.rows[0].cells).forEach(td => td.innerText = '');
+      }
+    }
+    // reset photo
+    if (fotoEl) fotoEl.src = placeholder || fotoEl.getAttribute('data-original') || fotoEl.src;
+    // reset select
+    if (selectEl) selectEl.value = '';
+  }
+
+  // Populate select with [{dpi, full_name}]
+  async function loadEmpleadoList(){
+    if (!selectEl) return;
+    try {
+      const res = await fetch(apiList, { cache: 'no-store' });
+      if (!res.ok) throw new Error('error retrieving list');
+      const rows = await res.json();
+      // expected rows: [{dpi: '...', full_name:'...'}]
+      // clear existing options
+      selectEl.innerHTML = '';
+      const emptyOpt = document.createElement('option');
+      emptyOpt.value = '';
+      emptyOpt.text = 'Seleccione un empleado...';
+      selectEl.appendChild(emptyOpt);
+      if (Array.isArray(rows) && rows.length){
+        rows.forEach(r => {
+          const o = document.createElement('option');
+          o.value = r.dpi || r.Numero_de_DPI || r['Numero de DPI'] || r.dpi;
+          o.text = (r.full_name || r.fullname || r.Nombre || r.full_name === undefined) ? (r.full_name || ( (r.Nombre||'') + ' ' + (r.Apellidos||'') ).trim() ) : String(o.value);
+          selectEl.appendChild(o);
+        });
+      } else {
+        const none = document.createElement('option');
+        none.value = '';
+        none.text = 'No hay empleados';
+        selectEl.appendChild(none);
+      }
+    } catch (err) {
+      console.error('loadEmpleadoList', err);
+      selectEl.innerHTML = '';
+      const errOpt = document.createElement('option');
+      errOpt.value = '';
+      errOpt.text = 'Error cargando empleados';
+      selectEl.appendChild(errOpt);
+    }
+  }
+
+  // Fetch full employee by dpi and fill
+  async function loadEmpleado(dpi){
+    if (!dpi) { clearAll(); return; }
+    try {
+      // fetch employee data
+      const r = await fetch(apiEmpleadoBase + encodeURIComponent(dpi), { cache:'no-store' });
+      if (!r.ok) throw new Error('empleado not found');
+      const emp = await r.json();
+      fillFields(emp);
+    } catch (err) {
+      console.error('loadEmpleado', err);
+      // still try to clear fields and show placeholder
+      clearAll();
+    }
+
+    // fetch photo
+    try {
+      const rp = await fetch(apiFotoBase + encodeURIComponent(dpi), { cache: 'no-store' });
+      if (!rp.ok) throw new Error('photo fetch error');
+      const jp = await rp.json();
+      if (jp && jp.url) {
+        if (fotoEl) fotoEl.src = `${jp.url}?t=${Date.now()}`;
+      } else {
+        if (fotoEl) fotoEl.src = placeholder || fotoEl.getAttribute('data-original') || fotoEl.src;
+      }
+    } catch (err) {
+      if (fotoEl) fotoEl.src = placeholder || fotoEl.getAttribute('data-original') || fotoEl.src;
+    }
+  }
+
+  // Event listeners
+  if (selectEl) {
+    selectEl.addEventListener('change', function(){
+      const dpi = (this.value || '').trim();
+      if (!dpi) { clearAll(); return; }
+      loadEmpleado(dpi);
+    });
+  }
+
+  if (btnClear) {
+    btnClear.addEventListener('click', function(){
+      clearAll();
+      // also reset select
+      if (selectEl) selectEl.value = '';
+    });
+  }
+
+  // Initialize: remember original src, load list
+  if (fotoEl && !fotoEl.getAttribute('data-original')) {
+    fotoEl.setAttribute('data-original', fotoEl.src || placeholder);
+  }
+  loadEmpleadoList();
+})();
+</script>
+
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 {% endblock %}
