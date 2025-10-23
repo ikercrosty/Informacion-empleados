@@ -612,11 +612,8 @@
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
+
 <style>
-/* ----- Ficha.css (pegar tal cual dentro de <style> en tu plantilla) ----- */
-/* Paleta: café, naranja, azul claro */
-/* ----- Ficha: apariencia avanzada, interacciones y print ----- */
-/* Paleta extendida: café, naranja, azul claro, acentos suaves */
 :root{
   --brand-brown: #4b2f2a;
   --brand-orange: #ff8a2b;
@@ -631,6 +628,7 @@
   --card-radius: 16px;
   --control-radius: 12px;
   --accent: linear-gradient(90deg, rgba(37,99,235,0.04), rgba(255,138,43,0.02));
+  --print-field-line: #d0d7e6;
 }
 
 /* Page container */
@@ -656,7 +654,7 @@
 h3.mb-0 { font-size:1.4rem; margin:0; color:var(--brand-brown); font-weight:900; letter-spacing:0.2px; }
 .text-muted.small { color:#475569; margin-top:6px; font-weight:700; }
 
-/* Select (keeps id empleadoSelect intacto) */
+/* Select */
 .select-main, #empleadoSelect.form-select {
   min-width:320px;
   border-radius: calc(var(--control-radius) - 2px);
@@ -667,126 +665,49 @@ h3.mb-0 { font-size:1.4rem; margin:0; color:var(--brand-brown); font-weight:900;
   color:#072031; font-weight:800;
 }
 
-/* Action buttons container: ensures Imprimir y Limpiar siempre juntos */
-.action-buttons, .header-actions .action-buttons {
-  display:flex;
-  align-items:center;
-  gap:10px;
-  white-space:nowrap;
-}
-
-/* Primary print button (id btnPrintFicha uses .btn-print) */
-.btn-print {
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding:0.46rem 1rem;
-  border-radius:12px;
-  font-weight:900;
-  color:#fff;
-  background: linear-gradient(90deg,var(--brand-blue),var(--brand-blue-2));
-  border: none;
-  box-shadow: 0 14px 40px rgba(37,99,235,0.12);
-  cursor:pointer;
-  transition: transform .12s ease, box-shadow .12s ease;
-}
+/* Buttons */
+.action-buttons, .header-actions .action-buttons { display:flex; align-items:center; gap:10px; white-space:nowrap; }
+.btn-print { display:inline-flex; align-items:center; gap:8px; padding:0.46rem 1rem; border-radius:12px; font-weight:900; color:#fff; background: linear-gradient(90deg,var(--brand-blue),var(--brand-blue-2)); border: none; box-shadow: 0 14px 40px rgba(37,99,235,0.12); cursor:pointer; transition: transform .12s ease, box-shadow .12s ease; }
 .btn-print svg { width:16px; height:16px; filter: drop-shadow(0 1px 0 rgba(0,0,0,0.06)); }
 .btn-print:hover { transform: translateY(-3px); box-shadow: 0 24px 56px rgba(37,99,235,0.16); }
-
-/* Secondary clear button - supports both #btnClear and Bootstrap .btn.btn-outline-secondary */
-.btn-clear, #btnClear, .btn-outline-secondary {
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding:0.42rem 0.9rem;
-  border-radius:12px;
-  font-weight:800;
-  background:#fff;
-  color:#263241;
-  border:1px solid rgba(37,99,235,0.06);
-  box-shadow: 0 8px 20px rgba(16,24,40,0.04);
-  cursor:pointer;
-  transition: transform .12s ease, box-shadow .12s ease;
-}
+.btn-clear, #btnClear, .btn-outline-secondary { display:inline-flex; align-items:center; gap:8px; padding:0.42rem 0.9rem; border-radius:12px; font-weight:800; background:#fff; color:#263241; border:1px solid rgba(37,99,235,0.06); box-shadow: 0 8px 20px rgba(16,24,40,0.04); cursor:pointer; transition: transform .12s ease, box-shadow .12s ease; }
 .btn-clear:hover, #btnClear:hover, .btn-outline-secondary:hover { transform: translateY(-2px); }
-
-/* Ensure both buttons same baseline and size */
-.btn-print, .btn-clear, #btnClear {
-  height: 42px;
-  line-height: 1;
-}
-
-/* Make buttons responsive but keep them side-by-side */
-@media (max-width:520px){
-  .header-actions { flex-direction:row; gap:8px; align-items:flex-start; }
-  .select-main { min-width:160px; max-width:48%; }
-  .action-buttons { max-width:48%; justify-content:flex-end; }
-}
+.btn-print, .btn-clear, #btnClear { height: 42px; line-height: 1; }
 
 /* Photo */
 .photo-frame { width:134px; height:176px; border-radius:14px; background: linear-gradient(180deg,#eef7ff,#fff); padding:6px; box-shadow: 0 12px 36px rgba(16,24,40,0.06); display:flex; align-items:center; justify-content:center; }
 #fotoEmpleado, .fotoEmpleado { width:122px; height:160px; object-fit:cover; border-radius:10px; border:2px solid rgba(255,255,255,0.9); transition: transform .12s ease; }
 #fotoEmpleado:hover, .fotoEmpleado:hover { transform: translateY(-6px); box-shadow: 0 28px 60px rgba(16,24,40,0.08); }
 
-/* Main form card */
-#fichaForm.card {
-  border-radius:18px;
-  overflow:hidden;
-  border: 1px solid rgba(37,99,235,0.04);
-  box-shadow: 0 28px 80px rgba(20,80,160,0.04);
-  background: linear-gradient(180deg,#ffffff,#fbfdff);
-}
-
-/* Body and section headings */
+/* Main form */
+#fichaForm.card { border-radius:18px; overflow:hidden; border: 1px solid rgba(37,99,235,0.04); box-shadow: 0 28px 80px rgba(20,80,160,0.04); background: linear-gradient(180deg,#ffffff,#fbfdff); }
 .card-body.p-4 { padding:24px; }
 h5.mb-3 {
-  font-size:1rem;
-  color:var(--brand-blue);
-  font-weight:900;
-  margin-bottom:12px;
-  display:flex;
-  align-items:center;
-  gap:10px;
-  position:relative;
-  padding-left:10px;
+  font-size:1rem; color:var(--brand-blue); font-weight:900; margin-bottom:12px;
+  display:flex; align-items:center; gap:10px; position:relative; padding-left:10px;
 }
 h5.mb-3:before {
-  content: "";
-  position:absolute;
-  left:0;
-  top:8px;
-  width:6px;
-  height:22px;
-  border-radius:4px;
+  content: ""; position:absolute; left:0; top:8px; width:6px; height:22px; border-radius:4px;
   background: linear-gradient(180deg,var(--brand-orange),var(--brand-blue-2));
   box-shadow: 0 6px 18px rgba(37,99,235,0.06);
 }
 
 /* Inputs */
 .form-control[readonly] {
-  width:100%;
-  padding:0.58rem 0.72rem;
-  border-radius:10px;
-  background: linear-gradient(90deg,#fff,#fcfeff);
-  border:1px solid #e9f2ff;
-  color:#06202a;
-  font-weight:800;
-  box-shadow: 0 4px 14px rgba(16,24,40,0.03) inset;
-  transition: box-shadow .12s, transform .08s;
-}
-.form-control[readonly]:focus {
-  outline: 3px solid rgba(37,99,235,0.12);
-  box-shadow: 0 18px 46px rgba(37,99,235,0.06);
-}
-.form-control[readonly].empty { color:#9aa4b2; font-style:italic; font-weight:800; }
-
-/* Accent left border for key fields keeping IDs same */
-#dpi, #nombre, #apellidos {
-  border-left:4px solid var(--brand-orange);
-  padding-left:0.62rem;
+  width:100%; padding:0.58rem 0.72rem; border-radius:10px;
+  background: linear-gradient(90deg,#fff,#fcfeff); border:1px solid #e9f2ff;
+  color:#06202a; font-weight:800; box-shadow: 0 4px 14px rgba(16,24,40,0.03) inset;
+  transition: box-shadow .12s, transform .08s; min-height:36px; line-height:1.25;
 }
 
-/* Grid behavior (keeps your col-md classes) */
+/* Keep printable underline classes available */
+.form-control.print-line { background: transparent; border: none; border-bottom: 1px solid var(--print-field-line); padding-left: 0; padding-top: 0.45rem; padding-bottom: 0.45rem; min-height: 28px; }
+.form-control.print-large { min-height: 42px; padding-top: 0.6rem; padding-bottom: 0.6rem; }
+
+/* Accent left border for key fields */
+#dpi, #nombre, #apellidos { border-left:4px solid var(--brand-orange); padding-left:0.62rem; }
+
+/* Grid */
 .row.g-3 { margin:0 -6px; gap:12px; }
 .col-md-3, .col-md-4, .col-md-6 { padding:0 6px; box-sizing:border-box; }
 .col-md-3 { flex:0 0 25%; max-width:25%; }
@@ -794,42 +715,24 @@ h5.mb-3:before {
 .col-md-6 { flex:0 0 50%; max-width:50%; }
 
 /* Table */
-.table-responsive {
-  margin-top:8px;
-  border-radius:12px;
-  overflow:auto;
-  background: linear-gradient(180deg, rgba(37,99,235,0.02), rgba(255,138,43,0.01));
-  padding:8px;
-  border:1px solid rgba(37,99,235,0.03);
-}
-.table.table-sm td, .table.table-sm th {
-  padding:0.6rem 0.8rem;
-  border-top:1px dashed rgba(37,99,235,0.03);
-  color:#24303a;
-}
+.table-responsive { margin-top:8px; border-radius:12px; overflow:auto; background: linear-gradient(180deg, rgba(37,99,235,0.02), rgba(255,138,43,0.01)); padding:8px; border:1px solid rgba(37,99,235,0.03); }
+.table.table-sm td, .table.table-sm th { padding:0.6rem 0.8rem; border-top:1px dashed rgba(37,99,235,0.03); color:#24303a; }
 
-/* Labels: stronger contrast and weight */
+/* Labels: normal weight (no negrita) as requested */
 label.form-label, .field-label, .form-label {
-  display:block;
-  font-weight:900;
-  color: #0b2733;
-  font-size:0.98rem;
-  letter-spacing:0.25px;
-  margin-bottom:6px;
-  text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+  display:block; font-weight:400; color: #0b2733; font-size:0.98rem; letter-spacing:0.25px; margin-bottom:6px;
 }
 
 /* Small helper/badge */
 .ficha-meta { display:flex; gap:10px; align-items:center; color:#6b7280; font-weight:700; }
 .ficha-badge { background:var(--glass); padding:6px 10px; border-radius:999px; color:var(--brand-brown); border:1px solid rgba(0,0,0,0.03); }
 
-/* Accessibility focus outlines */
+/* Focus outlines */
 .form-control[readonly]:focus-visible, .select-main:focus-visible, .btn-print:focus-visible, .btn-clear:focus-visible {
-  outline: 3px solid rgba(37,99,235,0.14);
-  outline-offset:2px;
+  outline: 3px solid rgba(37,99,235,0.14); outline-offset:2px;
 }
 
-/* Responsive tweaks */
+/* Responsive */
 @media (max-width:575.98px){
   .container { padding:12px; }
   .header-body { padding:12px; flex-direction:column; gap:12px; align-items:flex-start; }
@@ -840,17 +743,72 @@ label.form-label, .field-label, .form-label {
   .action-buttons { width:100%; justify-content:flex-start; gap:8px; }
 }
 
-/* Print rules: keeps buttons hidden and maximizes usable space */
+/* Print rules: preserve blue titles and make labels normal weight */
 @media print{
+  /* Keep section titles blue and printable */
+  h5.mb-3 {
+    color: var(--brand-blue) !important;
+    font-weight: 900 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Labels printed normal weight */
+  label.form-label, .field-label, .form-label {
+    font-weight: 400 !important;
+    color: #000 !important;
+  }
+
+  /* Hide interactive controls (but allow photo where placed in form) */
   .btn-print, .btn-clear, #btnClear, .btn-outline-secondary, select, .header-actions > * { display:none !important; }
-  .header-body, .header-card, .photo-frame { display:none !important; }
-  .card, .container { box-shadow:none; background:transparent; border:none; }
-  .form-control[readonly] { border:none; background:transparent; color:#000; font-weight:800; }
-  .table-responsive { overflow:visible; background:transparent; border:none; padding:0; }
-  h5.mb-3 { color:#000 !important; }
-  @page { margin:12mm 10mm; }
-  img { max-width:100% !important; height:auto !important; }
+  .header-body { background: transparent !important; box-shadow:none !important; }
+
+  /* Keep photo visible if it is inside the form (do not hide all images globally) */
+  /* If your photo is inside header and you want it printed, move it into the form or remove the selector hiding it */
+  .photo-frame, .print-photo-col, .fotoEmpleado { display:block !important; }
+
+  /* Strip decorative backgrounds and shadows */
+  .card, .container, #fichaForm.card { box-shadow:none !important; background:transparent !important; border:none !important; }
+
+  /* Inputs: underline for handwriting */
+  input.form-control[readonly], input.form-control {
+    display: block !important;
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 1px solid var(--print-field-line) !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    min-height: 34px !important;
+    margin-bottom: 8px !important;
+    color: #000 !important;
+    font-weight: 400 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Larger printable fields if needed */
+  input.form-control.print-large, input.print-large { min-height: 44px !important; padding-top: 0.65rem !important; padding-bottom: 0.65rem !important; }
+
+  /* Table printing: avoid splits */
+  .table-responsive { background: transparent !important; border: none !important; padding: 0 !important; overflow: visible !important; }
+  table, thead, tbody, tr, td, th {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  table td, table th { border: 1px solid #ddd !important; padding: 6px 8px !important; color: #000 !important; }
+
+  /* Prevent section splits */
+  .card-body.p-4, .row.g-3, .ficha-section, .table-responsive, .ficha-table, .table { page-break-inside: avoid !important; break-inside: avoid !important; -webkit-column-break-inside: avoid !important; }
+
+  /* Page margins */
+  @page { margin: 12mm 10mm !important; }
+
+  /* Images: scale safely */
+  img { max-width: 100% !important; height: auto !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 }
+</style>
 
 </style>
 {% endblock %}
