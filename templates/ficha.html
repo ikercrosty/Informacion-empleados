@@ -808,7 +808,7 @@ h5.mb-3:before {
   color:#24303a;
 }
 
-/* Labels: stronger contrast and weight */
+/* Labels: stronger contrast and weight on screen kept as original but printing weight will be normal */
 label.form-label, .field-label, .form-label {
   display:block;
   font-weight:900;
@@ -840,16 +840,79 @@ label.form-label, .field-label, .form-label {
   .action-buttons { width:100%; justify-content:flex-start; gap:8px; }
 }
 
-/* Print rules: keeps buttons hidden and maximizes usable space */
+/* Print rules: keep blue headers blue and make non-header text normal weight */
 @media print{
+  /* Preserve header and section title color (blue) and force printable color-adjust */
+  h5.mb-3 {
+    color: var(--brand-blue) !important;
+    font-weight: 900 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Keep main page title color too */
+  h3.mb-0 {
+    color: var(--brand-brown) !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Make labels and values normal weight when printing */
+  label.form-label, .field-label, .form-label,
+  .form-control[readonly], input.form-control[readonly], input.form-control {
+    font-weight: 400 !important;
+    color: #000 !important;
+  }
+
+  /* Hide interactive controls */
   .btn-print, .btn-clear, #btnClear, .btn-outline-secondary, select, .header-actions > * { display:none !important; }
-  .header-body, .header-card, .photo-frame { display:none !important; }
-  .card, .container { box-shadow:none; background:transparent; border:none; }
-  .form-control[readonly] { border:none; background:transparent; color:#000; font-weight:800; }
-  .table-responsive { overflow:visible; background:transparent; border:none; padding:0; }
-  h5.mb-3 { color:#000 !important; }
-  @page { margin:12mm 10mm; }
-  img { max-width:100% !important; height:auto !important; }
+
+  /* Keep header visible with title and photo; if photo is inside header ensure it prints */
+  .header-body, .header-card, .photo-frame, .fotoEmpleado, #fotoEmpleado {
+    display: block !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Strip decorative backgrounds that could interfere but keep colors on titles */
+  .card, .container, #fichaForm.card { box-shadow:none !important; background:transparent !important; border:none !important; }
+
+  /* Inputs: show as underline lines for handwriting in print */
+  input.form-control[readonly], input.form-control {
+    display: block !important;
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 1px solid #d0d7e6 !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    min-height: 34px !important;
+    margin-bottom: 8px !important;
+    color: #000 !important;
+    font-weight: 400 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Table printing: avoid splitting rows and show clear borders */
+  .table-responsive { background: transparent !important; border: none !important; padding: 0 !important; overflow: visible !important; }
+  table, thead, tbody, tr, td, th {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  table td, table th { border: 1px solid #ddd !important; padding: 6px 8px !important; color: #000 !important; }
+
+  /* Prevent section splits */
+  .card-body.p-4, .row.g-3, .ficha-section, .table-responsive, .ficha-table, .table { page-break-inside: avoid !important; break-inside: avoid !important; -webkit-column-break-inside: avoid !important; }
+
+  /* Page margins */
+  @page { margin: 12mm 10mm !important; }
+
+  /* Images: ensure printable */
+  img { max-width: 100% !important; height: auto !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 }
 
 </style>
