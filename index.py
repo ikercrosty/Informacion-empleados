@@ -388,7 +388,7 @@ def medica():
         SELECT
             `Numero de DPI`, `Nombre`, `Apellidos`,
             `Padece alguna enfermedad`, `Tipo de enfermedad`, `Recibe tratamiento medico`,
-            `Nombre del tratamiento`, `Es alergico a algun medicamento`, `Nombre del medico Tratante`, `Tipo de sangre`
+            `Nombre del tratamiento`, `Es alergico a algun medicamento`, `Nombre del medico Tratante`,`Numero del medico tratante`, `Tipo de sangre`
         FROM empleados_info
     """)
     empleados = cursor.fetchall()
@@ -799,8 +799,8 @@ def guardar_medica():
     tratamiento = data.get("Nombre del tratamiento")
     alergico = data.get("Es alergico a algun medicamento")
     medico = data.get("Nombre del medico Tratante")
-    sangre = data.get("Tipo de sangre")
     numero = data.get ("Numero del medico tratante")
+    sangre = data.get("Tipo de sangre")
     nuevo = data.get("nuevo", False)
 
     try:
@@ -813,7 +813,7 @@ def guardar_medica():
                 INSERT INTO empleados_info (
                     `Numero de DPI`, `Padece alguna enfermedad`, `Tipo de enfermedad`, `Recibe tratamiento medico`,
                     `Nombre del tratamiento`, `Es alergico a algun medicamento`, `Nombre del medico Tratante`,`Numero del medico tratante`, `Tipo de sangre`
-                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
             """, (dpi, padece, tipo, recibe, tratamiento, alergico, medico, numero, sangre))
             mensaje = "Registro médico agregado correctamente"
         else:
@@ -985,7 +985,6 @@ def eliminar_foto():
             return jsonify({"ok": False, "message": "No existe foto para ese empleado"}), 200
     except Exception as e:
         return jsonify({"error": f"Error al eliminar foto: {e}"}), 500
-
-
+    
 if __name__ == "__main__":
     app.run(debug=True)
