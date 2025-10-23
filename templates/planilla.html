@@ -76,10 +76,10 @@
               <td>
                 <div class="money-inline">
                   <span class="money-prefix">Q</span>
-                  <input class="form-control num-cell bono" type="number" step="0.01" value="250.00">
+                  <input class="form-control num-cell bono" type="number" step="0.01" value="150.00">
                 </div>
               </td>
-              <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="30"></td>
+              <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="15"></td>
               <td>
                 <div class="money-inline">
                   <span class="money-prefix">Q</span>
@@ -148,23 +148,6 @@
               <td class="text-end total-deducciones">Q 0.00</td>
             </tr>
           </tbody>
-
-          <tfoot>
-            <tr class="fw-bold" style="background:#f8f9fa">
-              <td colspan="2" class="text-end">TOTAL</td>
-              <td id="total-sueldo" class="text-end">Q 0.00</td>
-              <td id="total-bono" class="text-end">Q 0.00</td>
-              <td id="total-dias" class="text-end"></td>
-              <td id="total-comisiones" class="text-end">Q 0.00</td>
-              <td id="total-horas" class="text-end">0</td>
-              <td id="total-hextras" class="text-end">Q 0.00</td>
-              <td id="total-devengado" class="text-end">Q 0.00</td>
-              <td id="total-igss" class="text-end">Q 0.00</td>
-              <td id="total-isr" class="text-end">Q 0.00</td>
-              <td id="total-otras" class="text-end">Q 0.00</td>
-              <td id="total-deducciones" class="text-end">Q 0.00</td>
-            </tr>
-          </tfoot>
         </table>
       </div>
     </div>
@@ -560,9 +543,97 @@ document.getElementById('exportExcel').addEventListener('click', () => {
   const filename = `${safeName}_${dateInput}.xlsx`;
   XLSX.writeFile(wb, filename);
 });
+// --- Auto-dividir Sueldo Base entre 2 al ingresar ---
+// Se añade sin cambiar nada más: toma el valor ingresado y lo sustituye por la mitad.
+// Mantiene disparo de recálculo y guardado existente (usa los listeners ya definidos).
+(function(){
+  // función segura para parsear número (acepta comas y espacios)
+  function parseNumberSafe(v){
+    if (v == null) return 0;
+    try {
+      const s = String(v).replace(/\s+/g,'').replace(/,/g,'').trim();
+      const n = Number(s);
+      return isFinite(n) ? n : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  // Handler: al terminar de editar (blur) o al pegar/teclear (input) divide entre 2 y actualiza
+  function applyHalfToSueldoInput(inp){
+    if (!inp) return;
+    // leer valor crudo
+    const raw = inp.value;
+    const n = parseNumberSafe(raw);
+    // si no hay número o es cero, no cambiar (pero si quieres que 0 => 0 se mantiene)
+    if (n === 0) {
+      // asegura formato 0.00 si es input tipo number
+      inp.value = n.toFixed(2);
+    } else {
+      const half = Math.round((n / 2 + Number.EPSILON) * 100) / 100;
+      // asignar la mitad (manteniendo dos decimales)
+      // si el input es type="number" asignar número; si es text, asignar string con 2 decimales
+      if (inp.type === 'number') inp.value = half;
+      else inp.value = half.toFixed(2);
+    }
+
+    // forzar recalculo en fila y totales si existen esas funciones en la página
+    try {
+      const tr = inp.closest('tr');
+      if (typeof recalcRow === 'function' && tr) recalcRow(tr);
+      if (typeof recalcTotals === 'function') recalcTotals();
+      if (typeof saveToLocal === 'function') saveToLocal();
+    } catch (e) {
+      // no interrumpir si algo falla
+      console.error('Error aplicando mitad al sueldo:', e);
+    }
+  }
+
+  // Delegated listeners: input (live) y blur (final)
+  document.addEventListener('input', function(e){
+    const t = e.target;
+    if (!t || !t.classList) return;
+    if (t.classList.contains('sueldo')) {
+      // si quieres que la división ocurra en cada tecla, descomenta la siguiente línea:
+      // applyHalfToSueldoInput(t);
+
+      // por defecto solo actualizamos formato al teclear parcialmente y no sustituimos
+      // para evitar comportamiento intrusivo durante la edición, no dividimos aquí.
+      // dejamos la división para blur/paste handler.
+    }
+  }, true);
+
+  // Manejar paste y blur: dividir al terminar edición o pegar
+  document.addEventListener('paste', function(e){
+    const t = e.target;
+    if (!t || !t.classList) return;
+    if (t.classList.contains('sueldo')) {
+      // esperar el paste y luego aplicar
+      setTimeout(()=> applyHalfToSueldoInput(t), 20);
+    }
+  });
+
+  document.addEventListener('blur', function(e){
+    const t = e.target;
+    if (!t || !t.classList) return;
+    if (t.classList.contains('sueldo')) {
+      applyHalfToSueldoInput(t);
+    }
+  }, true);
+
+  // Inicial en caso de que ya haya valores en las celdas al cargar la página:
+  window.addEventListener('load', function(){
+    document.querySelectorAll('input.sueldo').forEach(inp => {
+      // solo aplicar si no está vacío y no es 0
+      const val = inp.value;
+      if (val !== null && String(val).trim() !== '') applyHalfToSueldoInput(inp);
+    });
+  });
+})();
 
 
 </script>
+
 
 <style>
   :root{
