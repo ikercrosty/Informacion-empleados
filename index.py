@@ -354,7 +354,7 @@ def conyugue():
         SELECT 
             `Numero de DPI`, `Nombre`, `Apellidos`,
             `Nombres del conyugue`, `Apellidos del conyugue`,
-            `Direccion del conyugue`, `Numero de teléfono del conyugue`, `Correo electronico del conyugue`
+            `Direccion del conyugue`, `Numero de telefono del conyugue`, `Correo electronico del conyugue`
         FROM empleados_info
     """)
     empleados = cursor.fetchall()
