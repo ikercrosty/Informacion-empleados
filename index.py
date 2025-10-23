@@ -675,7 +675,7 @@ def guardar_conyugue():
             cursor.execute("""
                 INSERT INTO empleados_info (
                     `Numero de DPI`, `Nombres del conyugue`, `Apellidos del conyugue`,
-                    `Direccion del conyugue`, `Numero de teléfono del conyugue`, `Correo electronico del conyugue`
+                    `Direccion del conyugue`, `Numero de telefono del conyugue`, `Correo electronico del conyugue`
                 ) VALUES (%s,%s,%s,%s,%s,%s)
             """, (dpi, nombres, apellidos, direccion, telefono, correo))
             mensaje = "Registro de cónyuge agregado correctamente"
@@ -684,7 +684,7 @@ def guardar_conyugue():
                 cursor.execute("""
                     UPDATE empleados_info
                     SET `Nombres del conyugue`=%s, `Apellidos del conyugue`=%s,
-                        `Direccion del conyugue`=%s, `Numero de teléfono del conyugue`=%s,
+                        `Direccion del conyugue`=%s, `Numero de telefono del conyugue`=%s,
                         `Correo electronico del conyugue`=%s
                     WHERE `Numero de DPI`=%s
                 """, (nombres, apellidos, direccion, telefono, correo, dpi))
@@ -693,7 +693,7 @@ def guardar_conyugue():
                 cursor.execute("""
                     INSERT INTO empleados_info (
                         `Numero de DPI`, `Nombres del conyugue`, `Apellidos del conyugue`,
-                        `Direccion del conyugue`, `Numero de teléfono del conyugue`, `Correo electronico del conyugue`
+                        `Direccion del conyugue`, `Numero de telefono del conyugue`, `Correo electronico del conyugue`
                     ) VALUES (%s,%s,%s,%s,%s,%s)
                 """, (dpi, nombres, apellidos, direccion, telefono, correo))
                 mensaje = "Registro de cónyuge agregado correctamente"
