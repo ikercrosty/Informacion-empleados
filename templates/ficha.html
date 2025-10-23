@@ -636,25 +636,28 @@
 /* Page container */
 .container { max-width:1200px; margin:22px auto; padding:18px; background: linear-gradient(180deg,var(--muted-bg),#fbfeff); border-radius:20px; }
 
-/* Header improved */
-.header-card { border-radius: var(--card-radius); border:0; }
-.header-body {
+/* Header & layout */
+.header-card, .card.shadow-sm { border-radius: var(--card-radius); border:0; }
+.header-body, .card-body.d-flex {
   padding:18px;
   border-radius: var(--card-radius);
   background: var(--accent);
   box-shadow: var(--soft-shadow-sm);
-  display:flex; align-items:center; justify-content:space-between;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
 }
 .header-left { display:flex; flex-direction:column; gap:10px; min-width:0; }
 .title-row { display:flex; gap:18px; align-items:center; min-width:0; }
-.header-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; min-width:0; }
+.header-actions { display:flex; gap:12px; align-items:center; flex-wrap:wrap; min-width:0; }
 
 /* Title */
 h3.mb-0 { font-size:1.4rem; margin:0; color:var(--brand-brown); font-weight:900; letter-spacing:0.2px; }
 .text-muted.small { color:#475569; margin-top:6px; font-weight:700; }
 
-/* Select */
-.select-main {
+/* Select (keeps id empleadoSelect intacto) */
+.select-main, #empleadoSelect.form-select {
   min-width:320px;
   border-radius: calc(var(--control-radius) - 2px);
   padding:0.5rem 0.8rem;
@@ -664,148 +667,89 @@ h3.mb-0 { font-size:1.4rem; margin:0; color:var(--brand-brown); font-weight:900;
   color:#072031; font-weight:800;
 }
 
-/* Buttons */
+/* Action buttons container: ensures Imprimir y Limpiar siempre juntos */
+.action-buttons, .header-actions .action-buttons {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  white-space:nowrap;
+}
+
+/* Primary print button (id btnPrintFicha uses .btn-print) */
 .btn-print {
-  display:inline-flex; align-items:center; gap:8px;
-  padding:0.48rem 1rem; border-radius:12px; color:#fff; border:0;
-  font-weight:900; background: linear-gradient(90deg,var(--brand-blue),var(--brand-blue-2));
-  box-shadow: 0 14px 40px rgba(37,99,235,0.12); cursor:pointer;
-  transition: transform .12s ease, box-shadow .12s ease;
-}
-.btn-print:hover { transform: translateY(-3px); box-shadow: 0 24px 56px rgba(37,99,235,0.16); }
-
-.btn-clear {
-  border-radius:10px; padding:0.38rem 0.9rem; background:#fff;
-  border:1px solid rgba(37,99,235,0.06); color:#374151; font-weight:800;
-  box-shadow: var(--soft-shadow-sm); cursor:pointer;
-}
-.btn-clear:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(16,24,40,0.06); }
-
-/* Photo */
-.photo-frame { width:134px; height:176px; border-radius:14px; background: linear-gradient(180deg,#eef7ff,#fff); padding:6px; box-shadow: 0 12px 36px rgba(16,24,40,0.06); display:flex; align-items:center; justify-content:center; }
-.fotoEmpleado { width:122px; height:160px; object-fit:cover; border-radius:10px; border:2px solid rgba(255,255,255,0.9); transition: transform .12s ease; }
-.fotoEmpleado:hover { transform: translateY(-6px); box-shadow: 0 28px 60px rgba(16,24,40,0.08); }
-
-/* Main form card */
-#fichaForm.card {
-  border-radius:18px; overflow:hidden;
-  border: 1px solid rgba(37,99,235,0.04);
-  box-shadow: 0 28px 80px rgba(20,80,160,0.04);
-  background: linear-gradient(180deg,#ffffff,#fbfdff);
-}
-
-/* Body and sections */
-.card-body.p-4 { padding:24px; }
-h5.mb-3 { font-size:1rem; color:var(--brand-blue); font-weight:900; margin-bottom:12px; display:flex; align-items:center; gap:10px; }
-
-/* Inputs */
-.form-control[readonly] {
-  width:100%;
-  padding:0.58rem 0.72rem;
-  border-radius:10px;
-  background: linear-gradient(90deg,#fff,#fcfeff);
-  border:1px solid #e9f2ff;
-  color:#06202a; font-weight:800;
-  box-shadow: 0 4px 14px rgba(16,24,40,0.03) inset;
-  transition: box-shadow .12s, transform .08s;
-}
-.form-control[readonly]:focus {
-  outline: 3px solid rgba(37,99,235,0.12); box-shadow: 0 18px 46px rgba(37,99,235,0.06);
-}
-.form-control[readonly].empty { color:#9aa4b2; font-style:italic; font-weight:800; }
-
-/* Accent left border for key fields keeping IDs same */
-#dpi, #nombre, #apellidos {
-  border-left:4px solid var(--brand-orange);
-  padding-left:0.62rem;
-}
-
-/* Grid behavior (keeps your col-md classes behavior) */
-.row.g-3 { margin:0 -6px; gap:12px; }
-.col-md-3, .col-md-4, .col-md-6 { padding:0 6px; box-sizing:border-box; }
-.col-md-3 { flex:0 0 25%; max-width:25%; }
-.col-md-4 { flex:0 0 33.3333%; max-width:33.3333%; }
-.col-md-6 { flex:0 0 50%; max-width:50%; }
-
-/* Table */
-.table-responsive {
-  margin-top:8px; border-radius:12px; overflow:auto;
-  background: linear-gradient(180deg, rgba(37,99,235,0.02), rgba(255,138,43,0.01));
-  padding:8px; border:1px solid rgba(37,99,235,0.03);
-}
-.table.table-sm td, .table.table-sm th { padding:0.6rem 0.8rem; border-top:1px dashed rgba(37,99,235,0.03); color:#24303a; }
-
-/* Small helper/badge */
-.ficha-meta { display:flex; gap:10px; align-items:center; color:#6b7280; font-weight:700; }
-.ficha-badge { background:var(--glass); padding:6px 10px; border-radius:999px; color:var(--brand-brown); border:1px solid rgba(0,0,0,0.03); }
-
-/* Focus accessibility */
-.form-control[readonly]:focus-visible { outline: 3px solid rgba(37,99,235,0.12); }
-
-/* Responsive tweaks */
-@media (max-width:575.98px){
-  .container { padding:12px; }
-  .header-body { padding:12px; flex-direction:column; gap:12px; align-items:flex-start; }
-  .select-main { width:100% !important; min-width:0 !important; }
-  .photo-frame { width:110px; height:140px; }
-  .fotoEmpleado { width:96px; height:120px; }
-  .col-md-3, .col-md-4, .col-md-6 { flex:0 0 100%; max-width:100%; }
-}
-
-/* Print */
-@media print{
-  .btn-print, .btn-clear, select, .header-actions > * { display:none !important; }
-  .card, .container { box-shadow:none; background:transparent; border:none; }
-  .form-control[readonly] { border:none; background:transparent; color:#000; font-weight:800; }
-  .table-responsive { overflow:visible; background:transparent; border:none; padding:0; }
-  @page { margin:16mm 12mm; }
-}
-/* Asegura que los botones imprimir y limpiar siempre estén alineados y con espacio */
-.header-actions { display:flex; gap:12px; align-items:center; min-width:0; }
-.action-buttons { display:flex; gap:10px; align-items:center; }
-
-/* Botones: tamaños uniformes y separación */
-.btn-print, .btn-clear {
   display:inline-flex;
   align-items:center;
   gap:8px;
-  padding:0.46rem 0.9rem;
+  padding:0.46rem 1rem;
   border-radius:12px;
-  font-weight:800;
-  border:0;
+  font-weight:900;
+  color:#fff;
+  background: linear-gradient(90deg,var(--brand-blue),var(--brand-blue-2));
+  border: none;
+  box-shadow: 0 14px 40px rgba(37,99,235,0.12);
   cursor:pointer;
   transition: transform .12s ease, box-shadow .12s ease;
 }
-.btn-clear {
+.btn-print svg { width:16px; height:16px; filter: drop-shadow(0 1px 0 rgba(0,0,0,0.06)); }
+.btn-print:hover { transform: translateY(-3px); box-shadow: 0 24px 56px rgba(37,99,235,0.16); }
+
+/* Secondary clear button - supports both #btnClear and Bootstrap .btn.btn-outline-secondary */
+.btn-clear, #btnClear, .btn-outline-secondary {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:0.42rem 0.9rem;
+  border-radius:12px;
+  font-weight:800;
   background:#fff;
   color:#263241;
   border:1px solid rgba(37,99,235,0.06);
   box-shadow: 0 8px 20px rgba(16,24,40,0.04);
+  cursor:pointer;
+  transition: transform .12s ease, box-shadow .12s ease;
 }
-.btn-print { background: linear-gradient(90deg,var(--brand-blue),var(--brand-blue-2)); color:#fff; box-shadow: 0 12px 36px rgba(37,99,235,0.12); }
-.btn-print:hover, .btn-clear:hover { transform: translateY(-3px); }
+.btn-clear:hover, #btnClear:hover, .btn-outline-secondary:hover { transform: translateY(-2px); }
 
-/* Forzar que ambos botones se mantengan en una sola línea en pantallas pequeñas */
-.action-buttons { white-space:nowrap; }
+/* Ensure both buttons same baseline and size */
+.btn-print, .btn-clear, #btnClear {
+  height: 42px;
+  line-height: 1;
+}
+
+/* Make buttons responsive but keep them side-by-side */
 @media (max-width:520px){
   .header-actions { flex-direction:row; gap:8px; align-items:flex-start; }
   .select-main { min-width:160px; max-width:48%; }
   .action-buttons { max-width:48%; justify-content:flex-end; }
 }
 
-/* Resaltar labels: mayor peso, color y contraste */
-label.form-label, .field-label, .form-label {
-  display:block;
-  font-weight:800;
-  color: #102230;
-  font-size:0.95rem;
-  letter-spacing:0.2px;
-  margin-bottom:6px;
-  text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+/* Photo */
+.photo-frame { width:134px; height:176px; border-radius:14px; background: linear-gradient(180deg,#eef7ff,#fff); padding:6px; box-shadow: 0 12px 36px rgba(16,24,40,0.06); display:flex; align-items:center; justify-content:center; }
+#fotoEmpleado, .fotoEmpleado { width:122px; height:160px; object-fit:cover; border-radius:10px; border:2px solid rgba(255,255,255,0.9); transition: transform .12s ease; }
+#fotoEmpleado:hover, .fotoEmpleado:hover { transform: translateY(-6px); box-shadow: 0 28px 60px rgba(16,24,40,0.08); }
+
+/* Main form card */
+#fichaForm.card {
+  border-radius:18px;
+  overflow:hidden;
+  border: 1px solid rgba(37,99,235,0.04);
+  box-shadow: 0 28px 80px rgba(20,80,160,0.04);
+  background: linear-gradient(180deg,#ffffff,#fbfdff);
 }
 
-/* Opcional: pequeño acento para labels de secciones importantes */
-h5.mb-3 { position:relative; padding-left:10px; }
+/* Body and section headings */
+.card-body.p-4 { padding:24px; }
+h5.mb-3 {
+  font-size:1rem;
+  color:var(--brand-blue);
+  font-weight:900;
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  position:relative;
+  padding-left:10px;
+}
 h5.mb-3:before {
   content: "";
   position:absolute;
@@ -818,18 +762,94 @@ h5.mb-3:before {
   box-shadow: 0 6px 18px rgba(37,99,235,0.06);
 }
 
-/* Asegura que inputs con left-accent mantengan alineación tras padding */
-#dpi, #nombre, #apellidos { padding-left:0.9rem; }
+/* Inputs */
+.form-control[readonly] {
+  width:100%;
+  padding:0.58rem 0.72rem;
+  border-radius:10px;
+  background: linear-gradient(90deg,#fff,#fcfeff);
+  border:1px solid #e9f2ff;
+  color:#06202a;
+  font-weight:800;
+  box-shadow: 0 4px 14px rgba(16,24,40,0.03) inset;
+  transition: box-shadow .12s, transform .08s;
+}
+.form-control[readonly]:focus {
+  outline: 3px solid rgba(37,99,235,0.12);
+  box-shadow: 0 18px 46px rgba(37,99,235,0.06);
+}
+.form-control[readonly].empty { color:#9aa4b2; font-style:italic; font-weight:800; }
 
-/* Mantener buena separación entre select y botones */
-.title-row { gap:18px; }
-/* Ajuste visual para evitar que el select comprima los botones */
-.select-main { min-width:220px; max-width:56%; }
+/* Accent left border for key fields keeping IDs same */
+#dpi, #nombre, #apellidos {
+  border-left:4px solid var(--brand-orange);
+  padding-left:0.62rem;
+}
 
-/* Mantener accesibilidad y foco visible */
+/* Grid behavior (keeps your col-md classes) */
+.row.g-3 { margin:0 -6px; gap:12px; }
+.col-md-3, .col-md-4, .col-md-6 { padding:0 6px; box-sizing:border-box; }
+.col-md-3 { flex:0 0 25%; max-width:25%; }
+.col-md-4 { flex:0 0 33.3333%; max-width:33.3333%; }
+.col-md-6 { flex:0 0 50%; max-width:50%; }
+
+/* Table */
+.table-responsive {
+  margin-top:8px;
+  border-radius:12px;
+  overflow:auto;
+  background: linear-gradient(180deg, rgba(37,99,235,0.02), rgba(255,138,43,0.01));
+  padding:8px;
+  border:1px solid rgba(37,99,235,0.03);
+}
+.table.table-sm td, .table.table-sm th {
+  padding:0.6rem 0.8rem;
+  border-top:1px dashed rgba(37,99,235,0.03);
+  color:#24303a;
+}
+
+/* Labels: stronger contrast and weight */
+label.form-label, .field-label, .form-label {
+  display:block;
+  font-weight:900;
+  color: #0b2733;
+  font-size:0.98rem;
+  letter-spacing:0.25px;
+  margin-bottom:6px;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+}
+
+/* Small helper/badge */
+.ficha-meta { display:flex; gap:10px; align-items:center; color:#6b7280; font-weight:700; }
+.ficha-badge { background:var(--glass); padding:6px 10px; border-radius:999px; color:var(--brand-brown); border:1px solid rgba(0,0,0,0.03); }
+
+/* Accessibility focus outlines */
 .form-control[readonly]:focus-visible, .select-main:focus-visible, .btn-print:focus-visible, .btn-clear:focus-visible {
   outline: 3px solid rgba(37,99,235,0.14);
   outline-offset:2px;
+}
+
+/* Responsive tweaks */
+@media (max-width:575.98px){
+  .container { padding:12px; }
+  .header-body { padding:12px; flex-direction:column; gap:12px; align-items:flex-start; }
+  .select-main { width:100% !important; min-width:0 !important; }
+  .photo-frame { width:110px; height:140px; }
+  #fotoEmpleado, .fotoEmpleado { width:96px; height:120px; }
+  .col-md-3, .col-md-4, .col-md-6 { flex:0 0 100%; max-width:100%; }
+  .action-buttons { width:100%; justify-content:flex-start; gap:8px; }
+}
+
+/* Print rules: keeps buttons hidden and maximizes usable space */
+@media print{
+  .btn-print, .btn-clear, #btnClear, .btn-outline-secondary, select, .header-actions > * { display:none !important; }
+  .header-body, .header-card, .photo-frame { display:none !important; }
+  .card, .container { box-shadow:none; background:transparent; border:none; }
+  .form-control[readonly] { border:none; background:transparent; color:#000; font-weight:800; }
+  .table-responsive { overflow:visible; background:transparent; border:none; padding:0; }
+  h5.mb-3 { color:#000 !important; }
+  @page { margin:12mm 10mm; }
+  img { max-width:100% !important; height:auto !important; }
 }
 
 </style>
