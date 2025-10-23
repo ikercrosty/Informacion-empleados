@@ -8,6 +8,16 @@
       <div>
         <h3 class="mb-0">FICHA DEL PERSONAL</h3>
         <div class="text-muted small mt-1">Selecciona un empleado para ver su ficha</div>
+        <button id="btnPrintFicha" class="btn-print" type="button" title="Imprimir ficha">
+  <!-- simple icon SVG -->
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 9V3h12v6" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M6 18H4a1 1 0 0 1-1-1v-5h18v5a1 1 0 0 1-1 1h-2" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="8" y="13" width="8" height="6" rx="1" stroke="#fff" stroke-width="1.6"/>
+  </svg>
+  Imprimir
+</button>
+
       </div>
 
       <div class="d-flex flex-column align-items-end gap-2">
@@ -312,6 +322,21 @@
 
 <script>
 (function(){
+  const btn = document.getElementById('btnPrintFicha');
+  if (!btn) return;
+  btn.addEventListener('click', function(){
+    // Opcional: quitar clases .empty para impresión limpia y restaurar después
+    const empties = Array.from(document.querySelectorAll('.form-control.empty'));
+    empties.forEach(e => e.classList.remove('empty'));
+    // Forzar reflow breve, luego imprimir
+    setTimeout(()=> { window.print(); setTimeout(()=> empties.forEach(e=>e.classList.add('empty')), 300); }, 80);
+  });
+})();
+</script>
+
+
+<script>
+(function(){
   const cfg = window.__FICHA_CONFIG || {};
   const apiList = cfg.apiEmpleados || '/api/empleados';
   const apiEmpleadoBase = cfg.apiEmpleadoBase || '/api/empleado/';
@@ -576,26 +601,33 @@
 <style>
 /* ----- Ficha.css (pegar tal cual dentro de <style> en tu plantilla) ----- */
 /* Paleta: café, naranja, azul claro */
+/* ----- Ficha: apariencia avanzada, interacciones y print ----- */
+/* Paleta extendida: café, naranja, azul claro, acentos suaves */
 :root{
   --brand-brown:#5a3e36;
   --brand-orange:#f18f01;
   --brand-blue:#1f6feb;
+  --brand-blue-2:#2b7be9;
   --muted-bg:#f7f9fb;
   --panel-bg:#ffffff;
   --surface-border:#eef3fb;
+  --glass: rgba(255,255,255,0.7);
+  --soft-shadow: 0 8px 24px rgba(31,111,235,0.06);
 }
 
-/* Contenedor base */
-.container { max-width:1100px; margin:0 auto; padding:1rem; }
+/* Container */
+.container { max-width:1140px; margin:0 auto; padding:1rem; }
 
-/* Tarjeta principal */
+/* Card */
 .ficha-card {
-  border-radius:12px;
-  background:var(--panel-bg);
-  box-shadow:0 10px 30px rgba(16,24,40,0.06);
+  border-radius:14px;
+  background: linear-gradient(180deg, #ffffff, #fbfdff);
+  box-shadow: var(--soft-shadow);
   overflow:hidden;
-  border: 1px solid rgba(31,111,235,0.04);
+  border:1px solid rgba(31,111,235,0.04);
+  transition: transform .12s ease, box-shadow .18s ease;
 }
+.ficha-card:hover { transform: translateY(-4px); box-shadow:0 22px 60px rgba(31,111,235,0.08); }
 
 /* Header */
 .ficha-header {
@@ -603,31 +635,54 @@
   align-items:center;
   justify-content:space-between;
   gap:14px;
-  padding:14px 18px;
-  border-bottom: 1px solid var(--surface-border);
-  background: linear-gradient(180deg, rgba(31,111,235,0.02), rgba(241,143,1,0.01));
+  padding:16px 20px;
+  border-bottom:1px solid var(--surface-border);
+  background: linear-gradient(90deg, rgba(31,111,235,0.02), rgba(241,143,1,0.01));
 }
-.ficha-title { font-weight:700; color:var(--brand-brown); margin:0; font-size:1.15rem; }
-.ficha-sub { color:#6b7280; font-size:0.9rem; margin-top:4px; }
+.ficha-left { display:flex; flex-direction:column; gap:6px; }
+.ficha-title { font-weight:800; color:var(--brand-brown); margin:0; font-size:1.25rem; letter-spacing:0.2px; }
+.ficha-sub { color:#6b7280; font-size:0.92rem; margin-top:2px; }
 
-/* Foto */
+/* Header controls */
+.ficha-controls { display:flex; align-items:center; gap:10px; }
+#empleadoSelect { min-width:320px; border-radius:10px; padding:0.5rem 0.7rem; }
+
+/* Photo container */
 .ficha-photo {
-  width:140px;
-  height:170px;
-  border-radius:8px;
-  object-fit:cover;
+  width:140px; height:170px; border-radius:10px; object-fit:cover;
   border:2px solid var(--surface-border);
   background: linear-gradient(180deg,var(--muted-bg),#fff);
-  box-shadow:0 6px 18px rgba(16,24,40,0.04);
+  box-shadow:0 8px 20px rgba(16,24,40,0.05);
 }
 
-/* Cuerpo y secciones */
-.ficha-body { padding:20px; background: linear-gradient(180deg,#fff,#fbfdff); }
-.ficha-section { margin-bottom:20px; }
-.ficha-section h5 { color:var(--brand-blue); font-weight:700; margin-bottom:10px; font-size:1rem; }
+/* Print button */
+.btn-print {
+  background: linear-gradient(90deg,var(--brand-blue),var(--brand-blue-2));
+  color:#fff;
+  border:none;
+  padding:0.46rem 0.9rem;
+  border-radius:10px;
+  font-weight:700;
+  box-shadow: 0 6px 18px rgba(31,111,235,0.12);
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  cursor:pointer;
+  transition: transform .12s, box-shadow .12s;
+}
+.btn-print:hover { transform: translateY(-2px); box-shadow:0 12px 30px rgba(31,111,235,0.14); }
+.btn-print:active { transform: translateY(0); }
 
-/* Labels y campos */
-.field-label { display:block; margin-bottom:6px; font-weight:600; color:#374151; font-size:0.88rem; }
+/* Print icon simple style (SVG fallback) */
+.btn-print svg { width:16px; height:16px; filter: drop-shadow(0 1px 0 rgba(0,0,0,0.06)); }
+
+/* Body & sections */
+.ficha-body { padding:22px; display:block; }
+.ficha-section { margin-bottom:22px; padding:12px; border-radius:10px; background: linear-gradient(180deg, rgba(31,111,235,0.01), rgba(241,143,1,0.005)); border:1px solid rgba(31,111,235,0.02); }
+.ficha-section h5 { color:var(--brand-blue); font-weight:800; margin-bottom:12px; font-size:1rem; }
+
+/* Labels and inputs */
+.field-label { display:block; margin-bottom:6px; font-weight:700; color:#263241; font-size:0.88rem; }
 .form-control[readonly] {
   background: linear-gradient(90deg,#ffffff,#fbfbfd);
   border:1px solid #e6eefc;
@@ -635,50 +690,53 @@
   font-weight:600;
   box-shadow:none;
 }
-.form-control.form-control-sm {
-  padding:0.55rem 0.65rem;
-  font-size:0.95rem;
-  border-radius:8px;
-  height:auto;
+.form-control.form-control-sm { padding:0.58rem 0.7rem; font-size:0.96rem; border-radius:9px; height:auto; }
+
+/* Subtle badges for empty values */
+.form-control[readonly].empty {
+  color:#9aa4b2;
+  font-style:italic;
 }
 
-/* Tabla referencias */
-.table.table-sm td, .table.table-sm th { vertical-align:middle; padding:0.55rem 0.75rem; }
-.table-responsive { border-radius:8px; overflow:hidden; background: linear-gradient(180deg,#fff,#fbfdff); }
+/* Table */
+.table.table-sm td, .table.table-sm th { vertical-align:middle; padding:0.6rem 0.75rem; }
+.table-responsive { border-radius:8px; overflow:auto; background:transparent; }
 
-/* Botones */
-#btnClear { border-radius:8px; padding:0.45rem 0.9rem; }
+/* Small helper row for meta info */
+.ficha-meta { display:flex; gap:10px; align-items:center; font-size:0.88rem; color:#6b7280; margin-top:6px; }
+.ficha-badge {
+  background:var(--glass); padding:6px 10px; border-radius:999px; font-weight:700; color:var(--brand-brown); border:1px solid rgba(0,0,0,0.03);
+}
 
-/* Accessibility focus */
-.form-control[readonly]:focus { outline: 2px solid rgba(31,111,235,0.14); box-shadow:none; }
+/* Buttons */
+#btnClear { border-radius:8px; padding:0.45rem 0.9rem; background:#fff; border:1px solid #e6eefc; color:#374151; font-weight:700; cursor:pointer; transition: all .12s; }
+#btnClear:hover { transform:translateY(-1px); box-shadow:0 8px 20px rgba(16,24,40,0.04); }
 
-/* Small devices (mobile-first) */
-/* <= 575.98px : stack header, full-width form fields */
+/* Focus / accessibility */
+.form-control[readonly]:focus { outline: 3px solid rgba(31,111,235,0.12); }
+
+/* Responsive: mobile-first */
 @media (max-width:575.98px){
-  .ficha-header { flex-direction:column; align-items:flex-start; gap:10px; padding:12px; }
-  .ficha-photo { width:100px; height:120px; }
+  .ficha-header { flex-direction:column; align-items:flex-start; gap:12px; padding:12px; }
+  .ficha-controls { width:100%; justify-content:space-between; }
+  .ficha-photo { width:110px; height:130px; }
   #empleadoSelect { width:100% !important; min-width:0 !important; }
   .field-label { font-size:0.82rem; }
   .form-control.form-control-sm { font-size:0.92rem; padding:0.5rem; }
-  .ficha-section h5 { font-size:0.95rem; }
-  .row.g-3 { gap:8px; }
-  /* Force bootstrap grid cols to stack nicely on very small screens */
+  .ficha-section { padding:10px; }
   .col-md-3, .col-md-4, .col-md-6 { width:100%; flex:0 0 100%; max-width:100%; }
-  .table-responsive { overflow:auto; -webkit-overflow-scrolling:touch; }
   .table.table-sm td, .table.table-sm th { white-space:nowrap; font-size:0.88rem; padding:0.45rem 0.6rem; }
 }
 
-/* Medium devices (≥576px and <992px): two-column where useful */
+/* Medium screens */
 @media (min-width:576px) and (max-width:991.98px){
-  .ficha-header { padding:14px; }
-  .ficha-photo { width:110px; height:140px; }
+  .ficha-photo { width:120px; height:150px; }
   .col-md-3 { flex:0 0 50%; max-width:50%; }
   .col-md-4 { flex:0 0 50%; max-width:50%; }
   .col-md-6 { flex:0 0 100%; max-width:100%; }
-  .ficha-section { padding-bottom:6px; }
 }
 
-/* Large devices (≥992px): desktop layout */
+/* Desktop */
 @media (min-width:992px){
   .col-md-3 { flex:0 0 25%; max-width:25%; }
   .col-md-4 { flex:0 0 33.3333%; max-width:33.3333%; }
@@ -686,15 +744,17 @@
   #empleadoSelect { min-width:320px; }
 }
 
-/* Minor UI polish */
-.ficha-card, .ficha-body, .table-responsive { transition: box-shadow .18s ease, transform .12s ease; }
-.ficha-card:hover { transform: translateY(-2px); box-shadow:0 18px 40px rgba(16,24,40,0.08); }
-
-/* Ensure high-contrast for small text */
-small, .small { color:#6b7280; }
-
-/* Utility adjustments for better touch area on mobile */
-select.form-select { padding:0.45rem 0.6rem; border-radius:8px; }
+/* Print styles - make printed page clean */
+@media print{
+  body * { visibility: visible; }
+  .btn-print, #btnClear, select, .ficha-controls > * { display: none !important; }
+  .ficha-card { box-shadow:none; border:none; }
+  .ficha-body { padding:8px; }
+  .form-control[readonly] { border:none; background:transparent; color:#000; font-weight:600; }
+  .ficha-section { border: none; background: transparent; padding:0; margin-bottom:6px; }
+  .table-responsive { overflow:visible; }
+  @page { margin:18mm 12mm; }
+}
 
 
 
