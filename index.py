@@ -662,7 +662,7 @@ def guardar_conyugue():
     nombres = data.get("Nombres del conyugue")
     apellidos = data.get("Apellidos del conyugue")
     direccion = data.get("Direccion del conyugue")
-    telefono = data.get("Numero de teléfono del conyugue")
+    telefono = data.get("Numero de telefono del conyugue")
     correo = data.get("Correo electronico del conyugue")
     nuevo = data.get("nuevo", False)
 
