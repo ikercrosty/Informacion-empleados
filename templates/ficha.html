@@ -746,83 +746,11 @@ label.form-label, .field-label, .form-label {
 /* Print rules: preserve blue titles and make labels normal weight */
 @media print{
   /* Keep section titles blue and printable */
- @media print{
-  /* Mostrar la cabecera (titulo + foto) en la impresión y evitar saltos antes/después */
-  .header-body, .header-card {
-    display: flex !important;
-    background: transparent !important;
-    box-shadow: none !important;
+  h5.mb-3 {
+    color: var(--brand-blue) !important;
+    font-weight: 900 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    page-break-after: avoid !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-
-  /* Ocultar solo controles interactivos pero mantener título y foto */
-  .header-actions, .action-buttons, .btn-print, .btn-clear, #btnClear, .btn-outline-secondary, select, #empleadoSelect {
-    display: none !important;
-  }
-
-  /* Ocultar texto pequeño "Selecciona un empleado..." en impresión */
-  .header-body .text-muted.small, .title-row .text-muted.small { display: none !important; }
-
-  /* Forzar que la cabecera quede junto al form (no separarla en páginas distintas) */
-  .header-card, #fichaForm.card, .card-body.p-4 {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-
-  /* Mantener el color del título y fuerza ajuste de color en impresión */
-  h3.mb-0, h5.mb-3 {
-    color: var(--brand-brown) !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-  h5.mb-3 { color: var(--brand-blue) !important; }
-
-  /* Asegurar que la foto se imprima y no provoque salto de página */
-  .photo-frame, .fotoEmpleado, #fotoEmpleado {
-    display: block !important;
-    max-width: 160px !important;
-    width: auto !important;
-    height: auto !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-
-  /* Inputs: mostrar como líneas para rellenar y no en negrita */
-  input.form-control[readonly], input.form-control {
-    display: block !important;
-    background: transparent !important;
-    border: none !important;
-    border-bottom: 1px solid var(--print-field-line) !important;
-    padding-top: 0.45rem !important;
-    padding-bottom: 0.45rem !important;
-    min-height: 34px !important;
-    margin-bottom: 8px !important;
-    color: #000 !important;
-    font-weight: 400 !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  /* Tablas: evitar división de filas y mostrar bordes para impresión */
-  .table-responsive { background: transparent !important; border: none !important; padding: 0 !important; overflow: visible !important; }
-  table, thead, tbody, tr, td, th {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-    -webkit-column-break-inside: avoid !important;
-  }
-  table td, table th { border: 1px solid #ddd !important; padding: 6px 8px !important; color: #000 !important; }
-
-  /* Márgenes de página */
-  @page { margin: 12mm 10mm !important; }
-
-  /* Escala segura de imágenes */
-  img { max-width: 100% !important; height: auto !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-}
-
   }
 
   /* Labels printed normal weight */
@@ -879,8 +807,9 @@ label.form-label, .field-label, .form-label {
 
   /* Images: scale safely */
   img { max-width: 100% !important; height: auto !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  
+}
 </style>
 
+</style>
 {% endblock %}
 
