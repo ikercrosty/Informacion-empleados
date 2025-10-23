@@ -987,4 +987,6 @@ def eliminar_foto():
         return jsonify({"error": f"Error al eliminar foto: {e}"}), 500
     
 if __name__ == "__main__":
-    app.run(debug=True)
+    # escucha en todas las interfaces en el puerto 7287 (http)
+    app.run(host="0.0.0.0", port=7287, debug=True)
+
