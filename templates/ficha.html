@@ -2,35 +2,44 @@
 {% block title %}Ficha{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-  <div class="card shadow-sm mb-4 border-0">
-    <div class="card-body d-flex align-items-center justify-content-between gap-3">
-      <div>
-        <h3 class="mb-0">FICHA DEL PERSONAL</h3>
-        <div class="text-muted small mt-1">Selecciona un empleado para ver su ficha</div>
-        <button id="btnPrintFicha" class="btn-print" type="button" title="Imprimir ficha">
-  <!-- simple icon SVG -->
-  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
-    <path d="M6 9V3h12v6" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M6 18H4a1 1 0 0 1-1-1v-5h18v5a1 1 0 0 1-1 1h-2" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-    <rect x="8" y="13" width="8" height="6" rx="1" stroke="#fff" stroke-width="1.6"/>
-  </svg>
-  Imprimir
-</button>
+<div class="card header-card shadow-sm mb-4 border-0">
+  <div class="card-body header-body d-flex align-items-center justify-content-between gap-3">
+    <div class="header-left">
+      <div class="title-row d-flex align-items-start gap-3">
+        <div>
+          <h3 class="mb-0">FICHA DEL PERSONAL</h3>
+          <div class="text-muted small mt-1">Selecciona un empleado para ver su ficha</div>
+        </div>
 
-      <div class="mt-4 text-end">
-        <button type="button" id="btnClear" class="btn btn-outline-secondary btn-sm">Limpiar</button>
-      </div>
+        <div class="header-actions d-flex align-items-center gap-2">
+          <select id="empleadoSelect" class="form-select form-select-sm select-main" aria-label="Seleccionar empleado">
+            <option value="">Cargando lista de empleados...</option>
+          </select>
+
+          <button id="btnPrintFicha" class="btn-print" type="button" title="Imprimir ficha" aria-label="Imprimir ficha">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 9V3h12v6" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M6 18H4a1 1 0 0 1-1-1v-5h18v5a1 1 0 0 1-1 1h-2" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="8" y="13" width="8" height="6" rx="1" stroke="#fff" stroke-width="1.6"/>
+            </svg>
+            Imprimir
+          </button>
+        </div>
       </div>
 
-      <div class="d-flex flex-column align-items-end gap-2">
-        <select id="empleadoSelect" class="form-select form-select-sm" style="min-width:320px">
-          <option value="">Cargando lista de empleados...</option>
-        </select>
-        <img id="fotoEmpleado" src="{{ url_for('static', filename='placeholder.png') }}" alt="Foto" style="width:120px;height:140px;object-fit:cover;border:1px solid #ddd;border-radius:4px;">
+      <div class="mt-3 small-controls d-flex gap-2">
+        <button type="button" id="btnClear" class="btn-clear" aria-label="Limpiar ficha">Limpiar</button>
       </div>
     </div>
+
+    <div class="header-right d-flex flex-column align-items-end gap-2">
+      <div class="photo-frame">
+        <img id="fotoEmpleado" src="{{ url_for('static', filename='placeholder.png') }}" alt="Foto" class="fotoEmpleado">
+      </div>
+      <div class="meta small text-muted">Foto de empleado</div>
+    </div>
   </div>
+</div>
 
   <form id="fichaForm" class="card shadow-sm border-0 mb-4">
     <div class="card-body p-4">
@@ -604,156 +613,148 @@
 /* ----- Ficha: apariencia avanzada, interacciones y print ----- */
 /* Paleta extendida: café, naranja, azul claro, acentos suaves */
 :root{
-  --brand-brown:#5a3e36;
-  --brand-orange:#f18f01;
-  --brand-blue:#1f6feb;
-  --brand-blue-2:#2b7be9;
-  --muted-bg:#f7f9fb;
-  --panel-bg:#ffffff;
-  --surface-border:#eef3fb;
-  --glass: rgba(255,255,255,0.7);
-  --soft-shadow: 0 8px 24px rgba(31,111,235,0.06);
+  --brand-brown: #4b2f2a;
+  --brand-orange: #ff8a2b;
+  --brand-blue: #1565d8;
+  --brand-blue-2: #2b7be9;
+  --muted-bg: #f2f6fb;
+  --panel-bg: #ffffff;
+  --surface-border: #e6f0ff;
+  --glass: rgba(255,255,255,0.78);
+  --soft-shadow: 0 22px 56px rgba(21,84,150,0.06);
+  --soft-shadow-sm: 0 8px 26px rgba(16,24,40,0.06);
+  --card-radius: 16px;
+  --control-radius: 12px;
+  --accent: linear-gradient(90deg, rgba(37,99,235,0.04), rgba(255,138,43,0.02));
 }
 
-/* Container */
-.container { max-width:1140px; margin:0 auto; padding:1rem; }
+/* Page container */
+.container { max-width:1200px; margin:22px auto; padding:18px; background: linear-gradient(180deg,var(--muted-bg),#fbfeff); border-radius:20px; }
 
-/* Card */
-.ficha-card {
-  border-radius:14px;
-  background: linear-gradient(180deg, #ffffff, #fbfdff);
-  box-shadow: var(--soft-shadow);
-  overflow:hidden;
-  border:1px solid rgba(31,111,235,0.04);
-  transition: transform .12s ease, box-shadow .18s ease;
+/* Header improved */
+.header-card { border-radius: var(--card-radius); border:0; }
+.header-body {
+  padding:18px;
+  border-radius: var(--card-radius);
+  background: var(--accent);
+  box-shadow: var(--soft-shadow-sm);
+  display:flex; align-items:center; justify-content:space-between;
 }
-.ficha-card:hover { transform: translateY(-4px); box-shadow:0 22px 60px rgba(31,111,235,0.08); }
+.header-left { display:flex; flex-direction:column; gap:10px; min-width:0; }
+.title-row { display:flex; gap:18px; align-items:center; min-width:0; }
+.header-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; min-width:0; }
 
-/* Header */
-.ficha-header {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:14px;
-  padding:16px 20px;
-  border-bottom:1px solid var(--surface-border);
-  background: linear-gradient(90deg, rgba(31,111,235,0.02), rgba(241,143,1,0.01));
-}
-.ficha-left { display:flex; flex-direction:column; gap:6px; }
-.ficha-title { font-weight:800; color:var(--brand-brown); margin:0; font-size:1.25rem; letter-spacing:0.2px; }
-.ficha-sub { color:#6b7280; font-size:0.92rem; margin-top:2px; }
+/* Title */
+h3.mb-0 { font-size:1.4rem; margin:0; color:var(--brand-brown); font-weight:900; letter-spacing:0.2px; }
+.text-muted.small { color:#475569; margin-top:6px; font-weight:700; }
 
-/* Header controls */
-.ficha-controls { display:flex; align-items:center; gap:10px; }
-#empleadoSelect { min-width:320px; border-radius:10px; padding:0.5rem 0.7rem; }
-
-/* Photo container */
-.ficha-photo {
-  width:140px; height:170px; border-radius:10px; object-fit:cover;
-  border:2px solid var(--surface-border);
-  background: linear-gradient(180deg,var(--muted-bg),#fff);
-  box-shadow:0 8px 20px rgba(16,24,40,0.05);
-}
-
-/* Print button */
-.btn-print {
-  background: linear-gradient(90deg,var(--brand-blue),var(--brand-blue-2));
-  color:#fff;
-  border:none;
-  padding:0.46rem 0.9rem;
-  border-radius:10px;
-  font-weight:700;
-  box-shadow: 0 6px 18px rgba(31,111,235,0.12);
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  cursor:pointer;
-  transition: transform .12s, box-shadow .12s;
-}
-.btn-print:hover { transform: translateY(-2px); box-shadow:0 12px 30px rgba(31,111,235,0.14); }
-.btn-print:active { transform: translateY(0); }
-
-/* Print icon simple style (SVG fallback) */
-.btn-print svg { width:16px; height:16px; filter: drop-shadow(0 1px 0 rgba(0,0,0,0.06)); }
-
-/* Body & sections */
-.ficha-body { padding:22px; display:block; }
-.ficha-section { margin-bottom:22px; padding:12px; border-radius:10px; background: linear-gradient(180deg, rgba(31,111,235,0.01), rgba(241,143,1,0.005)); border:1px solid rgba(31,111,235,0.02); }
-.ficha-section h5 { color:var(--brand-blue); font-weight:800; margin-bottom:12px; font-size:1rem; }
-
-/* Labels and inputs */
-.field-label { display:block; margin-bottom:6px; font-weight:700; color:#263241; font-size:0.88rem; }
-.form-control[readonly] {
-  background: linear-gradient(90deg,#ffffff,#fbfbfd);
-  border:1px solid #e6eefc;
-  color:#0f172a;
-  font-weight:600;
-  box-shadow:none;
-}
-.form-control.form-control-sm { padding:0.58rem 0.7rem; font-size:0.96rem; border-radius:9px; height:auto; }
-
-/* Subtle badges for empty values */
-.form-control[readonly].empty {
-  color:#9aa4b2;
-  font-style:italic;
-}
-
-/* Table */
-.table.table-sm td, .table.table-sm th { vertical-align:middle; padding:0.6rem 0.75rem; }
-.table-responsive { border-radius:8px; overflow:auto; background:transparent; }
-
-/* Small helper row for meta info */
-.ficha-meta { display:flex; gap:10px; align-items:center; font-size:0.88rem; color:#6b7280; margin-top:6px; }
-.ficha-badge {
-  background:var(--glass); padding:6px 10px; border-radius:999px; font-weight:700; color:var(--brand-brown); border:1px solid rgba(0,0,0,0.03);
+/* Select */
+.select-main {
+  min-width:320px;
+  border-radius: calc(var(--control-radius) - 2px);
+  padding:0.5rem 0.8rem;
+  border:1px solid var(--surface-border);
+  background: linear-gradient(180deg,#fff,#f4f9ff);
+  box-shadow: 0 6px 18px rgba(43,123,233,0.03) inset;
+  color:#072031; font-weight:800;
 }
 
 /* Buttons */
-#btnClear { border-radius:8px; padding:0.45rem 0.9rem; background:#fff; border:1px solid #e6eefc; color:#374151; font-weight:700; cursor:pointer; transition: all .12s; }
-#btnClear:hover { transform:translateY(-1px); box-shadow:0 8px 20px rgba(16,24,40,0.04); }
+.btn-print {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:0.48rem 1rem; border-radius:12px; color:#fff; border:0;
+  font-weight:900; background: linear-gradient(90deg,var(--brand-blue),var(--brand-blue-2));
+  box-shadow: 0 14px 40px rgba(37,99,235,0.12); cursor:pointer;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.btn-print:hover { transform: translateY(-3px); box-shadow: 0 24px 56px rgba(37,99,235,0.16); }
 
-/* Focus / accessibility */
-.form-control[readonly]:focus { outline: 3px solid rgba(31,111,235,0.12); }
+.btn-clear {
+  border-radius:10px; padding:0.38rem 0.9rem; background:#fff;
+  border:1px solid rgba(37,99,235,0.06); color:#374151; font-weight:800;
+  box-shadow: var(--soft-shadow-sm); cursor:pointer;
+}
+.btn-clear:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(16,24,40,0.06); }
 
-/* Responsive: mobile-first */
+/* Photo */
+.photo-frame { width:134px; height:176px; border-radius:14px; background: linear-gradient(180deg,#eef7ff,#fff); padding:6px; box-shadow: 0 12px 36px rgba(16,24,40,0.06); display:flex; align-items:center; justify-content:center; }
+.fotoEmpleado { width:122px; height:160px; object-fit:cover; border-radius:10px; border:2px solid rgba(255,255,255,0.9); transition: transform .12s ease; }
+.fotoEmpleado:hover { transform: translateY(-6px); box-shadow: 0 28px 60px rgba(16,24,40,0.08); }
+
+/* Main form card */
+#fichaForm.card {
+  border-radius:18px; overflow:hidden;
+  border: 1px solid rgba(37,99,235,0.04);
+  box-shadow: 0 28px 80px rgba(20,80,160,0.04);
+  background: linear-gradient(180deg,#ffffff,#fbfdff);
+}
+
+/* Body and sections */
+.card-body.p-4 { padding:24px; }
+h5.mb-3 { font-size:1rem; color:var(--brand-blue); font-weight:900; margin-bottom:12px; display:flex; align-items:center; gap:10px; }
+
+/* Inputs */
+.form-control[readonly] {
+  width:100%;
+  padding:0.58rem 0.72rem;
+  border-radius:10px;
+  background: linear-gradient(90deg,#fff,#fcfeff);
+  border:1px solid #e9f2ff;
+  color:#06202a; font-weight:800;
+  box-shadow: 0 4px 14px rgba(16,24,40,0.03) inset;
+  transition: box-shadow .12s, transform .08s;
+}
+.form-control[readonly]:focus {
+  outline: 3px solid rgba(37,99,235,0.12); box-shadow: 0 18px 46px rgba(37,99,235,0.06);
+}
+.form-control[readonly].empty { color:#9aa4b2; font-style:italic; font-weight:800; }
+
+/* Accent left border for key fields keeping IDs same */
+#dpi, #nombre, #apellidos {
+  border-left:4px solid var(--brand-orange);
+  padding-left:0.62rem;
+}
+
+/* Grid behavior (keeps your col-md classes behavior) */
+.row.g-3 { margin:0 -6px; gap:12px; }
+.col-md-3, .col-md-4, .col-md-6 { padding:0 6px; box-sizing:border-box; }
+.col-md-3 { flex:0 0 25%; max-width:25%; }
+.col-md-4 { flex:0 0 33.3333%; max-width:33.3333%; }
+.col-md-6 { flex:0 0 50%; max-width:50%; }
+
+/* Table */
+.table-responsive {
+  margin-top:8px; border-radius:12px; overflow:auto;
+  background: linear-gradient(180deg, rgba(37,99,235,0.02), rgba(255,138,43,0.01));
+  padding:8px; border:1px solid rgba(37,99,235,0.03);
+}
+.table.table-sm td, .table.table-sm th { padding:0.6rem 0.8rem; border-top:1px dashed rgba(37,99,235,0.03); color:#24303a; }
+
+/* Small helper/badge */
+.ficha-meta { display:flex; gap:10px; align-items:center; color:#6b7280; font-weight:700; }
+.ficha-badge { background:var(--glass); padding:6px 10px; border-radius:999px; color:var(--brand-brown); border:1px solid rgba(0,0,0,0.03); }
+
+/* Focus accessibility */
+.form-control[readonly]:focus-visible { outline: 3px solid rgba(37,99,235,0.12); }
+
+/* Responsive tweaks */
 @media (max-width:575.98px){
-  .ficha-header { flex-direction:column; align-items:flex-start; gap:12px; padding:12px; }
-  .ficha-controls { width:100%; justify-content:space-between; }
-  .ficha-photo { width:110px; height:130px; }
-  #empleadoSelect { width:100% !important; min-width:0 !important; }
-  .field-label { font-size:0.82rem; }
-  .form-control.form-control-sm { font-size:0.92rem; padding:0.5rem; }
-  .ficha-section { padding:10px; }
-  .col-md-3, .col-md-4, .col-md-6 { width:100%; flex:0 0 100%; max-width:100%; }
-  .table.table-sm td, .table.table-sm th { white-space:nowrap; font-size:0.88rem; padding:0.45rem 0.6rem; }
+  .container { padding:12px; }
+  .header-body { padding:12px; flex-direction:column; gap:12px; align-items:flex-start; }
+  .select-main { width:100% !important; min-width:0 !important; }
+  .photo-frame { width:110px; height:140px; }
+  .fotoEmpleado { width:96px; height:120px; }
+  .col-md-3, .col-md-4, .col-md-6 { flex:0 0 100%; max-width:100%; }
 }
 
-/* Medium screens */
-@media (min-width:576px) and (max-width:991.98px){
-  .ficha-photo { width:120px; height:150px; }
-  .col-md-3 { flex:0 0 50%; max-width:50%; }
-  .col-md-4 { flex:0 0 50%; max-width:50%; }
-  .col-md-6 { flex:0 0 100%; max-width:100%; }
-}
-
-/* Desktop */
-@media (min-width:992px){
-  .col-md-3 { flex:0 0 25%; max-width:25%; }
-  .col-md-4 { flex:0 0 33.3333%; max-width:33.3333%; }
-  .col-md-6 { flex:0 0 50%; max-width:50%; }
-  #empleadoSelect { min-width:320px; }
-}
-
-/* Print styles - make printed page clean */
+/* Print */
 @media print{
-  body * { visibility: visible; }
-  .btn-print, #btnClear, select, .ficha-controls > * { display: none !important; }
-  .ficha-card { box-shadow:none; border:none; }
-  .ficha-body { padding:8px; }
-  .form-control[readonly] { border:none; background:transparent; color:#000; font-weight:600; }
-  .ficha-section { border: none; background: transparent; padding:0; margin-bottom:6px; }
-  .table-responsive { overflow:visible; }
-  @page { margin:18mm 12mm; }
+  .btn-print, .btn-clear, select, .header-actions > * { display:none !important; }
+  .card, .container { box-shadow:none; background:transparent; border:none; }
+  .form-control[readonly] { border:none; background:transparent; color:#000; font-weight:800; }
+  .table-responsive { overflow:visible; background:transparent; border:none; padding:0; }
+  @page { margin:16mm 12mm; }
 }
+
 </style>
 {% endblock %}
