@@ -572,5 +572,135 @@
 </script>
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+<style>
+/* ----- Ficha.css (pegar tal cual dentro de <style> en tu plantilla) ----- */
+/* Paleta: café, naranja, azul claro */
+:root{
+  --brand-brown:#5a3e36;
+  --brand-orange:#f18f01;
+  --brand-blue:#1f6feb;
+  --muted-bg:#f7f9fb;
+  --panel-bg:#ffffff;
+  --surface-border:#eef3fb;
+}
+
+/* Contenedor base */
+.container { max-width:1100px; margin:0 auto; padding:1rem; }
+
+/* Tarjeta principal */
+.ficha-card {
+  border-radius:12px;
+  background:var(--panel-bg);
+  box-shadow:0 10px 30px rgba(16,24,40,0.06);
+  overflow:hidden;
+  border: 1px solid rgba(31,111,235,0.04);
+}
+
+/* Header */
+.ficha-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:14px 18px;
+  border-bottom: 1px solid var(--surface-border);
+  background: linear-gradient(180deg, rgba(31,111,235,0.02), rgba(241,143,1,0.01));
+}
+.ficha-title { font-weight:700; color:var(--brand-brown); margin:0; font-size:1.15rem; }
+.ficha-sub { color:#6b7280; font-size:0.9rem; margin-top:4px; }
+
+/* Foto */
+.ficha-photo {
+  width:140px;
+  height:170px;
+  border-radius:8px;
+  object-fit:cover;
+  border:2px solid var(--surface-border);
+  background: linear-gradient(180deg,var(--muted-bg),#fff);
+  box-shadow:0 6px 18px rgba(16,24,40,0.04);
+}
+
+/* Cuerpo y secciones */
+.ficha-body { padding:20px; background: linear-gradient(180deg,#fff,#fbfdff); }
+.ficha-section { margin-bottom:20px; }
+.ficha-section h5 { color:var(--brand-blue); font-weight:700; margin-bottom:10px; font-size:1rem; }
+
+/* Labels y campos */
+.field-label { display:block; margin-bottom:6px; font-weight:600; color:#374151; font-size:0.88rem; }
+.form-control[readonly] {
+  background: linear-gradient(90deg,#ffffff,#fbfbfd);
+  border:1px solid #e6eefc;
+  color:#0f172a;
+  font-weight:600;
+  box-shadow:none;
+}
+.form-control.form-control-sm {
+  padding:0.55rem 0.65rem;
+  font-size:0.95rem;
+  border-radius:8px;
+  height:auto;
+}
+
+/* Tabla referencias */
+.table.table-sm td, .table.table-sm th { vertical-align:middle; padding:0.55rem 0.75rem; }
+.table-responsive { border-radius:8px; overflow:hidden; background: linear-gradient(180deg,#fff,#fbfdff); }
+
+/* Botones */
+#btnClear { border-radius:8px; padding:0.45rem 0.9rem; }
+
+/* Accessibility focus */
+.form-control[readonly]:focus { outline: 2px solid rgba(31,111,235,0.14); box-shadow:none; }
+
+/* Small devices (mobile-first) */
+/* <= 575.98px : stack header, full-width form fields */
+@media (max-width:575.98px){
+  .ficha-header { flex-direction:column; align-items:flex-start; gap:10px; padding:12px; }
+  .ficha-photo { width:100px; height:120px; }
+  #empleadoSelect { width:100% !important; min-width:0 !important; }
+  .field-label { font-size:0.82rem; }
+  .form-control.form-control-sm { font-size:0.92rem; padding:0.5rem; }
+  .ficha-section h5 { font-size:0.95rem; }
+  .row.g-3 { gap:8px; }
+  /* Force bootstrap grid cols to stack nicely on very small screens */
+  .col-md-3, .col-md-4, .col-md-6 { width:100%; flex:0 0 100%; max-width:100%; }
+  .table-responsive { overflow:auto; -webkit-overflow-scrolling:touch; }
+  .table.table-sm td, .table.table-sm th { white-space:nowrap; font-size:0.88rem; padding:0.45rem 0.6rem; }
+}
+
+/* Medium devices (≥576px and <992px): two-column where useful */
+@media (min-width:576px) and (max-width:991.98px){
+  .ficha-header { padding:14px; }
+  .ficha-photo { width:110px; height:140px; }
+  .col-md-3 { flex:0 0 50%; max-width:50%; }
+  .col-md-4 { flex:0 0 50%; max-width:50%; }
+  .col-md-6 { flex:0 0 100%; max-width:100%; }
+  .ficha-section { padding-bottom:6px; }
+}
+
+/* Large devices (≥992px): desktop layout */
+@media (min-width:992px){
+  .col-md-3 { flex:0 0 25%; max-width:25%; }
+  .col-md-4 { flex:0 0 33.3333%; max-width:33.3333%; }
+  .col-md-6 { flex:0 0 50%; max-width:50%; }
+  #empleadoSelect { min-width:320px; }
+}
+
+/* Minor UI polish */
+.ficha-card, .ficha-body, .table-responsive { transition: box-shadow .18s ease, transform .12s ease; }
+.ficha-card:hover { transform: translateY(-2px); box-shadow:0 18px 40px rgba(16,24,40,0.08); }
+
+/* Ensure high-contrast for small text */
+small, .small { color:#6b7280; }
+
+/* Utility adjustments for better touch area on mobile */
+select.form-select { padding:0.45rem 0.6rem; border-radius:8px; }
+
+
+
+</style>
+
+
+
 {% endblock %}
 ```
