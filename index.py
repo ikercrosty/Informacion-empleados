@@ -225,6 +225,30 @@ def api_empleados_list():
         return jsonify({"mensaje": f"Error: {e}"}), 500
 
 
+        # Compatibilidad rápida para frontend que pide /api/categories
+@app.route("/api/categories", methods=["GET"])
+def api_categories_compat():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT `Numero de DPI` as dpi,
+                   COALESCE(CONCAT(`Nombre`, ' ', `Apellidos`), `Nombre`, `Apellidos`) as full_name
+            FROM empleados_info
+            WHERE `Nombre` IS NOT NULL OR `Apellidos` IS NOT NULL
+            ORDER BY `Apellidos`, `Nombre`
+        """)
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        rows = sanitize_rows(rows)
+        return jsonify(rows)
+    except Exception as e:
+        app.logger.exception("Error en /api/categories")
+        return jsonify({"error": str(e)}), 500
+
+
+
 # Devuelve todos los campos relevantes de un empleado por DPI
 @app.route("/api/empleado/<dpi>", methods=["GET", "PUT"])
 def api_empleado_get(dpi):
