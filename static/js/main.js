@@ -286,7 +286,8 @@
       conyuge_correo: ['Correo del cónyuge','Correo_del_conyuge','conyuge_correo','correo_conyuge','email_conyuge'],
       contacto_nombre: ['Nombre contacto','nombre_contacto','contacto_nombre','emergency_name'],
       contacto_apellidos: ['Apellidos contacto','apellidos_contacto','contacto_apellidos'],
-      contacto_telefono: ['Teléfono de emergencia','Telefono de emergencia','contacto_telefono','telefono_de_emergencia','emergency_phone']
+      contacto_telefono: ['Teléfono de emergencia','Telefono de emergencia','contacto_telefono','telefono_de_emergencia','emergency_phone'],
+      numero_medico: ['Numero del medico tratante','Número del médico tratante','numero_del_medico_tratante']
     };
   }
 
