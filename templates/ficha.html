@@ -748,6 +748,9 @@ h5.mb-3 {
   gap:10px;
   position:relative;
   padding-left:10px;
+  /* avoid splitting a section title from its content when printing */
+  page-break-after: avoid;
+  break-after: avoid;
 }
 h5.mb-3:before {
   content: "";
@@ -769,11 +772,9 @@ h5.mb-3:before {
   background: linear-gradient(90deg,#fff,#fcfeff);
   border:1px solid #e9f2ff;
   color:#06202a;
-  font-weight:400; /* cambió a peso normal en pantalla */
+  font-weight:400; /* pantalla: peso normal */
   box-shadow: 0 4px 14px rgba(16,24,40,0.03) inset;
   transition: box-shadow .12s, transform .08s;
-  min-height:36px;
-  line-height:1.25;
 }
 .form-control[readonly]:focus {
   outline: 3px solid rgba(37,99,235,0.12);
@@ -806,7 +807,7 @@ h5.mb-3:before {
 }
 
 /* Grid behavior (keeps your col-md classes) */
-.row.g-3 { margin:0 -6px; gap:12px; }
+.row.g-3 { margin:0 -6px; gap:12px; page-break-inside: avoid; break-inside: avoid; }
 .col-md-3, .col-md-4, .col-md-6 { padding:0 6px; box-sizing:border-box; }
 .col-md-3 { flex:0 0 25%; max-width:25%; }
 .col-md-4 { flex:0 0 33.3333%; max-width:33.3333%; }
@@ -820,6 +821,8 @@ h5.mb-3:before {
   background: linear-gradient(180deg, rgba(37,99,235,0.02), rgba(255,138,43,0.01));
   padding:8px;
   border:1px solid rgba(37,99,235,0.03);
+  page-break-inside: avoid;
+  break-inside: avoid;
 }
 .table.table-sm td, .table.table-sm th {
   padding:0.6rem 0.8rem;
@@ -827,10 +830,10 @@ h5.mb-3:before {
   color:#24303a;
 }
 
-/* Labels: ahora peso normal en pantalla, se mantiene estilo visual */
+/* Labels: pantalla con peso normal (no negrita) */
 label.form-label, .field-label, .form-label {
   display:block;
-  font-weight:400; /* cambió a peso normal en pantalla */
+  font-weight:400; /* pantalla: normal */
   color: #0b2733;
   font-size:0.98rem;
   letter-spacing:0.25px;
@@ -859,7 +862,8 @@ label.form-label, .field-label, .form-label {
   .action-buttons { width:100%; justify-content:flex-start; gap:8px; }
 }
 
-/* Print rules: keep blue headers blue and make non-header text normal weight */
+/* Print rules: keep blue headers blue and make non-header text normal weight,
+   and avoid splitting sections — minimal changes only for printing behavior */
 @media print{
   /* Preserve header and section title color (blue) and force printable color-adjust */
   h5.mb-3 {
@@ -867,6 +871,8 @@ label.form-label, .field-label, .form-label {
     font-weight: 900 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    page-break-after: avoid;
+    break-after: avoid;
   }
 
   /* Keep main page title color too */
@@ -903,7 +909,7 @@ label.form-label, .field-label, .form-label {
     display: block !important;
     background: transparent !important;
     border: none !important;
-    border-bottom: 1px solid #d0d7e6 !important;
+    border-bottom: 1px solid var(--print-field-line) !important;
     padding-top: 0.5rem !important;
     padding-bottom: 0.5rem !important;
     min-height: 34px !important;
@@ -920,14 +926,19 @@ label.form-label, .field-label, .form-label {
   /* Table printing: avoid splitting rows and show clear borders */
   .table-responsive { background: transparent !important; border: none !important; padding: 0 !important; overflow: visible !important; }
   table, thead, tbody, tr, td, th {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  table td, table th { border: 1px solid #ddd !important; padding: 6px 8px !important; color: #000 !important; }
+
+  /* Prevent section splits: keep each .card-body and its .row.g-3 together */
+  .card-body.p-4, .row.g-3, .table-responsive {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
     -webkit-column-break-inside: avoid !important;
   }
-  table td, table th { border: 1px solid #ddd !important; padding: 6px 8px !important; color: #000 !important; }
-
-  /* Prevent section splits */
-  .card-body.p-4, .row.g-3, .ficha-section, .table-responsive, .ficha-table, .table { page-break-inside: avoid !important; break-inside: avoid !important; -webkit-column-break-inside: avoid !important; }
 
   /* Page margins */
   @page { margin: 12mm 10mm !important; }
