@@ -16,19 +16,23 @@
             <option value="">Cargando lista de empleados...</option>
           </select>
 
-          <button id="btnPrintFicha" class="btn-print" type="button" title="Imprimir ficha" aria-label="Imprimir ficha">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
-              <path d="M6 9V3h12v6" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M6 18H4a1 1 0 0 1-1-1v-5h18v5a1 1 0 0 1-1 1h-2" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-              <rect x="8" y="13" width="8" height="6" rx="1" stroke="#fff" stroke-width="1.6"/>
-            </svg>
-            Imprimir
-          </button>
+          <div class="action-buttons d-flex align-items-center gap-2">
+            <button id="btnPrintFicha" class="btn-print" type="button" title="Imprimir ficha" aria-label="Imprimir ficha">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 9V3h12v6" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M6 18H4a1 1 0 0 1-1-1v-5h18v5a1 1 0 0 1-1 1h-2" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                <rect x="8" y="13" width="8" height="6" rx="1" stroke="#fff" stroke-width="1.6"/>
+              </svg>
+              Imprimir
+            </button>
+
+            <button type="button" id="btnClear" class="btn-clear" aria-label="Limpiar ficha">Limpiar</button>
+          </div>
         </div>
       </div>
 
-      <div class="mt-3 small-controls d-flex gap-2">
-        <button type="button" id="btnClear" class="btn-clear" aria-label="Limpiar ficha">Limpiar</button>
+      <div class="mt-3 small-controls">
+        <!-- espacio para futuros controles; mantiene estructura sin interferir -->
       </div>
     </div>
 
@@ -40,6 +44,7 @@
     </div>
   </div>
 </div>
+
 
   <form id="fichaForm" class="card shadow-sm border-0 mb-4">
     <div class="card-body p-4">
@@ -755,6 +760,78 @@ h5.mb-3 { font-size:1rem; color:var(--brand-blue); font-weight:900; margin-botto
   .table-responsive { overflow:visible; background:transparent; border:none; padding:0; }
   @page { margin:16mm 12mm; }
 }
+/* Asegura que los botones imprimir y limpiar siempre estén alineados y con espacio */
+.header-actions { display:flex; gap:12px; align-items:center; min-width:0; }
+.action-buttons { display:flex; gap:10px; align-items:center; }
+
+/* Botones: tamaños uniformes y separación */
+.btn-print, .btn-clear {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:0.46rem 0.9rem;
+  border-radius:12px;
+  font-weight:800;
+  border:0;
+  cursor:pointer;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.btn-clear {
+  background:#fff;
+  color:#263241;
+  border:1px solid rgba(37,99,235,0.06);
+  box-shadow: 0 8px 20px rgba(16,24,40,0.04);
+}
+.btn-print { background: linear-gradient(90deg,var(--brand-blue),var(--brand-blue-2)); color:#fff; box-shadow: 0 12px 36px rgba(37,99,235,0.12); }
+.btn-print:hover, .btn-clear:hover { transform: translateY(-3px); }
+
+/* Forzar que ambos botones se mantengan en una sola línea en pantallas pequeñas */
+.action-buttons { white-space:nowrap; }
+@media (max-width:520px){
+  .header-actions { flex-direction:row; gap:8px; align-items:flex-start; }
+  .select-main { min-width:160px; max-width:48%; }
+  .action-buttons { max-width:48%; justify-content:flex-end; }
+}
+
+/* Resaltar labels: mayor peso, color y contraste */
+label.form-label, .field-label, .form-label {
+  display:block;
+  font-weight:800;
+  color: #102230;
+  font-size:0.95rem;
+  letter-spacing:0.2px;
+  margin-bottom:6px;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+}
+
+/* Opcional: pequeño acento para labels de secciones importantes */
+h5.mb-3 { position:relative; padding-left:10px; }
+h5.mb-3:before {
+  content: "";
+  position:absolute;
+  left:0;
+  top:8px;
+  width:6px;
+  height:22px;
+  border-radius:4px;
+  background: linear-gradient(180deg,var(--brand-orange),var(--brand-blue-2));
+  box-shadow: 0 6px 18px rgba(37,99,235,0.06);
+}
+
+/* Asegura que inputs con left-accent mantengan alineación tras padding */
+#dpi, #nombre, #apellidos { padding-left:0.9rem; }
+
+/* Mantener buena separación entre select y botones */
+.title-row { gap:18px; }
+/* Ajuste visual para evitar que el select comprima los botones */
+.select-main { min-width:220px; max-width:56%; }
+
+/* Mantener accesibilidad y foco visible */
+.form-control[readonly]:focus-visible, .select-main:focus-visible, .btn-print:focus-visible, .btn-clear:focus-visible {
+  outline: 3px solid rgba(37,99,235,0.14);
+  outline-offset:2px;
+}
 
 </style>
 {% endblock %}
+
