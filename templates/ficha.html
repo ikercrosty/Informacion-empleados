@@ -51,19 +51,34 @@
 
       <!-- DATOS PERSONALES -->
       <h5 class="mb-3">DATOS PERSONALES</h5>
-      <div class="row g-3">
+
+      <div class="row g-3 align-items-start">
+        <!-- Foto a la par con los campos principales -->
+        <div class="col-md-3 d-flex justify-content-center align-items-start print-photo-col" style="padding-top:6px;">
+          <div style="width:130px;">
+            <img id="fotoEmpleado" src="{{ url_for('static', filename='placeholder.png') }}" alt="Foto" class="fotoEmpleado" style="width:122px;height:160px;object-fit:cover;border-radius:8px;border:2px solid #fff;">
+          </div>
+        </div>
+
+        <!-- Campos clave (mantengo mismos ids) -->
         <div class="col-md-3">
           <label class="form-label">Número de DPI</label>
           <input id="dpi" value="{{ e['Numero de DPI'] if e else '' }}" class="form-control form-control-sm" readonly>
         </div>
+
         <div class="col-md-3">
           <label class="form-label">Nombre</label>
           <input id="nombre" value="{{ e.get('Nombre') if e else '' }}" class="form-control form-control-sm" readonly>
         </div>
+
         <div class="col-md-3">
           <label class="form-label">Apellidos</label>
           <input id="apellidos" value="{{ e.get('Apellidos') if e else '' }}" class="form-control form-control-sm" readonly>
         </div>
+      </div>
+
+      <!-- resto de campos personales (sin cambios en ids ni en orden) -->
+      <div class="row g-3 mt-2">
         <div class="col-md-3">
           <label class="form-label">Apellidos de casada</label>
           <input id="apellidos_casada" value="{{ e.get('Apellidos de casada') if e else '' }}" class="form-control form-control-sm" readonly>
@@ -255,7 +270,7 @@
 
       <!-- REFERENCIAS LABORALES -->
       <h5 class="mb-3">REFERENCIAS LABORALES (Último empleo)</h5>
-      <div class="table-responsive">
+      <div class="table-responsive ficha-table">
         <table class="table table-sm table-borderless">
           <thead>
             <tr>
@@ -616,7 +631,6 @@
 /* ----- Ficha.css (pegar tal cual dentro de <style> en tu plantilla) ----- */
 /* Paleta: café, naranja, azul claro */
 /* ----- Ficha: apariencia avanzada, interacciones y print ----- */
-/* Paleta extendida: café, naranja, azul claro, acentos suaves */
 :root{
   --brand-brown: #4b2f2a;
   --brand-orange: #ff8a2b;
@@ -873,14 +887,18 @@ label.form-label, .field-label, .form-label {
     color-adjust: exact !important;
   }
 
-  /* Hide interactive controls and header */
-  .btn-print, .btn-clear, #btnClear, .btn-outline-secondary, select, .header-actions > *, .header-body, .header-card, .photo-frame { display:none !important; }
+  /* Hide interactive controls but keep the photo visible */
+  .btn-print, .btn-clear, #btnClear, .btn-outline-secondary, select, .header-actions > * { display: none !important; }
+  .header-body { background: transparent !important; box-shadow:none !important; }
+  .photo-frame, .print-photo-col, .fotoEmpleado { display:block !important; }
+
+  /* Force photo to float right near top in print so it prints next to the personal fields */
+  .print-photo-col { float: right; width: 28% !important; margin-left: 8px; }
 
   /* Strip decorative backgrounds and shadows */
   .card, .container, #fichaForm.card { box-shadow:none !important; background:transparent !important; border:none !important; }
 
   /* Inputs: show as large, empty lines for handwriting */
-  /* Apply underline style for printable fields */
   input.form-control[readonly], input.form-control {
     display: block !important;
     background: transparent !important;
@@ -914,10 +932,7 @@ label.form-label, .field-label, .form-label {
   table td, table th { border: 1px solid #ddd !important; padding: 6px 8px !important; color: #000 !important; }
 
   /* Prevent section splits */
-  .card-body.p-4, .row.g-3, .ficha-section, .table-responsive {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
+  .card-body.p-4, .row.g-3, .ficha-section, .table-responsive, .ficha-table, .table { page-break-inside: avoid !important; break-inside: avoid !important; -webkit-column-break-inside: avoid !important; }
 
   /* Page margins */
   @page { margin: 12mm 10mm !important; }
@@ -930,4 +945,3 @@ label.form-label, .field-label, .form-label {
 }
 </style>
 {% endblock %}
-
