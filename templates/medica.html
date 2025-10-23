@@ -20,7 +20,7 @@
       <tr>
         <th>DPI</th><th>Nombre</th><th>Apellidos</th>
         <th>Padece alguna enfermedad</th><th>Tipo de enfermedad</th><th>Recibe tratamiento</th>
-        <th>Nombre del tratamiento</th><th>Es alérgico</th><th>Nombre del médico</th><th>Tipo de sangre</th>
+        <th>Nombre del tratamiento</th><th>Es alérgico</th><th>Nombre del médico</th><th>Número del medico tratante</th><th>Tipo de sangre</th>
       </tr>
     </thead>
     <tbody>
@@ -35,6 +35,7 @@
         <td>{{ e.get('Nombre del tratamiento')|default('') }}</td>
         <td>{{ e.get('Es alergico a algun medicamento')|default('') }}</td>
         <td>{{ e.get('Nombre del medico Tratante')|default('') }}</td>
+        <td>{{ e.get('Numero del medico tratante')|default('') }}</td>
         <td>{{ e.get('Tipo de sangre')|default('') }}</td>
       </tr>
       {% endfor %}
@@ -51,7 +52,7 @@
     campos: [
       "Numero de DPI","Nombre","Apellidos",
       "Padece alguna enfermedad","Tipo de enfermedad","Recibe tratamiento medico",
-      "Nombre del tratamiento","Es alergico a algun medicamento","Nombre del medico Tratante","Tipo de sangre"
+      "Nombre del tratamiento","Es alergico a algun medicamento","Nombre del medico Tratante","Numero del medico tratante", "Tipo de sangre"
     ],
     bloqueadas: [0,1,2]
   };

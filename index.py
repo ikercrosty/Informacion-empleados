@@ -800,6 +800,7 @@ def guardar_medica():
     alergico = data.get("Es alergico a algun medicamento")
     medico = data.get("Nombre del medico Tratante")
     sangre = data.get("Tipo de sangre")
+    numero = data.get ("Numero del medico tratante")
     nuevo = data.get("nuevo", False)
 
     try:
@@ -811,27 +812,27 @@ def guardar_medica():
             cursor.execute("""
                 INSERT INTO empleados_info (
                     `Numero de DPI`, `Padece alguna enfermedad`, `Tipo de enfermedad`, `Recibe tratamiento medico`,
-                    `Nombre del tratamiento`, `Es alergico a algun medicamento`, `Nombre del medico Tratante`, `Tipo de sangre`
+                    `Nombre del tratamiento`, `Es alergico a algun medicamento`, `Nombre del medico Tratante`,`Numero del medico tratante`, `Tipo de sangre`
                 ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
-            """, (dpi, padece, tipo, recibe, tratamiento, alergico, medico, sangre))
+            """, (dpi, padece, tipo, recibe, tratamiento, alergico, medico, numero, sangre))
             mensaje = "Registro médico agregado correctamente"
         else:
             if existe:
                 cursor.execute("""
                     UPDATE empleados_info
                     SET `Padece alguna enfermedad`=%s, `Tipo de enfermedad`=%s, `Recibe tratamiento medico`=%s,
-                        `Nombre del tratamiento`=%s, `Es alergico a algun medicamento`=%s, `Nombre del medico Tratante`=%s,
+                        `Nombre del tratamiento`=%s, `Es alergico a algun medicamento`=%s, `Nombre del medico Tratante`=%s, `Numero del medico tratante`=%s,
                         `Tipo de sangre`=%s
                     WHERE `Numero de DPI`=%s
-                """, (padece, tipo, recibe, tratamiento, alergico, medico, sangre, dpi))
+                """, (padece, tipo, recibe, tratamiento, alergico, medico, numero, sangre, dpi))
                 mensaje = "Registro médico actualizado correctamente"
             else:
                 cursor.execute("""
                     INSERT INTO empleados_info (
                         `Numero de DPI`, `Padece alguna enfermedad`, `Tipo de enfermedad`, `Recibe tratamiento medico`,
-                        `Nombre del tratamiento`, `Es alergico a algun medicamento`, `Nombre del medico Tratante`, `Tipo de sangre`
-                    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
-                """, (dpi, padece, tipo, recibe, tratamiento, alergico, medico, sangre))
+                        `Nombre del tratamiento`, `Es alergico a algun medicamento`, `Nombre del medico Tratante`,`Numero del medico tratante`,`Tipo de sangre`
+                    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                """, (dpi, padece, tipo, recibe, tratamiento, alergico, medico, numero, sangre))
                 mensaje = "Registro médico agregado correctamente"
 
         conn.commit()

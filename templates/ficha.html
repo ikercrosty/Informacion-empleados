@@ -14,7 +14,6 @@
         <select id="empleadoSelect" class="form-select form-select-sm" style="min-width:320px">
           <option value="">Cargando lista de empleados...</option>
         </select>
-   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
         <img id="fotoEmpleado" src="{{ url_for('static', filename='placeholder.png') }}" alt="Foto" style="width:120px;height:140px;object-fit:cover;border:1px solid #ddd;border-radius:4px;">
       </div>
     </div>
@@ -285,6 +284,10 @@
           <input id="medico_tratante" value="{{ e.get('Nombre del médico tratante') if e else '' }}" class="form-control form-control-sm" readonly>
         </div>
         <div class="col-md-4 mt-3">
+          <label class="form-label">Numero del medico tratante</label>
+          <input id="numero_medico" value="{{ e.get('Numero del medico tratante') if e else '' }}" class="form-control form-control-sm" readonly>
+        </div>
+        <div class="col-md-4 mt-3">
           <label class="form-label">Tipo de sangre</label>
           <input id="tipo_sangre" value="{{ e.get('Tipo de sangre') if e else '' }}" class="form-control form-control-sm" readonly>
         </div>
@@ -415,6 +418,7 @@
       nombre_tratamiento: ['Nombre del tratamiento','nombre_del_tratamiento'],
       alergico: ['Es alergico a algun medicamento','Es alérgico a algún medicamento','es_alergico_a_algun_medicamento'],
       medico_tratante: ['Nombre del medico Tratante','Nombre del médico tratante','nombre_del_medico_tratante'],
+      numero_medico:   ['Numero del medico tratante','Número del médico tratante','numero_del_medico_tratante'],
       tipo_sangre: ['Tipo de sangre','tipo_de_sangre']
     };
 
