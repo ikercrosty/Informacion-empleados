@@ -246,3 +246,74 @@
   window.__MAIN_TABLA.cancelar = cancelar;
 
 })();
+// --- START: KEY_FALLBACKS + getFirstMatching (safe, non-intrusive) ---
+/*
+  Agrega un mapa global de claves alternativas y una función utilitaria
+  para obtener la primera clave no vacía desde un objeto servidor.
+  Diseñado para no interferir con la lógica existente de main.js.
+*/
+(function(){
+  if (!window.__KEY_FALLBACKS) {
+    window.__KEY_FALLBACKS = {
+      dpi: ['Numero de DPI','Numero_de_DPI','dpi','numero_de_dpi'],
+      nombre: ['Nombre','nombre','full_name','fullName'],
+      apellidos: ['Apellidos','apellidos','surname','last_name'],
+      apellidos_casada: ['Apellidos de casada','apellidos_de_casada'],
+      estado_civil: ['Estado Civil','estado_civil'],
+      nacionalidad: ['Nacionalidad','nacionalidad'],
+      departamento: ['Departamento','departamento'],
+      fecha_nacimiento: ['Fecha de nacimiento','fecha_nacimiento','birth_date','birthdate'],
+      lugar_nacimiento: ['Lugar de nacimiento','lugar_de_nacimiento'],
+      iggs: ['Numero de Afiliacion del IGSS','Numero de Afiliación del IGSS','Numero IGSS','Numero de Afiliacion IGSS','Numero de Afiliación del IGGS','Numero IGGS','igss','iggs'],
+      religion: ['Religión','Religion','religion'],
+      direccion: ['Dirección del Domicilio','Direccion del Domicilio','direccion','direccion_del_domicilio'],
+      telefono: ['Numero de Telefono','Numero de Teléfono','Telefono','telefono','telefono_personal','telefono_celular','tel','mobile'],
+      correo: ['Correo Electronico','Correo','correo','email','e-mail'],
+      puesto: ['Puesto de trabajo','puesto','puesto_de_trabajo'],
+      tipo_contrato: ['Tipo de contrato','tipo_de_contrato'],
+      jornada: ['Jornada laboral','jornada_laboral','jornada'],
+      duracion: ['Duración del trabajo','Duracion del trabajo','duracion_del_trabajo','duracion'],
+      fecha_inicio: ['Fecha de inicio laboral','fecha_inicio_laboral','fecha_inicio'],
+      dias_laborales: ['Dias Laborales','dias_laborales'],
+      nivel_estudios: ['Nivel de estudios','nivel_de_estudios'],
+      profesion: ['Profesión u Oficio','Profesion u Oficio','profesion_u_oficio','profesion'],
+      colegio: ['Colegio o establecimiento','colegio_o_establecimiento','colegio'],
+      cursos: ['Cursos o títulos adicionales','Cursos o titulos adicionales','Cursos','cursos'],
+      conyuge_nombres: ['Nombres del cónyuge','Nombres del conyugue','conyuge_nombres','nombres_del_conyuge','spouse_name'],
+      conyuge_apellidos: ['Apellidos del cónyuge','Apellidos del conyugue','conyuge_apellidos','apellidos_del_conyuge','spouse_surname'],
+      conyuge_direccion: ['Dirección del cónyuge','Direccion del conyugue','conyuge_direccion'],
+      conyuge_telefono: ['Teléfono del cónyuge','Telefono del conyugue','conyuge_telefono','telefono_conyuge','spouse_phone'],
+      conyuge_correo: ['Correo del cónyuge','Correo_del_conyuge','conyuge_correo','correo_conyuge','email_conyuge'],
+      contacto_nombre: ['Nombre contacto','nombre_contacto','contacto_nombre','emergency_name'],
+      contacto_apellidos: ['Apellidos contacto','apellidos_contacto','contacto_apellidos'],
+      contacto_telefono: ['Teléfono de emergencia','Telefono de emergencia','contacto_telefono','telefono_de_emergencia','emergency_phone']
+    };
+  }
+
+  if (!window.getFirstMatching) {
+    window.getFirstMatching = function(obj, fallbacks){
+      if (!obj || typeof obj !== 'object' || !Array.isArray(fallbacks)) return '';
+      // normalizer: remove accents, lowercase, replace non-alnum with underscore
+      const normalize = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'_');
+      for (const key of fallbacks) {
+        if (!key) continue;
+        // check raw key
+        if (Object.prototype.hasOwnProperty.call(obj, key) && obj[key] !== undefined && obj[key] !== null) {
+          const v = obj[key];
+          if (String(v).trim() !== '') return v;
+        }
+        // check normalized key
+        const nk = normalize(key);
+        for (const k2 of Object.keys(obj)) {
+          try {
+            if (normalize(k2) === nk) {
+              const v2 = obj[k2];
+              if (v2 !== undefined && v2 !== null && String(v2).trim() !== '') return v2;
+            }
+          } catch(_) { /* defensive */ }
+        }
+      }
+      return '';
+    };
+  }
+})();
