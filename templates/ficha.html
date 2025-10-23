@@ -429,11 +429,11 @@
 
     // Ensure spouse phone and email are set if present under other names
     trySetMany(emp, ['Telefono del conyuge','Telefono conyuge','Teléfono del conyuge','tel_conyuge','conyuge_telefono'], 'conyuge_telefono');
-    trySetMany(emp, ['Correo del conyuge','correo_conyuge','correo_del_conyuge','conyuge_correo'], 'conyuge_correo');
+    trySetMany(emp, ['Correo electronico del conyugue','correo_conyuge','correo_del_conyuge','conyuge_correo'], 'conyuge_correo');
 
     // Emergency name/apellidos fallbacks
-    trySetMany(emp, ['Nombre contacto','nombre_contacto','contacto_nombre','nombre_contacto_de_emergencia'], 'contacto_nombre');
-    trySetMany(emp, ['Apellidos contacto','apellidos_contacto','contacto_apellidos','apellidos_contacto_de_emergencia'], 'contacto_apellidos');
+    trySetMany(emp, ['Nombre del contacto de emergencia','nombre_contacto','contacto_nombre','nombre_contacto_de_emergencia'], 'contacto_nombre');
+    trySetMany(emp, ['Apellidos del contacto de emergencia','apellidos_contacto','contacto_apellidos','apellidos_contacto_de_emergencia'], 'contacto_apellidos');
 
     // Refs (set also into table cells)
     const refNombre = getFirstNonEmpty(emp, ['Nombre Empresa','Nombre de la Empresa (Ultimo Trabajo)','nombre_empresa']);
