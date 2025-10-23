@@ -599,137 +599,224 @@
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
 <style>
+/* ----- Ficha.css (pegar tal cual dentro de <style> en tu plantilla) ----- */
+/* Paleta: café, naranja, azul claro */
+/* ----- Ficha: apariencia avanzada, interacciones y print ----- */
+/* Paleta extendida: café, naranja, azul claro, acentos suaves */
 :root{
-  --brand-brown:#5a3e36;
-  --brand-orange:#f18f01;
-  --brand-blue:#1f6feb;
-  --brand-blue-2:#2b7be9;
-  --muted-bg:#f3f6fb;
-  --panel-bg:#ffffff;
-  --surface-border:#e6eefc;
-  --glass: rgba(255,255,255,0.72);
-  --soft-shadow: 0 12px 40px rgba(31,111,235,0.07);
-  --soft-shadow-2: 0 6px 18px rgba(16,24,40,0.06);
+:root{
+  --brand-brown: #4b2f2a;
+  --brand-orange: #ff8a2b;
+  --brand-blue: #1565d8;
+  --brand-blue-2: #2b7be9;
+  --muted-bg: #f2f6fb;
+  --panel-bg: #ffffff;
+  --surface-border: #e6f0ff;
+  --glass: rgba(255,255,255,0.75);
+  --soft-shadow: 0 18px 50px rgba(20,80,160,0.06);
+  --soft-shadow-sm: 0 6px 18px rgba(16,24,40,0.06);
+  --accent-line: linear-gradient(90deg, rgba(37,99,235,0.05), rgba(255,138,43,0.02));
+  --card-radius: 14px;
+  --control-radius: 10px;
+  --label-color: #24303a;
 }
 
-/* Layout principal */
-.container { max-width:1140px; margin:18px auto; padding:1rem; background:linear-gradient(180deg,var(--muted-bg),#fbfdff); border-radius:16px; }
+/* Page container */
+.container { max-width:1200px; margin:22px auto; padding:1rem; background: linear-gradient(180deg,var(--muted-bg),#fbfeff); border-radius:18px; }
 
-/* Card principal */
-.ficha-card {
-  background: linear-gradient(180deg,var(--panel-bg),#fbfeff);
-  border-radius:16px;
-  border:1px solid rgba(43,123,233,0.06);
-  box-shadow: var(--soft-shadow);
+/* Top card (header area) */
+.card.shadow-sm {
+  border-radius: var(--card-radius);
+  overflow: visible;
+}
+.card-body.d-flex {
+  background: linear-gradient(90deg, rgba(43,123,233,0.03), rgba(255,138,43,0.01));
+  padding:18px 20px;
+  border-radius: var(--card-radius);
+  box-shadow: var(--soft-shadow-sm);
+  align-items: center;
+}
+
+/* Title area */
+h3.mb-0 {
+  font-size:1.4rem;
+  margin:0;
+  color: var(--brand-brown);
+  letter-spacing:0.2px;
+  font-weight:800;
+}
+.text-muted.small {
+  color:#475569;
+  margin-top:4px;
+  font-weight:600;
+}
+
+/* Controls & photo column */
+.d-flex.flex-column {
+  gap:10px;
+}
+#empleadoSelect.form-select {
+  min-width:320px;
+  border-radius: calc(var(--control-radius) - 2px);
+  padding:0.46rem 0.8rem;
+  border:1px solid var(--surface-border);
+  background: linear-gradient(180deg,#ffffff,#f8fbff);
+  box-shadow: 0 4px 14px rgba(43,123,233,0.04) inset;
+  color:#0f172a;
+  font-weight:700;
+}
+
+/* Employee photo */
+#fotoEmpleado {
+  width:124px;
+  height:160px;
+  object-fit:cover;
+  border-radius:12px;
+  border:3px solid rgba(255,255,255,0.9);
+  box-shadow: 0 10px 30px rgba(16,24,40,0.06);
+  background: linear-gradient(180deg,#eef7ff,#fff);
+  transition: transform .14s ease, box-shadow .14s ease;
+}
+#fotoEmpleado:hover { transform: translateY(-4px); box-shadow: 0 26px 60px rgba(16,24,40,0.08); }
+
+/* Print and clear buttons */
+.btn-print {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:0.46rem 0.9rem;
+  border-radius:12px;
+  background: linear-gradient(90deg, var(--brand-blue), var(--brand-blue-2));
+  color:#fff;
+  font-weight:800;
+  border: none;
+  box-shadow: 0 10px 30px rgba(37,99,235,0.12);
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.btn-print:hover { transform: translateY(-3px); box-shadow: 0 18px 44px rgba(37,99,235,0.16); }
+
+#btnClear {
+  border-radius:10px;
+  padding:0.46rem 0.9rem;
+  background: #fff;
+  border: 1px solid rgba(37,99,235,0.06);
+  color:#374151;
+  font-weight:800;
+  box-shadow: var(--soft-shadow-sm);
+}
+#btnClear:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(16,24,40,0.06); }
+
+/* Main form card */
+#fichaForm.card {
+  border-radius:18px;
   overflow:hidden;
-  transition: transform .14s ease, box-shadow .18s ease;
+  border: 1px solid rgba(37,99,235,0.04);
+  box-shadow: 0 18px 45px rgba(20,80,160,0.04);
 }
-.ficha-card:hover { transform: translateY(-6px); box-shadow:0 30px 80px rgba(31,111,235,0.08); }
 
-/* Header */
-.ficha-header {
+/* Form body and section styling */
+.card-body.p-4 {
+  padding:22px;
+  background: linear-gradient(180deg,#ffffff, #f8fbff);
+}
+h5.mb-3 {
+  font-size:1rem;
+  color: var(--brand-blue);
+  font-weight:900;
+  margin-bottom:12px;
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  padding:18px 22px;
-  border-bottom:1px solid var(--surface-border);
-  background: linear-gradient(90deg, rgba(31,111,235,0.02), rgba(241,143,1,0.01));
+  gap:10px;
 }
-.ficha-left { display:flex; flex-direction:column; gap:4px; }
-.ficha-title { font-weight:800; color:var(--brand-brown); margin:0; font-size:1.28rem; letter-spacing:0.2px; }
-.ficha-sub { color:#56606d; font-size:0.92rem; margin-top:2px; }
 
-/* Controles */
-.ficha-controls { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-#empleadoSelect { min-width:300px; border-radius:10px; padding:0.5rem 0.8rem; border:1px solid var(--surface-border); background:#fff; box-shadow:var(--soft-shadow-2) inset; }
-
-/* Foto */
-.ficha-photo {
-  width:140px; height:170px; border-radius:12px; object-fit:cover;
-  border:3px solid rgba(255,255,255,0.85);
-  background: linear-gradient(180deg,#f8fbff,#fff);
-  box-shadow:0 10px 30px rgba(16,24,40,0.06);
-  transition: transform .12s ease;
+/* Section grouping - subtle colored panels */
+.row.g-3 > .col-md-3,
+.row.g-3 > .col-md-4,
+.row.g-3 > .col-md-6 {
+  padding:6px;
 }
-.ficha-photo:hover { transform: translateY(-4px); }
-
-/* Botones */
-.btn-print {
-  background: linear-gradient(90deg,var(--brand-blue),var(--brand-blue-2));
-  color:#fff; border:none; padding:0.5rem 0.9rem; border-radius:10px; font-weight:800;
-  box-shadow: 0 8px 28px rgba(31,111,235,0.12); cursor:pointer;
+.row.g-3 .col-md-3 > .form-control,
+.row.g-3 .col-md-4 > .form-control,
+.row.g-3 .col-md-6 > .form-control {
+  border-radius:10px;
 }
-.btn-print:hover { transform: translateY(-2px); box-shadow:0 16px 40px rgba(31,111,235,0.14); }
 
-/* Cuerpo y secciones */
-.ficha-body { padding:22px; display:block; background: linear-gradient(180deg, rgba(255,255,255,0.00), rgba(248,251,255,0.02)); }
-.ficha-section {
-  margin-bottom:18px; padding:14px; border-radius:12px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(247,249,255,0.9));
-  border:1px solid rgba(31,111,235,0.03); box-shadow: var(--soft-shadow-2);
-}
-.ficha-section h5 { color:var(--brand-blue); font-weight:800; margin-bottom:10px; font-size:1rem; }
-
-/* Etiquetas e inputs */
-.field-label { display:block; margin-bottom:6px; font-weight:700; color:#263241; font-size:0.88rem; }
-.form-control {
-  width:100%; padding:0.56rem 0.7rem; border-radius:10px; border:1px solid var(--surface-border);
-  background:linear-gradient(90deg,#ffffff,#fbfdff); color:#0f172a; font-weight:600;
+/* Input appearance */
+.form-control[readonly] {
+  background: linear-gradient(90deg,#ffffff,#fbfdff);
+  border: 1px solid #e8f2ff;
+  color:#0b1720;
+  font-weight:700;
+  padding:0.56rem 0.72rem;
   box-shadow: 0 2px 8px rgba(16,24,40,0.03) inset;
   transition: box-shadow .12s, transform .08s;
 }
-.form-control:focus { box-shadow: 0 8px 30px rgba(43,123,233,0.08); transform: translateY(-1px); outline:none; }
-.form-control[readonly] {
-  background: linear-gradient(90deg,#ffffff,#fcfeff);
-  border:1px solid #eef6ff; color:#0f172a; font-weight:700;
+.form-control[readonly].empty {
+  color:#9aa4b2;
+  font-style:italic;
+  font-weight:700;
 }
-.form-control[readonly].empty { color:#9aa4b2; font-style:italic; font-weight:600; }
 
-/* Columnas responsivas (compatibles con tus clases col-md) */
-.row { display:flex; gap:12px; flex-wrap:wrap; margin:0 -6px; }
-.col-md-3, .col-md-4, .col-md-6 { padding:0 6px; box-sizing:border-box; }
-.col-md-3 { flex:0 0 25%; max-width:25%; }
-.col-md-4 { flex:0 0 33.3333%; max-width:33.3333%; }
-.col-md-6 { flex:0 0 50%; max-width:50%; }
+/* Accent left border for key fields */
+.col-md-3 input[id="dpi"],
+.col-md-3 input[id="nombre"],
+.col-md-3 input[id="apellidos"] {
+  border-left: 4px solid var(--brand-orange);
+  padding-left:0.6rem;
+}
 
-/* Tabla y helper */
-.table.table-sm td, .table.table-sm th { vertical-align:middle; padding:0.6rem 0.75rem; border-top:1px dashed rgba(31,111,235,0.03); }
-.table-responsive { border-radius:10px; overflow:auto; background:transparent; padding:6px; }
+/* Table */
+.table-responsive {
+  margin-top:6px;
+  border-radius:12px;
+  overflow:auto;
+  background: linear-gradient(180deg, rgba(37,99,235,0.02), rgba(255,138,43,0.01));
+  padding:8px;
+  border: 1px solid rgba(37,99,235,0.03);
+}
+.table.table-sm td, .table.table-sm th {
+  vertical-align: middle;
+  padding:0.6rem 0.8rem;
+  border-top: 1px dashed rgba(37,99,235,0.03);
+  color:#24303a;
+}
 
-/* Meta y badges */
-.ficha-meta { display:flex; gap:10px; align-items:center; font-size:0.88rem; color:#6b7280; margin-top:6px; flex-wrap:wrap; }
-.ficha-badge { background:var(--glass); padding:6px 10px; border-radius:999px; font-weight:800; color:var(--brand-brown); border:1px solid rgba(0,0,0,0.03); }
+/* Small helper/badges */
+.ficha-meta { display:flex; gap:10px; align-items:center; font-size:0.88rem; color:#6b7280; }
+.ficha-badge {
+  background: var(--glass);
+  padding:6px 10px;
+  border-radius:999px;
+  font-weight:800;
+  color: var(--brand-brown);
+  border: 1px solid rgba(0,0,0,0.03);
+}
 
-/* Clear button */
-#btnClear { border-radius:10px; padding:0.46rem 0.9rem; background:#fff; border:1px solid var(--surface-border); color:#374151; font-weight:800; cursor:pointer; box-shadow:var(--soft-shadow-2); }
-#btnClear:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(16,24,40,0.06); }
+/* Focus / accessibility */
+.form-control[readonly]:focus {
+  outline: 3px solid rgba(37,99,235,0.12);
+  box-shadow: 0 12px 30px rgba(37,99,235,0.06);
+}
 
-/* Accentos de color para campos importantes */
-.input-important { border-left:4px solid var(--brand-orange); padding-left:0.6rem; }
-
-/* Focus accesible */
-.form-control:focus-visible { outline: 3px solid rgba(31,111,235,0.12); border-color: rgba(31,111,235,0.18); }
-
-/* Responsive tweaks */
+/* Responsive */
 @media (max-width:575.98px){
-  .ficha-header { flex-direction:column; align-items:flex-start; gap:12px; padding:14px; }
+  .container { padding:12px; }
   #empleadoSelect { width:100% !important; min-width:0 !important; }
-  .ficha-photo { width:110px; height:130px; align-self:flex-end; }
-  .col-md-3, .col-md-4, .col-md-6 { flex:0 0 100%; max-width:100%; }
+  #fotoEmpleado { width:96px; height:120px; align-self:flex-end; }
+  h3.mb-0 { font-size:1.1rem; }
+  .card-body.d-flex { padding:12px; flex-direction:column; gap:12px; align-items:flex-start; }
+  .table-responsive { padding:6px; }
 }
 
-/* Print styles */
+/* Print rules (preserve clean print) */
 @media print{
-  body * { visibility: visible; }
   .btn-print, #btnClear, select, .ficha-controls > * { display: none !important; }
-  .ficha-card { box-shadow:none; border:none; }
-  .ficha-body { padding:8px; }
+  .card, .container { box-shadow:none; background:transparent; border:none; }
   .form-control[readonly] { border:none; background:transparent; color:#000; font-weight:700; }
-  .ficha-section { border: none; background: transparent; padding:0; margin-bottom:6px; }
-  .table-responsive { overflow:visible; }
+  .table-responsive { overflow:visible; background:transparent; border:none; padding:0; }
   @page { margin:16mm 12mm; }
 }
-
+}
 </style>
 {% endblock %}
