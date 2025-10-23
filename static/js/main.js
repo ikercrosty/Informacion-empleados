@@ -282,7 +282,7 @@
       conyuge_nombres: ['Nombres del cónyuge','Nombres del conyugue','conyuge_nombres','nombres_del_conyuge','spouse_name'],
       conyuge_apellidos: ['Apellidos del cónyuge','Apellidos del conyugue','conyuge_apellidos','apellidos_del_conyuge','spouse_surname'],
       conyuge_direccion: ['Dirección del cónyuge','Direccion del conyugue','conyuge_direccion'],
-      conyuge_telefono: ['Teléfono del cónyuge','Telefono del conyugue','conyuge_telefono','telefono_conyuge','spouse_phone'],
+      conyuge_telefono: ['Numero de telefono del conyugue','Telefono del conyugue','conyuge_telefono','telefono_conyuge','spouse_phone'],
       conyuge_correo: ['Correo del cónyuge','Correo_del_conyuge','conyuge_correo','correo_conyuge','email_conyuge'],
       contacto_nombre: ['Nombre contacto','nombre_contacto','contacto_nombre','emergency_name'],
       contacto_apellidos: ['Apellidos contacto','apellidos_contacto','contacto_apellidos'],
