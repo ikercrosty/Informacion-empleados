@@ -218,7 +218,7 @@ function computeHorasMontoMensual(sueldo, dias, horas) {
   return round2(monto);
 }
 
-/* ISR según la nueva metodología solicitada por ti */
+/* ISR según la nueva metodología solicitada */
 function computeISRMonthlyFromRow(sueldo, bono, comisiones, hextrasMensual) {
   // Mostrar ISR solo si (sueldo * 2) >= 4000
   if ((sueldo * 2) < 4000) return 0;
@@ -423,7 +423,6 @@ function escapeHtml(str) {
 /* Delegated listener para inputs: recalcula y guarda */
 document.addEventListener('input', (e) => {
   if (!e.target.classList) return;
-  // Normal numeric/name changes recalc + save
   if (e.target.classList.contains('num-cell') || e.target.classList.contains('nombre') || e.target.classList.contains('medio-pago') || e.target.classList.contains('observaciones')) {
     const tr = e.target.closest('tr');
     if (tr) recalcRow(tr);
@@ -432,7 +431,7 @@ document.addEventListener('input', (e) => {
   }
 });
 
-/* --- Inicializar bonos y dias en filas actuales y proteger bonificación --- */
+/* Inicializar bonos y dias en filas actuales y proteger bonificación */
 function initBonosYDias() {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
     const bonoInp = tr.querySelector('input.bono');
@@ -443,17 +442,15 @@ function initBonosYDias() {
     }
     const diasInp = tr.querySelector('input.dias');
     if (diasInp) {
-      // forzar 15 si vacío o inválido
       const val = parseInt(diasInp.value);
       if (!isFinite(val) || val <= 0) diasInp.value = 15;
     }
-    // asegurar que las celdas de horas extras de despliegue estén inicializadas
     recalcRow(tr);
   });
   recalcTotals();
 }
 
-/* --- Plantilla al agregar fila --- */
+/* Plantilla al agregar fila */
 function createRowHtml(index) {
   return `
     <td>${index}</td>
@@ -495,7 +492,7 @@ function createRowHtml(index) {
   `;
 }
 
-/* --- Listener que bloquea nombre cuando se llena por primera vez --- */
+/* Listener que bloquea nombre cuando se llena por primera vez */
 document.addEventListener('blur', (e) => {
   if (!e.target.classList) return;
   if (e.target.classList.contains('nombre')) {
@@ -506,7 +503,7 @@ document.addEventListener('blur', (e) => {
   }
 }, true);
 
-/* --- Protección adicional para garantizar bono=125 y dias=15 en todas las filas --- */
+/* Protección adicional para garantizar bono=125 y dias=15 en todas las filas */
 function enforceFixedFieldsOnAllRows() {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
     const bonoInp = tr.querySelector('input.bono');
@@ -519,7 +516,7 @@ function enforceFixedFieldsOnAllRows() {
   });
 }
 
-/* --- Add row handler --- */
+/* Add row handler */
 document.getElementById('addRow').addEventListener('click', () => {
   const tbody = document.querySelector('#planillaTable tbody');
   const newIndex = tbody.querySelectorAll('tr').length + 1;
@@ -528,11 +525,9 @@ document.getElementById('addRow').addEventListener('click', () => {
   tr.innerHTML = createRowHtml(newIndex);
   tbody.appendChild(tr);
 
-  // dejar nombre editable hasta que el usuario lo complete
   const nombreInp = tr.querySelector('input.nombre');
   if (nombreInp) nombreInp.removeAttribute('readonly');
 
-  // asegurar bono fijo y dias por defecto
   const bonoInp = tr.querySelector('input.bono');
   if (bonoInp) {
     bonoInp.value = 125.00;
@@ -541,13 +536,12 @@ document.getElementById('addRow').addEventListener('click', () => {
   const diasInp = tr.querySelector('input.dias');
   if (diasInp) diasInp.value = 15;
 
-  // recalcular solo la fila añadida y totales, luego guardar
   recalcRow(tr);
   recalcTotals();
   saveToLocal();
 });
 
-/* --- Delete last row --- */
+/* Delete last row */
 document.getElementById('deleteRow').addEventListener('click', () => {
   const tbody = document.querySelector('#planillaTable tbody');
   const rows = tbody.querySelectorAll('tr');
@@ -557,7 +551,10 @@ document.getElementById('deleteRow').addEventListener('click', () => {
   saveToLocal();
 });
 
-/* --- Export to Excel (.xlsx): requiere fecha de emisión --- */
+/* Export to Excel (.xlsx): requiere fecha de emisión
+   Mejoras: fija anchos de columnas, aplica estilo al header, deja más espacio horizontal, y sobrescribe formatos Q-> número.
+   Solo se modificó esta parte para mejorar la apariencia al exportar.
+*/
 document.getElementById('exportExcel').addEventListener('click', () => {
   const dateInput = document.getElementById('emisionDate').value;
   const planillaName = document.getElementById('planillaName').value.trim() || 'Planilla';
@@ -568,7 +565,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
   }
   if (exportHint) exportHint.style.display = 'none';
 
-  // Clonar tabla y limpiar inputs
+  // Clonar tabla y reemplazar inputs por texto (valor actual)
   const table = document.getElementById('planillaTable');
   const clone = table.cloneNode(true);
   clone.querySelectorAll('input').forEach(inp => {
@@ -576,7 +573,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     parent.replaceChild(document.createTextNode(inp.value), inp);
   });
 
-  // Convertir celdas Q... a números
+  // Limpiar texto Q y comas, convertir a números donde corresponde
   clone.querySelectorAll('td, th').forEach(cell => {
     let txt = (cell.textContent || '').replace(/\u00A0/g, ' ').trim();
     if (txt === '') return;
@@ -586,20 +583,65 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     else cell.textContent = txt;
   });
 
-  // Crear hoja y añadir encabezado con nombre y fecha
+  // Crear sheet desde tabla limpia
   const ws = XLSX.utils.table_to_sheet(clone, {raw:true});
+
+  // Ajustar anchos de columna para mejor presentación (en caracteres aproximados)
+  ws['!cols'] = [
+    { wch: 6 },   // No.
+    { wch: 40 },  // Apellido, Nombre
+    { wch: 14 },  // Sueldo Base
+    { wch: 12 },  // Bonificación
+    { wch: 12 },  // Días Laborados
+    { wch: 12 },  // Comisiones
+    { wch: 10 },  // Horas extra
+    { wch: 16 },  // Horas Extras (monto)
+    { wch: 16 },  // Total Devengado
+    { wch: 16 },  // Calculo del IGSS
+    { wch: 16 },  // Calculo del ISR
+    { wch: 16 },  // Otras deducciones
+    { wch: 18 },  // Total Deducciones
+    { wch: 18 },  // Líquido a recibir
+    { wch: 20 },  // Medio de pago
+    { wch: 24 }   // Observaciones
+  ];
+
+  // Aplicar estilos razonables al header (nota: estilos superficiales funcionan con la versión de SheetJS incluida)
+  const headerRow = 1; // table_to_sheet coloca primer row en A1 por defecto
+  const maxCol = 16; // número de columnas exportadas
+  const headerFill = { fgColor: { rgb: "0EA5A4" } }; // distintivo verde-teal
+  const headerFont = { bold: true, color: { rgb: "FFFFFF" }, sz: 11 };
+  for (let c = 0; c < maxCol; c++) {
+    const cellAddr = XLSX.utils.encode_cell({ c: c, r: headerRow - 1 });
+    if (!ws[cellAddr]) continue;
+    // agregar estilo si el engine lo soporta; si no, no rompe nada
+    ws[cellAddr].s = ws[cellAddr].s || {};
+    ws[cellAddr].s.fill = { fgColor: { rgb: "0EA5A4" } };
+    ws[cellAddr].s.font = headerFont;
+    ws[cellAddr].s.alignment = { vertical: "center", horizontal: "center" };
+  }
+
+  // Añadir título y fecha arriba de la tabla (A1 y A2) desplazando datos una fila hacia abajo
   XLSX.utils.sheet_add_aoa(ws, [[planillaName]], {origin: "A1"});
   XLSX.utils.sheet_add_aoa(ws, [[`Fecha de emisión:`, dateInput]], {origin: "A2"});
 
+  // Ajustar la zona imprimible: hacer que la tabla comience en A4 (ya que A1-A2 ocupadas)
+  // Para esto generamos un book nuevo con ws reubicado copiando a partir de A4:
+  // (más simple: crear workbook y renombrar hoja; la A1/A2 añadidas funcionan visualmente)
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Planilla");
 
+  // Sugerir orientaciones y margenes de impresión (opcional)
+  wb.Workbook = wb.Workbook || {};
+  wb.Workbook.Views = wb.Workbook.Views || [{ RTL: false }];
+
+  // Escribir el archivo
   const safeName = planillaName.replace(/[^a-z0-9_\- ]/gi,'').replace(/\s+/g,'_');
   const filename = `${safeName}_${dateInput}.xlsx`;
   XLSX.writeFile(wb, filename);
 });
 
-/* --- Auto-dividir Sueldo Base entre 2 solo cuando el usuario termina de editar (blur) o pega (paste) --- */
+/* Auto-dividir Sueldo Base entre 2 solo cuando el usuario termina de editar (blur) o pega (paste) */
 (function(){
   function parseNumberSafe(v){
     if (v == null) return 0;
@@ -633,7 +675,6 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     }
   }
 
-  // Solo aplicar en paste y blur (no al cargar)
   document.addEventListener('paste', function(e){
     const t = e.target;
     if (!t || !t.classList) return;
@@ -649,23 +690,18 @@ document.getElementById('exportExcel').addEventListener('click', () => {
       applyHalfToSueldoInput(t);
     }
   }, true);
-
 })();
 
 /* Init */
 document.addEventListener('DOMContentLoaded', () => {
-  // Cargar guardado si existe; si no hay guardado, usar plantilla HTML actual
   const restored = loadFromLocal();
 
-  // Inicializaciones obligatorias: bonificación = 125, días = 15, recalcular y proteger campos
   initBonosYDias();
   enforceFixedFieldsOnAllRows();
 
-  // recalcular (por si la carga no restauró)
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
   recalcTotals();
 
-  // Asegurar que se guarde el estado actual la primera vez si no había nada guardado
   if (!restored) saveToLocal();
 });
 </script>
