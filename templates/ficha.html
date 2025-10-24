@@ -340,15 +340,19 @@
 
       <hr class="my-5">
 
-      <!-- FIRMAS: firma del empleado y firma del encargado -->
+      <!-- FIRMAS: firma del empleado y firma del encargado (líneas negras, más cortas y lado a lado) -->
       <div class="row g-3 align-items-end" style="margin-top: 1rem;">
         <div class="col-md-6">
           <label class="form-label">Firma del empleado</label>
-          <div style="height:72px; border-bottom:1px solid #d0d7e6;"></div>
+          <div style="height:72px; display:flex; align-items:flex-end;">
+            <div style="width:60%; border-bottom:2px solid #000;"></div>
+          </div>
         </div>
         <div class="col-md-6">
           <label class="form-label">Firma del encargado</label>
-          <div style="height:72px; border-bottom:1px solid #d0d7e6;"></div>
+          <div style="height:72px; display:flex; align-items:flex-end;">
+            <div style="width:60%; border-bottom:2px solid #000;"></div>
+          </div>
         </div>
       </div>
 
@@ -647,6 +651,9 @@
   --card-radius: 16px;
   --control-radius: 12px;
   --print-field-line: #d0d7e6;
+  --firma-line-color: #000; /* línea de firma negra */
+  --firma-line-height: 2px;
+  --firma-line-width: 70%; /* ancho relativo dentro de su columna, ajustable */
 }
 
 /* --- Pantalla (sin cambios funcionales importantes) --- */
@@ -680,6 +687,39 @@ h5.mb-3:before { content: ""; position:absolute; left:0; top:8px; width:6px; hei
 .table.table-sm td, .table.table-sm th { padding:0.6rem 0.8rem; color:#24303a; border-top:1px dashed rgba(37,99,235,0.03); }
 
 label.form-label { display:block; font-weight:700; color:#0b2733; margin-bottom:6px; }
+
+/* Firmas: contenedor y estilo de líneas */
+.firmas-row {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+.firma-item {
+  flex: 0 0 48%;
+  max-width: 48%;
+}
+.firma-item label.form-label { margin-bottom: 0.65rem; }
+.firma-line {
+  width: var(--firma-line-width);
+  height: var(--firma-line-height);
+  background-color: var(--firma-line-color);
+  border-radius: 1px;
+  margin-top: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+/* Asegura que la línea quede centrada horizontalmente dentro de su columna */
+.firma-item { display:flex; flex-direction:column; align-items:flex-start; }
+.firma-item .firma-line { align-self:flex-start; }
+
+/* Responsive signatures */
+@media (max-width:575.98px){
+  .firmas-row { flex-direction: column; gap: 1.25rem; }
+  .firma-item { flex: 0 0 100%; max-width: 100%; }
+  .firma-line { width: 60%; }
+}
 
 /* Responsive */
 @media (max-width:575.98px){
@@ -784,6 +824,10 @@ label.form-label { display:block; font-weight:700; color:#0b2733; margin-bottom:
     break-inside: avoid !important;
     -webkit-column-break-inside: avoid !important;
   }
+
+  /* Ensure signature lines print as solid black and remain side-by-side when space allows */
+  .firmas-row { display:flex !important; gap: 2rem !important; justify-content: space-between !important; }
+  .firma-line { background-color: #000 !important; height: 2px !important; width: 70% !important; }
 
   /* If a ficha-section is taller than printable page, browser will still paginate it; reduce layout or split manually in that case. */
 }
