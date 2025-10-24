@@ -21,7 +21,7 @@
           <input id="emisionDate" class="form-control form-control-sm" type="date" />
         </div>
 
-        <div class="action-buttons d-flex align-items-center" style="gap:16px;">
+        <div class="action-buttons d-flex align-items-center" style="gap:24px;">
           <button id="exportExcel" class="btn btn-primary btn-sm d-flex align-items-center" title="Exportar a Excel">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-file-earmark-excel me-2" viewBox="0 0 16 16"><path d="M5.884 6.68 4.52 9.5l1.364 2.82H3.54L2 9.5l1.54-2.82h1.344z"/><path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zM10.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5.5H10.5A1.5 1.5 0 0 1 9 4V3.5z"/></svg>
             Exportar a Excel
@@ -232,26 +232,17 @@ function computeHorasMontoMensual(sueldo, dias, horas) {
 
 /* ISR según la nueva metodología solicitada */
 function computeISRMonthlyFromRow(sueldo, bono, comisiones, hextrasMensual) {
-  // Mostrar ISR solo si (sueldo * 2) >= 4000
   if ((sueldo * 2) < 4000) return 0;
-
-  // Ganancias anuales:
   const sueldoBaseAnual = (sueldo * 2) * 12;
   const bonoIncentivoAnual = (bono * 2) * 12;
   const hextrasAnual = hextrasMensual * 12;
   const comisionesAnual = comisiones * 12;
-
   const sumaGananciasAnual = round2(sueldoBaseAnual + bonoIncentivoAnual + hextrasAnual + comisionesAnual);
-
-  // Descuentos:
   const igssLaboralAnual = round2(sumaGananciasAnual * IGSS_RATE);
   const baseCalculo = round2(sumaGananciasAnual - (GASTOS_PERSONALES_ANUAL + igssLaboralAnual));
-
   if (baseCalculo <= 0) return 0;
-
   const isrAnual = round2(baseCalculo * ISR_ANNUAL_RATE);
   const isrMensual = round2(isrAnual / 12);
-
   return isrMensual;
 }
 
@@ -267,7 +258,6 @@ function recalcRow(tr) {
 
   const hextrasMonto = computeHorasMontoMensual(sueldo, dias, horas);
   const totalDevengado = round2(sueldo + bono + comisiones + hextrasMonto);
-  // IGSS mensual calculado solo sobre Sueldo Base
   const igss = round2(sueldo * IGSS_RATE);
 
   const isrMensual = computeISRMonthlyFromRow(sueldo, bono, comisiones, hextrasMonto);
@@ -391,7 +381,6 @@ function restoreTable(data) {
     tr.dataset._isrValue = Number(r.isr||0);
     tbody.appendChild(tr);
   });
-  // recalcular todo
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
   recalcTotals();
 }
@@ -564,7 +553,8 @@ document.getElementById('deleteRow').addEventListener('click', () => {
 });
 
 /* Export to Excel (.xlsx): requiere fecha de emisión
-   Mejoras solicitadas: título y fecha arriba de la tabla, colores en encabezado y fila de totales, y bordes.
+   Cambios realizados: colores y bordes en headers y fila de totales, ajustes de ancho,
+   importante: EL NOMBRE DE LA PLANILLA Y LA FECHA DE EMISIÓN NO se agregan dentro de la hoja — solo se usan para el NOMBRE DEL ARCHIVO.
    Sólo se modificó esta parte para mejorar la apariencia al exportar.
 */
 document.getElementById('exportExcel').addEventListener('click', () => {
@@ -618,7 +608,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     { wch: 24 }   // Observaciones
   ];
 
-  // Estilos: header, totals row, and borders
+  // Estilos: header (row 1), totals row (detectar "TOTALES"), y bordes para todas las celdas
   const range = XLSX.utils.decode_range(ws['!ref']);
   const headerRowIndex = range.s.r;
   const maxCol = range.e.c;
@@ -638,7 +628,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     };
   }
 
-  // Find totals row by scanning for 'TOTALES' in column B
+  // Find totals row by scanning for the cell that contains 'TOTALES' in column B (c=1) below header
   let totalsRow = null;
   for (let r = headerRowIndex + 1; r <= range.e.r; r++) {
     const cellB = XLSX.utils.encode_cell({r, c: 1});
@@ -664,7 +654,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     };
   }
 
-  // Borders for all cells
+  // Apply thin borders to all data cells for better separation
   for (let R = headerRowIndex; R <= range.e.r; ++R) {
     for (let C = range.s.c; C <= maxCol; ++C) {
       const addr = XLSX.utils.encode_cell({r:R,c:C});
@@ -679,19 +669,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     }
   }
 
-  // Add document title and date above the table (A1 and A2)
-  ws['A1'] = ws['A1'] || {};
-  ws['A1'].v = planillaName;
-  ws['A1'].s = ws['A1'].s || {};
-  ws['A1'].s.font = { name: "Calibri", sz: 14, bold: true, color: { rgb: "0B7285" } };
-  ws['A1'].s.alignment = { vertical: "center", horizontal: "left" };
-
-  ws['A2'] = ws['A2'] || {};
-  ws['A2'].v = `Fecha de emisión: ${dateInput}`;
-  ws['A2'].s = ws['A2'].s || {};
-  ws['A2'].s.font = { name: "Calibri", sz: 11, color: { rgb: "374151" } };
-  ws['A2'].s.alignment = { vertical: "center", horizontal: "left" };
-
+  // IMPORTANT: Do NOT add planillaName or emisionDate into the sheet. They are used only for the filename.
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Planilla");
 
