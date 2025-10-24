@@ -192,7 +192,7 @@ function computeISRMonthlyFromRow(sueldo, bono, comisiones, hextrasMensual) {
   if (sueldo < ISR_MIN_SALARIO) return 0;
   const gbMensual = sueldo + bono + comisiones + hextrasMensual;
   const gbAnual = gbMensual * 12;
-  const igssAnual = round2(gbAnual * IGSS_RATE);
+  const igssAnual = round2((sueldo * 12) * IGSS_RATE);
   const baseCalculo = gbAnual - (igssAnual + GASTOS_PERSONALES_ANUAL);
   if (baseCalculo <= 0) return 0;
   const isrAnual = round2(baseCalculo * ISR_ANNUAL_RATE);
@@ -212,7 +212,8 @@ function recalcRow(tr) {
 
   const hextrasMonto = computeHorasMontoMensual(sueldo, dias, horas);
   const totalDevengado = round2(sueldo + bono + comisiones + hextrasMonto);
-  const igss = round2((sueldo + bono + comisiones + hextrasMonto) * IGSS_RATE);
+  const igss = round2(sueldo * IGSS_RATE);
+
 
   const isrMensual = computeISRMonthlyFromRow(sueldo, bono, comisiones, hextrasMonto);
 
@@ -250,7 +251,8 @@ function recalcTotals() {
     const dias = parseInt(tr.querySelector('input.dias')?.value) || 0;
     const hextrasMonto = parseFloat(tr.dataset._hextras) || computeHorasMontoMensual(sueldo, dias, horas);
     const totalDevengado = round2(sueldo + bono + comisiones + hextrasMonto);
-    const igss = round2((sueldo + bono + comisiones + hextrasMonto) * IGSS_RATE);
+    const igss = round2(sueldo * IGSS_RATE);
+
     const isrMensual = parseFloat(tr.dataset._isrValue) || 0;
     const totalDeducciones = round2(igss + isrMensual + otras);
 
