@@ -79,7 +79,7 @@
               <td>
                 <div class="money-inline">
                   <span class="money-prefix">Q</span>
-                  <input class="form-control bono" type="number" step="0.01" value="150.00" readonly>
+                  <input class="form-control bono" type="number" step="0.01" value="125.00" readonly>
                 </div>
               </td>
               <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="15"></td>
@@ -108,7 +108,7 @@
               <td>2</td>
               <td class="align-middle">IGDALIA ALIDA OCTAVI VELASQUEZ MALDONDO</td>
               <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell sueldo" type="number" step="0.01" value="3723.05"></div></td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control bono" type="number" step="0.01" value="150.00" readonly></div></td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control bono" type="number" step="0.01" value="125.00" readonly></div></td>
               <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="15"></td>
               <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="0.00"></div></td>
               <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
@@ -125,7 +125,7 @@
               <td>3</td>
               <td class="align-middle">ANGEL ESTUARDO ESCOBAR VELÁSQUEZ</td>
               <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell sueldo" type="number" step="0.01" value="4500.00"></div></td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control bono" type="number" step="0.01" value="150.00" readonly></div></td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control bono" type="number" step="0.01" value="125.00" readonly></div></td>
               <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="15"></td>
               <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="0.00"></div></td>
               <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
@@ -142,7 +142,7 @@
               <td>4</td>
               <td class="align-middle">LEONIDAS ANIBAL ESCOBAR PASCUAL</td>
               <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell sueldo" type="number" step="0.01" value="4500.00"></div></td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control bono" type="number" step="0.01" value="150.00" readonly></div></td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control bono" type="number" step="0.01" value="125.00" readonly></div></td>
               <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="15"></td>
               <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="0.00"></div></td>
               <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
@@ -315,7 +315,7 @@ function restoreTable(data) {
       <td>${idx}</td>
       <td class="align-middle"><input class="form-control form-control-sm nombre" type="text" value="${escapeHtml(r.nombre || '')}"></td>
       <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell sueldo" type="number" step="0.01" value="${Number(r.sueldo||0).toFixed(2)}"></div></td>
-      <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control bono" type="number" step="0.01" value="${Number(r.bono||150).toFixed(2)}" readonly></div></td>
+      <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control bono" type="number" step="0.01" value="${Number(r.bono||125).toFixed(2)}" readonly></div></td>
       <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="${Number(r.dias||15)}"></td>
       <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="${Number(r.comisiones||0).toFixed(2)}"></div></td>
       <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="${Number(r.horas||0)}"></td>
@@ -391,7 +391,7 @@ function initBonosYDias() {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
     const bonoInp = tr.querySelector('input.bono');
     if (bonoInp) {
-      bonoInp.value = 150.00;
+      bonoInp.value = 125.00;
       bonoInp.setAttribute('readonly', 'readonly');
       bonoInp.classList.remove('num-cell');
     }
@@ -400,10 +400,7 @@ function initBonosYDias() {
       // forzar 15 si vacío o inválido
       const val = parseInt(diasInp.value);
       if (!isFinite(val) || val <= 0) diasInp.value = 15;
-    } else {
-      // si no existe, añadir una celda por robustez (no debería ocurrir)
     }
-    // asegurar que las celdas de horas extras de despliegue estén inicializadas
     recalcRow(tr);
   });
   recalcTotals();
@@ -423,7 +420,7 @@ function createRowHtml(index) {
     <td>
       <div class="money-inline">
         <span class="money-prefix">Q</span>
-        <input class="form-control bono" type="number" step="0.01" value="150.00" readonly>
+        <input class="form-control bono" type="number" step="0.01" value="125.00" readonly>
       </div>
     </td>
     <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="15"></td>
@@ -461,12 +458,12 @@ document.addEventListener('blur', (e) => {
   }
 }, true);
 
-/* --- Protección adicional para garantizar bono=150 y dias=15 en todas las filas --- */
+/* --- Protección adicional para garantizar bono=125 y dias=15 en todas las filas --- */
 function enforceFixedFieldsOnAllRows() {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
     const bonoInp = tr.querySelector('input.bono');
     if (bonoInp) {
-      bonoInp.value = 150.00;
+      bonoInp.value = 125.00;
       bonoInp.setAttribute('readonly', 'readonly');
     }
     const diasInp = tr.querySelector('input.dias');
@@ -490,7 +487,7 @@ document.getElementById('addRow').addEventListener('click', () => {
   // asegurar bono fijo y dias por defecto
   const bonoInp = tr.querySelector('input.bono');
   if (bonoInp) {
-    bonoInp.value = 150.00;
+    bonoInp.value = 125.00;
     bonoInp.setAttribute('readonly', 'readonly');
   }
   const diasInp = tr.querySelector('input.dias');
@@ -604,8 +601,6 @@ document.getElementById('exportExcel').addEventListener('click', () => {
       applyHalfToSueldoInput(t);
     }
   }, true);
-
-  // No aplicar en load - respetamos el valor existente y solo dividimos cuando el usuario lo ingresa/edita
 })();
 
 /* Init */
@@ -613,7 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Cargar guardado si existe; si no hay guardado, usar plantilla HTML actual
   const restored = loadFromLocal();
 
-  // Inicializaciones obligatorias: bonificación = 150, días = 15, recalcular y proteger campos
+  // Inicializaciones obligatorias: bonificación = 125, días = 15, recalcular y proteger campos
   initBonosYDias();
   enforceFixedFieldsOnAllRows();
 
