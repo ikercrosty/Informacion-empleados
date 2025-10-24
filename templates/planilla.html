@@ -142,7 +142,7 @@
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
 <script>
-/* Parámetros fiscales */
+/* Par\u00E1metros fiscales */
 const IGSS_RATE = 0.0483;
 const GASTOS_PERSONALES_ANUAL = 48000;
 const ISR_ANNUAL_RATE = 0.05;
@@ -164,10 +164,12 @@ function computeHorasMontoMensual(sueldo, dias, horas) {
   return round2(monto);
 }
 
-/* ISR según ganancias brutas anuales */
+/* ISR según ganancias brutas anuales — usar SUELDO_BASE * 2 como base mensual */
 function computeISRMonthlyFromRow(sueldo, bono, comisiones, hextrasMensual) {
   if (sueldo < ISR_MIN_SALARIO) return 0;
-  const gbMensual = sueldo + bono + comisiones + hextrasMensual;
+  // usar sueldo duplicado como punto de partida
+  const sueldoBaseAjustado = round2(sueldo * 2);
+  const gbMensual = sueldoBaseAjustado + bono + comisiones + hextrasMensual;
   const gbAnual = gbMensual * 12;
   const igssAnual = round2(gbAnual * IGSS_RATE);
   const baseCalculo = gbAnual - (igssAnual + GASTOS_PERSONALES_ANUAL);
@@ -242,17 +244,18 @@ function recalcTotals() {
     totals.deducciones += totalDeducciones;
   });
 
-  document.getElementById('total-sueldo').textContent = withQ(totals.sueldo);
-  document.getElementById('total-bono').textContent = withQ(totals.bono);
-  document.getElementById('total-dias').textContent = ''; // no sumar días
-  document.getElementById('total-comisiones').textContent = withQ(totals.comisiones);
-  document.getElementById('total-horas').textContent = totals.horas.toString();
-  document.getElementById('total-hextras').textContent = withQ(totals.hextras);
-  document.getElementById('total-devengado').textContent = withQ(totals.devengado);
-  document.getElementById('total-igss').textContent = withQ(totals.igss);
-  document.getElementById('total-isr').textContent = withQ(totals.isr);
-  document.getElementById('total-otras').textContent = withQ(totals.otras);
-  document.getElementById('total-deducciones').textContent = withQ(totals.deducciones);
+  // Si los elementos no existen (depende del template), proteger con try/catch
+  try { document.getElementById('total-sueldo').textContent = withQ(totals.sueldo); } catch(e){}
+  try { document.getElementById('total-bono').textContent = withQ(totals.bono); } catch(e){}
+  try { document.getElementById('total-dias').textContent = ''; } catch(e){} // no sumar días
+  try { document.getElementById('total-comisiones').textContent = withQ(totals.comisiones); } catch(e){}
+  try { document.getElementById('total-horas').textContent = totals.horas.toString(); } catch(e){}
+  try { document.getElementById('total-hextras').textContent = withQ(totals.hextras); } catch(e){}
+  try { document.getElementById('total-devengado').textContent = withQ(totals.devengado); } catch(e){}
+  try { document.getElementById('total-igss').textContent = withQ(totals.igss); } catch(e){}
+  try { document.getElementById('total-isr').textContent = withQ(totals.isr); } catch(e){}
+  try { document.getElementById('total-otras').textContent = withQ(totals.otras); } catch(e){}
+  try { document.getElementById('total-deducciones').textContent = withQ(totals.deducciones); } catch(e){}
 }
 
 /* Serializar tabla para localStorage */
@@ -270,7 +273,7 @@ function serializeTable() {
     const isr = parseFloat(tr.dataset._isrValue) || 0;
     rows.push({ nombre, sueldo, bono, dias, comisiones, horas, otras, hextras, isr });
   });
-  const meta = { saved_at: new Date().toISOString(), planillaName: document.getElementById('planillaName').value, emisionDate: document.getElementById('emisionDate').value };
+  const meta = { saved_at: new Date().toISOString(), planillaName: document.getElementById('planillaName')?.value, emisionDate: document.getElementById('emisionDate')?.value };
   return { rows, meta };
 }
 
@@ -278,6 +281,7 @@ function serializeTable() {
 function restoreTable(data) {
   if (!data || !Array.isArray(data.rows)) return;
   const tbody = document.querySelector('#planillaTable tbody');
+  if (!tbody) return;
   tbody.innerHTML = '';
   data.rows.forEach((r, i) => {
     const idx = i + 1;
@@ -288,13 +292,13 @@ function restoreTable(data) {
       <td class="align-middle"><input class="form-control form-control-sm nombre" type="text" value="${escapeHtml(r.nombre || '')}"></td>
       <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell sueldo" type="number" step="0.01" value="${Number(r.sueldo||0).toFixed(2)}"></div></td>
       <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell bono" type="number" step="0.01" value="${Number(r.bono||0).toFixed(2)}"></div></td>
-      <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="${Number(r.dias||0)}"></td>
+      <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="${Number(r.dias||15)}"></td>
       <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="${Number(r.comisiones||0).toFixed(2)}"></div></td>
       <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="${Number(r.horas||0)}"></td>
       <td class="text-end hextras">Q ${Number(r.hextras||0).toFixed(2)}</td>
       <td class="text-end total-devengado">Q 0.00</td>
       <td class="text-end igss">Q 0.00</td>
-      <td class="text-end isr-cell">${r.isr && r.isr>0 ? 'Q '+Number(r.isr).toFixed(2) : ''}</td>
+      <td class="text-end isr-cell">${r.isr && r.isr>0 ? 'Q ' + Number(r.isr).toFixed(2) : ''}</td>
       <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="${Number(r.otras||0).toFixed(2)}"></div></td>
       <td class="text-end total-deducciones">Q 0.00</td>
     `;
@@ -346,20 +350,10 @@ document.addEventListener('input', (e) => {
   if (!e.target.classList) return;
   if (e.target.classList.contains('num-cell') || e.target.classList.contains('nombre')) {
     const tr = e.target.closest('tr');
-    recalcRow(tr);
+    if (tr) recalcRow(tr);
     recalcTotals();
     saveToLocal();
   }
-});
-
-/* Init */
-document.addEventListener('DOMContentLoaded', () => {
-  // cargar guardado si existe (sobrescribe tabla inicial si hay datos guardados)
-  loadFromLocal();
-
-  // recalcular (para casos donde no hubo localStorage)
-  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
-  recalcTotals();
 });
 
 /* --- Inicializar bonos existentes: forzar 250 y readonly --- */
@@ -383,7 +377,7 @@ function lockExistingBonos() {
   });
 }
 
-/* --- Cuando se agrega fila: bonificación = 250 (readonly) y nombre editable sólo hasta llenarlo --- */
+/* --- Cuando se agrega fila: bonificación = 250 (readonly) y dias por defecto = 15 --- */
 function createRowHtml(index) {
   return `
     <td>${index}</td>
@@ -391,7 +385,7 @@ function createRowHtml(index) {
     <td>
       <div class="money-inline">
         <span class="money-prefix">Q</span>
-        <input class="form-control num-cell sueldo" type="number" step="0.01" value="0">
+        <input class="form-control num-cell sueldo" type="number" step="0.01" value="0.00">
       </div>
     </td>
     <td>
@@ -400,11 +394,11 @@ function createRowHtml(index) {
         <input class="form-control bono" type="number" step="0.01" value="250.00" readonly>
       </div>
     </td>
-    <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="30"></td>
+    <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="15"></td>
     <td>
       <div class="money-inline">
         <span class="money-prefix">Q</span>
-        <input class="form-control num-cell comisiones" type="number" step="0.01" value="0">
+        <input class="form-control num-cell comisiones" type="number" step="0.01" value="0.00">
       </div>
     </td>
     <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
@@ -415,7 +409,7 @@ function createRowHtml(index) {
     <td>
       <div class="money-inline">
         <span class="money-prefix">Q</span>
-        <input class="form-control num-cell otras" type="number" step="0.01" value="0">
+        <input class="form-control num-cell otras" type="number" step="0.01" value="0.00">
       </div>
     </td>
     <td class="text-end total-deducciones">Q 0.00</td>
@@ -433,7 +427,7 @@ document.addEventListener('blur', (e) => {
   }
 }, true);
 
-/* --- Protección adicional: impedir cambios a bonificaciones por JS accidental --- */
+/* --- Protecci\u00F3n adicional: impedir cambios a bonificaciones por JS accidental --- */
 function enforceBonoProtectionOnAllRows() {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
     const bonoInp = tr.querySelector('input.bono');
@@ -467,16 +461,10 @@ document.getElementById('addRow').addEventListener('click', () => {
   // recalcular fila y totales
   recalcRow(tr);
   recalcTotals();
+  saveToLocal();
 });
 
-/* --- Al iniciar: aplicar bloqueo a bonos existentes y listeners para proteger valores --- */
-document.addEventListener('DOMContentLoaded', () => {
-  lockExistingBonos();
-  enforceBonoProtectionOnAllRows();
-});
-
-
-/* Delete last row */
+/* --- Delete last row --- */
 document.getElementById('deleteRow').addEventListener('click', () => {
   const tbody = document.querySelector('#planillaTable tbody');
   const rows = tbody.querySelectorAll('tr');
@@ -486,16 +474,16 @@ document.getElementById('deleteRow').addEventListener('click', () => {
   saveToLocal();
 });
 
-/* Export to Excel (.xlsx): requiere fecha de emisión */
+/* --- Export to Excel (.xlsx): requiere fecha de emisión --- */
 document.getElementById('exportExcel').addEventListener('click', () => {
   const dateInput = document.getElementById('emisionDate').value;
   const planillaName = document.getElementById('planillaName').value.trim() || 'Planilla';
   const exportHint = document.getElementById('exportHint');
   if (!dateInput) {
-    exportHint.style.display = 'inline';
+    if (exportHint) exportHint.style.display = 'inline';
     return;
   }
-  exportHint.style.display = 'none';
+  if (exportHint) exportHint.style.display = 'none';
 
   // Clonar tabla y limpiar inputs
   const table = document.getElementById('planillaTable');
@@ -527,6 +515,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
   const filename = `${safeName}_${dateInput}.xlsx`;
   XLSX.writeFile(wb, filename);
 });
+
 // --- Auto-dividir Sueldo Base entre 2 al ingresar ---
 // Se añade sin cambiar nada más: toma el valor ingresado y lo sustituye por la mitad.
 // Mantiene disparo de recálculo y guardado existente (usa los listeners ya definidos).
@@ -546,29 +535,21 @@ document.getElementById('exportExcel').addEventListener('click', () => {
   // Handler: al terminar de editar (blur) o al pegar/teclear (input) divide entre 2 y actualiza
   function applyHalfToSueldoInput(inp){
     if (!inp) return;
-    // leer valor crudo
     const raw = inp.value;
     const n = parseNumberSafe(raw);
-    // si no hay número o es cero, no cambiar (pero si quieres que 0 => 0 se mantiene)
     if (n === 0) {
-      // asegura formato 0.00 si es input tipo number
       inp.value = n.toFixed(2);
     } else {
       const half = Math.round((n / 2 + Number.EPSILON) * 100) / 100;
-      // asignar la mitad (manteniendo dos decimales)
-      // si el input es type="number" asignar número; si es text, asignar string con 2 decimales
       if (inp.type === 'number') inp.value = half;
       else inp.value = half.toFixed(2);
     }
-
-    // forzar recalculo en fila y totales si existen esas funciones en la página
     try {
       const tr = inp.closest('tr');
       if (typeof recalcRow === 'function' && tr) recalcRow(tr);
       if (typeof recalcTotals === 'function') recalcTotals();
       if (typeof saveToLocal === 'function') saveToLocal();
     } catch (e) {
-      // no interrumpir si algo falla
       console.error('Error aplicando mitad al sueldo:', e);
     }
   }
@@ -578,12 +559,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     const t = e.target;
     if (!t || !t.classList) return;
     if (t.classList.contains('sueldo')) {
-      // si quieres que la división ocurra en cada tecla, descomenta la siguiente línea:
-      // applyHalfToSueldoInput(t);
-
-      // por defecto solo actualizamos formato al teclear parcialmente y no sustituimos
-      // para evitar comportamiento intrusivo durante la edición, no dividimos aquí.
-      // dejamos la división para blur/paste handler.
+      // por defecto no dividimos en cada tecla para no ser intrusivos
     }
   }, true);
 
@@ -592,7 +568,6 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     const t = e.target;
     if (!t || !t.classList) return;
     if (t.classList.contains('sueldo')) {
-      // esperar el paste y luego aplicar
       setTimeout(()=> applyHalfToSueldoInput(t), 20);
     }
   });
@@ -608,15 +583,36 @@ document.getElementById('exportExcel').addEventListener('click', () => {
   // Inicial en caso de que ya haya valores en las celdas al cargar la página:
   window.addEventListener('load', function(){
     document.querySelectorAll('input.sueldo').forEach(inp => {
-      // solo aplicar si no está vacío y no es 0
       const val = inp.value;
       if (val !== null && String(val).trim() !== '') applyHalfToSueldoInput(inp);
     });
   });
 })();
 
+/* Init */
+document.addEventListener('DOMContentLoaded', () => {
+  // cargar guardado si existe (sobrescribe tabla inicial si hay datos guardados)
+  loadFromLocal();
 
+  // Forzar días = 15 en filas existentes si están vacíos o inválidos
+  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
+    const diasInp = tr.querySelector('input.dias');
+    if (diasInp) {
+      const val = parseInt(diasInp.value);
+      if (!isFinite(val) || val <= 0) diasInp.value = 15;
+    }
+  });
+
+  // aplicar bloqueo a bonos existentes y listeners para proteger valores
+  lockExistingBonos();
+  enforceBonoProtectionOnAllRows();
+
+  // recalcular (para casos donde no hubo localStorage)
+  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
+  recalcTotals();
+});
 </script>
+```
 
 
 <style>
