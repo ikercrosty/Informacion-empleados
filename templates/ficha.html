@@ -340,19 +340,16 @@
 
       <hr class="my-5">
 
-      <!-- FIRMAS: firma del empleado y firma del encargado (líneas negras, más cortas y lado a lado) -->
-      <div class="row g-3 align-items-end" style="margin-top: 1rem;">
-        <div class="col-md-6">
-          <label class="form-label">Firma del empleado</label>
-          <div style="height:72px; display:flex; align-items:flex-end;">
-            <div style="width:60%; border-bottom:2px solid #000;"></div>
-          </div>
+      <!-- FIRMAS: firma del empleado y firma de la empresa (alineadas en la misma línea con espacio) -->
+      <div class="firmas-row" style="margin-top: 1rem;">
+        <div class="firma-item">
+          <div class="firma-line" aria-hidden="true"></div>
+          <div class="firma-caption">Firma del empleado</div>
         </div>
-        <div class="col-md-6">
-          <label class="form-label">Firma del encargado</label>
-          <div style="height:72px; display:flex; align-items:flex-end;">
-            <div style="width:60%; border-bottom:2px solid #000;"></div>
-          </div>
+
+        <div class="firma-item" style="margin-left: 3.5rem;">
+          <div class="firma-line" aria-hidden="true"></div>
+          <div class="firma-caption">Firma de la empresa</div>
         </div>
       </div>
 
@@ -653,7 +650,7 @@
   --print-field-line: #d0d7e6;
   --firma-line-color: #000; /* línea de firma negra */
   --firma-line-height: 2px;
-  --firma-line-width: 70%; /* ancho relativo dentro de su columna, ajustable */
+  --firma-line-width: 220px; /* ancho fijo para consistencia */
 }
 
 /* --- Pantalla (sin cambios funcionales importantes) --- */
@@ -688,36 +685,40 @@ h5.mb-3:before { content: ""; position:absolute; left:0; top:8px; width:6px; hei
 
 label.form-label { display:block; font-weight:700; color:#0b2733; margin-bottom:6px; }
 
-/* Firmas: contenedor y estilo de líneas */
+/* Firmas: contenedor y estilo de líneas (alineadas lado a lado) */
 .firmas-row {
   display: flex;
-  gap: 2rem;
+  gap: 3.5rem;
   align-items: flex-end;
-  justify-content: space-between;
+  justify-content: flex-start;
   margin-top: 1rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 .firma-item {
-  flex: 0 0 48%;
-  max-width: 48%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: var(--firma-line-width);
 }
-.firma-item label.form-label { margin-bottom: 0.65rem; }
 .firma-line {
   width: var(--firma-line-width);
   height: var(--firma-line-height);
   background-color: var(--firma-line-color);
   border-radius: 1px;
-  margin-top: 0.85rem;
-  margin-bottom: 0.25rem;
+  margin-bottom: 6px;
 }
-/* Asegura que la línea quede centrada horizontalmente dentro de su columna */
-.firma-item { display:flex; flex-direction:column; align-items:flex-start; }
-.firma-item .firma-line { align-self:flex-start; }
+.firma-caption {
+  font-weight:700;
+  color:#0b2733;
+  margin-top: 6px;
+  text-align: center;
+  font-size: .95rem;
+}
 
-/* Responsive signatures */
+/* Responsive firmas: si la pantalla es pequeña, las apila manteniendo el ancho y centrado */
 @media (max-width:575.98px){
   .firmas-row { flex-direction: column; gap: 1.25rem; }
-  .firma-item { flex: 0 0 100%; max-width: 100%; }
+  .firma-item { min-width: 100%; align-items: flex-start; }
   .firma-line { width: 60%; }
 }
 
@@ -826,8 +827,8 @@ label.form-label { display:block; font-weight:700; color:#0b2733; margin-bottom:
   }
 
   /* Ensure signature lines print as solid black and remain side-by-side when space allows */
-  .firmas-row { display:flex !important; gap: 2rem !important; justify-content: space-between !important; }
-  .firma-line { background-color: #000 !important; height: 2px !important; width: 70% !important; }
+  .firmas-row { display:flex !important; gap: 3.5rem !important; justify-content: flex-start !important; }
+  .firma-line { background-color: #000 !important; height: 2px !important; width: 220px !important; }
 
   /* If a ficha-section is taller than printable page, browser will still paginate it; reduce layout or split manually in that case. */
 }
