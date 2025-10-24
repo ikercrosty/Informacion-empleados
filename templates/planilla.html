@@ -4,35 +4,41 @@
 {% block content %}
 <div class="container py-4">
   <div class="card shadow-sm mb-4 border-0">
-    <div class="card-body d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-      <div>
-        <h3 class="mb-0" style="letter-spacing:.2px">Planilla - Empaquetex </h3>
-        <div class="text-muted small mt-1">Empresa: EMPAQUES Y TEXTURAS DE GUATEMALA, SOCIEDAD ANÓNIMA</div>
-      </div>
-
-      <div class="controls d-flex flex-wrap align-items-center">
-        <div class="me-4">
-          <h6 class="mb-1">Ingrese nombre para el documento</h6>
-          <input id="planillaName" class="form-control form-control-sm" type="text" value="Planilla " style="min-width:240px" />
+    <div class="card-body">
+      <div class="d-flex flex-column flex-md-row align-items-start justify-content-between gap-3">
+        <div>
+          <h3 class="mb-0" style="letter-spacing:.2px">Planilla - Empaquetex</h3>
+          <div class="text-muted small mt-1">Empresa: EMPAQUES Y TEXTURAS DE GUATEMALA, SOCIEDAD ANÓNIMA</div>
         </div>
 
-        <div class="me-4">
-          <h6 class="mb-1">Ingrese fecha de emisión del documento</h6>
-          <input id="emisionDate" class="form-control form-control-sm" type="date" />
+        <!-- Controls: inputs spaced apart; buttons below them -->
+        <div class="controls w-100 w-md-auto">
+          <div class="d-flex flex-column flex-md-row gap-4 align-items-start">
+            <div class="control-field">
+              <label class="form-label small mb-1">Ingrese nombre para el documento</label>
+              <input id="planillaName" class="form-control form-control-sm" type="text" value="Planilla " style="min-width:240px" />
+            </div>
+
+            <div class="control-field">
+              <label class="form-label small mb-1">Ingrese fecha de emisión del documento</label>
+              <input id="emisionDate" class="form-control form-control-sm" type="date" />
+            </div>
+          </div>
+
+          <!-- Buttons moved below inputs and spaced farther apart -->
+          <div class="mt-3 d-flex flex-wrap align-items-center action-row" style="gap:20px;">
+            <button id="exportExcel" class="btn btn-primary btn-sm d-flex align-items-center" title="Exportar a Excel">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-file-earmark-excel me-2" viewBox="0 0 16 16"><path d="M5.884 6.68 4.52 9.5l1.364 2.82H3.54L2 9.5l1.54-2.82h1.344z"/><path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zM10.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5.5H10.5A1.5 1.5 0 0 1 9 4V3.5z"/></svg>
+              Exportar a Excel
+            </button>
+
+            <button id="addRow" class="btn btn-outline-secondary btn-sm" title="Agregar fila">Agregar fila</button>
+
+            <button id="deleteRow" class="btn btn-outline-danger btn-sm" title="Eliminar fila">Eliminar fila</button>
+
+            <small id="exportHint" class="text-danger ms-3" style="display:none;">Ingrese fecha de emisión para exportar</small>
+          </div>
         </div>
-
-        <div class="action-buttons d-flex align-items-center" style="gap:24px;">
-          <button id="exportExcel" class="btn btn-primary btn-sm d-flex align-items-center" title="Exportar a Excel">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-file-earmark-excel me-2" viewBox="0 0 16 16"><path d="M5.884 6.68 4.52 9.5l1.364 2.82H3.54L2 9.5l1.54-2.82h1.344z"/><path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zM10.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5.5H10.5A1.5 1.5 0 0 1 9 4V3.5z"/></svg>
-            Exportar a Excel
-          </button>
-
-          <button id="addRow" class="btn btn-outline-secondary btn-sm" title="Agregar fila">Agregar fila</button>
-
-          <button id="deleteRow" class="btn btn-outline-danger btn-sm" title="Eliminar fila">Eliminar fila</button>
-        </div>
-
-        <small id="exportHint" class="text-danger ms-3" style="display:none;">Ingrese fecha de emisión para exportar</small>
       </div>
     </div>
   </div>
@@ -40,23 +46,21 @@
   <div class="card shadow-sm border-0">
     <div class="card-body p-3">
       <div class="table-responsive horizontal-scroll">
-        <table id="planillaTable" class="table table-hover table-sm align-middle mb-0" style="min-width:1600px">
+        <table id="planillaTable" class="table table-hover table-sm align-middle mb-0" style="min-width:1400px">
           <colgroup>
-            <col style="width:3%">
-            <col style="width:30%">
-            <col style="width:9%">
+            <col style="width:4%">
+            <col style="width:40%">
+            <col style="width:10%">
+            <col style="width:10%">
             <col style="width:7%">
+            <col style="width:9%">
             <col style="width:6%">
-            <col style="width:8%">
-            <col style="width:6%">
-            <col style="width:8%">
-            <col style="width:8%">
-            <col style="width:8%">
-            <col style="width:8%">
-            <col style="width:8%">
-            <col style="width:8%">
-            <col style="width:8%">
-            <col style="width:12%">
+            <col style="width:9%">
+            <col style="width:9%">
+            <col style="width:9%">
+            <col style="width:9%">
+            <col style="width:9%">
+            <col style="width:10%">
           </colgroup>
 
           <thead class="table-header-custom text-white">
@@ -74,9 +78,6 @@
               <th>Calculo del ISR</th>
               <th>Otras deducciones</th>
               <th>Total Deducciones</th>
-              <th>Líquido a recibir</th>
-              <th>Medio de pago (Banco) / Firma</th>
-              <th>Observaciones</th>
             </tr>
           </thead>
 
@@ -93,14 +94,14 @@
               <td>
                 <div class="money-inline">
                   <span class="money-prefix">Q</span>
-                  <input class="form-control bono" type="number" step="0.01" value="125.00" readonly>
+                  <input class="form-control num-cell bono" type="number" step="0.01" value="150.00" readonly>
                 </div>
               </td>
               <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="15"></td>
               <td>
                 <div class="money-inline">
                   <span class="money-prefix">Q</span>
-                  <input class="form-control num-cell comisiones" type="number" step="0.01" value="0.00">
+                  <input class="form-control num-cell comisiones" type="number" step="0.01" value="0">
                 </div>
               </td>
               <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
@@ -111,93 +112,44 @@
               <td>
                 <div class="money-inline">
                   <span class="money-prefix">Q</span>
-                  <input class="form-control num-cell otras" type="number" step="0.01" value="0.00">
+                  <input class="form-control num-cell otras" type="number" step="0.01" value="0">
                 </div>
               </td>
               <td class="text-end total-deducciones">Q 0.00</td>
-              <td class="text-end liquido">Q 0.00</td>
-              <td><input class="form-control medio-pago" type="text" value=""></td>
-              <td><input class="form-control observaciones" type="text" value=""></td>
             </tr>
 
             <tr data-row="2">
               <td>2</td>
               <td class="align-middle">IGDALIA ALIDA OCTAVI VELASQUEZ MALDONDO</td>
               <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell sueldo" type="number" step="0.01" value="3723.05"></div></td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control bono" type="number" step="0.01" value="125.00" readonly></div></td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell bono" type="number" step="0.01" value="150.00" readonly></div></td>
               <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="15"></td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="0.00"></div></td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="0"></div></td>
               <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
               <td class="text-end hextras">Q 0.00</td>
               <td class="text-end total-devengado">Q 0.00</td>
               <td class="text-end igss">Q 0.00</td>
               <td class="text-end isr-cell"></td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="0.00"></div></td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="0"></div></td>
               <td class="text-end total-deducciones">Q 0.00</td>
-              <td class="text-end liquido">Q 0.00</td>
-              <td><input class="form-control medio-pago" type="text" value=""></td>
-              <td><input class="form-control observaciones" type="text" value=""></td>
             </tr>
 
             <tr data-row="3">
               <td>3</td>
               <td class="align-middle">ANGEL ESTUARDO ESCOBAR VELÁSQUEZ</td>
               <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell sueldo" type="number" step="0.01" value="4500.00"></div></td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control bono" type="number" step="0.01" value="125.00" readonly></div></td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell bono" type="number" step="0.01" value="150.00" readonly></div></td>
               <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="15"></td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="0.00"></div></td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="0"></div></td>
               <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
               <td class="text-end hextras">Q 0.00</td>
               <td class="text-end total-devengado">Q 0.00</td>
               <td class="text-end igss">Q 0.00</td>
               <td class="text-end isr-cell"></td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="0.00"></div></td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="0"></div></td>
               <td class="text-end total-deducciones">Q 0.00</td>
-              <td class="text-end liquido">Q 0.00</td>
-              <td><input class="form-control medio-pago" type="text" value=""></td>
-              <td><input class="form-control observaciones" type="text" value=""></td>
-            </tr>
-
-            <tr data-row="4">
-              <td>4</td>
-              <td class="align-middle">LEONIDAS ANIBAL ESCOBAR PASCUAL</td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell sueldo" type="number" step="0.01" value="4500.00"></div></td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control bono" type="number" step="0.01" value="125.00" readonly></div></td>
-              <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="15"></td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="0.00"></div></td>
-              <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
-              <td class="text-end hextras">Q 0.00</td>
-              <td class="text-end total-devengado">Q 0.00</td>
-              <td class="text-end igss">Q 0.00</td>
-              <td class="text-end isr-cell"></td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="0.00"></div></td>
-              <td class="text-end total-deducciones">Q 0.00</td>
-              <td class="text-end liquido">Q 0.00</td>
-              <td><input class="form-control medio-pago" type="text" value=""></td>
-              <td><input class="form-control observaciones" type="text" value=""></td>
             </tr>
           </tbody>
-
-          <tfoot>
-            <tr class="table-header-custom" style="font-weight:700">
-              <td></td>
-              <td class="text-end">TOTALES</td>
-              <td id="total-sueldo" class="text-end">Q 0.00</td>
-              <td id="total-bono" class="text-end">Q 0.00</td>
-              <td id="total-dias" class="text-end"></td>
-              <td id="total-comisiones" class="text-end">Q 0.00</td>
-              <td id="total-horas" class="text-end">0</td>
-              <td id="total-hextras" class="text-end">Q 0.00</td>
-              <td id="total-devengado" class="text-end">Q 0.00</td>
-              <td id="total-igss" class="text-end">Q 0.00</td>
-              <td id="total-isr" class="text-end">Q 0.00</td>
-              <td id="total-otras" class="text-end">Q 0.00</td>
-              <td id="total-deducciones" class="text-end">Q 0.00</td>
-              <td id="total-liquido" class="text-end">Q 0.00</td>
-              <td></td>
-              <td></td>
-            </tr>
-          </tfoot>
         </table>
       </div>
     </div>
@@ -279,13 +231,12 @@ function recalcRow(tr) {
   tr.dataset._hextras = hextrasMonto;
 
   const totDedCell = tr.querySelector('.total-deducciones'); if (totDedCell) totDedCell.textContent = withQ(totalDeducciones);
-  const liquiCell = tr.querySelector('.liquido'); if (liquiCell) liquiCell.textContent = withQ(liquido);
 }
 
 /* Recalcula totales */
 function recalcTotals() {
   const rows = document.querySelectorAll('#planillaTable tbody tr');
-  let totals = {sueldo:0, bono:0, comisiones:0, horas:0, hextras:0, devengado:0, igss:0, isr:0, otras:0, deducciones:0, liquido:0};
+  let totals = {sueldo:0, bono:0, comisiones:0, horas:0, hextras:0, devengado:0, igss:0, isr:0, otras:0, deducciones:0};
   rows.forEach(tr => {
     const sueldo = parseFloat(tr.querySelector('input.sueldo')?.value) || 0;
     const bono = parseFloat(tr.querySelector('input.bono')?.value) || 0;
@@ -299,7 +250,6 @@ function recalcTotals() {
     const igss = round2(sueldo * IGSS_RATE);
     const isrMensual = parseFloat(tr.dataset._isrValue) || 0;
     const totalDeducciones = round2(igss + isrMensual + otras);
-    const liquido = round2(totalDevengado - totalDeducciones);
 
     totals.sueldo += sueldo;
     totals.bono += bono;
@@ -311,7 +261,6 @@ function recalcTotals() {
     totals.isr += isrMensual;
     totals.otras += otras;
     totals.deducciones += totalDeducciones;
-    totals.liquido += liquido;
   });
 
   if (document.getElementById('total-sueldo')) document.getElementById('total-sueldo').textContent = withQ(totals.sueldo);
@@ -325,7 +274,6 @@ function recalcTotals() {
   if (document.getElementById('total-isr')) document.getElementById('total-isr').textContent = withQ(totals.isr);
   if (document.getElementById('total-otras')) document.getElementById('total-otras').textContent = withQ(totals.otras);
   if (document.getElementById('total-deducciones')) document.getElementById('total-deducciones').textContent = withQ(totals.deducciones);
-  if (document.getElementById('total-liquido')) document.getElementById('total-liquido').textContent = withQ(totals.liquido);
 }
 
 /* Serializar tabla para localStorage */
@@ -339,11 +287,9 @@ function serializeTable() {
     const comisiones = parseFloat(tr.querySelector('input.comisiones')?.value ?? 0) || 0;
     const horas = parseInt(tr.querySelector('input.horas')?.value ?? 0) || 0;
     const otras = parseFloat(tr.querySelector('input.otras')?.value ?? 0) || 0;
-    const medioPago = tr.querySelector('input.medio-pago')?.value ?? '';
-    const observ = tr.querySelector('input.observaciones')?.value ?? '';
     const hextras = parseFloat(tr.dataset._hextras) || 0;
     const isr = parseFloat(tr.dataset._isrValue) || 0;
-    rows.push({ nombre, sueldo, bono, dias, comisiones, horas, otras, medioPago, observ, hextras, isr });
+    rows.push({ nombre, sueldo, bono, dias, comisiones, horas, otras, hextras, isr });
   });
   const meta = { saved_at: new Date().toISOString(), planillaName: document.getElementById('planillaName')?.value ?? '', emisionDate: document.getElementById('emisionDate')?.value ?? '' };
   return { rows, meta };
@@ -363,7 +309,7 @@ function restoreTable(data) {
       <td>${idx}</td>
       <td class="align-middle"><input class="form-control form-control-sm nombre" type="text" value="${escapeHtml(r.nombre || '')}"></td>
       <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell sueldo" type="number" step="0.01" value="${Number(r.sueldo||0).toFixed(2)}"></div></td>
-      <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control bono" type="number" step="0.01" value="${Number(r.bono||125).toFixed(2)}" readonly></div></td>
+      <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell bono" type="number" step="0.01" value="${Number(r.bono||150).toFixed(2)}" readonly></div></td>
       <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="${Number(r.dias||15)}"></td>
       <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="${Number(r.comisiones||0).toFixed(2)}"></div></td>
       <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="${Number(r.horas||0)}"></td>
@@ -373,9 +319,6 @@ function restoreTable(data) {
       <td class="text-end isr-cell">${r.isr && r.isr>0 ? 'Q ' + Number(r.isr).toFixed(2) : ''}</td>
       <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="${Number(r.otras||0).toFixed(2)}"></div></td>
       <td class="text-end total-deducciones">Q 0.00</td>
-      <td class="text-end liquido">Q 0.00</td>
-      <td><input class="form-control medio-pago" type="text" value="${escapeHtml(r.medioPago||'')}"></td>
-      <td><input class="form-control observaciones" type="text" value="${escapeHtml(r.observ||'')}"></td>
     `;
     tr.dataset._hextras = Number(r.hextras||0);
     tr.dataset._isrValue = Number(r.isr||0);
@@ -424,7 +367,7 @@ function escapeHtml(str) {
 /* Delegated listener para inputs: recalcula y guarda */
 document.addEventListener('input', (e) => {
   if (!e.target.classList) return;
-  if (e.target.classList.contains('num-cell') || e.target.classList.contains('nombre') || e.target.classList.contains('medio-pago') || e.target.classList.contains('observaciones')) {
+  if (e.target.classList.contains('num-cell') || e.target.classList.contains('nombre')) {
     const tr = e.target.closest('tr');
     if (tr) recalcRow(tr);
     recalcTotals();
@@ -437,7 +380,7 @@ function initBonosYDias() {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
     const bonoInp = tr.querySelector('input.bono');
     if (bonoInp) {
-      bonoInp.value = 125.00;
+      bonoInp.value = 150.00;
       bonoInp.setAttribute('readonly', 'readonly');
       bonoInp.classList.remove('num-cell');
     }
@@ -465,14 +408,14 @@ function createRowHtml(index) {
     <td>
       <div class="money-inline">
         <span class="money-prefix">Q</span>
-        <input class="form-control bono" type="number" step="0.01" value="125.00" readonly>
+        <input class="form-control num-cell bono" type="number" step="0.01" value="150.00" readonly>
       </div>
     </td>
     <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="15"></td>
     <td>
       <div class="money-inline">
         <span class="money-prefix">Q</span>
-        <input class="form-control num-cell comisiones" type="number" step="0.01" value="0.00">
+        <input class="form-control num-cell comisiones" type="number" step="0.01" value="0">
       </div>
     </td>
     <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
@@ -483,13 +426,10 @@ function createRowHtml(index) {
     <td>
       <div class="money-inline">
         <span class="money-prefix">Q</span>
-        <input class="form-control num-cell otras" type="number" step="0.01" value="0.00">
+        <input class="form-control num-cell otras" type="number" step="0.01" value="0">
       </div>
     </td>
     <td class="text-end total-deducciones">Q 0.00</td>
-    <td class="text-end liquido">Q 0.00</td>
-    <td><input class="form-control medio-pago" type="text" value=""></td>
-    <td><input class="form-control observaciones" type="text" value=""></td>
   `;
 }
 
@@ -504,12 +444,12 @@ document.addEventListener('blur', (e) => {
   }
 }, true);
 
-/* Protección adicional para garantizar bono=125 y dias=15 en todas las filas */
+/* Protección adicional para garantizar bono fijo y dias por defecto en todas las filas */
 function enforceFixedFieldsOnAllRows() {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
     const bonoInp = tr.querySelector('input.bono');
     if (bonoInp) {
-      bonoInp.value = 125.00;
+      bonoInp.value = 150.00;
       bonoInp.setAttribute('readonly', 'readonly');
     }
     const diasInp = tr.querySelector('input.dias');
@@ -531,7 +471,7 @@ document.getElementById('addRow').addEventListener('click', () => {
 
   const bonoInp = tr.querySelector('input.bono');
   if (bonoInp) {
-    bonoInp.value = 125.00;
+    bonoInp.value = 150.00;
     bonoInp.setAttribute('readonly', 'readonly');
   }
   const diasInp = tr.querySelector('input.dias');
@@ -553,9 +493,8 @@ document.getElementById('deleteRow').addEventListener('click', () => {
 });
 
 /* Export to Excel (.xlsx): requiere fecha de emisión
-   Cambios realizados: colores y bordes en headers y fila de totales, ajustes de ancho,
-   importante: EL NOMBRE DE LA PLANILLA Y LA FECHA DE EMISIÓN NO se agregan dentro de la hoja — solo se usan para el NOMBRE DEL ARCHIVO.
-   Sólo se modificó esta parte para mejorar la apariencia al exportar.
+   IMPORTANT: planillaName y emisionDate are used ONLY for filename.
+   They are NOT added into the sheet content per your request.
 */
 document.getElementById('exportExcel').addEventListener('click', () => {
   const dateInput = document.getElementById('emisionDate').value;
@@ -567,7 +506,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
   }
   if (exportHint) exportHint.style.display = 'none';
 
-  // Clonar tabla y reemplazar inputs por texto (valor actual)
+  // Clone table and replace inputs by their current values
   const table = document.getElementById('planillaTable');
   const clone = table.cloneNode(true);
   clone.querySelectorAll('input').forEach(inp => {
@@ -575,7 +514,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     parent.replaceChild(document.createTextNode(inp.value), inp);
   });
 
-  // Limpiar texto Q y comas, convertir a números donde corresponde
+  // Clean "Q " and commas and convert numeric-looking cells to numbers
   clone.querySelectorAll('td, th').forEach(cell => {
     let txt = (cell.textContent || '').replace(/\u00A0/g, ' ').trim();
     if (txt === '') return;
@@ -585,10 +524,10 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     else cell.textContent = txt;
   });
 
-  // Crear sheet desde tabla limpia
+  // Create sheet from cleaned table
   const ws = XLSX.utils.table_to_sheet(clone, {raw:true});
 
-  // Ajustar anchos de columna para mejor presentación (en caracteres aproximados)
+  // Adjust column widths for presentation
   ws['!cols'] = [
     { wch: 6 },   // No.
     { wch: 40 },  // Apellido, Nombre
@@ -602,79 +541,35 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     { wch: 16 },  // Calculo del IGSS
     { wch: 16 },  // Calculo del ISR
     { wch: 16 },  // Otras deducciones
-    { wch: 18 },  // Total Deducciones
-    { wch: 18 },  // Líquido a recibir
-    { wch: 20 },  // Medio de pago
-    { wch: 24 }   // Observaciones
+    { wch: 18 }   // Total Deducciones
   ];
 
-  // Estilos: header (row 1), totals row (detectar "TOTALES"), y bordes para todas las celdas
-  const range = XLSX.utils.decode_range(ws['!ref']);
-  const headerRowIndex = range.s.r;
-  const maxCol = range.e.c;
-
-  for (let c = range.s.c; c <= maxCol; c++) {
-    const cellAddr = XLSX.utils.encode_cell({ c: c, r: headerRowIndex });
-    if (!ws[cellAddr]) continue;
-    ws[cellAddr].s = ws[cellAddr].s || {};
-    ws[cellAddr].s.fill = { patternType: "solid", fgColor: { rgb: "0EA5A4" } };
-    ws[cellAddr].s.font = { name: "Calibri", sz: 11, bold: true, color: { rgb: "FFFFFF" } };
-    ws[cellAddr].s.alignment = { vertical: "center", horizontal: "center" };
-    ws[cellAddr].s.border = {
-      top: { style: "thin", color: { rgb: "BFDCE3" } },
-      bottom: { style: "thin", color: { rgb: "BFDCE3" } },
-      left: { style: "thin", color: { rgb: "BFDCE3" } },
-      right: { style: "thin", color: { rgb: "BFDCE3" } }
-    };
-  }
-
-  // Find totals row by scanning for the cell that contains 'TOTALES' in column B (c=1) below header
-  let totalsRow = null;
-  for (let r = headerRowIndex + 1; r <= range.e.r; r++) {
-    const cellB = XLSX.utils.encode_cell({r, c: 1});
-    if (ws[cellB] && String(ws[cellB].v).toUpperCase().includes('TOTALES')) {
-      totalsRow = r;
-      break;
-    }
-  }
-  if (totalsRow === null) totalsRow = range.e.r;
-
-  for (let c = range.s.c; c <= maxCol; c++) {
-    const addr = XLSX.utils.encode_cell({r: totalsRow, c});
-    if (!ws[addr]) continue;
-    ws[addr].s = ws[addr].s || {};
-    ws[addr].s.fill = { patternType: "solid", fgColor: { rgb: "035E59" } };
-    ws[addr].s.font = { name: "Calibri", sz: 11, bold: true, color: { rgb: "FFFFFF" } };
-    ws[addr].s.alignment = { vertical: "center", horizontal: (c < 2 ? "left" : "right") };
-    ws[addr].s.border = {
-      top: { style: "medium", color: { rgb: "0B7285" } },
-      bottom: { style: "medium", color: { rgb: "0B7285" } },
-      left: { style: "thin", color: { rgb: "BFDCE3" } },
-      right: { style: "thin", color: { rgb: "BFDCE3" } }
-    };
-  }
-
-  // Apply thin borders to all data cells for better separation
-  for (let R = headerRowIndex; R <= range.e.r; ++R) {
-    for (let C = range.s.c; C <= maxCol; ++C) {
-      const addr = XLSX.utils.encode_cell({r:R,c:C});
-      if (!ws[addr]) continue;
-      ws[addr].s = ws[addr].s || {};
-      ws[addr].s.border = ws[addr].s.border || {
-        top: { style: "thin", color: { rgb: "E6EEF6" } },
-        bottom: { style: "thin", color: { rgb: "E6EEF6" } },
-        left: { style: "thin", color: { rgb: "E6EEF6" } },
-        right: { style: "thin", color: { rgb: "E6EEF6" } }
+  // Apply simple header and totals styling where possible (optional)
+  try {
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    const headerRowIndex = range.s.r;
+    const maxCol = range.e.c;
+    for (let c = range.s.c; c <= maxCol; c++) {
+      const cellAddr = XLSX.utils.encode_cell({ c: c, r: headerRowIndex });
+      if (!ws[cellAddr]) continue;
+      ws[cellAddr].s = ws[cellAddr].s || {};
+      ws[cellAddr].s.fill = { patternType: "solid", fgColor: { rgb: "0EA5A4" } };
+      ws[cellAddr].s.font = { name: "Calibri", sz: 11, bold: true, color: { rgb: "FFFFFF" } };
+      ws[cellAddr].s.alignment = { vertical: "center", horizontal: "center" };
+      ws[cellAddr].s.border = {
+        top: { style: "thin", color: { rgb: "BFDCE3" } },
+        bottom: { style: "thin", color: { rgb: "BFDCE3" } },
+        left: { style: "thin", color: { rgb: "BFDCE3" } },
+        right: { style: "thin", color: { rgb: "BFDCE3" } }
       };
     }
+  } catch (e) {
+    // non-fatal: styling optional
+    console.warn('Sheet styling skipped', e);
   }
 
-  // IMPORTANT: Do NOT add planillaName or emisionDate into the sheet. They are used only for the filename.
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Planilla");
-
-  wb.Workbook = wb.Workbook || {};
-  wb.Workbook.Views = wb.Workbook.Views || [{ RTL: false }];
 
   const safeName = planillaName.replace(/[^a-z0-9_\- ]/gi,'').replace(/\s+/g,'_');
   const filename = `${safeName}_${dateInput}.xlsx`;
@@ -758,8 +653,8 @@ document.addEventListener('DOMContentLoaded', () => {
     --planilla-cell-horizontal-padding: 1.5rem;
     --planilla-input-min-height: 52px;
     --planilla-input-font-size: 1.03rem;
-    --planilla-money-min-width: 200px;
-    --planilla-name-col-min-width: 320px;
+    --planilla-money-min-width: 225px;
+    --planilla-name-col-min-width: 360px;
   }
 
   body { background: linear-gradient(180deg,var(--bg-grad-start) 0%, var(--bg-grad-end) 100%); }
@@ -771,8 +666,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   .btn-primary { background: linear-gradient(90deg,var(--accent1),var(--accent2)); border: none; box-shadow: 0 6px 20px rgba(11,114,133,0.08); }
   .btn-outline-secondary { border-radius:.45rem; }
+  .btn-outline-danger { border-radius:.45rem; }
   .table-header-custom { background: linear-gradient(90deg,#0ea5a4,#036b6a); }
   .table-header-custom th { color:#fff; border:0; font-weight:700; padding:.9rem 1rem; }
+
+  /* Controls spacing */
+  .controls .control-field { min-width: 240px; }
+  .action-row { align-items: center; }
 
   table.table { border-collapse: separate; border-spacing:0; border-radius:.6rem; overflow:hidden; box-shadow: 0 1px 2px rgba(15,23,42,0.04); width:100%; }
   table.table td, table.table th {
@@ -839,7 +739,6 @@ document.addEventListener('DOMContentLoaded', () => {
   #planillaTable td.total-devengado,
   #planillaTable td.igss,
   #planillaTable td.total-deducciones,
-  #planillaTable td.liquido,
   #planillaTable td.isr-cell,
   #planillaTable tfoot td {
     text-align: right;
@@ -858,22 +757,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   @media (max-width: 1000px) {
     :root {
-      --planilla-money-min-width: 150px;
+      --planilla-money-min-width: 165px;
       --planilla-input-min-height: 48px;
       --planilla-cell-horizontal-padding: 1.2rem;
-      --planilla-name-col-min-width: 260px;
+      --planilla-name-col-min-width: 265px;
     }
-    #planillaTable { min-width: 1400px; }
+    #planillaTable { min-width: 1220px; }
   }
 
   @media (max-width: 576px) {
     :root {
-      --planilla-money-min-width: 120px;
+      --planilla-money-min-width: 130px;
       --planilla-input-min-height: 50px;
       --planilla-cell-horizontal-padding: 1.0rem;
-      --planilla-name-col-min-width: 200px;
+      --planilla-name-col-min-width: 210px;
     }
-    #planillaTable { min-width: 1100px; }
+    #planillaTable { min-width: 1030px; }
   }
 
 table.table {
