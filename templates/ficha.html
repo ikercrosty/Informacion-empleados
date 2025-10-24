@@ -842,6 +842,18 @@ label.form-label { display:block; font-weight:700; color:#0b2733; margin-bottom:
   .firma-item { min-width: var(--firma-line-width) !important; }
   .firma-line { background-color: #000 !important; height: 2px !important; width: 220px !important; }
 
+  /* Forzar que las líneas de firma sean visibles en impresión */
+.firma-line {
+  background-color: transparent !important;
+  height: 0 !important;
+  border-bottom: 2px solid #000 !important; /* línea negra imprimible */
+  box-shadow: none !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+.firma-item { page-break-inside: avoid !important; break-inside: avoid !important; }
+.firmas-row { display:flex !important; gap: 3.5rem !important; justify-content: flex-start !important; }
+
   /* If a ficha-section is taller than printable page, browser will still paginate it; reduce layout or split manually in that case. */
 }
 </style>
