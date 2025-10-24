@@ -10,17 +10,29 @@
         <div class="text-muted small mt-1">Empresa: EMPAQUES Y TEXTURAS DE GUATEMALA, SOCIEDAD ANÓNIMA</div>
       </div>
 
-      <div class="d-flex flex-wrap align-items-center gap-2">
-        <h6>Ingrese nombre para el documento: </h6><input id="planillaName" class="form-control form-control-sm" type="text" value="Planilla " style="min-width:240px" />
-        <br>
-        <h6>Ingrese fecha de emisión del documento: </h6><input id="emisionDate" class="form-control form-control-sm" type="date" />
-        <button id="exportExcel" class="btn btn-primary btn-sm d-flex align-items-center" title="Exportar a Excel">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-file-earmark-excel me-2" viewBox="0 0 16 16"><path d="M5.884 6.68 4.52 9.5l1.364 2.82H3.54L2 9.5l1.54-2.82h1.344z"/><path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zM10.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5.5H10.5A1.5 1.5 0 0 1 9 4V3.5z"/></svg>
-          Exportar a Excel
-        </button>
-        <button id="addRow" class="btn btn-outline-secondary btn-sm" title="Agregar fila">Agregar fila</button>
-        <button id="deleteRow" class="btn btn-outline-danger btn-sm" title="Eliminar fila">Eliminar fila</button>
-        <small id="exportHint" class="text-danger" style="display:none; margin-left:.5rem;">Ingrese fecha de emisión para exportar</small>
+      <div class="controls d-flex flex-wrap align-items-center">
+        <div class="me-4">
+          <h6 class="mb-1">Ingrese nombre para el documento</h6>
+          <input id="planillaName" class="form-control form-control-sm" type="text" value="Planilla " style="min-width:240px" />
+        </div>
+
+        <div class="me-4">
+          <h6 class="mb-1">Ingrese fecha de emisión del documento</h6>
+          <input id="emisionDate" class="form-control form-control-sm" type="date" />
+        </div>
+
+        <div class="action-buttons d-flex align-items-center" style="gap:16px;">
+          <button id="exportExcel" class="btn btn-primary btn-sm d-flex align-items-center" title="Exportar a Excel">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-file-earmark-excel me-2" viewBox="0 0 16 16"><path d="M5.884 6.68 4.52 9.5l1.364 2.82H3.54L2 9.5l1.54-2.82h1.344z"/><path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zM10.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5.5H10.5A1.5 1.5 0 0 1 9 4V3.5z"/></svg>
+            Exportar a Excel
+          </button>
+
+          <button id="addRow" class="btn btn-outline-secondary btn-sm" title="Agregar fila">Agregar fila</button>
+
+          <button id="deleteRow" class="btn btn-outline-danger btn-sm" title="Eliminar fila">Eliminar fila</button>
+        </div>
+
+        <small id="exportHint" class="text-danger ms-3" style="display:none;">Ingrese fecha de emisión para exportar</small>
       </div>
     </div>
   </div>
@@ -552,8 +564,7 @@ document.getElementById('deleteRow').addEventListener('click', () => {
 });
 
 /* Export to Excel (.xlsx): requiere fecha de emisión
-   Mejoras: fija anchos de columnas, aplica estilo al header y fila de totales (color de fondo, fuentes blancas en header, blanco sobre verde oscuro en totales),
-   aplica bordes a las celdas para mejor apariencia.
+   Mejoras solicitadas: título y fecha arriba de la tabla, colores en encabezado y fila de totales, y bordes.
    Sólo se modificó esta parte para mejorar la apariencia al exportar.
 */
 document.getElementById('exportExcel').addEventListener('click', () => {
@@ -607,19 +618,19 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     { wch: 24 }   // Observaciones
   ];
 
-  // Estilos: header (row 1 of table_to_sheet output), totals row (last row), and borders for all used cells.
-  // Note: .s style property works with the included SheetJS release in many Excel readers.
+  // Estilos: header, totals row, and borders
   const range = XLSX.utils.decode_range(ws['!ref']);
-  const headerRowIndex = range.s.r; // starting row index of table
-  // Apply header style
-  for (let c = range.s.c; c <= range.e.c; c++) {
-    const addr = XLSX.utils.encode_cell({r: headerRowIndex, c});
-    if (!ws[addr]) continue;
-    ws[addr].s = ws[addr].s || {};
-    ws[addr].s.fill = { patternType: "solid", fgColor: { rgb: "0EA5A4" } };
-    ws[addr].s.font = { name: "Calibri", sz: 11, bold: true, color: { rgb: "FFFFFF" } };
-    ws[addr].s.alignment = { vertical: "center", horizontal: "center" };
-    ws[addr].s.border = {
+  const headerRowIndex = range.s.r;
+  const maxCol = range.e.c;
+
+  for (let c = range.s.c; c <= maxCol; c++) {
+    const cellAddr = XLSX.utils.encode_cell({ c: c, r: headerRowIndex });
+    if (!ws[cellAddr]) continue;
+    ws[cellAddr].s = ws[cellAddr].s || {};
+    ws[cellAddr].s.fill = { patternType: "solid", fgColor: { rgb: "0EA5A4" } };
+    ws[cellAddr].s.font = { name: "Calibri", sz: 11, bold: true, color: { rgb: "FFFFFF" } };
+    ws[cellAddr].s.alignment = { vertical: "center", horizontal: "center" };
+    ws[cellAddr].s.border = {
       top: { style: "thin", color: { rgb: "BFDCE3" } },
       bottom: { style: "thin", color: { rgb: "BFDCE3" } },
       left: { style: "thin", color: { rgb: "BFDCE3" } },
@@ -627,7 +638,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     };
   }
 
-  // Find totals row by scanning for the cell that contains 'TOTALES' in column B (c=1) below header
+  // Find totals row by scanning for 'TOTALES' in column B
   let totalsRow = null;
   for (let r = headerRowIndex + 1; r <= range.e.r; r++) {
     const cellB = XLSX.utils.encode_cell({r, c: 1});
@@ -636,11 +647,9 @@ document.getElementById('exportExcel').addEventListener('click', () => {
       break;
     }
   }
-  // If not found, assume last row
   if (totalsRow === null) totalsRow = range.e.r;
 
-  // Apply totals row style (darker background, white bold text)
-  for (let c = range.s.c; c <= range.e.c; c++) {
+  for (let c = range.s.c; c <= maxCol; c++) {
     const addr = XLSX.utils.encode_cell({r: totalsRow, c});
     if (!ws[addr]) continue;
     ws[addr].s = ws[addr].s || {};
@@ -655,9 +664,9 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     };
   }
 
-  // Apply thin borders to all data cells for better separation
+  // Borders for all cells
   for (let R = headerRowIndex; R <= range.e.r; ++R) {
-    for (let C = range.s.c; C <= range.e.c; ++C) {
+    for (let C = range.s.c; C <= maxCol; ++C) {
       const addr = XLSX.utils.encode_cell({r:R,c:C});
       if (!ws[addr]) continue;
       ws[addr].s = ws[addr].s || {};
@@ -670,20 +679,25 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     }
   }
 
-  // Add document title and date above the table
-  XLSX.utils.sheet_add_aoa(ws, [[planillaName]], {origin: "A1"});
-  XLSX.utils.sheet_add_aoa(ws, [[`Fecha de emisión:`, dateInput]], {origin: "A2"});
+  // Add document title and date above the table (A1 and A2)
+  ws['A1'] = ws['A1'] || {};
+  ws['A1'].v = planillaName;
+  ws['A1'].s = ws['A1'].s || {};
+  ws['A1'].s.font = { name: "Calibri", sz: 14, bold: true, color: { rgb: "0B7285" } };
+  ws['A1'].s.alignment = { vertical: "center", horizontal: "left" };
 
-  // Shift data down by 3 rows visually is handled by adding A1 and A2 - consumers will see header starting lower.
-  // Prepare workbook
+  ws['A2'] = ws['A2'] || {};
+  ws['A2'].v = `Fecha de emisión: ${dateInput}`;
+  ws['A2'].s = ws['A2'].s || {};
+  ws['A2'].s.font = { name: "Calibri", sz: 11, color: { rgb: "374151" } };
+  ws['A2'].s.alignment = { vertical: "center", horizontal: "left" };
+
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Planilla");
 
-  // Workbook view settings (printing orientation and margins are reader-dependent)
   wb.Workbook = wb.Workbook || {};
   wb.Workbook.Views = wb.Workbook.Views || [{ RTL: false }];
 
-  // Write file
   const safeName = planillaName.replace(/[^a-z0-9_\- ]/gi,'').replace(/\s+/g,'_');
   const filename = `${safeName}_${dateInput}.xlsx`;
   XLSX.writeFile(wb, filename);
