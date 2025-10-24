@@ -393,7 +393,7 @@ def laboral():
             `Numero de DPI`, `Nombre`, `Apellidos`,
             `Nombre de la Empresa (Ultimo Trabajo)`, `Direccion de la empresa`,
             `Inicio laboral en la empresa`, `Fin Laboral en la empresa`, `Motivo del retiro`,
-            `Nombre del Jefe Imediato`
+            `Nombre del Jefe Imediato`, `Numero del Jefe inmediato`
         FROM empleados_info
     """)
     empleados = cursor.fetchall()
@@ -768,6 +768,7 @@ def guardar_laboral():
     fin = data.get("Fin Laboral en la empresa")
     motivo = data.get("Motivo del retiro")
     jefe = data.get("Nombre del Jefe Imediato")
+    jefnum = data.get ("Numero del Jefe inmediato")
     nuevo = data.get("nuevo", False)
 
     try:
@@ -779,9 +780,9 @@ def guardar_laboral():
             cursor.execute("""
                 INSERT INTO empleados_info (
                     `Numero de DPI`, `Nombre de la Empresa (Ultimo Trabajo)`, `Direccion de la empresa`,
-                    `Inicio laboral en la empresa`, `Fin Laboral en la empresa`, `Motivo del retiro`, `Nombre del Jefe Imediato`
-                ) VALUES (%s,%s,%s,%s,%s,%s,%s)
-            """, (dpi, empresa, direccion, inicio, fin, motivo, jefe))
+                    `Inicio laboral en la empresa`, `Fin Laboral en la empresa`, `Motivo del retiro`, `Nombre del Jefe Imediato`, `Numero del Jefe inmediato`
+                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+            """, (dpi, empresa, direccion, inicio, fin, motivo, jefe, jefnum))
             mensaje = "Registro laboral agregado correctamente"
         else:
             if existe:
@@ -789,17 +790,17 @@ def guardar_laboral():
                     UPDATE empleados_info
                     SET `Nombre de la Empresa (Ultimo Trabajo)`=%s, `Direccion de la empresa`=%s,
                         `Inicio laboral en la empresa`=%s, `Fin Laboral en la empresa`=%s,
-                        `Motivo del retiro`=%s, `Nombre del Jefe Imediato`=%s
+                        `Motivo del retiro`=%s, `Nombre del Jefe Imediato`=%s, `Numero del Jefe inmediato`=%s
                     WHERE `Numero de DPI`=%s
-                """, (empresa, direccion, inicio, fin, motivo, jefe, dpi))
+                """, (empresa, direccion, inicio, fin, motivo, jefe, jefnum, dpi))
                 mensaje = "Registro laboral actualizado correctamente"
             else:
                 cursor.execute("""
                     INSERT INTO empleados_info (
                         `Numero de DPI`, `Nombre de la Empresa (Ultimo Trabajo)`, `Direccion de la empresa`,
-                        `Inicio laboral en la empresa`, `Fin Laboral en la empresa`, `Motivo del retiro`, `Nombre del Jefe Imediato`
-                    ) VALUES (%s,%s,%s,%s,%s,%s,%s)
-                """, (dpi, empresa, direccion, inicio, fin, motivo, jefe))
+                        `Inicio laboral en la empresa`, `Fin Laboral en la empresa`, `Motivo del retiro`, `Nombre del Jefe Imediato`, `Numero del Jefe inmediato `
+                    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                """, (dpi, empresa, direccion, inicio, fin, motivo, jefe, jefnum))
                 mensaje = "Registro laboral agregado correctamente"
 
         conn.commit()

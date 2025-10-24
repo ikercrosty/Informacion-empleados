@@ -20,7 +20,7 @@
       <tr>
         <th>DPI</th><th>Nombre</th><th>Apellidos</th>
         <th>Nombre Empresa</th><th>Dirección Empresa</th><th>Inicio en la empresa</th>
-        <th>Fin en la empresa</th><th>Motivo del retiro</th><th>Nombre del jefe inmediato</th>
+        <th>Fin en la empresa</th><th>Motivo del retiro</th><th>Nombre del jefe inmediato</th><th>Numero del jefe inmediato</th>
       </tr>
     </thead>
     <tbody>
@@ -35,6 +35,7 @@
         <td>{{ e.get('Fin Laboral en la empresa')|default('') }}</td>
         <td>{{ e.get('Motivo del retiro')|default('') }}</td>
         <td>{{ e.get('Nombre del Jefe Imediato')|default('') }}</td>
+        <td>{{ e.get('Numero del Jefe inmediato')|default('') }}</td>
       </tr>
       {% endfor %}
     </tbody>
@@ -45,13 +46,13 @@
 (function waitRegister(){
   const meta = {
     id: 'tablaLaboral',
-    cols: 9,
+    cols: 10,
     endpoint: '/guardar_laboral',
     campos: [
       "Numero de DPI","Nombre","Apellidos",
       "Nombre de la Empresa (Ultimo Trabajo)","Direccion de la empresa",
       "Inicio laboral en la empresa","Fin Laboral en la empresa",
-      "Motivo del retiro","Nombre del Jefe Imediato"
+      "Motivo del retiro","Nombre del Jefe Imediato","Numero del Jefe inmediato"
     ],
     bloqueadas: [0,1,2]
   };

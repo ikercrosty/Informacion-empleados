@@ -265,29 +265,36 @@
       <!-- REFERENCIAS LABORALES -->
       <div class="ficha-section">
         <h5 class="mb-3">REFERENCIAS LABORALES (Último empleo)</h5>
-        <div class="table-responsive">
-          <table class="table table-sm table-borderless">
-            <thead>
-              <tr>
-                <th>Nombre Empresa</th>
-                <th>Dirección Empresa</th>
-                <th>Inicio en la empresa</th>
-                <th>Fin en la empresa</th>
-                <th>Motivo del retiro</th>
-                <th>Nombre del jefe inmediato</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td id="ref_nombre_empresa">{{ e.get('Nombre Empresa') if e else '' }}</td>
-                <td id="ref_direccion_empresa">{{ e.get('Dirección Empresa') if e else '' }}</td>
-                <td id="ref_inicio_empresa">{{ e.get('Inicio en la empresa') if e else '' }}</td>
-                <td id="ref_fin_empresa">{{ e.get('Fin en la empresa') if e else '' }}</td>
-                <td id="ref_motivo_retiro">{{ e.get('Motivo del retiro') if e else '' }}</td>
-                <td id="ref_nombre_jefe">{{ e.get('Nombre del jefe inmediato') if e else '' }}</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="row g-3">
+          <div class = "col-md-3"> 
+            <label class="form-label">Nombre Empresa </label>
+            <input id = "nombre_de_la_empresa_ultimo_trabajo" value = "{{ e.get('Nombre de la Empresa (Ultimo Trabajo)') if e else '' }}" class="form-control-sm" readonly >
+          </div>
+          <div class = "col-md-3"> 
+            <label class="form-label">Direccion Empresa </label>
+            <input id = "direccion_empresa" value = "{{ e.get('Direccion de la empresa') if e else '' }}" class="form-control-sm" readonly >
+          </div>
+          <div class = "col-md-3"> 
+            <label class="form-label">Inicio en la empresa </label>
+            <input id = "inicio_en_la_empresa" value = "{{ e.get('Inicio laboral en la empresa') if e else '' }}" class="form-control-sm" readonly >
+          </div>
+
+          <div class = "col-md-3"> 
+            <label class="form-label">Fin en la empresa </label>
+            <input id = "fin_en_la_empresa" value = "{{ e.get('Fin Laboral en la empresa') if e else '' }}" class="form-control-sm" readonly >
+          </div>
+         <div class = "col-md-3"> 
+            <label class="form-label">Motivo del retiro </label>
+            <input id = "motivo_del_retiro" value = "{{ e.get('Motivo del retiro') if e else '' }}" class="form-control-sm" readonly >
+          </div>
+          <div class = "col-md-3"> 
+            <label class="form-label"> Nombre del Jefe inmediato </label>
+            <input id = "nombre_del_jefe_inmediato" value = "{{ e.get('Nombre del Jefe Imediato') if e else '' }}" class="form-control-sm" readonly >
+          </div>
+          <div class = "col-md-3"> 
+            <label class="form-label">Número telefónico del Jefe Inmediato </label>
+            <input id = "" value = "{{ e.get('Numero del Jefe inmediato') if e else '' }}" class="form-control-sm" readonly >
+          </div>
         </div>
       </div>
 
