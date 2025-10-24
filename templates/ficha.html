@@ -826,8 +826,20 @@ label.form-label { display:block; font-weight:700; color:#0b2733; margin-bottom:
     -webkit-column-break-inside: avoid !important;
   }
 
-  /* Ensure signature lines print as solid black and remain side-by-side when space allows */
-  .firmas-row { display:flex !important; gap: 3.5rem !important; justify-content: flex-start !important; }
+  /* Ensure signature lines print as solid black and remain side-by-side and centered on the page.
+     Push the signature block lower on the printed page so it is not near the last info section. */
+  .firmas-row {
+    display:flex !important;
+    gap: 3.5rem !important;
+    justify-content: center !important;
+    align-items: flex-end !important;
+    margin-top: 30mm !important; /* move signatures further down in print */
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    -webkit-column-break-inside: avoid !important;
+    flex-wrap: nowrap !important; /* keep them on the same line when space allows */
+  }
+  .firma-item { min-width: var(--firma-line-width) !important; }
   .firma-line { background-color: #000 !important; height: 2px !important; width: 220px !important; }
 
   /* If a ficha-section is taller than printable page, browser will still paginate it; reduce layout or split manually in that case. */
