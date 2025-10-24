@@ -28,21 +28,22 @@
   <div class="card shadow-sm border-0">
     <div class="card-body p-3">
       <div class="table-responsive horizontal-scroll">
-        <table id="planillaTable" class="table table-hover table-sm align-middle mb-0" style="min-width:1400px">
+        <table id="planillaTable" class="table table-hover table-sm align-middle mb-0" style="min-width:1600px">
           <colgroup>
-            <col style="width:4%">
-            <col style="width:40%">
-            <col style="width:10%">
-            <col style="width:10%">
-            <col style="width:7%">
+            <col style="width:3%">
+            <col style="width:30%">
             <col style="width:9%">
+            <col style="width:8%">
             <col style="width:6%">
-            <col style="width:9%">
-            <col style="width:9%">
-            <col style="width:9%">
-            <col style="width:9%">
-            <col style="width:9%">
-            <col style="width:10%">
+            <col style="width:8%">
+            <col style="width:6%">
+            <col style="width:8%">
+            <col style="width:8%">
+            <col style="width:8%">
+            <col style="width:8%">
+            <col style="width:8%">
+            <col style="width:8%">
+            <col style="width:12%">
           </colgroup>
 
           <thead class="table-header-custom text-white">
@@ -56,14 +57,16 @@
               <th>Horas extra</th>
               <th>Horas Extras (monto)</th>
               <th>Total Devengado</th>
-              <th>Calculo del IGGS </th>
+              <th>Calculo del IGSS</th>
               <th>Calculo del ISR</th>
               <th>Otras deducciones</th>
-              <th>Total Deducciones</th>
+              <th>Medio de pago (Banco) / Firma</th>
+              <th>Observaciones</th>
             </tr>
           </thead>
 
           <tbody>
+            <!-- Filas iniciales de ejemplo; sus valores serán preservados/modificados y guardados en localStorage -->
             <tr data-row="1">
               <td>1</td>
               <td class="align-middle">EDNA ANABELY MARISTELA VELASQUEZ MALDONADO</td>
@@ -76,14 +79,14 @@
               <td>
                 <div class="money-inline">
                   <span class="money-prefix">Q</span>
-                  <input class="form-control num-cell bono" type="number" step="0.01" value="150.00">
+                  <input class="form-control bono" type="number" step="0.01" value="150.00" readonly>
                 </div>
               </td>
               <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="15"></td>
               <td>
                 <div class="money-inline">
                   <span class="money-prefix">Q</span>
-                  <input class="form-control num-cell comisiones" type="number" step="0.01" value="0">
+                  <input class="form-control num-cell comisiones" type="number" step="0.01" value="0.00">
                 </div>
               </td>
               <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
@@ -94,58 +97,62 @@
               <td>
                 <div class="money-inline">
                   <span class="money-prefix">Q</span>
-                  <input class="form-control num-cell otras" type="number" step="0.01" value="0">
+                  <input class="form-control num-cell otras" type="number" step="0.01" value="0.00">
                 </div>
               </td>
-              <td class="text-end total-deducciones">Q 0.00</td>
+              <td><input class="form-control medio-pago" type="text" value=""></td>
+              <td><input class="form-control observaciones" type="text" value=""></td>
             </tr>
 
             <tr data-row="2">
               <td>2</td>
               <td class="align-middle">IGDALIA ALIDA OCTAVI VELASQUEZ MALDONDO</td>
               <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell sueldo" type="number" step="0.01" value="3723.05"></div></td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell bono" type="number" step="0.01" value="150.00"></div></td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control bono" type="number" step="0.01" value="150.00" readonly></div></td>
               <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="15"></td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="0"></div></td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="0.00"></div></td>
               <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
               <td class="text-end hextras">Q 0.00</td>
               <td class="text-end total-devengado">Q 0.00</td>
               <td class="text-end igss">Q 0.00</td>
               <td class="text-end isr-cell"></td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="0"></div></td>
-              <td class="text-end total-deducciones">Q 0.00</td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="0.00"></div></td>
+              <td><input class="form-control medio-pago" type="text" value=""></td>
+              <td><input class="form-control observaciones" type="text" value=""></td>
             </tr>
 
             <tr data-row="3">
               <td>3</td>
               <td class="align-middle">ANGEL ESTUARDO ESCOBAR VELÁSQUEZ</td>
               <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell sueldo" type="number" step="0.01" value="4500.00"></div></td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell bono" type="number" step="0.01" value="150.00"></div></td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control bono" type="number" step="0.01" value="150.00" readonly></div></td>
               <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="15"></td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="0"></div></td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="0.00"></div></td>
               <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
               <td class="text-end hextras">Q 0.00</td>
               <td class="text-end total-devengado">Q 0.00</td>
               <td class="text-end igss">Q 0.00</td>
               <td class="text-end isr-cell"></td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="0"></div></td>
-              <td class="text-end total-deducciones">Q 0.00</td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="0.00"></div></td>
+              <td><input class="form-control medio-pago" type="text" value=""></td>
+              <td><input class="form-control observaciones" type="text" value=""></td>
             </tr>
 
             <tr data-row="4">
               <td>4</td>
               <td class="align-middle">LEONIDAS ANIBAL ESCOBAR PASCUAL</td>
               <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell sueldo" type="number" step="0.01" value="4500.00"></div></td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell bono" type="number" step="0.01" value="150.00"></div></td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control bono" type="number" step="0.01" value="150.00" readonly></div></td>
               <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="15"></td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="0"></div></td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="0.00"></div></td>
               <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
               <td class="text-end hextras">Q 0.00</td>
               <td class="text-end total-devengado">Q 0.00</td>
               <td class="text-end igss">Q 0.00</td>
               <td class="text-end isr-cell"></td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="0"></div></td>
-              <td class="text-end total-deducciones">Q 0.00</td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="0.00"></div></td>
+              <td><input class="form-control medio-pago" type="text" value=""></td>
+              <td><input class="form-control observaciones" type="text" value=""></td>
             </tr>
           </tbody>
         </table>
@@ -169,7 +176,7 @@ const STORAGE_KEY = 'empaquetex_planilla_noviembre_v1';
 
 /* Helpers */
 function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
-function formatNum(n){ return n.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); }
+function formatNum(n){ return Number(n).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); }
 function withQ(n){ return 'Q ' + formatNum(n); }
 
 /* Horas extras mensual: sueldo / dias / 8 * 1.5 * horas */
@@ -195,12 +202,13 @@ function computeISRMonthlyFromRow(sueldo, bono, comisiones, hextrasMensual) {
 
 /* Recalcula fila */
 function recalcRow(tr) {
-  const sueldo = parseFloat(tr.querySelector('input.sueldo').value) || 0;
-  const bono = parseFloat(tr.querySelector('input.bono').value) || 0;
-  const comisiones = parseFloat(tr.querySelector('input.comisiones').value) || 0;
-  const dias = parseInt(tr.querySelector('input.dias').value) || 0;
-  const horas = parseInt(tr.querySelector('input.horas').value) || 0;
-  const otras = parseFloat(tr.querySelector('input.otras').value) || 0;
+  if (!tr) return;
+  const sueldo = parseFloat(tr.querySelector('input.sueldo')?.value) || 0;
+  const bono = parseFloat(tr.querySelector('input.bono')?.value) || 0;
+  const comisiones = parseFloat(tr.querySelector('input.comisiones')?.value) || 0;
+  const dias = parseInt(tr.querySelector('input.dias')?.value) || 0;
+  const horas = parseInt(tr.querySelector('input.horas')?.value) || 0;
+  const otras = parseFloat(tr.querySelector('input.otras')?.value) || 0;
 
   const hextrasMonto = computeHorasMontoMensual(sueldo, dias, horas);
   const totalDevengado = round2(sueldo + bono + comisiones + hextrasMonto);
@@ -228,18 +236,18 @@ function recalcRow(tr) {
   const liquiCell = tr.querySelector('.liquido'); if (liquiCell) liquiCell.textContent = withQ(liquido);
 }
 
-/* Recalcula totales (NO suma días) */
+/* Recalcula totales */
 function recalcTotals() {
   const rows = document.querySelectorAll('#planillaTable tbody tr');
   let totals = {sueldo:0, bono:0, comisiones:0, horas:0, hextras:0, devengado:0, igss:0, isr:0, otras:0, deducciones:0};
   rows.forEach(tr => {
-    const sueldo = parseFloat(tr.querySelector('input.sueldo').value) || 0;
-    const bono = parseFloat(tr.querySelector('input.bono').value) || 0;
-    const comisiones = parseFloat(tr.querySelector('input.comisiones').value) || 0;
-    const horas = parseInt(tr.querySelector('input.horas').value) || 0;
-    const otras = parseFloat(tr.querySelector('input.otras').value) || 0;
+    const sueldo = parseFloat(tr.querySelector('input.sueldo')?.value) || 0;
+    const bono = parseFloat(tr.querySelector('input.bono')?.value) || 0;
+    const comisiones = parseFloat(tr.querySelector('input.comisiones')?.value) || 0;
+    const horas = parseInt(tr.querySelector('input.horas')?.value) || 0;
+    const otras = parseFloat(tr.querySelector('input.otras')?.value) || 0;
 
-    const dias = parseInt(tr.querySelector('input.dias').value) || 0; // usado por fila, no se suma
+    const dias = parseInt(tr.querySelector('input.dias')?.value) || 0;
     const hextrasMonto = parseFloat(tr.dataset._hextras) || computeHorasMontoMensual(sueldo, dias, horas);
     const totalDevengado = round2(sueldo + bono + comisiones + hextrasMonto);
     const igss = round2((sueldo + bono + comisiones + hextrasMonto) * IGSS_RATE);
@@ -258,7 +266,7 @@ function recalcTotals() {
     totals.deducciones += totalDeducciones;
   });
 
-  // If you have elements to show totals, ensure their IDs exist in the page (placeholders removed in this template)
+  // Update totals display if elements exist (optional)
   if (document.getElementById('total-sueldo')) document.getElementById('total-sueldo').textContent = withQ(totals.sueldo);
   if (document.getElementById('total-bono')) document.getElementById('total-bono').textContent = withQ(totals.bono);
   if (document.getElementById('total-dias')) document.getElementById('total-dias').textContent = '';
@@ -276,18 +284,20 @@ function recalcTotals() {
 function serializeTable() {
   const rows = [];
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
-    const nombre = (tr.querySelector('.nombre')?.value ?? tr.cells[1].textContent ?? '').trim();
+    const nombre = (tr.querySelector('input.nombre')?.value ?? tr.cells[1].textContent ?? '').trim();
     const sueldo = parseFloat(tr.querySelector('input.sueldo')?.value ?? 0) || 0;
     const bono = parseFloat(tr.querySelector('input.bono')?.value ?? 0) || 0;
     const dias = parseInt(tr.querySelector('input.dias')?.value ?? 0) || 0;
     const comisiones = parseFloat(tr.querySelector('input.comisiones')?.value ?? 0) || 0;
     const horas = parseInt(tr.querySelector('input.horas')?.value ?? 0) || 0;
     const otras = parseFloat(tr.querySelector('input.otras')?.value ?? 0) || 0;
+    const medioPago = tr.querySelector('input.medio-pago')?.value ?? '';
+    const observ = tr.querySelector('input.observaciones')?.value ?? '';
     const hextras = parseFloat(tr.dataset._hextras) || 0;
     const isr = parseFloat(tr.dataset._isrValue) || 0;
-    rows.push({ nombre, sueldo, bono, dias, comisiones, horas, otras, hextras, isr });
+    rows.push({ nombre, sueldo, bono, dias, comisiones, horas, otras, medioPago, observ, hextras, isr });
   });
-  const meta = { saved_at: new Date().toISOString(), planillaName: document.getElementById('planillaName').value, emisionDate: document.getElementById('emisionDate').value };
+  const meta = { saved_at: new Date().toISOString(), planillaName: document.getElementById('planillaName')?.value ?? '', emisionDate: document.getElementById('emisionDate')?.value ?? '' };
   return { rows, meta };
 }
 
@@ -295,6 +305,7 @@ function serializeTable() {
 function restoreTable(data) {
   if (!data || !Array.isArray(data.rows)) return;
   const tbody = document.querySelector('#planillaTable tbody');
+  if (!tbody) return;
   tbody.innerHTML = '';
   data.rows.forEach((r, i) => {
     const idx = i + 1;
@@ -304,15 +315,17 @@ function restoreTable(data) {
       <td>${idx}</td>
       <td class="align-middle"><input class="form-control form-control-sm nombre" type="text" value="${escapeHtml(r.nombre || '')}"></td>
       <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell sueldo" type="number" step="0.01" value="${Number(r.sueldo||0).toFixed(2)}"></div></td>
-      <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell bono" type="number" step="0.01" value="${Number(r.bono||0).toFixed(2)}"></div></td>
-      <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="${Number(r.dias||0)}"></td>
+      <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control bono" type="number" step="0.01" value="${Number(r.bono||150).toFixed(2)}" readonly></div></td>
+      <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="${Number(r.dias||15)}"></td>
       <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="${Number(r.comisiones||0).toFixed(2)}"></div></td>
       <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="${Number(r.horas||0)}"></td>
       <td class="text-end hextras">Q ${Number(r.hextras||0).toFixed(2)}</td>
       <td class="text-end total-devengado">Q 0.00</td>
       <td class="text-end igss">Q 0.00</td>
-      <td class="text-end isr-cell">${r.isr && r.isr>0 ? 'Q '+Number(r.isr).toFixed(2) : ''}</td>
+      <td class="text-end isr-cell">${r.isr && r.isr>0 ? 'Q ' + Number(r.isr).toFixed(2) : ''}</td>
       <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="${Number(r.otras||0).toFixed(2)}"></div></td>
+      <td><input class="form-control medio-pago" type="text" value="${escapeHtml(r.medioPago||'')}"></td>
+      <td><input class="form-control observaciones" type="text" value="${escapeHtml(r.observ||'')}"></td>
       <td class="text-end total-deducciones">Q 0.00</td>
     `;
     tr.dataset._hextras = Number(r.hextras||0);
@@ -338,18 +351,20 @@ function saveToLocal() {
 function loadFromLocal() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
+    if (!raw) return false;
     const obj = JSON.parse(raw);
-    // restaurar planilla si hay filas guardadas
     if (obj && Array.isArray(obj.rows) && obj.rows.length) {
       restoreTable(obj);
       if (obj.meta) {
         if (obj.meta.planillaName) document.getElementById('planillaName').value = obj.meta.planillaName;
         if (obj.meta.emisionDate) document.getElementById('emisionDate').value = obj.meta.emisionDate;
       }
+      return true;
     }
+    return false;
   } catch (e) {
     console.error('Error cargando planilla desde localStorage', e);
+    return false;
   }
 }
 
@@ -359,51 +374,42 @@ function escapeHtml(str) {
 }
 
 /* Delegated listener para inputs: recalcula y guarda */
+/* Guardado inmediato para que los cambios queden persistidos */
 document.addEventListener('input', (e) => {
   if (!e.target.classList) return;
-  if (e.target.classList.contains('num-cell') || e.target.classList.contains('nombre')) {
+  // Normal numeric/name changes recalc + save
+  if (e.target.classList.contains('num-cell') || e.target.classList.contains('nombre') || e.target.classList.contains('medio-pago') || e.target.classList.contains('observaciones')) {
     const tr = e.target.closest('tr');
-    recalcRow(tr);
+    if (tr) recalcRow(tr);
     recalcTotals();
     saveToLocal();
   }
 });
 
-/* Init */
-document.addEventListener('DOMContentLoaded', () => {
-  // cargar guardado si existe (sobrescribe tabla inicial si hay datos guardados)
-  loadFromLocal();
-
-  // recalcular (para casos donde no hubo localStorage)
-  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
-  recalcTotals();
-});
-
-/* --- Inicializar bonos existentes: forzar 150 y readonly --- */
-function lockExistingBonos() {
+/* --- Inicializar bonos y dias en filas actuales y proteger bonificación --- */
+function initBonosYDias() {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
     const bonoInp = tr.querySelector('input.bono');
     if (bonoInp) {
       bonoInp.value = 150.00;
       bonoInp.setAttribute('readonly', 'readonly');
-      bonoInp.classList.remove('num-cell'); // evitar doble disparo si quieres
+      bonoInp.classList.remove('num-cell');
     }
-    // asegurar nombres ya cargados queden readonly
-    const nombreInp = tr.querySelector('input.nombre');
-    if (nombreInp) {
-      if ((nombreInp.value || '').trim() !== '') {
-        nombreInp.setAttribute('readonly', 'readonly');
-      } else {
-        nombreInp.removeAttribute('readonly');
-      }
-    }
-    // forzar dias a 15 en todas las filas actuales
     const diasInp = tr.querySelector('input.dias');
-    if (diasInp) diasInp.value = 15;
+    if (diasInp) {
+      // forzar 15 si vacío o inválido
+      const val = parseInt(diasInp.value);
+      if (!isFinite(val) || val <= 0) diasInp.value = 15;
+    } else {
+      // si no existe, añadir una celda por robustez (no debería ocurrir)
+    }
+    // asegurar que las celdas de horas extras de despliegue estén inicializadas
+    recalcRow(tr);
   });
+  recalcTotals();
 }
 
-/* --- Cuando se agrega fila: bonificación = 150 (readonly) y nombre editable sólo hasta llenarlo --- */
+/* --- Plantilla al agregar fila --- */
 function createRowHtml(index) {
   return `
     <td>${index}</td>
@@ -411,7 +417,7 @@ function createRowHtml(index) {
     <td>
       <div class="money-inline">
         <span class="money-prefix">Q</span>
-        <input class="form-control num-cell sueldo" type="number" step="0.01" value="0">
+        <input class="form-control num-cell sueldo" type="number" step="0.01" value="0.00">
       </div>
     </td>
     <td>
@@ -424,7 +430,7 @@ function createRowHtml(index) {
     <td>
       <div class="money-inline">
         <span class="money-prefix">Q</span>
-        <input class="form-control num-cell comisiones" type="number" step="0.01" value="0">
+        <input class="form-control num-cell comisiones" type="number" step="0.01" value="0.00">
       </div>
     </td>
     <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
@@ -435,9 +441,11 @@ function createRowHtml(index) {
     <td>
       <div class="money-inline">
         <span class="money-prefix">Q</span>
-        <input class="form-control num-cell otras" type="number" step="0.01" value="0">
+        <input class="form-control num-cell otras" type="number" step="0.01" value="0.00">
       </div>
     </td>
+    <td><input class="form-control medio-pago" type="text" value=""></td>
+    <td><input class="form-control observaciones" type="text" value=""></td>
     <td class="text-end total-deducciones">Q 0.00</td>
   `;
 }
@@ -453,21 +461,20 @@ document.addEventListener('blur', (e) => {
   }
 }, true);
 
-/* --- Protección adicional: impedir cambios a bonificaciones por JS accidental --- */
-function enforceBonoProtectionOnAllRows() {
+/* --- Protección adicional para garantizar bono=150 y dias=15 en todas las filas --- */
+function enforceFixedFieldsOnAllRows() {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
     const bonoInp = tr.querySelector('input.bono');
     if (bonoInp) {
       bonoInp.value = 150.00;
       bonoInp.setAttribute('readonly', 'readonly');
     }
-    // forzar dias a 15 también
     const diasInp = tr.querySelector('input.dias');
     if (diasInp) diasInp.value = 15;
   });
 }
 
-/* --- Modificar el handler de Add row para usar createRowHtml y aplicar protecciones --- */
+/* --- Add row handler --- */
 document.getElementById('addRow').addEventListener('click', () => {
   const tbody = document.querySelector('#planillaTable tbody');
   const newIndex = tbody.querySelectorAll('tr').length + 1;
@@ -476,34 +483,26 @@ document.getElementById('addRow').addEventListener('click', () => {
   tr.innerHTML = createRowHtml(newIndex);
   tbody.appendChild(tr);
 
-  // inicializar comportamiento del nombre (editable hasta que se llene)
+  // dejar nombre editable hasta que el usuario lo complete
   const nombreInp = tr.querySelector('input.nombre');
   if (nombreInp) nombreInp.removeAttribute('readonly');
 
-  // asegurar bono fijo
+  // asegurar bono fijo y dias por defecto
   const bonoInp = tr.querySelector('input.bono');
   if (bonoInp) {
     bonoInp.value = 150.00;
     bonoInp.setAttribute('readonly', 'readonly');
   }
-
-  // forzar dias por defecto a 15
   const diasInp = tr.querySelector('input.dias');
   if (diasInp) diasInp.value = 15;
 
-  // recalcular fila y totales
+  // recalcular solo la fila añadida y totales, luego guardar
   recalcRow(tr);
   recalcTotals();
   saveToLocal();
 });
 
-/* --- Al iniciar: aplicar bloqueo a bonos existentes y listeners para proteger valores --- */
-document.addEventListener('DOMContentLoaded', () => {
-  lockExistingBonos();
-  enforceBonoProtectionOnAllRows();
-});
-
-/* Delete last row */
+/* --- Delete last row --- */
 document.getElementById('deleteRow').addEventListener('click', () => {
   const tbody = document.querySelector('#planillaTable tbody');
   const rows = tbody.querySelectorAll('tr');
@@ -513,16 +512,16 @@ document.getElementById('deleteRow').addEventListener('click', () => {
   saveToLocal();
 });
 
-/* Export to Excel (.xlsx): requiere fecha de emisión */
+/* --- Export to Excel (.xlsx): requiere fecha de emisión --- */
 document.getElementById('exportExcel').addEventListener('click', () => {
   const dateInput = document.getElementById('emisionDate').value;
   const planillaName = document.getElementById('planillaName').value.trim() || 'Planilla';
   const exportHint = document.getElementById('exportHint');
   if (!dateInput) {
-    exportHint.style.display = 'inline';
+    if (exportHint) exportHint.style.display = 'inline';
     return;
   }
-  exportHint.style.display = 'none';
+  if (exportHint) exportHint.style.display = 'none';
 
   // Clonar tabla y limpiar inputs
   const table = document.getElementById('planillaTable');
@@ -555,8 +554,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
   XLSX.writeFile(wb, filename);
 });
 
-// --- Auto-dividir Sueldo Base entre 2 al ingresar ---
-// (esta sección la dejo tal cual, no se tocó salvo lo estrictamente necesario)
+/* --- Auto-dividir Sueldo Base entre 2 solo cuando el usuario termina de editar (blur) o pega (paste) --- */
 (function(){
   function parseNumberSafe(v){
     if (v == null) return 0;
@@ -590,14 +588,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     }
   }
 
-  document.addEventListener('input', function(e){
-    const t = e.target;
-    if (!t || !t.classList) return;
-    if (t.classList.contains('sueldo')) {
-      // no dividir en cada tecla por defecto
-    }
-  }, true);
-
+  // Solo aplicar en paste y blur (no al cargar)
   document.addEventListener('paste', function(e){
     const t = e.target;
     if (!t || !t.classList) return;
@@ -614,13 +605,25 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     }
   }, true);
 
-  window.addEventListener('load', function(){
-    document.querySelectorAll('input.sueldo').forEach(inp => {
-      const val = inp.value;
-      if (val !== null && String(val).trim() !== '') applyHalfToSueldoInput(inp);
-    });
-  });
+  // No aplicar en load - respetamos el valor existente y solo dividimos cuando el usuario lo ingresa/edita
 })();
+
+/* Init */
+document.addEventListener('DOMContentLoaded', () => {
+  // Cargar guardado si existe; si no hay guardado, usar plantilla HTML actual
+  const restored = loadFromLocal();
+
+  // Inicializaciones obligatorias: bonificación = 150, días = 15, recalcular y proteger campos
+  initBonosYDias();
+  enforceFixedFieldsOnAllRows();
+
+  // recalcular (por si la carga no restauró)
+  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
+  recalcTotals();
+
+  // Asegurar que se guarde el estado actual la primera vez si no había nada guardado
+  if (!restored) saveToLocal();
+});
 </script>
 
 <style>
@@ -635,8 +638,8 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     --planilla-cell-horizontal-padding: 1.5rem;
     --planilla-input-min-height: 52px;
     --planilla-input-font-size: 1.03rem;
-    --planilla-money-min-width: 225px;
-    --planilla-name-col-min-width: 360px;
+    --planilla-money-min-width: 200px;
+    --planilla-name-col-min-width: 320px;
   }
 
   body { background: linear-gradient(180deg,var(--bg-grad-start) 0%, var(--bg-grad-end) 100%); }
@@ -735,54 +738,47 @@ document.getElementById('exportExcel').addEventListener('click', () => {
 
   @media (max-width: 1000px) {
     :root {
-      --planilla-money-min-width: 165px;
+      --planilla-money-min-width: 150px;
       --planilla-input-min-height: 48px;
       --planilla-cell-horizontal-padding: 1.2rem;
-      --planilla-name-col-min-width: 265px;
+      --planilla-name-col-min-width: 260px;
     }
-    #planillaTable { min-width: 1220px; }
+    #planillaTable { min-width: 1400px; }
   }
 
   @media (max-width: 576px) {
     :root {
-      --planilla-money-min-width: 130px;
+      --planilla-money-min-width: 120px;
       --planilla-input-min-height: 50px;
       --planilla-cell-horizontal-padding: 1.0rem;
-      --planilla-name-col-min-width: 210px;
+      --planilla-name-col-min-width: 200px;
     }
-    #planillaTable { min-width: 1030px; }
+    #planillaTable { min-width: 1100px; }
   }
 
 table.table {
   border-collapse: collapse;
 }
-
 table.table th,
 table.table td {
   border-right: 1px solid #e6eef6;
   border-bottom: 1px solid #e9f0f7;
 }
-
 table.table th:last-child,
 table.table td:last-child {
   border-right: none;
 }
-
 .table-header-custom th {
   border-bottom: 2px solid rgba(15,23,42,0.06);
 }
-
 table.table th:first-child,
 table.table td:first-child {
   border-left: 1px solid #e6eef6;
 }
-
 table.table tbody tr:first-child td {
   border-top: 1px solid #eef6fb;
 }
-
 .table-responsive { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-
 #planillaTable tfoot tr td {
   border-top: 2px solid var(--tfoot-top-border);
   border-right: 1px solid #e6eef6;
