@@ -131,6 +131,22 @@
               <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="0"></div></td>
               <td class="text-end total-deducciones">Q 0.00</td>
             </tr>
+
+            <tr data-row="4">
+              <td>4</td>
+              <td class="align-middle">LEONIDAS ANIBAL ESCOBAR PASCUAL</td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell sueldo" type="number" step="0.01" value="4500.00"></div></td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell bono" type="number" step="0.01" value="150.00"></div></td>
+              <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="15"></td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="0"></div></td>
+              <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
+              <td class="text-end hextras">Q 0.00</td>
+              <td class="text-end total-devengado">Q 0.00</td>
+              <td class="text-end igss">Q 0.00</td>
+              <td class="text-end isr-cell"></td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="0"></div></td>
+              <td class="text-end total-deducciones">Q 0.00</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -142,7 +158,7 @@
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
 <script>
-/* Par\u00E1metros fiscales */
+/* Parámetros fiscales */
 const IGSS_RATE = 0.0483;
 const GASTOS_PERSONALES_ANUAL = 48000;
 const ISR_ANNUAL_RATE = 0.05;
@@ -156,7 +172,7 @@ function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
 function formatNum(n){ return n.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); }
 function withQ(n){ return 'Q ' + formatNum(n); }
 
-/* Horas extras mensual */
+/* Horas extras mensual: sueldo / dias / 8 * 1.5 * horas */
 function computeHorasMontoMensual(sueldo, dias, horas) {
   if (!dias || dias <= 0) return 0;
   const valorHora = sueldo / dias / 8;
@@ -164,12 +180,10 @@ function computeHorasMontoMensual(sueldo, dias, horas) {
   return round2(monto);
 }
 
-/* ISR según ganancias brutas anuales — usar SUELDO_BASE * 2 como base mensual */
+/* ISR según ganancias brutas anuales */
 function computeISRMonthlyFromRow(sueldo, bono, comisiones, hextrasMensual) {
   if (sueldo < ISR_MIN_SALARIO) return 0;
-  // usar sueldo duplicado como punto de partida
-  const sueldoBaseAjustado = round2(sueldo * 2);
-  const gbMensual = sueldoBaseAjustado + bono + comisiones + hextrasMensual;
+  const gbMensual = sueldo + bono + comisiones + hextrasMensual;
   const gbAnual = gbMensual * 12;
   const igssAnual = round2(gbAnual * IGSS_RATE);
   const baseCalculo = gbAnual - (igssAnual + GASTOS_PERSONALES_ANUAL);
@@ -181,12 +195,12 @@ function computeISRMonthlyFromRow(sueldo, bono, comisiones, hextrasMensual) {
 
 /* Recalcula fila */
 function recalcRow(tr) {
-  const sueldo = parseFloat(tr.querySelector('.sueldo').value) || 0;
-  const bono = parseFloat(tr.querySelector('.bono').value) || 0;
-  const comisiones = parseFloat(tr.querySelector('.comisiones').value) || 0;
-  const dias = parseInt(tr.querySelector('.dias').value) || 0;
-  const horas = parseInt(tr.querySelector('.horas').value) || 0;
-  const otras = parseFloat(tr.querySelector('.otras').value) || 0;
+  const sueldo = parseFloat(tr.querySelector('input.sueldo').value) || 0;
+  const bono = parseFloat(tr.querySelector('input.bono').value) || 0;
+  const comisiones = parseFloat(tr.querySelector('input.comisiones').value) || 0;
+  const dias = parseInt(tr.querySelector('input.dias').value) || 0;
+  const horas = parseInt(tr.querySelector('input.horas').value) || 0;
+  const otras = parseFloat(tr.querySelector('input.otras').value) || 0;
 
   const hextrasMonto = computeHorasMontoMensual(sueldo, dias, horas);
   const totalDevengado = round2(sueldo + bono + comisiones + hextrasMonto);
@@ -219,13 +233,13 @@ function recalcTotals() {
   const rows = document.querySelectorAll('#planillaTable tbody tr');
   let totals = {sueldo:0, bono:0, comisiones:0, horas:0, hextras:0, devengado:0, igss:0, isr:0, otras:0, deducciones:0};
   rows.forEach(tr => {
-    const sueldo = parseFloat(tr.querySelector('.sueldo').value) || 0;
-    const bono = parseFloat(tr.querySelector('.bono').value) || 0;
-    const comisiones = parseFloat(tr.querySelector('.comisiones').value) || 0;
-    const horas = parseInt(tr.querySelector('.horas').value) || 0;
-    const otras = parseFloat(tr.querySelector('.otras').value) || 0;
+    const sueldo = parseFloat(tr.querySelector('input.sueldo').value) || 0;
+    const bono = parseFloat(tr.querySelector('input.bono').value) || 0;
+    const comisiones = parseFloat(tr.querySelector('input.comisiones').value) || 0;
+    const horas = parseInt(tr.querySelector('input.horas').value) || 0;
+    const otras = parseFloat(tr.querySelector('input.otras').value) || 0;
 
-    const dias = parseInt(tr.querySelector('.dias').value) || 0; // usado por fila, no se suma
+    const dias = parseInt(tr.querySelector('input.dias').value) || 0; // usado por fila, no se suma
     const hextrasMonto = parseFloat(tr.dataset._hextras) || computeHorasMontoMensual(sueldo, dias, horas);
     const totalDevengado = round2(sueldo + bono + comisiones + hextrasMonto);
     const igss = round2((sueldo + bono + comisiones + hextrasMonto) * IGSS_RATE);
@@ -244,18 +258,18 @@ function recalcTotals() {
     totals.deducciones += totalDeducciones;
   });
 
-  // Si los elementos no existen (depende del template), proteger con try/catch
-  try { document.getElementById('total-sueldo').textContent = withQ(totals.sueldo); } catch(e){}
-  try { document.getElementById('total-bono').textContent = withQ(totals.bono); } catch(e){}
-  try { document.getElementById('total-dias').textContent = ''; } catch(e){} // no sumar días
-  try { document.getElementById('total-comisiones').textContent = withQ(totals.comisiones); } catch(e){}
-  try { document.getElementById('total-horas').textContent = totals.horas.toString(); } catch(e){}
-  try { document.getElementById('total-hextras').textContent = withQ(totals.hextras); } catch(e){}
-  try { document.getElementById('total-devengado').textContent = withQ(totals.devengado); } catch(e){}
-  try { document.getElementById('total-igss').textContent = withQ(totals.igss); } catch(e){}
-  try { document.getElementById('total-isr').textContent = withQ(totals.isr); } catch(e){}
-  try { document.getElementById('total-otras').textContent = withQ(totals.otras); } catch(e){}
-  try { document.getElementById('total-deducciones').textContent = withQ(totals.deducciones); } catch(e){}
+  // If you have elements to show totals, ensure their IDs exist in the page (placeholders removed in this template)
+  if (document.getElementById('total-sueldo')) document.getElementById('total-sueldo').textContent = withQ(totals.sueldo);
+  if (document.getElementById('total-bono')) document.getElementById('total-bono').textContent = withQ(totals.bono);
+  if (document.getElementById('total-dias')) document.getElementById('total-dias').textContent = '';
+  if (document.getElementById('total-comisiones')) document.getElementById('total-comisiones').textContent = withQ(totals.comisiones);
+  if (document.getElementById('total-horas')) document.getElementById('total-horas').textContent = totals.horas.toString();
+  if (document.getElementById('total-hextras')) document.getElementById('total-hextras').textContent = withQ(totals.hextras);
+  if (document.getElementById('total-devengado')) document.getElementById('total-devengado').textContent = withQ(totals.devengado);
+  if (document.getElementById('total-igss')) document.getElementById('total-igss').textContent = withQ(totals.igss);
+  if (document.getElementById('total-isr')) document.getElementById('total-isr').textContent = withQ(totals.isr);
+  if (document.getElementById('total-otras')) document.getElementById('total-otras').textContent = withQ(totals.otras);
+  if (document.getElementById('total-deducciones')) document.getElementById('total-deducciones').textContent = withQ(totals.deducciones);
 }
 
 /* Serializar tabla para localStorage */
@@ -263,17 +277,17 @@ function serializeTable() {
   const rows = [];
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
     const nombre = (tr.querySelector('.nombre')?.value ?? tr.cells[1].textContent ?? '').trim();
-    const sueldo = parseFloat(tr.querySelector('.sueldo')?.value ?? 0) || 0;
-    const bono = parseFloat(tr.querySelector('.bono')?.value ?? 0) || 0;
-    const dias = parseInt(tr.querySelector('.dias')?.value ?? 0) || 0;
-    const comisiones = parseFloat(tr.querySelector('.comisiones')?.value ?? 0) || 0;
-    const horas = parseInt(tr.querySelector('.horas')?.value ?? 0) || 0;
-    const otras = parseFloat(tr.querySelector('.otras')?.value ?? 0) || 0;
+    const sueldo = parseFloat(tr.querySelector('input.sueldo')?.value ?? 0) || 0;
+    const bono = parseFloat(tr.querySelector('input.bono')?.value ?? 0) || 0;
+    const dias = parseInt(tr.querySelector('input.dias')?.value ?? 0) || 0;
+    const comisiones = parseFloat(tr.querySelector('input.comisiones')?.value ?? 0) || 0;
+    const horas = parseInt(tr.querySelector('input.horas')?.value ?? 0) || 0;
+    const otras = parseFloat(tr.querySelector('input.otras')?.value ?? 0) || 0;
     const hextras = parseFloat(tr.dataset._hextras) || 0;
     const isr = parseFloat(tr.dataset._isrValue) || 0;
     rows.push({ nombre, sueldo, bono, dias, comisiones, horas, otras, hextras, isr });
   });
-  const meta = { saved_at: new Date().toISOString(), planillaName: document.getElementById('planillaName')?.value, emisionDate: document.getElementById('emisionDate')?.value };
+  const meta = { saved_at: new Date().toISOString(), planillaName: document.getElementById('planillaName').value, emisionDate: document.getElementById('emisionDate').value };
   return { rows, meta };
 }
 
@@ -281,7 +295,6 @@ function serializeTable() {
 function restoreTable(data) {
   if (!data || !Array.isArray(data.rows)) return;
   const tbody = document.querySelector('#planillaTable tbody');
-  if (!tbody) return;
   tbody.innerHTML = '';
   data.rows.forEach((r, i) => {
     const idx = i + 1;
@@ -292,13 +305,13 @@ function restoreTable(data) {
       <td class="align-middle"><input class="form-control form-control-sm nombre" type="text" value="${escapeHtml(r.nombre || '')}"></td>
       <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell sueldo" type="number" step="0.01" value="${Number(r.sueldo||0).toFixed(2)}"></div></td>
       <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell bono" type="number" step="0.01" value="${Number(r.bono||0).toFixed(2)}"></div></td>
-      <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="${Number(r.dias||15)}"></td>
+      <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="${Number(r.dias||0)}"></td>
       <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="${Number(r.comisiones||0).toFixed(2)}"></div></td>
       <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="${Number(r.horas||0)}"></td>
       <td class="text-end hextras">Q ${Number(r.hextras||0).toFixed(2)}</td>
       <td class="text-end total-devengado">Q 0.00</td>
       <td class="text-end igss">Q 0.00</td>
-      <td class="text-end isr-cell">${r.isr && r.isr>0 ? 'Q ' + Number(r.isr).toFixed(2) : ''}</td>
+      <td class="text-end isr-cell">${r.isr && r.isr>0 ? 'Q '+Number(r.isr).toFixed(2) : ''}</td>
       <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="${Number(r.otras||0).toFixed(2)}"></div></td>
       <td class="text-end total-deducciones">Q 0.00</td>
     `;
@@ -350,18 +363,28 @@ document.addEventListener('input', (e) => {
   if (!e.target.classList) return;
   if (e.target.classList.contains('num-cell') || e.target.classList.contains('nombre')) {
     const tr = e.target.closest('tr');
-    if (tr) recalcRow(tr);
+    recalcRow(tr);
     recalcTotals();
     saveToLocal();
   }
 });
 
-/* --- Inicializar bonos existentes: forzar 250 y readonly --- */
+/* Init */
+document.addEventListener('DOMContentLoaded', () => {
+  // cargar guardado si existe (sobrescribe tabla inicial si hay datos guardados)
+  loadFromLocal();
+
+  // recalcular (para casos donde no hubo localStorage)
+  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
+  recalcTotals();
+});
+
+/* --- Inicializar bonos existentes: forzar 150 y readonly --- */
 function lockExistingBonos() {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
     const bonoInp = tr.querySelector('input.bono');
     if (bonoInp) {
-      bonoInp.value = 250.00;
+      bonoInp.value = 150.00;
       bonoInp.setAttribute('readonly', 'readonly');
       bonoInp.classList.remove('num-cell'); // evitar doble disparo si quieres
     }
@@ -374,10 +397,13 @@ function lockExistingBonos() {
         nombreInp.removeAttribute('readonly');
       }
     }
+    // forzar dias a 15 en todas las filas actuales
+    const diasInp = tr.querySelector('input.dias');
+    if (diasInp) diasInp.value = 15;
   });
 }
 
-/* --- Cuando se agrega fila: bonificación = 250 (readonly) y dias por defecto = 15 --- */
+/* --- Cuando se agrega fila: bonificación = 150 (readonly) y nombre editable sólo hasta llenarlo --- */
 function createRowHtml(index) {
   return `
     <td>${index}</td>
@@ -385,20 +411,20 @@ function createRowHtml(index) {
     <td>
       <div class="money-inline">
         <span class="money-prefix">Q</span>
-        <input class="form-control num-cell sueldo" type="number" step="0.01" value="0.00">
+        <input class="form-control num-cell sueldo" type="number" step="0.01" value="0">
       </div>
     </td>
     <td>
       <div class="money-inline">
         <span class="money-prefix">Q</span>
-        <input class="form-control bono" type="number" step="0.01" value="250.00" readonly>
+        <input class="form-control bono" type="number" step="0.01" value="150.00" readonly>
       </div>
     </td>
     <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="15"></td>
     <td>
       <div class="money-inline">
         <span class="money-prefix">Q</span>
-        <input class="form-control num-cell comisiones" type="number" step="0.01" value="0.00">
+        <input class="form-control num-cell comisiones" type="number" step="0.01" value="0">
       </div>
     </td>
     <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
@@ -409,7 +435,7 @@ function createRowHtml(index) {
     <td>
       <div class="money-inline">
         <span class="money-prefix">Q</span>
-        <input class="form-control num-cell otras" type="number" step="0.01" value="0.00">
+        <input class="form-control num-cell otras" type="number" step="0.01" value="0">
       </div>
     </td>
     <td class="text-end total-deducciones">Q 0.00</td>
@@ -427,14 +453,17 @@ document.addEventListener('blur', (e) => {
   }
 }, true);
 
-/* --- Protecci\u00F3n adicional: impedir cambios a bonificaciones por JS accidental --- */
+/* --- Protección adicional: impedir cambios a bonificaciones por JS accidental --- */
 function enforceBonoProtectionOnAllRows() {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
     const bonoInp = tr.querySelector('input.bono');
     if (bonoInp) {
-      bonoInp.value = 250.00;
+      bonoInp.value = 150.00;
       bonoInp.setAttribute('readonly', 'readonly');
     }
+    // forzar dias a 15 también
+    const diasInp = tr.querySelector('input.dias');
+    if (diasInp) diasInp.value = 15;
   });
 }
 
@@ -454,9 +483,13 @@ document.getElementById('addRow').addEventListener('click', () => {
   // asegurar bono fijo
   const bonoInp = tr.querySelector('input.bono');
   if (bonoInp) {
-    bonoInp.value = 250.00;
+    bonoInp.value = 150.00;
     bonoInp.setAttribute('readonly', 'readonly');
   }
+
+  // forzar dias por defecto a 15
+  const diasInp = tr.querySelector('input.dias');
+  if (diasInp) diasInp.value = 15;
 
   // recalcular fila y totales
   recalcRow(tr);
@@ -464,7 +497,13 @@ document.getElementById('addRow').addEventListener('click', () => {
   saveToLocal();
 });
 
-/* --- Delete last row --- */
+/* --- Al iniciar: aplicar bloqueo a bonos existentes y listeners para proteger valores --- */
+document.addEventListener('DOMContentLoaded', () => {
+  lockExistingBonos();
+  enforceBonoProtectionOnAllRows();
+});
+
+/* Delete last row */
 document.getElementById('deleteRow').addEventListener('click', () => {
   const tbody = document.querySelector('#planillaTable tbody');
   const rows = tbody.querySelectorAll('tr');
@@ -474,16 +513,16 @@ document.getElementById('deleteRow').addEventListener('click', () => {
   saveToLocal();
 });
 
-/* --- Export to Excel (.xlsx): requiere fecha de emisión --- */
+/* Export to Excel (.xlsx): requiere fecha de emisión */
 document.getElementById('exportExcel').addEventListener('click', () => {
   const dateInput = document.getElementById('emisionDate').value;
   const planillaName = document.getElementById('planillaName').value.trim() || 'Planilla';
   const exportHint = document.getElementById('exportHint');
   if (!dateInput) {
-    if (exportHint) exportHint.style.display = 'inline';
+    exportHint.style.display = 'inline';
     return;
   }
-  if (exportHint) exportHint.style.display = 'none';
+  exportHint.style.display = 'none';
 
   // Clonar tabla y limpiar inputs
   const table = document.getElementById('planillaTable');
@@ -517,10 +556,8 @@ document.getElementById('exportExcel').addEventListener('click', () => {
 });
 
 // --- Auto-dividir Sueldo Base entre 2 al ingresar ---
-// Se añade sin cambiar nada más: toma el valor ingresado y lo sustituye por la mitad.
-// Mantiene disparo de recálculo y guardado existente (usa los listeners ya definidos).
+// (esta sección la dejo tal cual, no se tocó salvo lo estrictamente necesario)
 (function(){
-  // función segura para parsear número (acepta comas y espacios)
   function parseNumberSafe(v){
     if (v == null) return 0;
     try {
@@ -532,7 +569,6 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     }
   }
 
-  // Handler: al terminar de editar (blur) o al pegar/teclear (input) divide entre 2 y actualiza
   function applyHalfToSueldoInput(inp){
     if (!inp) return;
     const raw = inp.value;
@@ -554,16 +590,14 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     }
   }
 
-  // Delegated listeners: input (live) y blur (final)
   document.addEventListener('input', function(e){
     const t = e.target;
     if (!t || !t.classList) return;
     if (t.classList.contains('sueldo')) {
-      // por defecto no dividimos en cada tecla para no ser intrusivos
+      // no dividir en cada tecla por defecto
     }
   }, true);
 
-  // Manejar paste y blur: dividir al terminar edición o pegar
   document.addEventListener('paste', function(e){
     const t = e.target;
     if (!t || !t.classList) return;
@@ -580,7 +614,6 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     }
   }, true);
 
-  // Inicial en caso de que ya haya valores en las celdas al cargar la página:
   window.addEventListener('load', function(){
     document.querySelectorAll('input.sueldo').forEach(inp => {
       const val = inp.value;
@@ -588,32 +621,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     });
   });
 })();
-
-/* Init */
-document.addEventListener('DOMContentLoaded', () => {
-  // cargar guardado si existe (sobrescribe tabla inicial si hay datos guardados)
-  loadFromLocal();
-
-  // Forzar días = 15 en filas existentes si están vacíos o inválidos
-  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
-    const diasInp = tr.querySelector('input.dias');
-    if (diasInp) {
-      const val = parseInt(diasInp.value);
-      if (!isFinite(val) || val <= 0) diasInp.value = 15;
-    }
-  });
-
-  // aplicar bloqueo a bonos existentes y listeners para proteger valores
-  lockExistingBonos();
-  enforceBonoProtectionOnAllRows();
-
-  // recalcular (para casos donde no hubo localStorage)
-  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
-  recalcTotals();
-});
 </script>
-```
-
 
 <style>
   :root{
@@ -623,14 +631,12 @@ document.addEventListener('DOMContentLoaded', () => {
     --accent1: #0ea5a4;
     --accent2: #0b7285;
     --panel: #f8f9fa;
-
-    /* Ajustes globales de tamaño de celda e inputs */
-    --planilla-cell-vertical-padding: 1.08rem; /* aumenta altura de celdas */
-    --planilla-cell-horizontal-padding: 1.5rem; /* mayor espacio horizontal */
-    --planilla-input-min-height: 52px; /* altura de inputs */
+    --planilla-cell-vertical-padding: 1.08rem;
+    --planilla-cell-horizontal-padding: 1.5rem;
+    --planilla-input-min-height: 52px;
     --planilla-input-font-size: 1.03rem;
-    --planilla-money-min-width: 225px; /* ancho mínimo para columnas monetarias */
-    --planilla-name-col-min-width: 360px; /* ancho visible para columna nombre */
+    --planilla-money-min-width: 225px;
+    --planilla-name-col-min-width: 360px;
   }
 
   body { background: linear-gradient(180deg,var(--bg-grad-start) 0%, var(--bg-grad-end) 100%); }
@@ -655,12 +661,11 @@ document.addEventListener('DOMContentLoaded', () => {
   .text-end { text-align:right; }
   .fw-bold { font-weight:700; }
 
-  /* Mantener Q siempre a la izquierda y alineado con inputs más altos */
   .money-inline {
     display: inline-flex;
     align-items: center;
     gap: 0.6rem;
-    white-space: nowrap;   /* evita que el prefijo salte de línea */
+    white-space: nowrap;
     flex-wrap: nowrap;
   }
   .money-prefix {
@@ -669,7 +674,7 @@ document.addEventListener('DOMContentLoaded', () => {
     justify-content: center;
     flex: 0 0 auto;
     margin-right: 0;
-    min-width: 38px;                      /* un poco más ancho para equilibrio */
+    min-width: 38px;
     height: var(--planilla-input-min-height);
     padding: 0 .6rem;
     border-radius: .45rem;
@@ -680,7 +685,6 @@ document.addEventListener('DOMContentLoaded', () => {
     box-sizing: border-box;
   }
 
-  /* Inputs más altos y con suficiente ancho para mostrar números sin romper la Q */
   .money-inline .form-control {
     min-width: var(--planilla-money-min-width);
     min-height: var(--planilla-input-min-height);
@@ -693,7 +697,6 @@ document.addEventListener('DOMContentLoaded', () => {
     text-overflow: ellipsis;
   }
 
-  /* Inputs generales de la tabla */
   #planillaTable input.form-control {
     font-size: var(--planilla-input-font-size);
     min-height: var(--planilla-input-min-height);
@@ -702,7 +705,6 @@ document.addEventListener('DOMContentLoaded', () => {
     padding: .45rem .6rem;
   }
 
-  /* Columna nombre más ancha y con wrapping controlado */
   #planillaTable col:nth-child(2),
   #planillaTable td:nth-child(2),
   #planillaTable th:nth-child(2) {
@@ -711,7 +713,6 @@ document.addEventListener('DOMContentLoaded', () => {
     word-break: break-word;
   }
 
-  /* Alineaciones numéricas y celdas de resultado */
   #planillaTable td.total-devengado,
   #planillaTable td.igss,
   #planillaTable td.total-deducciones,
@@ -722,7 +723,6 @@ document.addEventListener('DOMContentLoaded', () => {
     vertical-align: middle;
   }
 
-  /* Centrar hora y reducir su padding para que se vea bien dentro de la fila alta */
   #planillaTable td input.horas {
     text-align:center;
     padding-top: .35rem;
@@ -730,11 +730,9 @@ document.addEventListener('DOMContentLoaded', () => {
     height: calc(var(--planilla-input-min-height) - .8rem);
   }
 
-  /* Sombras y fondos sutiles mantienen el diseño existente */
   table.table tbody tr { background: #fff; }
   table.table tbody tr:nth-child(odd) { background: #fbfeff; }
 
-  /* Responsivo: bajar tamaños en pantallas pequeñas sin romper la posición del prefijo Q */
   @media (max-width: 1000px) {
     :root {
       --planilla-money-min-width: 165px;
@@ -755,44 +753,36 @@ document.addEventListener('DOMContentLoaded', () => {
     #planillaTable { min-width: 1030px; }
   }
 
-/* Bordes por columna: coloca esto dentro del bloque <style> existente */
 table.table {
-  border-collapse: collapse; /* asegura líneas continuas entre celdas */
+  border-collapse: collapse;
 }
 
-/* Borde vertical entre columnas */
 table.table th,
 table.table td {
   border-right: 1px solid #e6eef6;
-  border-bottom: 1px solid #e9f0f7; /* separación horizontal sutil */
+  border-bottom: 1px solid #e9f0f7;
 }
 
-/* Evitar doble borde en el extremo derecho */
 table.table th:last-child,
 table.table td:last-child {
   border-right: none;
 }
 
-/* Borde superior del header reforzado */
 .table-header-custom th {
   border-bottom: 2px solid rgba(15,23,42,0.06);
 }
 
-/* Borde izquierdo en primera columna para enmarcar la tabla */
 table.table th:first-child,
 table.table td:first-child {
   border-left: 1px solid #e6eef6;
 }
 
-/* Borde superior en la primera fila del body (opcional, mejora visibilidad) */
 table.table tbody tr:first-child td {
   border-top: 1px solid #eef6fb;
 }
 
-/* Mantener estilos responsivos y que no rompan layout */
 .table-responsive { overflow-x:auto; -webkit-overflow-scrolling:touch; }
 
-/* Ajuste para el tfoot: separar claramente la fila de totales */
 #planillaTable tfoot tr td {
   border-top: 2px solid var(--tfoot-top-border);
   border-right: 1px solid #e6eef6;
@@ -800,11 +790,6 @@ table.table tbody tr:first-child td {
 #planillaTable tfoot tr td:last-child {
   border-right: none;
 }
-
-/* Si prefieres líneas más discretas, usa este color alternativo */
-/* table.table th, table.table td { border-right: 1px solid rgba(11,114,133,0.06); } */
-
-
 </style>
 
 {% endblock %}
