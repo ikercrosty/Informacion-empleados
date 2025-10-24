@@ -341,7 +341,7 @@
       <hr class="my-5">
 
       <!-- FIRMAS: centradas y desplazadas hacia abajo respecto al último apartado -->
-      <div class="signatures-spacer" aria-hidden="true"></div>
+      <div class="signatures-spacer"></div>
 
       <div class="firmas-row centered" aria-hidden="false">
         <div class="firma-item">
@@ -650,7 +650,8 @@
   --firma-line-width: 220px;
 }
 
-/* existing UI styles left unchanged (kept minimal here but present in your project) */
+/* existing UI styles left unchanged (omitted here to keep only modified styles visible) */
+/* ... keep earlier styles unchanged ... */
 
 /* Spacer to push signatures lower on page */
 .signatures-spacer { height: 28px; margin-bottom: 12px; }
@@ -676,7 +677,6 @@
   background-color: var(--firma-line-color);
   border-radius: 1px;
   margin-bottom: 6px;
-  /* on-screen the background shows a solid line; for print we rely on border-top (explicit below) */
 }
 .firma-caption {
   font-weight:700;
@@ -695,25 +695,17 @@
 
 /* Print rules ensuring signature lines appear when printing */
 @media print{
-  /* make sure signatures are centered and not hidden */
   .firmas-row.centered { display:flex !important; justify-content:center !important; gap:4.5rem !important; }
-  .firma-item { page-break-inside: avoid !important; -webkit-column-break-inside: avoid !important; }
-
-  /* Ensure visible solid line on print: use border-top and force color-adjust */
   .firma-line {
-    background-color: transparent !important; /* avoid background-color suppression in some printers */
-    height: 0 !important;
-    border-top: 2px solid #000 !important;
+    background-color: #000 !important;
+    height: 2px !important;
     width: var(--firma-line-width) !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
     page-break-inside: avoid !important;
+    -webkit-print-color-adjust: exact !important;
   }
-
   /* increase space above signatures on print */
   .signatures-spacer { height: 32mm !important; }
-
-  /* If inputs are printed as underlined fields, ensure signature div borders are not overwritten */
+  /* ensure lines are not hidden by input print rules */
   div[style*="border-bottom"] { border-bottom: none !important; }
 }
 </style>
