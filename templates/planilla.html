@@ -33,10 +33,11 @@
             <col style="width:3%">
             <col style="width:30%">
             <col style="width:9%">
-            <col style="width:8%">
+            <col style="width:7%">
             <col style="width:6%">
             <col style="width:8%">
             <col style="width:6%">
+            <col style="width:8%">
             <col style="width:8%">
             <col style="width:8%">
             <col style="width:8%">
@@ -60,13 +61,14 @@
               <th>Calculo del IGSS</th>
               <th>Calculo del ISR</th>
               <th>Otras deducciones</th>
+              <th>Total Deducciones</th>
+              <th>Líquido a recibir</th>
               <th>Medio de pago (Banco) / Firma</th>
               <th>Observaciones</th>
             </tr>
           </thead>
 
           <tbody>
-            <!-- Filas iniciales de ejemplo; sus valores serán preservados/modificados y guardados en localStorage -->
             <tr data-row="1">
               <td>1</td>
               <td class="align-middle">EDNA ANABELY MARISTELA VELASQUEZ MALDONADO</td>
@@ -100,6 +102,8 @@
                   <input class="form-control num-cell otras" type="number" step="0.01" value="0.00">
                 </div>
               </td>
+              <td class="text-end total-deducciones">Q 0.00</td>
+              <td class="text-end liquido">Q 0.00</td>
               <td><input class="form-control medio-pago" type="text" value=""></td>
               <td><input class="form-control observaciones" type="text" value=""></td>
             </tr>
@@ -117,6 +121,8 @@
               <td class="text-end igss">Q 0.00</td>
               <td class="text-end isr-cell"></td>
               <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="0.00"></div></td>
+              <td class="text-end total-deducciones">Q 0.00</td>
+              <td class="text-end liquido">Q 0.00</td>
               <td><input class="form-control medio-pago" type="text" value=""></td>
               <td><input class="form-control observaciones" type="text" value=""></td>
             </tr>
@@ -134,6 +140,8 @@
               <td class="text-end igss">Q 0.00</td>
               <td class="text-end isr-cell"></td>
               <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="0.00"></div></td>
+              <td class="text-end total-deducciones">Q 0.00</td>
+              <td class="text-end liquido">Q 0.00</td>
               <td><input class="form-control medio-pago" type="text" value=""></td>
               <td><input class="form-control observaciones" type="text" value=""></td>
             </tr>
@@ -151,10 +159,33 @@
               <td class="text-end igss">Q 0.00</td>
               <td class="text-end isr-cell"></td>
               <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="0.00"></div></td>
+              <td class="text-end total-deducciones">Q 0.00</td>
+              <td class="text-end liquido">Q 0.00</td>
               <td><input class="form-control medio-pago" type="text" value=""></td>
               <td><input class="form-control observaciones" type="text" value=""></td>
             </tr>
           </tbody>
+
+          <tfoot>
+            <tr class="table-header-custom" style="font-weight:700">
+              <td></td>
+              <td class="text-end">TOTALES</td>
+              <td id="total-sueldo" class="text-end">Q 0.00</td>
+              <td id="total-bono" class="text-end">Q 0.00</td>
+              <td id="total-dias" class="text-end"></td>
+              <td id="total-comisiones" class="text-end">Q 0.00</td>
+              <td id="total-horas" class="text-end">0</td>
+              <td id="total-hextras" class="text-end">Q 0.00</td>
+              <td id="total-devengado" class="text-end">Q 0.00</td>
+              <td id="total-igss" class="text-end">Q 0.00</td>
+              <td id="total-isr" class="text-end">Q 0.00</td>
+              <td id="total-otras" class="text-end">Q 0.00</td>
+              <td id="total-deducciones" class="text-end">Q 0.00</td>
+              <td id="total-liquido" class="text-end">Q 0.00</td>
+              <td></td>
+              <td></td>
+            </tr>
+          </tfoot>
         </table>
       </div>
     </div>
@@ -192,6 +223,7 @@ function computeISRMonthlyFromRow(sueldo, bono, comisiones, hextrasMensual) {
   if (sueldo < ISR_MIN_SALARIO) return 0;
   const gbMensual = sueldo + bono + comisiones + hextrasMensual;
   const gbAnual = gbMensual * 12;
+  // IGSS anual para ISR se calcula sobre sueldo anual (no sobre GB anual)
   const igssAnual = round2((sueldo * 12) * IGSS_RATE);
   const baseCalculo = gbAnual - (igssAnual + GASTOS_PERSONALES_ANUAL);
   if (baseCalculo <= 0) return 0;
@@ -212,8 +244,8 @@ function recalcRow(tr) {
 
   const hextrasMonto = computeHorasMontoMensual(sueldo, dias, horas);
   const totalDevengado = round2(sueldo + bono + comisiones + hextrasMonto);
+  // IGSS calculado siempre sobre Sueldo Base
   const igss = round2(sueldo * IGSS_RATE);
-
 
   const isrMensual = computeISRMonthlyFromRow(sueldo, bono, comisiones, hextrasMonto);
 
@@ -240,7 +272,7 @@ function recalcRow(tr) {
 /* Recalcula totales */
 function recalcTotals() {
   const rows = document.querySelectorAll('#planillaTable tbody tr');
-  let totals = {sueldo:0, bono:0, comisiones:0, horas:0, hextras:0, devengado:0, igss:0, isr:0, otras:0, deducciones:0};
+  let totals = {sueldo:0, bono:0, comisiones:0, horas:0, hextras:0, devengado:0, igss:0, isr:0, otras:0, deducciones:0, liquido:0};
   rows.forEach(tr => {
     const sueldo = parseFloat(tr.querySelector('input.sueldo')?.value) || 0;
     const bono = parseFloat(tr.querySelector('input.bono')?.value) || 0;
@@ -252,9 +284,9 @@ function recalcTotals() {
     const hextrasMonto = parseFloat(tr.dataset._hextras) || computeHorasMontoMensual(sueldo, dias, horas);
     const totalDevengado = round2(sueldo + bono + comisiones + hextrasMonto);
     const igss = round2(sueldo * IGSS_RATE);
-
     const isrMensual = parseFloat(tr.dataset._isrValue) || 0;
     const totalDeducciones = round2(igss + isrMensual + otras);
+    const liquido = round2(totalDevengado - totalDeducciones);
 
     totals.sueldo += sueldo;
     totals.bono += bono;
@@ -266,9 +298,9 @@ function recalcTotals() {
     totals.isr += isrMensual;
     totals.otras += otras;
     totals.deducciones += totalDeducciones;
+    totals.liquido += liquido;
   });
 
-  // Update totals display if elements exist (optional)
   if (document.getElementById('total-sueldo')) document.getElementById('total-sueldo').textContent = withQ(totals.sueldo);
   if (document.getElementById('total-bono')) document.getElementById('total-bono').textContent = withQ(totals.bono);
   if (document.getElementById('total-dias')) document.getElementById('total-dias').textContent = '';
@@ -280,6 +312,7 @@ function recalcTotals() {
   if (document.getElementById('total-isr')) document.getElementById('total-isr').textContent = withQ(totals.isr);
   if (document.getElementById('total-otras')) document.getElementById('total-otras').textContent = withQ(totals.otras);
   if (document.getElementById('total-deducciones')) document.getElementById('total-deducciones').textContent = withQ(totals.deducciones);
+  if (document.getElementById('total-liquido')) document.getElementById('total-liquido').textContent = withQ(totals.liquido);
 }
 
 /* Serializar tabla para localStorage */
@@ -326,9 +359,10 @@ function restoreTable(data) {
       <td class="text-end igss">Q 0.00</td>
       <td class="text-end isr-cell">${r.isr && r.isr>0 ? 'Q ' + Number(r.isr).toFixed(2) : ''}</td>
       <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="${Number(r.otras||0).toFixed(2)}"></div></td>
+      <td class="text-end total-deducciones">Q 0.00</td>
+      <td class="text-end liquido">Q 0.00</td>
       <td><input class="form-control medio-pago" type="text" value="${escapeHtml(r.medioPago||'')}"></td>
       <td><input class="form-control observaciones" type="text" value="${escapeHtml(r.observ||'')}"></td>
-      <td class="text-end total-deducciones">Q 0.00</td>
     `;
     tr.dataset._hextras = Number(r.hextras||0);
     tr.dataset._isrValue = Number(r.isr||0);
@@ -376,10 +410,8 @@ function escapeHtml(str) {
 }
 
 /* Delegated listener para inputs: recalcula y guarda */
-/* Guardado inmediato para que los cambios queden persistidos */
 document.addEventListener('input', (e) => {
   if (!e.target.classList) return;
-  // Normal numeric/name changes recalc + save
   if (e.target.classList.contains('num-cell') || e.target.classList.contains('nombre') || e.target.classList.contains('medio-pago') || e.target.classList.contains('observaciones')) {
     const tr = e.target.closest('tr');
     if (tr) recalcRow(tr);
@@ -388,7 +420,7 @@ document.addEventListener('input', (e) => {
   }
 });
 
-/* --- Inicializar bonos y dias en filas actuales y proteger bonificación --- */
+/* Inicializar bonos y dias en filas actuales y proteger bonificación */
 function initBonosYDias() {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
     const bonoInp = tr.querySelector('input.bono');
@@ -399,7 +431,6 @@ function initBonosYDias() {
     }
     const diasInp = tr.querySelector('input.dias');
     if (diasInp) {
-      // forzar 15 si vacío o inválido
       const val = parseInt(diasInp.value);
       if (!isFinite(val) || val <= 0) diasInp.value = 15;
     }
@@ -408,7 +439,7 @@ function initBonosYDias() {
   recalcTotals();
 }
 
-/* --- Plantilla al agregar fila --- */
+/* Plantilla al agregar fila */
 function createRowHtml(index) {
   return `
     <td>${index}</td>
@@ -443,13 +474,14 @@ function createRowHtml(index) {
         <input class="form-control num-cell otras" type="number" step="0.01" value="0.00">
       </div>
     </td>
+    <td class="text-end total-deducciones">Q 0.00</td>
+    <td class="text-end liquido">Q 0.00</td>
     <td><input class="form-control medio-pago" type="text" value=""></td>
     <td><input class="form-control observaciones" type="text" value=""></td>
-    <td class="text-end total-deducciones">Q 0.00</td>
   `;
 }
 
-/* --- Listener que bloquea nombre cuando se llena por primera vez --- */
+/* Listener que bloquea nombre cuando se llena por primera vez */
 document.addEventListener('blur', (e) => {
   if (!e.target.classList) return;
   if (e.target.classList.contains('nombre')) {
@@ -460,7 +492,7 @@ document.addEventListener('blur', (e) => {
   }
 }, true);
 
-/* --- Protección adicional para garantizar bono=125 y dias=15 en todas las filas --- */
+/* Protección adicional para garantizar bono=125 y dias=15 en todas las filas */
 function enforceFixedFieldsOnAllRows() {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
     const bonoInp = tr.querySelector('input.bono');
@@ -473,7 +505,7 @@ function enforceFixedFieldsOnAllRows() {
   });
 }
 
-/* --- Add row handler --- */
+/* Add row handler */
 document.getElementById('addRow').addEventListener('click', () => {
   const tbody = document.querySelector('#planillaTable tbody');
   const newIndex = tbody.querySelectorAll('tr').length + 1;
@@ -482,11 +514,9 @@ document.getElementById('addRow').addEventListener('click', () => {
   tr.innerHTML = createRowHtml(newIndex);
   tbody.appendChild(tr);
 
-  // dejar nombre editable hasta que el usuario lo complete
   const nombreInp = tr.querySelector('input.nombre');
   if (nombreInp) nombreInp.removeAttribute('readonly');
 
-  // asegurar bono fijo y dias por defecto
   const bonoInp = tr.querySelector('input.bono');
   if (bonoInp) {
     bonoInp.value = 125.00;
@@ -495,13 +525,12 @@ document.getElementById('addRow').addEventListener('click', () => {
   const diasInp = tr.querySelector('input.dias');
   if (diasInp) diasInp.value = 15;
 
-  // recalcular solo la fila añadida y totales, luego guardar
   recalcRow(tr);
   recalcTotals();
   saveToLocal();
 });
 
-/* --- Delete last row --- */
+/* Delete last row */
 document.getElementById('deleteRow').addEventListener('click', () => {
   const tbody = document.querySelector('#planillaTable tbody');
   const rows = tbody.querySelectorAll('tr');
@@ -511,7 +540,7 @@ document.getElementById('deleteRow').addEventListener('click', () => {
   saveToLocal();
 });
 
-/* --- Export to Excel (.xlsx): requiere fecha de emisión --- */
+/* Export to Excel (.xlsx): requiere fecha de emisión */
 document.getElementById('exportExcel').addEventListener('click', () => {
   const dateInput = document.getElementById('emisionDate').value;
   const planillaName = document.getElementById('planillaName').value.trim() || 'Planilla';
@@ -522,7 +551,6 @@ document.getElementById('exportExcel').addEventListener('click', () => {
   }
   if (exportHint) exportHint.style.display = 'none';
 
-  // Clonar tabla y limpiar inputs
   const table = document.getElementById('planillaTable');
   const clone = table.cloneNode(true);
   clone.querySelectorAll('input').forEach(inp => {
@@ -530,7 +558,6 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     parent.replaceChild(document.createTextNode(inp.value), inp);
   });
 
-  // Convertir celdas Q... a números
   clone.querySelectorAll('td, th').forEach(cell => {
     let txt = (cell.textContent || '').replace(/\u00A0/g, ' ').trim();
     if (txt === '') return;
@@ -540,7 +567,6 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     else cell.textContent = txt;
   });
 
-  // Crear hoja y añadir encabezado con nombre y fecha
   const ws = XLSX.utils.table_to_sheet(clone, {raw:true});
   XLSX.utils.sheet_add_aoa(ws, [[planillaName]], {origin: "A1"});
   XLSX.utils.sheet_add_aoa(ws, [[`Fecha de emisión:`, dateInput]], {origin: "A2"});
@@ -553,7 +579,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
   XLSX.writeFile(wb, filename);
 });
 
-/* --- Auto-dividir Sueldo Base entre 2 solo cuando el usuario termina de editar (blur) o pega (paste) --- */
+/* Auto-dividir Sueldo Base entre 2 solo cuando el usuario termina de editar (blur) o pega (paste) */
 (function(){
   function parseNumberSafe(v){
     if (v == null) return 0;
@@ -587,7 +613,6 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     }
   }
 
-  // Solo aplicar en paste y blur (no al cargar)
   document.addEventListener('paste', function(e){
     const t = e.target;
     if (!t || !t.classList) return;
@@ -607,18 +632,14 @@ document.getElementById('exportExcel').addEventListener('click', () => {
 
 /* Init */
 document.addEventListener('DOMContentLoaded', () => {
-  // Cargar guardado si existe; si no hay guardado, usar plantilla HTML actual
   const restored = loadFromLocal();
 
-  // Inicializaciones obligatorias: bonificación = 125, días = 15, recalcular y proteger campos
   initBonosYDias();
   enforceFixedFieldsOnAllRows();
 
-  // recalcular (por si la carga no restauró)
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
   recalcTotals();
 
-  // Asegurar que se guarde el estado actual la primera vez si no había nada guardado
   if (!restored) saveToLocal();
 });
 </script>
