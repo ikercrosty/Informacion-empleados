@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% block title %}Planilla {% endblock %}
+{% block title %}Planilla - Noviembre 2025{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -10,38 +10,29 @@
         <div class="text-muted small mt-1">Empresa: EMPAQUES Y TEXTURAS DE GUATEMALA, SOCIEDAD ANÓNIMA</div>
       </div>
 
-      <!-- CONTROLS: UPDATED LAYOUT
-           - Name and Date placed with more separation
-           - Buttons moved below the inputs and pushed down visually
-           - No other behavior or logic changed
-      -->
-      <div class="controls d-flex flex-column flex-md-row align-items-start gap-3">
-        <div class="d-flex flex-column flex-md-row align-items-start gap-3 w-100">
-          <div class="control-item me-0 me-md-3">
-            <h6 class="mb-1">Ingrese nombre para el documento</h6>
-            <input id="planillaName" class="form-control form-control-sm" type="text" value="Planilla " style="min-width:240px" />
-          </div>
-
-          <div class="control-item me-0 me-md-3">
-            <h6 class="mb-1">Ingrese fecha de emisión del documento</h6>
-            <input id="emisionDate" class="form-control form-control-sm" type="date" />
-          </div>
+      <div class="controls d-flex flex-wrap align-items-center">
+        <div class="me-4">
+          <h6 class="mb-1">Ingrese nombre para el documento</h6>
+          <input id="planillaName" class="form-control form-control-sm" type="text" value="Planilla " style="min-width:240px" />
         </div>
 
-        <div class="action-buttons w-100 d-flex flex-column flex-md-row align-items-start align-items-md-center" style="gap:24px; margin-top:10px;">
-          <div class="d-flex flex-wrap align-items-center" style="gap:24px;">
-            <button id="exportExcel" class="btn btn-primary btn-sm d-flex align-items-center" title="Exportar a Excel">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-file-earmark-excel me-2" viewBox="0 0 16 16"><path d="M5.884 6.68 4.52 9.5l1.364 2.82H3.54L2 9.5l1.54-2.82h1.344z"/><path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zM10.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5.5H10.5A1.5 1.5 0 0 1 9 4V3.5z"/></svg>
-              Exportar a Excel
-            </button>
-
-            <button id="addRow" class="btn btn-outline-secondary btn-sm" title="Agregar fila">Agregar fila</button>
-
-            <button id="deleteRow" class="btn btn-outline-danger btn-sm" title="Eliminar fila">Eliminar fila</button>
-          </div>
-
-          <small id="exportHint" class="text-danger ms-3" style="display:none; margin-top:8px;">Ingrese fecha de emisión para exportar</small>
+        <div class="me-4">
+          <h6 class="mb-1">Ingrese fecha de emisión del documento</h6>
+          <input id="emisionDate" class="form-control form-control-sm" type="date" />
         </div>
+
+        <div class="action-buttons d-flex align-items-center" style="gap:24px; justify-content:flex-end; margin-left:auto;">
+          <button id="exportExcel" class="btn btn-primary btn-sm d-flex align-items-center" title="Exportar a Excel">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-file-earmark-excel me-2" viewBox="0 0 16 16"><path d="M5.884 6.68 4.52 9.5l1.364 2.82H3.54L2 9.5l1.54-2.82h1.344z"/><path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zM10.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5.5H10.5A1.5 1.5 0 0 1 9 4V3.5z"/></svg>
+            Exportar a Excel
+          </button>
+
+          <button id="addRow" class="btn btn-outline-secondary btn-sm" title="Agregar fila">Agregar fila</button>
+
+          <button id="deleteRow" class="btn btn-outline-danger btn-sm" title="Eliminar fila">Eliminar fila</button>
+        </div>
+
+        <small id="exportHint" class="text-danger ms-3" style="display:none;">Ingrese fecha de emisión para exportar</small>
       </div>
     </div>
   </div>
@@ -135,7 +126,7 @@
               <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell sueldo" type="number" step="0.01" value="3723.05"></div></td>
               <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control bono" type="number" step="0.01" value="125.00" readonly></div></td>
               <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="15"></td>
-              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="0.00"></div></td>
+              <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="0.00"></div></td>
               <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
               <td class="text-end hextras">Q 0.00</td>
               <td class="text-end total-devengado">Q 0.00</td>
@@ -783,10 +774,8 @@ document.addEventListener('DOMContentLoaded', () => {
   .table-header-custom { background: linear-gradient(90deg,#0ea5a4,#036b6a); }
   .table-header-custom th { color:#fff; border:0; font-weight:700; padding:.9rem 1rem; }
 
-  /* Controls spacing (added) */
-  .controls { align-items: flex-start; }
-  .controls .control-item { min-width: 240px; }
-  .action-buttons { margin-top: 6px; }
+  /* small spacing adjustment so inputs are more separated */
+  .controls .me-4 { margin-right: 1.4rem; }
 
   table.table { border-collapse: separate; border-spacing:0; border-radius:.6rem; overflow:hidden; box-shadow: 0 1px 2px rgba(15,23,42,0.04); width:100%; }
   table.table td, table.table th {
