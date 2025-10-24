@@ -340,17 +340,15 @@
 
       <hr class="my-5">
 
-      <!-- FIRMAS: centradas y desplazadas hacia abajo respecto al último apartado -->
-      <div class="signatures-spacer"></div>
-
-      <div class="firmas-row centered" aria-hidden="false">
+      <!-- FIRMAS: firma del empleado y firma de la empresa (alineadas en la misma línea con espacio) -->
+      <div class="firmas-row" style="margin-top: 1rem;">
         <div class="firma-item">
-          <div class="firma-line" role="presentation"></div>
+          <div class="firma-line" aria-hidden="true"></div>
           <div class="firma-caption">Firma del empleado</div>
         </div>
 
-        <div class="firma-item">
-          <div class="firma-line" role="presentation"></div>
+        <div class="firma-item" style="margin-left: 3.5rem;">
+          <div class="firma-line" aria-hidden="true"></div>
           <div class="firma-caption">Firma de la empresa</div>
         </div>
       </div>
@@ -635,6 +633,11 @@
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
 <style>
+/* ----- Ficha.css (reemplaza todo tu <style> con este contenido) ----- */
+/* Pantalla: mantiene tu diseño. Impresión: encabezado en PRIMERA página con solo título + foto,
+   fondo blanco, mismo orden de secciones y ocultación de controles/subtítulo. */
+
+/* Variables */
 :root{
   --brand-brown: #4b2f2a;
   --brand-orange: #ff8a2b;
@@ -645,30 +648,56 @@
   --card-radius: 16px;
   --control-radius: 12px;
   --print-field-line: #d0d7e6;
-  --firma-line-color: #000;
+  --firma-line-color: #000; /* línea de firma negra */
   --firma-line-height: 2px;
-  --firma-line-width: 220px;
+  --firma-line-width: 220px; /* ancho fijo para consistencia */
 }
 
-/* existing UI styles left unchanged (omitted here to keep only modified styles visible) */
-/* ... keep earlier styles unchanged ... */
+/* --- Pantalla (sin cambios funcionales importantes) --- */
+.container { max-width:1200px; margin:22px auto; padding:18px; background: linear-gradient(180deg,var(--muted-bg),#fbfeff); border-radius:20px; }
+.header-body { padding:18px; border-radius: var(--card-radius); background: linear-gradient(90deg, rgba(37,99,235,0.04), rgba(255,138,43,0.02)); display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.title-row { display:flex; gap:18px; align-items:start; }
+h3.mb-0 { font-size:1.4rem; margin:0; color:var(--brand-brown); font-weight:900; }
+.text-muted.small { color:#475569; margin-top:6px; font-weight:700; }
+.select-main { min-width:320px; border-radius: calc(var(--control-radius) - 2px); padding:0.45rem 0.7rem; border:1px solid var(--surface-border); background: linear-gradient(180deg,#fff,#f4f9ff); color:#072031; font-weight:800; }
+.action-buttons { display:flex; align-items:center; gap:10px; white-space:nowrap; }
+.btn-print { display:inline-flex; align-items:center; gap:8px; padding:0.42rem 0.9rem; border-radius:12px; font-weight:900; color:#fff; background: linear-gradient(90deg,var(--brand-blue),var(--brand-blue-2)); border:none; cursor:pointer; }
+.btn-clear { display:inline-flex; align-items:center; gap:8px; padding:0.38rem 0.8rem; border-radius:12px; background:#fff; color:#263241; border:1px solid rgba(37,99,235,0.06); cursor:pointer; }
+.photo-frame { width:134px; height:176px; border-radius:14px; background: linear-gradient(180deg,#eef7ff,#fff); padding:6px; display:flex; align-items:center; justify-content:center; box-shadow: 0 12px 36px rgba(16,24,40,0.06); }
+#fotoEmpleado, .fotoEmpleado { width:122px; height:160px; object-fit:cover; border-radius:10px; border:2px solid rgba(255,255,255,0.9); }
 
-/* Spacer to push signatures lower on page */
-.signatures-spacer { height: 28px; margin-bottom: 12px; }
+/* Form */
+#fichaForm.card { border-radius:18px; overflow:hidden; border: 1px solid rgba(37,99,235,0.04); background: linear-gradient(180deg,#ffffff,#fbfdff); box-shadow: 0 28px 80px rgba(20,80,160,0.04); }
+.card-body.p-4 { padding:24px; }
+h5.mb-3 { font-size:1rem; color:var(--brand-blue); font-weight:900; margin-bottom:12px; display:flex; align-items:center; gap:10px; position:relative; padding-left:10px; }
+h5.mb-3:before { content: ""; position:absolute; left:0; top:8px; width:6px; height:22px; border-radius:4px; background: linear-gradient(180deg,var(--brand-orange),var(--brand-blue-2)); box-shadow: 0 6px 18px rgba(37,99,235,0.06); }
 
-/* Firmas: centrar lateralmente y mantener separación */
-.firmas-row.centered {
-  display:flex;
-  justify-content:center;
-  gap: 4.5rem;
-  align-items:flex-end;
-  margin-top: 6mm;
-  page-break-inside: avoid;
+.form-control[readonly] { width:100%; padding:0.58rem 0.72rem; border-radius:10px; background: linear-gradient(90deg,#fff,#fcfeff); border:1px solid #e9f2ff; color:#06202a; font-weight:400; min-height:36px; line-height:1.25; }
+.form-control[readonly].empty { color:#9aa4b2; font-style:italic; font-weight:400; }
+
+.row.g-3 { margin:0 -6px; gap:12px; }
+.col-md-3 { padding:0 6px; box-sizing:border-box; flex:0 0 25%; max-width:25%; }
+.col-md-4 { padding:0 6px; box-sizing:border-box; flex:0 0 33.3333%; max-width:33.3333%; }
+.col-md-6 { padding:0 6px; box-sizing:border-box; flex:0 0 50%; max-width:50%; }
+
+.table-responsive { margin-top:8px; border-radius:12px; overflow:auto; padding:8px; border:1px solid rgba(37,99,235,0.03); background: linear-gradient(180deg, rgba(37,99,235,0.02), rgba(255,138,43,0.01)); }
+.table.table-sm td, .table.table-sm th { padding:0.6rem 0.8rem; color:#24303a; border-top:1px dashed rgba(37,99,235,0.03); }
+
+label.form-label { display:block; font-weight:700; color:#0b2733; margin-bottom:6px; }
+
+/* Firmas: contenedor y estilo de líneas (alineadas lado a lado) */
+.firmas-row {
+  display: flex;
+  gap: 3.5rem;
+  align-items: flex-end;
+  justify-content: flex-start;
+  margin-top: 1rem;
+  flex-wrap: nowrap;
 }
 .firma-item {
-  display:flex;
-  flex-direction:column;
-  align-items:center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   min-width: var(--firma-line-width);
 }
 .firma-line {
@@ -686,27 +715,122 @@
   font-size: .95rem;
 }
 
-/* Small screens: stack and center */
+/* Responsive firmas: si la pantalla es pequeña, las apila manteniendo el ancho y centrado */
 @media (max-width:575.98px){
-  .firmas-row.centered { flex-direction: column; gap: 1.25rem; align-items:center; }
-  .firma-item { min-width: 60%; }
+  .firmas-row { flex-direction: column; gap: 1.25rem; }
+  .firma-item { min-width: 100%; align-items: flex-start; }
   .firma-line { width: 60%; }
 }
 
-/* Print rules ensuring signature lines appear when printing */
+/* Responsive */
+@media (max-width:575.98px){
+  .header-body { padding:12px; flex-direction:column; gap:12px; align-items:flex-start; }
+  .photo-frame { width:110px; height:140px; }
+  #fotoEmpleado, .fotoEmpleado { width:96px; height:120px; }
+  .col-md-3, .col-md-4, .col-md-6 { flex:0 0 100%; max-width:100%; }
+}
+
+/* --- Impresión específica: encabezado con título + foto en PRIMERA página, fondo blanco --- */
 @media print{
-  .firmas-row.centered { display:flex !important; justify-content:center !important; gap:4.5rem !important; }
-  .firma-line {
-    background-color: #000 !important;
-    height: 2px !important;
-    width: var(--firma-line-width) !important;
+  /* white page background */
+  html, body { background: #fff !important; color: #000 !important; margin:0 !important; padding:0 !important; height:auto !important; }
+
+  /* hide interactive controls and subtitle */
+  .btn-print, .btn-clear, #btnClear, .header-actions, .small-controls, select { display:none !important; }
+  .text-muted.small { display:none !important; }
+
+  /* keep header area but show only the H3 and the photo when body has .print-photo-header */
+  .header-body { background: transparent !important; box-shadow:none !important; border:none !important; padding: 6mm 0 0 0 !important; position: relative !important; }
+  .title-row > :not(h3) { display:none !important; } /* hides select/actions but keeps H3 */
+  .header-right .meta { display:none !important; } /* hides "Foto de empleado" caption */
+
+  /* ensure H3 visible and black */
+  h3.mb-0 { display:block !important; font-size:1.6rem !important; color:#000 !important; font-weight:900 !important; margin:0 0 6mm 0 !important; }
+
+  /* Place photo at top-right of first page (absolute) only when body has the print class */
+  body.print-photo-header .photo-frame,
+  body.print-photo-header .fotoEmpleado,
+  body.print-photo-header #fotoEmpleado {
+    display:block !important;
+    position: absolute !important;
+    right: 10mm !important;
+    top: 6mm !important;
+    width: 36mm !important;
+    height: auto !important;
+    max-height: 48mm !important;
+    margin: 0 !important;
     page-break-inside: avoid !important;
-    -webkit-print-color-adjust: exact !important;
+    break-inside: avoid !important;
   }
-  /* increase space above signatures on print */
-  .signatures-spacer { height: 32mm !important; }
-  /* ensure lines are not hidden by input print rules */
-  div[style*="border-bottom"] { border-bottom: none !important; }
+  body.print-photo-header .photo-frame img,
+  body.print-photo-header .fotoEmpleado,
+  body.print-photo-header #fotoEmpleado { width:100% !important; height:auto !important; object-fit:cover !important; }
+
+  /* Prevent header occupying a full page */
+  .header-card, .header-body { margin:0 0 6mm 0 !important; page-break-after: avoid !important; break-after: avoid !important; }
+
+  /* Form content: same order as screen, avoid splitting sections */
+  #fichaForm.card, .card-body.p-4, .row.g-3, .table-responsive, table, tbody, tr, td, th {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    -webkit-column-break-inside: avoid !important;
+  }
+
+  /* Inputs: print as underlined fields with black text */
+  label.form-label { color:#000 !important; font-weight:700 !important; }
+  input.form-control[readonly], input.form-control {
+    display:block !important;
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 1px solid var(--print-field-line) !important;
+    padding-top: 0.45rem !important;
+    padding-bottom: 0.45rem !important;
+    min-height: 30px !important;
+    margin-bottom: 6px !important;
+    color: #000 !important;
+    font-weight: 400 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Tables: clear borders */
+  table td, table th { border: 1px solid #ddd !important; padding: 6px 8px !important; color: #000 !important; }
+
+  /* Remove decorative backgrounds/shadows */
+  .card, .container, #fichaForm.card { box-shadow:none !important; background:transparent !important; border:none !important; }
+
+  @page { margin: 10mm 10mm !important; }
+
+  /* ensure images are printable */
+  img { max-width:100% !important; height:auto !important; }
+
+  /* final cleanup */
+  .card-body.p-4::after { content: "" !important; display: table !important; clear: both !important; }
+
+  /* ===== New: avoid page-breaks inside logical sections (applies only to sections after DATOS PERSONALES) ===== */
+  .ficha-section {
+    display: block !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    -webkit-column-break-inside: avoid !important;
+    margin-bottom: 6mm !important;
+  }
+
+  .ficha-section .row,
+  .ficha-section .row.g-3,
+  .ficha-section > .table-responsive,
+  .ficha-section table,
+  .ficha-section .row > [class*="col-"] {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    -webkit-column-break-inside: avoid !important;
+  }
+
+  /* Ensure signature lines print as solid black and remain side-by-side when space allows */
+  .firmas-row { display:flex !important; gap: 3.5rem !important; justify-content: flex-start !important; }
+  .firma-line { background-color: #000 !important; height: 2px !important; width: 220px !important; }
+
+  /* If a ficha-section is taller than printable page, browser will still paginate it; reduce layout or split manually in that case. */
 }
 </style>
 {% endblock %}
