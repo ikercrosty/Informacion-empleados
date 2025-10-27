@@ -6,8 +6,8 @@
   <div class="card shadow-sm mb-4">
     <div class="card-body d-flex justify-content-between align-items-center">
       <div>
-        <h2 class="mb-0">RECIBO DE PAGO</h2>
-        <div class="small text-muted">Empresa: {{ empresa_nombre|default('Empaques y texturas de Guatamala S.A') }}</div>
+        <h3 class="mb-0 title-large">Recibo de pago de sueldos</h3>
+        <div class="small text-muted">Empresa: {{ empresa_nombre|default('Empaques y texturas de Guatemala S.A') }}</div>
       </div>
 
       <div class="text-end meta-block" style="min-width:320px;">
@@ -23,14 +23,14 @@
           </div>
 
           <div style="align-self:flex-end;">
-            <button id="imprimirBtn" class="btn btn-primary btn-sm" title="Imprimir recibo">Imprimir</button>
+            <button id="imprimirBtn" class="btn-imprimir" title="Imprimir recibo">Imprimir</button>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Selección de empleado -->
+  <!-- Selección de empleado + Lugar moved under Nombre -->
   <div class="card shadow-sm mb-4 section-card">
     <div class="card-body section-grid">
       <div class="section-left">
@@ -42,9 +42,8 @@
               <option value="">-- Seleccione empleado --</option>
             </select>
           </div>
-          <div class="col-12 col-md-4">
-            <label class="form-label">Lugar / Ciudad</label>
-            <input id="lugarPago" class="form-control" type="text" placeholder="GUATEMALA" value="GUATEMALA">
+          <div class="col-12 col-md-4 d-none d-md-block">
+            <!-- placeholder to keep layout on desktop; actual Lugar will appear under Nombre -->
           </div>
         </div>
       </div>
@@ -56,6 +55,13 @@
             <label class="form-label">Nombre completo</label>
             <input id="nombre" class="form-control" readonly value="{{ recibo.nombre if recibo is defined else '' }}">
           </div>
+
+          <!-- Lugar / Ciudad moved here under Nombre as requested -->
+          <div class="col-12 mt-2">
+            <label class="form-label">Lugar / Ciudad</label>
+            <input id="lugarPago" class="form-control" type="text" placeholder="GUATEMALA" value="GUATEMALA">
+          </div>
+
           <div class="col-12 mt-2">
             <label class="form-label">DPI / Identificación</label>
             <input id="dpi" class="form-control" readonly value="{{ recibo.dpi if recibo is defined else '' }}">
@@ -123,7 +129,7 @@
     </div>
   </div>
 
-  <!-- Total en letras y medios de pago -->
+  <!-- Total en letras -->
   <div class="card shadow-sm mb-4">
     <div class="card-body d-flex gap-3 flex-wrap align-items-start">
       <div style="flex:1; min-width:260px;">
@@ -131,29 +137,33 @@
         <input id="totalEnLetras" class="form-control" type="text" readonly value="{{ recibo.total_letras if recibo is defined else '' }}">
       </div>
 
+      <!-- Metodo de pago moved here under Total en letras (on page visible) -->
       <div style="min-width:280px;">
         <h6 class="mb-2">MEDIOS DE PAGO</h6>
-        <div class="form-check">
-          <input class="form-check-input" type="radio" name="medioPago" id="pagoEfectivo" value="EFECTIVO" checked>
+
+        <div class="form-check printable-option" data-option="EFECTIVO">
+          <input class="form-check-input medio-radio" type="radio" name="medioPago" id="pagoEfectivo" value="EFECTIVO" checked>
           <label class="form-check-label" for="pagoEfectivo">EFECTIVO</label>
         </div>
 
-        <div class="form-check mt-2">
-          <input class="form-check-input" type="radio" name="medioPago" id="pagoTransferencia" value="TRANSFERENCIA">
+        <div class="form-check printable-option" data-option="TRANSFERENCIA">
+          <input class="form-check-input medio-radio" type="radio" name="medioPago" id="pagoTransferencia" value="TRANSFERENCIA">
           <label class="form-check-label" for="pagoTransferencia">TRANSFERENCIA BANCARIA</label>
-        </div>
-        <div class="transferencia-fields mt-2 ms-3">
-          <input id="transCuenta" class="form-control mb-1" type="text" placeholder="No. de cuenta (transferencia)">
-          <input id="transBanco" class="form-control" type="text" placeholder="Banco (transferencia)">
+
+          <div class="transferencia-fields mt-2 ms-3">
+            <input id="transCuenta" class="form-control mb-1" type="text" placeholder="No. de cuenta (transferencia)">
+            <input id="transBanco" class="form-control" type="text" placeholder="Banco (transferencia)">
+          </div>
         </div>
 
-        <div class="form-check mt-2">
-          <input class="form-check-input" type="radio" name="medioPago" id="pagoCheque" value="CHEQUE">
+        <div class="form-check printable-option" data-option="CHEQUE">
+          <input class="form-check-input medio-radio" type="radio" name="medioPago" id="pagoCheque" value="CHEQUE">
           <label class="form-check-label" for="pagoCheque">CHEQUE</label>
-        </div>
-        <div class="cheque-fields mt-2 ms-3">
-          <input id="chequeNumero" class="form-control mb-1" type="text" placeholder="No. de cheque">
-          <input id="chequeBanco" class="form-control" type="text" placeholder="Banco (cheque)">
+
+          <div class="cheque-fields mt-2 ms-3">
+            <input id="chequeNumero" class="form-control mb-1" type="text" placeholder="No. de cheque">
+            <input id="chequeBanco" class="form-control" type="text" placeholder="Banco (cheque)">
+          </div>
         </div>
       </div>
     </div>
@@ -351,6 +361,40 @@
     return parts.join(' ').replace(/\s+/g,' ').trim();
   }
 
+  // payment method toggles on screen (show extra fields when selected)
+  function updateMediosOnScreen(){
+    const val = document.querySelector('input[name="medioPago"]:checked')?.value;
+    document.querySelectorAll('.transferencia-fields').forEach(el=>el.style.display = (val === 'TRANSFERENCIA') ? 'block' : 'none');
+    document.querySelectorAll('.cheque-fields').forEach(el=>el.style.display = (val === 'CHEQUE') ? 'block' : 'none');
+  }
+  document.querySelectorAll('input[name="medioPago"]').forEach(r=>r.addEventListener('change', updateMediosOnScreen));
+  updateMediosOnScreen();
+
+  // Printing behavior: before print, add a class to body to indicate which medio is selected
+  function beforePrintSetup(){
+    const val = document.querySelector('input[name="medioPago"]:checked')?.value || '';
+    document.body.classList.remove('print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
+    if(val) document.body.classList.add('print-medio-' + val);
+  }
+  function afterPrintCleanup(){
+    document.body.classList.remove('print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
+  }
+
+  // Attach print handlers: modern browsers support beforeprint/afterprint; also attach to the print button
+  if (window.matchMedia) {
+    const mql = window.matchMedia('print');
+    mql.addListener((m) => { if(m.matches) beforePrintSetup(); else afterPrintCleanup(); });
+  }
+  window.addEventListener('beforeprint', beforePrintSetup);
+  window.addEventListener('afterprint', afterPrintCleanup);
+
+  // print button: ensure we run beforePrintSetup just in case, then print
+  const imprimirBtn = document.getElementById('imprimirBtn');
+  if(imprimirBtn) imprimirBtn.addEventListener('click', function(){
+    beforePrintSetup();
+    setTimeout(()=> window.print(), 60);
+  });
+
   ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.addEventListener('input', recalcLiquido);
@@ -359,175 +403,129 @@
   document.addEventListener('DOMContentLoaded', function(){
     loadEmpleados();
     recalcLiquido();
-    const imp = document.getElementById('imprimirBtn');
-    if(imp) imp.addEventListener('click', function(){ window.print(); });
   });
-
-  // toggle transfer/cheque fields
-  function updateMedios(){
-    const val = document.querySelector('input[name="medioPago"]:checked')?.value;
-    document.querySelectorAll('.transferencia-fields, .cheque-fields').forEach(el=>el.style.display='none');
-    if(val === 'TRANSFERENCIA') document.querySelectorAll('.transferencia-fields').forEach(el=>el.style.display='block');
-    if(val === 'CHEQUE') document.querySelectorAll('.cheque-fields').forEach(el=>el.style.display='block');
-  }
-  document.querySelectorAll('input[name="medioPago"]').forEach(r=>r.addEventListener('change', updateMedios));
-  updateMedios();
-
 })();
 </script>
 
 <style>
 :root{
-  --bg-1: #f3e7dd; /* light coffee background restored */
-  --card: #ffffff;
+  --bg-1: #f3e7dd;
   --muted: #6b7280;
-  --accent-cafe: #8b5e3c;
   --accent-naranja: #ff7a18;
   --accent-azul: #0b7285;
   --accent-azul-claro: #0ea5a4;
-  --glass: rgba(255,255,255,0.85);
   --shadow-1: 0 8px 28px rgba(11,50,80,0.06);
-  --radius: 12px;
-  --gap: 1rem;
-  --smooth: cubic-bezier(.2,.9,.3,1);
   font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-/* Page background */
-body {
-  background: linear-gradient(180deg, var(--bg-1), #fff6ee);
-  color: #0f1724;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  margin: 0;
-  padding: 0;
-}
+/* Page */
+body { background: linear-gradient(180deg, var(--bg-1), #fff6ee); color:#0f1724; margin:0; padding:0; }
 
-/* Cards and containers */
-.container { max-width: 1100px; margin: 18px auto; padding: 0 18px 40px; }
-.card {
-  border-radius: 14px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,251,255,0.98));
-  border: 1px solid rgba(11,19,30,0.04);
-  box-shadow: var(--shadow-1);
-}
+/* Header */
+.title-large { font-size: 1.6rem; font-weight: 800; color: var(--accent-azul); }
 
-/* Layout helper for two-column sections on screen */
+/* Cards and layout */
+.container { max-width:1100px; margin:18px auto; padding:0 18px 40px; }
+.card { border-radius: 14px; background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,251,255,0.98)); border:1px solid rgba(11,19,30,0.04); box-shadow: var(--shadow-1); }
 .section-card .card-body.section-grid { display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap; padding:16px; }
 .section-card .section-left, .section-card .section-right { flex:1 1 320px; min-width:260px; }
 
-/* Header */
-h3.mb-0 { margin: 0; font-size: 1.25rem; color: var(--accent-azul); letter-spacing: 0.4px; font-weight: 700; }
-.small.text-muted { color: var(--muted); }
+/* Inputs */
+.form-label { font-weight:600; color:var(--muted); }
+.form-control { border-radius:10px; border:1px solid rgba(11,19,30,0.06); background:#fff; padding:.6rem .75rem; }
+.form-control[readonly] { background: linear-gradient(180deg,#fbfdff,#f8fbff); color:#0b2a36; cursor:not-allowed; }
 
-/* Inputs & labels */
-.form-label { font-weight: 600; color: var(--muted); }
-.form-label.small { font-size: .86rem; color: var(--muted); font-weight: 600; }
-.form-control { border-radius: 10px; border: 1px solid rgba(11,19,30,0.06); background: #fff; box-shadow: none; padding: .50rem .7rem; }
-.form-control[readonly] { background: linear-gradient(180deg,#fbfdff,#f8fbff); color: #0b2a36; cursor: not-allowed; }
-
-/* Buttons */
-.btn-primary {
-  background: linear-gradient(90deg, var(--accent-naranja), var(--accent-azul));
-  border: none;
+/* Print button new design */
+.btn-imprimir {
+  background: linear-gradient(90deg, #0b7285, #ff7a18);
   color: #fff;
+  border: none;
+  padding: .52rem .95rem;
+  border-radius: 12px;
   font-weight: 700;
-  padding: .45rem .7rem;
-  border-radius: 10px;
-  box-shadow: 0 10px 28px rgba(11,114,133,0.09);
-  transition: transform .18s var(--smooth), box-shadow .18s var(--smooth);
+  box-shadow: 0 8px 24px rgba(11,114,133,0.12);
+  cursor: pointer;
+  transition: transform .14s ease, box-shadow .14s ease;
 }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(11,114,133,0.12); }
+.btn-imprimir:hover { transform: translateY(-3px); box-shadow: 0 16px 36px rgba(11,114,133,0.18); }
 
-/* Compact spacing for compact look */
-.row.g-2 > [class*="col-"], .row.g-3 > [class*="col-"] { padding-bottom: 6px; }
-.mb-2 { margin-bottom: .5rem !important; }
-.section-card .card-body { padding: 12px; }
-
-/* Money / numeric styling */
-#liquidoTotal { background: linear-gradient(90deg,#fff8eb,#fff4e6); border: 1px solid rgba(255,176,54,0.12); font-weight: 800; color: var(--accent-naranja); }
+/* Compact look */
+.row.g-2 > [class*="col-"], .row.g-3 > [class*="col-"] { padding-bottom:6px; }
+.mb-2 { margin-bottom:.5rem !important; }
+.card-body { padding: 16px; }
 
 /* Signatures */
 .sig-line { border-bottom:1px solid #ccc; height:1px; margin-bottom:8px; }
 
-/* Transfer / cheque fields: subtle indent */
-.transferencia-fields, .cheque-fields {
-  margin-left: .5rem;
-  margin-top: .5rem;
-}
+/* Transfer / cheque fields off by default until selection */
+.transferencia-fields, .cheque-fields { display:none; }
 
-/* Responsive tweaks */
-@media (max-width: 900px){
-  .section-card .card-body.section-grid { flex-direction:column; }
-}
+/* On-screen: show selected extra fields (handled by JS) */
+.transferencia-fields[style*="display: block"], .cheque-fields[style*="display: block"] { display:flex; flex-direction:column; gap:6px; }
 
-/* Print-specific layout: compact, two-column receipt on one page */
+/* Accessibility focus */
+input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rgba(14,165,164,0.06); border-color: var(--accent-azul-claro); }
+
+/* Print styles */
 @media print {
   @page { size: A4; margin: 10mm; }
-  html, body {
+
+  /* Reset page visuals */
+  body { background: #fff !important; color: #000; }
+  .container { max-width:100%; padding:0; margin:0; }
+  .card { box-shadow:none !important; border:none !important; background:transparent !important; }
+  .card .card-body { padding:6px; }
+
+  /* Make inputs more visible in print */
+  input.form-control, input.form-control[readonly] {
     background: #fff !important;
-    margin: 0; padding: 0;
+    -webkit-print-color-adjust: exact;
+    border: 1px solid #111 !important;
+    color: #000 !important;
+    padding: 2px 4px;
   }
 
-  /* Hide UI controls that shouldn't print */
-  button, select, .form-check-input, .form-check-label, input[placeholder], .meta-block .form-control-sm { display: none !important; }
-  a, #imprimirBtn, #empleadoSelect { display: none !important; }
+  /* Hide interactive controls (radios visible but labels/others handled below) */
+  .medio-radio { display:inline-block; }
 
-  /* Make container full width for print */
-  .container { max-width: 100%; padding: 0; margin:0; }
+  /* On-screen we show all 3 options; in print we show only the selected one */
+  /* Default: hide all printable-option blocks, then reveal only the chosen via body class added by JS */
+  .printable-option { display:none; }
 
-  /* Reduce fonts and paddings to fit one page */
-  body, .card, .form-control, label, input, h3, h5, h6 { font-size: 10px; }
-  .card { border: none; box-shadow: none; background: transparent; }
-  .card .card-body { padding: 6px; }
-  .section-card .card-body.section-grid { gap: 8px; }
+  /* If EFECTIVO selected for print -> show only that block */
+  body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:block; }
+  body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:block; }
+  body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:block; }
 
-  /* Two-column arrangement for most content */
-  .section-card .card-body.section-grid { display:flex; flex-wrap:nowrap; }
-  .section-card .section-left, .section-card .section-right { flex: 0 0 50%; min-width: 45%; }
+  /* Show the extra fields for the selected option */
+  body.print-medio-TRANSFERENCIA .transferencia-fields { display:block; }
+  body.print-medio-CHEQUE .cheque-fields { display:block; }
 
-  /* Make rows within each column compact */
-  .row.g-2, .row.g-3 { margin: 0; }
-  .row.g-2 > [class*="col-"], .row.g-3 > [class*="col-"] { padding: 4px; }
+  /* Remove buttons and non-essential interactive elements */
+  button, select, input[type="date"], .btn-imprimir { display:none !important; }
 
-  /* Compact signature area */
-  .signatures-row { margin-top: 12px; display:flex; gap:8px; }
-  .signatures-row .col-6 { width:50%; padding:0 8px; }
+  /* Reduce font sizes slightly to fit one page */
+  h3, h5, h6, label, input { font-size: 10px; }
 
-  /* Liquido and total should be prominent but compact */
-  .liquido-row { padding: 6px 6px; }
-  #liquidoTotal { font-size: 12px; width:200px; display:inline-block; }
-
-  /* Ensure no page break inside the receipt */
+  /* Avoid page breaks inside the main cards */
   .card, .section-card, .signatures-row { page-break-inside: avoid; break-inside: avoid; }
 
-  /* Show transfer/cheque fields if selected; otherwise they'll print empty but hidden inputs were removed above */
-  .transferencia-fields, .cheque-fields { display:block; margin-left: 4px; }
-
-  /* Ensure inputs print their values plainly */
-  input.form-control { border: none; background: transparent; box-shadow:none; padding: 0; }
-  input[readonly] { color: #000; }
-
-  /* Reduce margins on headings */
-  h3, h5, h6 { margin: 0 0 4px 0; font-weight: 700; }
-  .small.text-muted { font-size: 9px; color: #222; }
-
-  /* Hide elements that could push to second page */
-  .meta-block { display: block; }
+  /* Ensure total and liquido are compact but visible */
+  #liquidoTotal { font-weight:800; color:#111; }
 }
 
-/* Subtle accessibility helpers */
-input:focus, select:focus, button:focus {
-  outline: none;
-  box-shadow: 0 0 0 4px rgba(14,165,164,0.06);
-  border-color: var(--accent-azul-claro);
+/* Ensure on-screen the payment option extras show/hidden via JS */
+.printable-option .transferencia-fields, .printable-option .cheque-fields { display:none; }
+
+/* When user selects Transferencia/Cheque on screen we show extras */
+input[name="medioPago"][value="TRANSFERENCIA"]:checked ~ .transferencia-fields,
+input[name="medioPago"][value="CHEQUE"]:checked ~ .cheque-fields {
+  display:flex;
+  flex-direction:column;
 }
 
-/* Final micro polish */
-.small.text-muted { font-size: .88rem; }
-.form-check-label { font-weight: 600; color: #233642; }
-
-/* Hide extra fields by default until JS toggles them */
-.transferencia-fields, .cheque-fields { display: none; }
+/* micro polish */
+.small.text-muted { font-size:.88rem; color:var(--muted); }
+.form-check-label { font-weight:600; color:#233642; }
 </style>
 {% endblock %}
