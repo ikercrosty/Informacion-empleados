@@ -10,18 +10,20 @@
         <div class="small text-muted">Empresa: {{ empresa_nombre|default('EMPRESA') }}</div>
       </div>
 
-      <div class="text-end" style="min-width:290px;">
+      <div class="text-end" style="min-width:320px;">
         <div class="mb-2">
           <label class="form-label small text-muted">Comprobante No</label>
           <input id="comprobanteNumero" class="form-control form-control-sm" type="text" value="{{ recibo.numero if recibo is defined else '' }}">
         </div>
-        <div class="d-flex gap-2 align-items-center justify-content-end">
-          <div style="flex:1; min-width:120px;">
+
+        <div class="d-flex gap-2 align-items-end justify-content-end">
+          <div style="flex:1; min-width:140px;">
             <label class="form-label small text-muted">Fecha</label>
             <input id="comprobanteFecha" class="form-control form-control-sm" type="date" value="{{ recibo.fecha if recibo is defined else fecha_emision if fecha_emision is defined else '' }}">
           </div>
+
           <div style="align-self:flex-end;">
-            <button id="imprimirBtn" class="btn btn-primary btn-sm mt-2" title="Imprimir recibo">Imprimir</button>
+            <button id="imprimirBtn" class="btn btn-primary btn-sm" title="Imprimir recibo">Imprimir</button>
           </div>
         </div>
       </div>
@@ -47,7 +49,7 @@
     </div>
   </div>
 
-  <!-- Datos trabajador: Nombre completo (más ancho), Apellidos eliminado -->
+  <!-- Datos trabajador: Nombre completo, DPI -->
   <div class="card shadow-sm mb-4">
     <div class="card-body">
       <h5 class="mb-3">Datos del Trabajador</h5>
@@ -136,18 +138,13 @@
     </div>
   </div>
 
-  <!-- Total en letras y medios de pago -->
+  <!-- Total en letras y medios de pago (sin Mes/Año ni Fecha de pago) -->
   <div class="card shadow-sm mb-4">
     <div class="card-body">
       <div class="row g-3">
-        <div class="col-md-8">
+        <div class="col-md-12">
           <label class="form-label small">TOTAL EN LETRAS</label>
           <input id="totalEnLetras" class="form-control" type="text" readonly value="{{ recibo.total_letras if recibo is defined else '' }}">
-        </div>
-
-        <div class="col-md-4">
-          <label class="form-label small">Mes</label>
-          <input id="mesPago" class="form-control" type="text" placeholder="Mes" value="{{ recibo.mes if recibo is defined else '' }}">
         </div>
       </div>
 
@@ -183,15 +180,6 @@
             <input id="chequeBanco" class="form-control" type="text" placeholder="Banco (cheque)">
           </div>
         </div>
-
-        <div class="col-6 mt-3">
-          <label class="form-label small">Mes</label>
-          <input id="mesPagoBottom" class="form-control" type="text" placeholder="Mes" value="{{ recibo.mes if recibo is defined else '' }}">
-        </div>
-        <div class="col-6 mt-3">
-          <label class="form-label small">Año</label>
-          <input id="anoPago" class="form-control" type="text" placeholder="Año" value="{{ recibo.ano if recibo is defined else '' }}">
-        </div>
       </div>
     </div>
   </div>
@@ -207,10 +195,9 @@
       <div class="small text-muted">Firma de la empresa</div>
     </div>
   </div>
-
 </div>
 
-<!-- Scripts: carga empleados y lógica para sincronizar con la planilla local -->
+<!-- Scripts: carga empleados y lógica para sincronizar con la planilla local, cálculo y conversión a letras -->
 <script>
 (function(){
   const PLANILLA_STORAGE_KEY = 'empaquetex_planilla_noviembre_v1';
@@ -224,7 +211,7 @@
       list.forEach(e => {
         const opt = document.createElement('option');
         opt.value = e.dpi || '';
-        opt.textContent = e.full_name || e.full_name || e.dpi;
+        opt.textContent = e.full_name || (e.Nombre ? ( (e.Apellidos||'') + ' ' + (e.Nombre||'') ) : e.dpi);
         sel.appendChild(opt);
       });
     }).catch(()=>{});
@@ -281,7 +268,6 @@
       document.getElementById('comisiones').value = toNumberSafe(planRow.comisiones || 0);
       document.getElementById('hextrasMonto').value = toNumberSafe(planRow.hextras || planRow._hextras || 0);
 
-      // IGSS: prefer stored igss in planilla row; fallback compute
       const igssVal = toNumberSafe(planRow.igss ?? planRow.IGSS ?? ( (planRow.sueldo||planRow.Sueldo||0) * 0.0483 ));
       document.getElementById('igss').value = igssVal;
 
@@ -316,15 +302,83 @@
     const deducciones = toNum('igss') + toNum('isr') + toNum('otrasDeducciones');
     const liquido = round2(ganancias - deducciones);
     document.getElementById('liquidoTotal').value = fmt(liquido);
-    document.getElementById('totalEnLetras').value = numeroALetras(liquido);
+    document.getElementById('totalEnLetras').value = numeroALetrasEnEspañol(liquido);
   }
 
-  function numeroALetras(num){
+  // Conversión a letras en español (maneja hasta millones, negativos y centavos)
+  function numeroALetrasEnEspañol(num){
     if (isNaN(num)) return '';
-    const entero = Math.trunc(Math.abs(num));
-    const cent = Math.round((Math.abs(num) - entero) * 100);
-    const enteroForm = entero.toLocaleString('es-GT');
-    return `${enteroForm} QUETZALES ${cent.toString().padStart(2,'0')}/100`;
+    const negativo = num < 0;
+    const absNum = Math.abs(num);
+    const entero = Math.trunc(absNum);
+    const cent = Math.round((absNum - entero) * 100);
+
+    const enteroTexto = entero === 0 ? 'cero' : enteroALetras(entero);
+    let resultado = enteroTexto + (entero === 1 ? ' Quetzal' : ' Quetzales');
+
+    if (cent > 0){
+      // formar la parte de centavos en palabras y añadir "con ... centavos"
+      const centTexto = cent < 10 ? 'cero ' + cent : String(cent);
+      // Convertir centavos a palabras mínimas (ej. 09 -> nueve)
+      const centPalabras = enteroALetras(cent);
+      resultado += ' con ' + centPalabras + ' centavo' + (cent === 1 ? '' : 's');
+    }
+
+    // Capitalizar la primera letra y mantener el resto en minúsculas salvo nombres propios
+    resultado = resultado.charAt(0).toUpperCase() + resultado.slice(1);
+    return (negativo ? 'menos ' : '') + resultado;
+  }
+
+  // Helper: convierte enteros >=0 a palabras en español (hasta 999 999 999)
+  function enteroALetras(n){
+    if (n === 0) return 'cero';
+    const unidades = ['','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve'];
+    const especiales = ['diez','once','doce','trece','catorce','quince','dieciseis','diecisiete','dieciocho','diecinueve'];
+    const decenas = ['','','veinte','treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa'];
+    const centenas = ['','ciento','doscientos','trescientos','cuatrocientos','quinientos','seiscientos','setecientos','ochocientos','novecientos'];
+
+    function tresCifrasToText(n){
+      let s = '';
+      const c = Math.floor(n / 100);
+      const r = n % 100;
+      if (n === 100) return 'cien';
+      if (c > 0) s += centenas[c] + (r ? ' ' : '');
+      if (r >= 10 && r <= 19){
+        s += especiales[r - 10];
+      } else if (r >= 20){
+        const d = Math.floor(r / 10);
+        const u = r % 10;
+        if (d === 2 && u > 0){
+          s += 'veinti' + unidades[u];
+        } else {
+          s += decenas[d];
+          if (u > 0) s += ' y ' + unidades[u];
+        }
+      } else if (r > 0){
+        s += unidades[r];
+      }
+      return s;
+    }
+
+    let parts = [];
+    const millones = Math.floor(n / 1000000);
+    const restoMillones = n % 1000000;
+    const miles = Math.floor(restoMillones / 1000);
+    const centenasResto = restoMillones % 1000;
+
+    if (millones > 0){
+      if (millones === 1) parts.push('un millón');
+      else parts.push(tresCifrasToText(millones) + ' millones');
+    }
+    if (miles > 0){
+      if (miles === 1) parts.push('mil');
+      else parts.push(tresCifrasToText(miles) + ' mil');
+    }
+    if (centenasResto > 0){
+      parts.push(tresCifrasToText(centenasResto));
+    }
+
+    return parts.join(' ').replace(/\s+/g,' ').trim();
   }
 
   ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones'].forEach(id=>{
@@ -347,10 +401,16 @@
   .form-label.small { font-size: .85rem; color:#6b7280; }
   input[readonly] { background:#f8f9fa; cursor: not-allowed; }
   #liquidoTotal { background: #fff8eb; }
-  /* aseguro el botón visible en pantallas pequeñas */
+  /* asegurar el botón visible en móvil */
   @media (max-width:576px){
     #imprimirBtn { width:100%; }
     .text-end[style] { min-width: unset; }
+  }
+  /* ocultar controles irrelevantes en impresión */
+  @media print{
+    button, select, input[type="text"].form-control-sm, .form-check-input, .form-check-label, input[placeholder] { display: none !important; }
+    .card { box-shadow: none !important; border: none !important; }
+    body { background: #fff !important; }
   }
 </style>
 {% endblock %}
