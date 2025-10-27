@@ -164,7 +164,7 @@
             <input class="form-check-input" type="radio" name="medioPago" id="pagoTransferencia" value="TRANSFERENCIA">
             <label class="form-check-label" for="pagoTransferencia">TRANSFERENCIA BANCARIA</label>
           </div>
-          <div class="mt-2 ms-4">
+          <div class="mt-2 ms-4 transferencia-fields">
             <input id="transCuenta" class="form-control mb-1" type="text" placeholder="No. de cuenta (transferencia)">
             <input id="transBanco" class="form-control" type="text" placeholder="Banco (transferencia)">
           </div>
@@ -175,7 +175,7 @@
             <input class="form-check-input" type="radio" name="medioPago" id="pagoCheque" value="CHEQUE">
             <label class="form-check-label" for="pagoCheque">CHEQUE</label>
           </div>
-          <div class="mt-2 ms-4">
+          <div class="mt-2 ms-4 cheque-fields">
             <input id="chequeNumero" class="form-control mb-1" type="text" placeholder="No. de cheque">
             <input id="chequeBanco" class="form-control" type="text" placeholder="Banco (cheque)">
           </div>
@@ -317,19 +317,14 @@
     let resultado = enteroTexto + (entero === 1 ? ' Quetzal' : ' Quetzales');
 
     if (cent > 0){
-      // formar la parte de centavos en palabras y añadir "con ... centavos"
-      const centTexto = cent < 10 ? 'cero ' + cent : String(cent);
-      // Convertir centavos a palabras mínimas (ej. 09 -> nueve)
       const centPalabras = enteroALetras(cent);
       resultado += ' con ' + centPalabras + ' centavo' + (cent === 1 ? '' : 's');
     }
 
-    // Capitalizar la primera letra y mantener el resto en minúsculas salvo nombres propios
     resultado = resultado.charAt(0).toUpperCase() + resultado.slice(1);
     return (negativo ? 'menos ' : '') + resultado;
   }
 
-  // Helper: convierte enteros >=0 a palabras en español (hasta 999 999 999)
   function enteroALetras(n){
     if (n === 0) return 'cero';
     const unidades = ['','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve'];
@@ -393,24 +388,137 @@
     if(imp) imp.addEventListener('click', function(){ window.print(); });
   });
 
+  // toggle transfer/cheque fields
+  function updateMedios(){
+    const val = document.querySelector('input[name="medioPago"]:checked')?.value;
+    document.querySelectorAll('.transferencia-fields, .cheque-fields').forEach(el=>el.style.display='none');
+    if(val === 'TRANSFERENCIA') document.querySelectorAll('.transferencia-fields').forEach(el=>el.style.display='block');
+    if(val === 'CHEQUE') document.querySelectorAll('.cheque-fields').forEach(el=>el.style.display='block');
+  }
+  document.querySelectorAll('input[name="medioPago"]').forEach(r=>r.addEventListener('change', updateMedios));
+  updateMedios();
+
 })();
 </script>
 
 <style>
-  .card-sm .card-body { padding: 0.9rem; }
-  .form-label.small { font-size: .85rem; color:#6b7280; }
-  input[readonly] { background:#f8f9fa; cursor: not-allowed; }
-  #liquidoTotal { background: #fff8eb; }
-  /* asegurar el botón visible en móvil */
-  @media (max-width:576px){
-    #imprimirBtn { width:100%; }
-    .text-end[style] { min-width: unset; }
-  }
-  /* ocultar controles irrelevantes en impresión */
-  @media print{
-    button, select, input[type="text"].form-control-sm, .form-check-input, .form-check-label, input[placeholder] { display: none !important; }
-    .card { box-shadow: none !important; border: none !important; }
-    body { background: #fff !important; }
-  }
+:root{
+  --bg-1: #f6fbff;
+  --card: #ffffff;
+  --muted: #6b7280;
+  --accent-cafe: #8b5e3c;
+  --accent-naranja: #ff7a18;
+  --accent-azul: #0b7285;
+  --accent-azul-claro: #0ea5a4;
+  --glass: rgba(255,255,255,0.85);
+  --shadow-1: 0 8px 28px rgba(11,50,80,0.06);
+  --radius: 12px;
+  --gap: 1rem;
+  --smooth: cubic-bezier(.2,.9,.3,1);
+  font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Page background */
+body {
+  background: linear-gradient(180deg, var(--bg-1), #ffffff);
+  color: #0f1724;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+}
+
+/* Cards and containers */
+.container { max-width: 1100px; margin: 18px auto; padding: 0 18px 40px; }
+.card {
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,251,255,0.98));
+  border: 1px solid rgba(11,19,30,0.04);
+  box-shadow: var(--shadow-1);
+}
+
+/* Header */
+h3.mb-0 { margin: 0; font-size: 1.25rem; color: var(--accent-azul); letter-spacing: 0.4px; font-weight: 700; }
+.small.text-muted { color: var(--muted); }
+
+/* Inputs & labels */
+.form-label { font-weight: 600; color: var(--muted); }
+.form-label.small { font-size: .86rem; color: var(--muted); font-weight: 600; }
+.form-control { border-radius: 10px; border: 1px solid rgba(11,19,30,0.06); background: #fff; box-shadow: none; padding: .60rem .75rem; }
+.form-control[readonly] { background: linear-gradient(180deg,#fbfdff,#f8fbff); color: #0b2a36; cursor: not-allowed; }
+
+/* Buttons */
+.btn-primary {
+  background: linear-gradient(90deg, var(--accent-naranja), var(--accent-azul));
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  padding: .5rem .8rem;
+  border-radius: 10px;
+  box-shadow: 0 10px 28px rgba(11,114,133,0.09);
+  transition: transform .18s var(--smooth), box-shadow .18s var(--smooth);
+}
+.btn-primary:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(11,114,133,0.12); }
+
+/* Cards inside */
+.card-sm { border-radius: 10px; }
+.card.card-sm .card-body { padding: 12px; background: linear-gradient(180deg,#fff,#fcfeff); border: 1px solid rgba(11,19,30,0.03); }
+
+/* Section titles */
+h5, h6 { margin: 0 0 10px 0; color: #0b3b4b; font-weight: 700; }
+h6 { font-size: .98rem; }
+
+/* Money / numeric styling */
+.money-style {
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+}
+#liquidoTotal { background: linear-gradient(90deg,#fff8eb,#fff4e6); border: 1px solid rgba(255,176,54,0.12); font-weight: 800; color: var(--accent-naranja); }
+
+/* Form groups spacing */
+.mb-2 { margin-bottom: .7rem !important; }
+
+/* Transfer / cheque fields: subtle indent */
+.transferencia-fields, .cheque-fields {
+  margin-left: 1.1rem;
+  margin-top: .5rem;
+}
+
+/* Make form sections softly elevated */
+.card-body { padding: 18px; }
+
+/* Responsive tweaks */
+@media (max-width: 900px){
+  .card-body.d-flex { flex-direction: column; gap: 12px; align-items: stretch; }
+  .text-end[style] { min-width: unset; }
+}
+
+@media (max-width: 576px){
+  #imprimirBtn { width: 100%; display:block; }
+  .transferencia-fields, .cheque-fields { margin-left: 0; }
+}
+
+/* Print adjustments */
+@media print{
+  button, select, input[type="text"].form-control-sm, .form-check-input, .form-check-label, input[placeholder] { display: none !important; }
+  .card { box-shadow: none !important; border: none !important; background: transparent !important; }
+  body { background: #fff !important; }
+  .transferencia-fields, .cheque-fields { display:block; }
+}
+
+/* Subtle accessibility helpers */
+input:focus, select:focus, button:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(14,165,164,0.08);
+  border-color: var(--accent-azul-claro);
+}
+
+/* Final micro polish */
+.small.text-muted { font-size: .88rem; }
+.form-check-label { font-weight: 600; color: #233642; }
+
+/* Hide extra fields by default until JS toggles them */
+.transferencia-fields, .cheque-fields { display: none; }
 </style>
 {% endblock %}
