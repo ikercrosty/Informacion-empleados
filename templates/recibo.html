@@ -92,7 +92,7 @@
 
               <div class="mb-2">
                 <label class="form-label small">Bonificación incentivo</label>
-                <input id="bonoIncentivo" class="form-control" type="number" step="0.01" readonly value="{{ recibo.bono_incentivo if recibo is defined else 0 }}">
+                <input id="bonoIncentivo" class="form-control" type="number" step="0.01" readonly value="{{ recibo.bono_incentivo if recibo is defined else (recibo.bonoIncentivo if recibo is defined else 0) }}">
               </div>
 
               <div class="mb-2">
@@ -111,7 +111,7 @@
 
               <div class="mb-2">
                 <label class="form-label small">IGSS</label>
-                <input id="igss" class="form-control" type="number" step="0.01" readonly value="{{ recibo.igss if recibo is defined else 0 }}">
+                <input id="igss" class="form-control" type="number" step="0.01" readonly value="{{ recibo.igss if recibo is defined else (recibo.IGSS if recibo is defined else 0) }}">
               </div>
 
               <div class="mb-2">
@@ -261,6 +261,15 @@
     return null;
   }
 
+  // Safe number extractor: acepta strings, nulls, "Q 0.00"
+  function toNumberSafe(v){
+    if(v === null || v === undefined) return 0;
+    if(typeof v === 'number') return v;
+    const s = String(v).replace(/\s+/g,'').replace(/^Q/i,'').replace(/,/g,'').trim();
+    const n = Number(s);
+    return isFinite(n) ? n : 0;
+  }
+
   // Cuando seleccionan empleado, traer datos y poblar campos
   document.getElementById('empleadoSelect').addEventListener('change', function(){
     const dpiVal = this.value;
@@ -283,18 +292,25 @@
       document.getElementById('apellidos').value = planRow.apellidos || planRow.Apellidos || '';
       document.getElementById('dpi').value = planRow.dpi || planRow.DPI || dpiVal;
 
-      // Valores numéricos que la planilla almacena
-      document.getElementById('sueldoBase').value = Number(planRow.sueldo || 0);
-      document.getElementById('bonificacion').value = Number(planRow.bono || planRow.bon || 0);
-      document.getElementById('comisiones').value = Number(planRow.comisiones || 0);
+      // Valores numéricos que la planilla almacena - uso toNumberSafe para evitar cadenas vacías
+      document.getElementById('sueldoBase').value = toNumberSafe(planRow.sueldo || planRow.Sueldo || 0);
+      document.getElementById('bonificacion').value = toNumberSafe(planRow.bono || planRow.bon || planRow.Bono || 0);
+      document.getElementById('comisiones').value = toNumberSafe(planRow.comisiones || planRow.Comisiones || 0);
       // horas extras almacenadas como hextras en la serialización
-      document.getElementById('hextrasMonto').value = Number(planRow.hextras || 0);
-      document.getElementById('igss').value = Number(planRow.igss || 0) || 0;
-      document.getElementById('isr').value = Number(planRow.isr || 0) || 0;
-      document.getElementById('otrasDeducciones').value = Number(planRow.otras || planRow.otras_deducciones || 0) || 0;
+      document.getElementById('hextrasMonto').value = toNumberSafe(planRow.hextras || planRow.hextras_monto || planRow._hextras || 0);
 
-      // si planilla tiene bonoIncentivo campo, úsalo; si no, dejar el campo
-      if(planRow.bono_incentivo !== undefined) document.getElementById('bonoIncentivo').value = Number(planRow.bono_incentivo || 0);
+      // IGSS puede venir con varios nombres en la serialización de la planilla
+      const igssVal = toNumberSafe(planRow.igss || planRow.IGSS || planRow.igss_laboral || 0);
+      document.getElementById('igss').value = igssVal;
+
+      // ISR
+      document.getElementById('isr').value = toNumberSafe(planRow.isr || planRow._isrValue || 0);
+
+      document.getElementById('otrasDeducciones').value = toNumberSafe(planRow.otras || planRow.otras_deducciones || 0);
+
+      // Bonificación incentivo: varias variantes de clave
+      const bonoInc = toNumberSafe(planRow.bono_incentivo ?? planRow.bonoIncentivo ?? planRow.bono_incentive ?? 0);
+      document.getElementById('bonoIncentivo').value = bonoInc;
 
       recalcLiquido();
       return;
@@ -307,13 +323,19 @@
       document.getElementById('dpi').value = data['Numero de DPI'] || data.dpi || dpiVal;
 
       // Si la API devuelve salario u otros campos, los usamos como fallback
-      if(data.Sueldo !== undefined) document.getElementById('sueldoBase').value = Number(data.Sueldo);
-      if(data.bono !== undefined) document.getElementById('bonificacion').value = Number(data.bono);
-      if(data.comisiones !== undefined) document.getElementById('comisiones').value = Number(data.comisiones);
-      if(data.hextras_monto !== undefined) document.getElementById('hextrasMonto').value = Number(data.hextras_monto);
-      if(data.igss !== undefined) document.getElementById('igss').value = Number(data.igss);
-      if(data._isrValue !== undefined) document.getElementById('isr').value = Number(data._isrValue);
-      if(data.otras_deducciones !== undefined) document.getElementById('otrasDeducciones').value = Number(data.otras_deducciones);
+      if(data.Sueldo !== undefined) document.getElementById('sueldoBase').value = toNumberSafe(data.Sueldo);
+      if(data.bono !== undefined) document.getElementById('bonificacion').value = toNumberSafe(data.bono);
+      if(data.comisiones !== undefined) document.getElementById('comisiones').value = toNumberSafe(data.comisiones);
+      if(data.hextras_monto !== undefined) document.getElementById('hextrasMonto').value = toNumberSafe(data.hextras_monto);
+
+      // IGSS fallback names
+      if(data.igss !== undefined) document.getElementById('igss').value = toNumberSafe(data.igss);
+      if(data._isrValue !== undefined) document.getElementById('isr').value = toNumberSafe(data._isrValue);
+      if(data.otras_deducciones !== undefined) document.getElementById('otrasDeducciones').value = toNumberSafe(data.otras_deducciones);
+
+      // bono incentivo
+      if(data.bono_incentivo !== undefined) document.getElementById('bonoIncentivo').value = toNumberSafe(data.bono_incentivo);
+      if(data.bonoIncentivo !== undefined) document.getElementById('bonoIncentivo').value = toNumberSafe(data.bonoIncentivo);
 
       recalcLiquido();
     }).catch(()=>{/* no mostrar errores aquí */});
