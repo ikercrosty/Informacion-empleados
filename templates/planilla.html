@@ -208,11 +208,11 @@ function recalcRow(tr) {
   const totalDeducciones = round2(igss + isrMensual + otras);
   const liquido = round2(totalDevengado - totalDeducciones);
 
-  const hextrasCell = tr.querySelector('td.hextras'); if (hextrasCell) hextrasCell.textContent = withQ(hextrasMonto);
-  const devCell = tr.querySelector('td.total-devengado'); if (devCell) devCell.textContent = withQ(totalDevengado);
-  const igssCell = tr.querySelector('td.igss'); if (igssCell) igssCell.textContent = withQ(igss);
+  const hextrasCell = tr.querySelector('.hextras'); if (hextrasCell) hextrasCell.textContent = withQ(hextrasMonto);
+  const devCell = tr.querySelector('.total-devengado'); if (devCell) devCell.textContent = withQ(totalDevengado);
+  const igssCell = tr.querySelector('.igss'); if (igssCell) igssCell.textContent = withQ(igss);
 
-  const isrCell = tr.querySelector('td.isr-cell');
+  const isrCell = tr.querySelector('.isr-cell');
   if (isrCell) {
     if (isrMensual > 0) isrCell.textContent = withQ(isrMensual);
     else isrCell.textContent = '';
@@ -221,8 +221,8 @@ function recalcRow(tr) {
   tr.dataset._isrValue = isrMensual;
   tr.dataset._hextras = hextrasMonto;
 
-  const totDedCell = tr.querySelector('td.total-deducciones'); if (totDedCell) totDedCell.textContent = withQ(totalDeducciones);
-  const liquiCell = tr.querySelector('td.liquido'); if (liquiCell) liquiCell.textContent = withQ(liquido);
+  const totDedCell = tr.querySelector('.total-deducciones'); if (totDedCell) totDedCell.textContent = withQ(totalDeducciones);
+  const liquiCell = tr.querySelector('.liquido'); if (liquiCell) liquiCell.textContent = withQ(liquido);
 }
 
 /* Recalcula totales */
