@@ -1,895 +1,386 @@
 {% extends "layout.html" %}
-{% block title %}Planilla - Noviembre 2025{% endblock %}
+{% block title %}Recibo de Pago{% endblock %}
 
 {% block content %}
 <div class="container py-4">
-  <div class="card shadow-sm mb-4 border-0">
-    <div class="card-body d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+  <div class="card shadow-sm mb-4">
+    <div class="card-body d-flex justify-content-between align-items-center">
       <div>
-        <h3 class="mb-0" style="letter-spacing:.2px">Planilla - Empaquetex </h3>
-        <div class="text-muted small mt-1">Empresa: EMPAQUES Y TEXTURAS DE GUATEMALA, SOCIEDAD ANÓNIMA</div>
+        <h3 class="mb-0">RECIBO DE PAGO</h3>
+        <div class="small text-muted">Empresa: {{ empresa_nombre|default('EMPRESA') }}</div>
       </div>
 
-      <div class="controls d-flex flex-wrap align-items-center">
-        <div class="me-4">
-          <h6 class="mb-1">Ingrese nombre para el documento</h6>
-          <input id="planillaName" class="form-control form-control-sm" type="text" value="Planilla " style="min-width:240px" />
+      <div class="text-end">
+        <div class="mb-2">
+          <label class="form-label small text-muted">Comprobante No</label>
+          <input id="comprobanteNumero" class="form-control form-control-sm" type="text" value="{{ recibo.numero if recibo is defined else '' }}">
         </div>
-
-        <div class="me-4">
-          <h6 class="mb-1">Ingrese fecha de emisión del documento</h6>
-          <input id="emisionDate" class="form-control form-control-sm" type="date" />
+        <div>
+          <label class="form-label small text-muted">Fecha</label>
+          <input id="comprobanteFecha" class="form-control form-control-sm" type="date" value="{{ recibo.fecha if recibo is defined else fecha_emision if fecha_emision is defined else '' }}">
         </div>
-
-        <div class="action-buttons d-flex align-items-center" style="gap:24px; justify-content:flex-end; margin-left:auto;">
-          <button id="exportExcel" class="btn btn-primary btn-sm d-flex align-items-center" title="Exportar a Excel">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-file-earmark-excel me-2" viewBox="0 0 16 16"><path d="M5.884 6.68 4.52 9.5l1.364 2.82H3.54L2 9.5l1.54-2.82h1.344z"/><path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zM10.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5.5H10.5A1.5 1.5 0 0 1 9 4V3.5z"/></svg>
-            Exportar a Excel
-          </button>
-
-          <button id="addRow" class="btn btn-outline-secondary btn-sm" title="Agregar fila">Agregar fila</button>
-
-          <button id="deleteRow" class="btn btn-outline-danger btn-sm" title="Eliminar fila">Eliminar fila</button>
-        </div>
-
-        <small id="exportHint" class="text-danger ms-3" style="display:none;">Ingrese fecha de emisión para exportar</small>
       </div>
     </div>
   </div>
 
-  <div class="card shadow-sm border-0">
-    <div class="card-body p-3">
-      <div class="table-responsive horizontal-scroll">
-        <table id="planillaTable" class="table table-hover table-sm align-middle mb-0" style="min-width:1600px">
-          <colgroup>
-            <col style="width:3%">
-            <col style="width:36%">
-            <col style="width:9%">
-            <col style="width:7%">
-            <col style="width:6%">
-            <col style="width:8%">
-            <col style="width:6%">
-            <col style="width:8%">
-            <col style="width:8%">
-            <col style="width:8%">
-            <col style="width:8%">
-            <col style="width:8%">
-            <col style="width:8%">
-            <col style="width:12%">
-          </colgroup>
-
-          <thead class="table-header-custom text-white">
-            <tr>
-              <th>No.</th>
-              <th>Nombre completo</th>
-              <th>Sueldo Base</th>
-              <th>Bonificación</th>
-              <th>Días Laborados</th>
-              <th>Comisiones</th>
-              <th>Horas extra</th>
-              <th>Horas Extras (monto)</th>
-              <th>Total Devengado</th>
-              <th>Cálculo del IGSS</th>
-              <th>Cálculo del ISR</th>
-              <th>Otras deducciones</th>
-              <th>Total Deducciones</th>
-              <th>Líquido a recibir</th>
-            </tr>
-          </thead>
-
-          <tbody>
-
-          </tbody>
-
-          <tfoot>
-            <tr class="table-header-custom" style="font-weight:700">
-              <td></td>
-              <td class="text-end">TOTALES</td>
-              <td id="total-sueldo" class="text-end">Q 0.00</td>
-              <td id="total-bono" class="text-end">Q 0.00</td>
-              <td id="total-dias" class="text-end"></td>
-              <td id="total-comisiones" class="text-end">Q 0.00</td>
-              <td id="total-horas" class="text-end">0</td>
-              <td id="total-hextras" class="text-end">Q 0.00</td>
-              <td id="total-devengado" class="text-end">Q 0.00</td>
-              <td id="total-igss" class="text-end">Q 0.00</td>
-              <td id="total-isr" class="text-end">Q 0.00</td>
-              <td id="total-otras" class="text-end">Q 0.00</td>
-              <td id="total-deducciones" class="text-end">Q 0.00</td>
-              <td id="total-liquido" class="text-end">Q 0.00</td>
-            </tr>
-          </tfoot>
-        </table>
+  <!-- Selección de empleado -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <h5 class="mb-3">Seleccionar Trabajador</h5>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Empleado</label>
+          <select id="empleadoSelect" class="form-select">
+            <option value="">-- Seleccione empleado --</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Lugar / Ciudad</label>
+          <input id="lugarPago" class="form-control" type="text" placeholder="GUATEMALA" value="GUATEMALA">
+        </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Datos trabajador -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <h5 class="mb-3">Datos del Trabajador</h5>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Nombre</label>
+          <input id="nombre" class="form-control" readonly value="{{ recibo.nombre if recibo is defined else '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Apellidos</label>
+          <input id="apellidos" class="form-control" readonly value="{{ recibo.apellidos if recibo is defined else '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">DPI / Identificación</label>
+          <input id="dpi" class="form-control" readonly value="{{ recibo.dpi if recibo is defined else '' }}">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detalle de pago: ganancias a la izquierda, descuentos a la derecha -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <h5 class="mb-3">Detalle de pago</h5>
+
+      <div class="row">
+        <!-- Ganancias -->
+        <div class="col-md-6">
+          <div class="card card-sm mb-3">
+            <div class="card-body">
+              <h6 class="mb-3">Ganancias</h6>
+
+              <div class="mb-2">
+                <label class="form-label small">Sueldo Base</label>
+                <input id="sueldoBase" class="form-control" type="number" step="0.01" readonly value="{{ recibo.sueldo if recibo is defined else (recibo.Sueldo if recibo is defined else 0) }}">
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label small">Horas extras (monto)</label>
+                <input id="hextrasMonto" class="form-control" type="number" step="0.01" readonly value="{{ recibo.hextras_monto if recibo is defined else (recibo.hextras if recibo is defined else 0) }}">
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label small">Bonificación</label>
+                <input id="bonificacion" class="form-control" type="number" step="0.01" readonly value="{{ recibo.bono if recibo is defined else 0 }}">
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label small">Bonificación incentivo</label>
+                <input id="bonoIncentivo" class="form-control" type="number" step="0.01" readonly value="{{ recibo.bono_incentivo if recibo is defined else (recibo.bonoIncentivo if recibo is defined else 0) }}">
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label small">Comisiones</label>
+                <input id="comisiones" class="form-control" type="number" step="0.01" readonly value="{{ recibo.comisiones if recibo is defined else 0 }}">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deducciones -->
+        <div class="col-md-6">
+          <div class="card card-sm mb-3">
+            <div class="card-body">
+              <h6 class="mb-3">Descuentos</h6>
+
+              <div class="mb-2">
+                <label class="form-label small">IGSS</label>
+                <input id="igss" class="form-control" type="number" step="0.01" readonly value="{{ recibo.igss if recibo is defined else (recibo.IGSS if recibo is defined else 0) }}">
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label small">ISR</label>
+                <input id="isr" class="form-control" type="number" step="0.01" readonly value="{{ recibo.isr if recibo is defined else (recibo._isrValue if recibo is defined else 0) }}">
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label small">Otras deducciones</label>
+                <input id="otrasDeducciones" class="form-control" type="number" step="0.01" readonly value="{{ recibo.otras_deducciones if recibo is defined else 0 }}">
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Liquido a recibir destacado -->
+      <div class="row mt-3">
+        <div class="col-md-12 text-end">
+          <label class="form-label small">Líquido a recibir</label>
+          <input id="liquidoTotal" class="form-control fw-bold text-end" readonly value="Q 0.00" style="font-size:1.15rem;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección inferior: Total en letras y Medios de pago -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-8">
+          <label class="form-label small">TOTAL EN LETRAS</label>
+          <input id="totalEnLetras" class="form-control" type="text" readonly value="{{ recibo.total_letras if recibo is defined else '' }}">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label small">Fecha de pago</label>
+          <input id="fechaPago" class="form-control" type="date" value="{{ recibo.fecha_pago if recibo is defined else '' }}">
+        </div>
+      </div>
+
+      <hr class="my-3">
+
+      <h6 class="mb-2">MEDIOS DE PAGO</h6>
+      <div class="row g-2">
+        <div class="col-12">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="medioPago" id="pagoEfectivo" value="EFECTIVO" checked>
+            <label class="form-check-label" for="pagoEfectivo">EFECTIVO</label>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="medioPago" id="pagoTransferencia" value="TRANSFERENCIA">
+            <label class="form-check-label" for="pagoTransferencia">TRANSFERENCIA BANCARIA</label>
+          </div>
+          <div class="mt-2 ms-4">
+            <input id="transCuenta" class="form-control mb-1" type="text" placeholder="No. de cuenta (transferencia)">
+            <input id="transBanco" class="form-control" type="text" placeholder="Banco (transferencia)">
+          </div>
+        </div>
+
+        <div class="col-12 mt-2">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="medioPago" id="pagoCheque" value="CHEQUE">
+            <label class="form-check-label" for="pagoCheque">CHEQUE</label>
+          </div>
+          <div class="mt-2 ms-4">
+            <input id="chequeNumero" class="form-control mb-1" type="text" placeholder="No. de cheque">
+            <input id="chequeBanco" class="form-control" type="text" placeholder="Banco (cheque)">
+          </div>
+        </div>
+
+        <div class="col-6 mt-3">
+          <label class="form-label small">Mes</label>
+          <input id="mesPago" class="form-control" type="text" placeholder="Mes" value="{{ recibo.mes if recibo is defined else '' }}">
+        </div>
+        <div class="col-6 mt-3">
+          <label class="form-label small">Año</label>
+          <input id="anoPago" class="form-control" type="text" placeholder="Año" value="{{ recibo.ano if recibo is defined else '' }}">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firmas -->
+  <div class="row mb-5">
+    <div class="col-md-6 text-center">
+      <div style="border-bottom:1px solid #ccc; height:1px; margin-bottom:8px;"></div>
+      <div class="small text-muted">Firma del trabajador</div>
+    </div>
+    <div class="col-md-6 text-center">
+      <div style="border-bottom:1px solid #ccc; height:1px; margin-bottom:8px;"></div>
+      <div class="small text-muted">Firma de la empresa</div>
     </div>
   </div>
 </div>
 
-<!-- SheetJS -->
-<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-
+<!-- Scripts: carga empleados y lógica para sincronizar con la planilla local -->
 <script>
-/* ------------------ Fiscal constants and helpers (unchanged) ------------------ */
-const IGSS_RATE = 0.0483;
-const GASTOS_PERSONALES_ANUAL = 48000;
-const ISR_ANNUAL_RATE = 0.05;
-const ISR_MIN_SALARIO = 4000.00;
-
-const STORAGE_KEY = 'empaquetex_planilla_noviembre_v1';
-
-function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
-function formatNum(n){ return Number(n).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); }
-function withQ(n){ return 'Q ' + formatNum(n); }
-
-function computeHorasMontoMensual(sueldo, dias, horas) {
-  if (!dias || dias <= 0) return 0;
-  const valorHora = sueldo / dias / 8;
-  const monto = valorHora * 1.5 * horas;
-  return round2(monto);
-}
-
-function computeISRMonthlyFromRow(sueldo, bono, comisiones, hextrasMensual) {
-  if ((sueldo * 2) < 4000) return 0;
-  const sueldoBaseAnual = (sueldo * 2) * 12;
-  const bonoIncentivoAnual = (bono * 2) * 12;
-  const hextrasAnual = hextrasMensual * 12;
-  const comisionesAnual = comisiones * 12;
-  const sumaGananciasAnual = round2(sueldoBaseAnual + bonoIncentivoAnual + hextrasAnual + comisionesAnual);
-  const igssLaboralAnual = round2(sumaGananciasAnual * IGSS_RATE);
-  const baseCalculo = round2(sumaGananciasAnual - (GASTOS_PERSONALES_ANUAL + igssLaboralAnual));
-  if (baseCalculo <= 0) return 0;
-  const isrAnual = round2(baseCalculo * ISR_ANNUAL_RATE);
-  const isrMensual = round2(isrAnual / 12);
-  return isrMensual;
-}
-
-/* ------------------ Row calculations (unchanged) ------------------ */
-function recalcRow(tr) {
-  if (!tr) return;
-  const sueldo = parseFloat(tr.querySelector('input.sueldo')?.value) || 0;
-  const bono = parseFloat(tr.querySelector('input.bono')?.value) || 0;
-  const comisiones = parseFloat(tr.querySelector('input.comisiones')?.value) || 0;
-  const dias = parseInt(tr.querySelector('input.dias')?.value) || 0;
-  const horas = parseInt(tr.querySelector('input.horas')?.value) || 0;
-  const otras = parseFloat(tr.querySelector('input.otras')?.value) || 0;
-
-  const hextrasMonto = computeHorasMontoMensual(sueldo, dias, horas);
-  const totalDevengado = round2(sueldo + bono + comisiones + hextrasMonto);
-  const igss = round2(sueldo * IGSS_RATE);
-
-  const isrMensual = computeISRMonthlyFromRow(sueldo, bono, comisiones, hextrasMonto);
-
-  const totalDeducciones = round2(igss + isrMensual + otras);
-  const liquido = round2(totalDevengado - totalDeducciones);
-
-  const hextrasCell = tr.querySelector('.hextras'); if (hextrasCell) hextrasCell.textContent = withQ(hextrasMonto);
-  const devCell = tr.querySelector('.total-devengado'); if (devCell) devCell.textContent = withQ(totalDevengado);
-  const igssCell = tr.querySelector('.igss'); if (igssCell) igssCell.textContent = withQ(igss);
-
-  const isrCell = tr.querySelector('.isr-cell');
-  if (isrCell) {
-    if (isrMensual > 0) isrCell.textContent = withQ(isrMensual);
-    else isrCell.textContent = '';
-  }
-
-  tr.dataset._isrValue = isrMensual;
-  tr.dataset._hextras = hextrasMonto;
-
-  const totDedCell = tr.querySelector('.total-deducciones'); if (totDedCell) totDedCell.textContent = withQ(totalDeducciones);
-  const liquiCell = tr.querySelector('.liquido'); if (liquiCell) liquiCell.textContent = withQ(liquido);
-}
-
-/* ------------------ Totals (unchanged) ------------------ */
-function recalcTotals() {
-  const rows = document.querySelectorAll('#planillaTable tbody tr');
-  let totals = {sueldo:0, bono:0, comisiones:0, horas:0, hextras:0, devengado:0, igss:0, isr:0, otras:0, deducciones:0, liquido:0};
-  rows.forEach(tr => {
-    const sueldo = parseFloat(tr.querySelector('input.sueldo')?.value) || 0;
-    const bono = parseFloat(tr.querySelector('input.bono')?.value) || 0;
-    const comisiones = parseFloat(tr.querySelector('input.comisiones')?.value) || 0;
-    const horas = parseInt(tr.querySelector('input.horas')?.value) || 0;
-    const otras = parseFloat(tr.querySelector('input.otras')?.value) || 0;
-
-    const dias = parseInt(tr.querySelector('input.dias')?.value) || 0;
-    const hextrasMonto = parseFloat(tr.dataset._hextras) || computeHorasMontoMensual(sueldo, dias, horas);
-    const totalDevengado = round2(sueldo + bono + comisiones + hextrasMonto);
-    const igss = round2(sueldo * IGSS_RATE);
-    const isrMensual = parseFloat(tr.dataset._isrValue) || 0;
-    const totalDeducciones = round2(igss + isrMensual + otras);
-    const liquido = round2(totalDevengado - totalDeducciones);
-
-    totals.sueldo += sueldo;
-    totals.bono += bono;
-    totals.comisiones += comisiones;
-    totals.horas += horas;
-    totals.hextras += hextrasMonto;
-    totals.devengado += totalDevengado;
-    totals.igss += igss;
-    totals.isr += isrMensual;
-    totals.otras += otras;
-    totals.deducciones += totalDeducciones;
-    totals.liquido += liquido;
-  });
-
-  if (document.getElementById('total-sueldo')) document.getElementById('total-sueldo').textContent = withQ(totals.sueldo);
-  if (document.getElementById('total-bono')) document.getElementById('total-bono').textContent = withQ(totals.bono);
-  if (document.getElementById('total-dias')) document.getElementById('total-dias').textContent = '';
-  if (document.getElementById('total-comisiones')) document.getElementById('total-comisiones').textContent = withQ(totals.comisiones);
-  if (document.getElementById('total-horas')) document.getElementById('total-horas').textContent = totals.horas.toString();
-  if (document.getElementById('total-hextras')) document.getElementById('total-hextras').textContent = withQ(totals.hextras);
-  if (document.getElementById('total-devengado')) document.getElementById('total-devengado').textContent = withQ(totals.devengado);
-  if (document.getElementById('total-igss')) document.getElementById('total-igss').textContent = withQ(totals.igss);
-  if (document.getElementById('total-isr')) document.getElementById('total-isr').textContent = withQ(totals.isr);
-  if (document.getElementById('total-otras')) document.getElementById('total-otras').textContent = withQ(totals.otras);
-  if (document.getElementById('total-deducciones')) document.getElementById('total-deducciones').textContent = withQ(totals.deducciones);
-  if (document.getElementById('total-liquido')) document.getElementById('total-liquido').textContent = withQ(totals.liquido);
-}
-
-/* ------------------ Serialization (FIX: include IGSS) ------------------ */
-function serializeTable() {
-  const rows = [];
-  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
-    const nombre = (tr.querySelector('input.nombre')?.value ?? tr.cells[1].textContent ?? '').trim();
-    const sueldo = parseFloat(tr.querySelector('input.sueldo')?.value ?? 0) || 0;
-    const bono = parseFloat(tr.querySelector('input.bono')?.value ?? 0) || 0;
-    const dias = parseInt(tr.querySelector('input.dias')?.value ?? 0) || 0;
-    const comisiones = parseFloat(tr.querySelector('input.comisiones')?.value ?? 0) || 0;
-    const horas = parseInt(tr.querySelector('input.horas')?.value ?? 0) || 0;
-    const otras = parseFloat(tr.querySelector('input.otras')?.value ?? 0) || 0;
-    const medioPago = tr.querySelector('input.medio-pago')?.value ?? '';
-    const observ = tr.querySelector('input.observaciones')?.value ?? '';
-    const hextras = parseFloat(tr.dataset._hextras) || 0;
-    const isr = parseFloat(tr.dataset._isrValue) || 0;
-
-    // Compute IGSS here so it is stored with the row and later available to recibo.html
-    const igss = round2(sueldo * IGSS_RATE);
-
-    // push including igss
-    rows.push({ nombre, sueldo, bono, dias, comisiones, horas, otras, medioPago, observ, hextras, isr, igss, dpi: tr.dataset.dpi || '' });
-  });
-  const meta = { saved_at: new Date().toISOString(), planillaName: document.getElementById('planillaName')?.value ?? '', emisionDate: document.getElementById('emisionDate')?.value ?? '' };
-  return { rows, meta };
-}
-
-function restoreTable(data) {
-  if (!data || !Array.isArray(data.rows)) return;
-  const tbody = document.querySelector('#planillaTable tbody');
-  if (!tbody) return;
-  tbody.innerHTML = '';
-  data.rows.forEach((r, i) => {
-    const idx = i + 1;
-    const tr = document.createElement('tr');
-    tr.dataset.row = idx;
-    if (r.dpi) tr.dataset.dpi = r.dpi;
-    tr.innerHTML = `
-      <td>${idx}</td>
-      <td class="align-middle"><input class="form-control form-control-sm nombre" type="text" value="${escapeHtml(r.nombre || '')}"></td>
-      <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell sueldo" type="number" step="0.01" value="${Number(r.sueldo||0).toFixed(2)}"></div></td>
-      <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control bono" type="number" step="0.01" value="${Number(r.bono||125).toFixed(2)}" readonly></div></td>
-      <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="${Number(r.dias||15)}"></td>
-      <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="${Number(r.comisiones||0).toFixed(2)}"></div></td>
-      <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="${Number(r.horas||0)}"></td>
-      <td class="text-end hextras">Q ${Number(r.hextras||0).toFixed(2)}</td>
-      <td class="text-end total-devengado">Q 0.00</td>
-      <td class="text-end igss">Q ${Number(r.igss||0).toFixed(2)}</td>
-      <td class="text-end isr-cell">${r.isr && r.isr>0 ? 'Q ' + Number(r.isr).toFixed(2) : ''}</td>
-      <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="${Number(r.otras||0).toFixed(2)}"></div></td>
-      <td class="text-end total-deducciones">Q 0.00</td>
-      <td class="text-end liquido">Q 0.00</td>
-    `;
-    tr.dataset._hextras = Number(r.hextras||0);
-    tr.dataset._isrValue = Number(r.isr||0);
-    tbody.appendChild(tr);
-  });
-  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
-  recalcTotals();
-}
-
-/* ------------------ Utilities and UI handlers (unchanged behavior) ------------------ */
-function escapeHtml(str) {
-  return String(str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-document.addEventListener('input', (e) => {
-  if (!e.target.classList) return;
-  if (e.target.classList.contains('num-cell') || e.target.classList.contains('nombre') || e.target.classList.contains('medio-pago') || e.target.classList.contains('observaciones')) {
-    const tr = e.target.closest('tr');
-    if (tr) recalcRow(tr);
-    recalcTotals();
-    saveToLocal();
-  }
-});
-
-function initBonosYDias() {
-  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
-    const bonoInp = tr.querySelector('input.bono');
-    if (bonoInp) {
-      bonoInp.value = 125.00;
-      bonoInp.setAttribute('readonly', 'readonly');
-      bonoInp.classList.remove('num-cell');
-    }
-    const diasInp = tr.querySelector('input.dias');
-    if (diasInp) {
-      const val = parseInt(diasInp.value);
-      if (!isFinite(val) || val <= 0) diasInp.value = 15;
-    }
-    recalcRow(tr);
-  });
-  recalcTotals();
-}
-
-function createRowHtml(index) {
-  return `
-    <td>${index}</td>
-    <td class="align-middle"><input class="form-control form-control-sm nombre" type="text" value=""></td>
-    <td>
-      <div class="money-inline">
-        <span class="money-prefix">Q</span>
-        <input class="form-control num-cell sueldo" type="number" step="0.01" value="0.00">
-      </div>
-    </td>
-    <td>
-      <div class="money-inline">
-        <span class="money-prefix">Q</span>
-        <input class="form-control bono" type="number" step="0.01" value="125.00" readonly>
-      </div>
-    </td>
-    <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="15"></td>
-    <td>
-      <div class="money-inline">
-        <span class="money-prefix">Q</span>
-        <input class="form-control num-cell comisiones" type="number" step="0.01" value="0.00">
-      </div>
-    </td>
-    <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
-    <td class="text-end hextras">Q 0.00</td>
-    <td class="text-end total-devengado">Q 0.00</td>
-    <td class="text-end igss">Q 0.00</td>
-    <td class="text-end isr-cell"></td>
-    <td>
-      <div class="money-inline">
-        <span class="money-prefix">Q</span>
-        <input class="form-control num-cell otras" type="number" step="0.01" value="0.00">
-      </div>
-    </td>
-    <td class="text-end total-deducciones">Q 0.00</td>
-    <td class="text-end liquido">Q 0.00</td>
-  `;
-}
-
-document.addEventListener('blur', (e) => {
-  if (!e.target.classList) return;
-  if (e.target.classList.contains('nombre')) {
-    const val = (e.target.value || '').trim();
-    if (val !== '') {
-      e.target.setAttribute('readonly', 'readonly');
-    }
-  }
-}, true);
-
-function enforceFixedFieldsOnAllRows() {
-  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
-    const bonoInp = tr.querySelector('input.bono');
-    if (bonoInp) {
-      bonoInp.value = 125.00;
-      bonoInp.setAttribute('readonly', 'readonly');
-    }
-    const diasInp = tr.querySelector('input.dias');
-    if (diasInp) diasInp.value = 15;
-  });
-}
-
-/* Row add/delete handlers (unchanged) */
-document.getElementById('addRow').addEventListener('click', () => {
-  const tbody = document.querySelector('#planillaTable tbody');
-  const newIndex = tbody.querySelectorAll('tr').length + 1;
-  const tr = document.createElement('tr');
-  tr.dataset.row = newIndex;
-  tr.innerHTML = createRowHtml(newIndex);
-  tbody.appendChild(tr);
-
-  const nombreInp = tr.querySelector('input.nombre');
-  if (nombreInp) nombreInp.removeAttribute('readonly');
-
-  const bonoInp = tr.querySelector('input.bono');
-  if (bonoInp) {
-    bonoInp.value = 125.00;
-    bonoInp.setAttribute('readonly', 'readonly');
-  }
-  const diasInp = tr.querySelector('input.dias');
-  if (diasInp) diasInp.value = 15;
-
-  recalcRow(tr);
-  recalcTotals();
-  saveToLocal();
-});
-
-document.getElementById('deleteRow').addEventListener('click', () => {
-  const tbody = document.querySelector('#planillaTable tbody');
-  const rows = tbody.querySelectorAll('tr');
-  if (rows.length === 0) return;
-  tbody.removeChild(rows[rows.length - 1]);
-  recalcTotals();
-  saveToLocal();
-});
-
-/* Export to Excel (unchanged) */
-document.getElementById('exportExcel').addEventListener('click', () => {
-  const dateInput = document.getElementById('emisionDate').value;
-  const planillaName = document.getElementById('planillaName').value.trim() || 'Planilla';
-  const exportHint = document.getElementById('exportHint');
-  if (!dateInput) {
-    if (exportHint) exportHint.style.display = 'inline';
-    return;
-  }
-  if (exportHint) exportHint.style.display = 'none';
-
-  const table = document.getElementById('planillaTable');
-  const clone = table.cloneNode(true);
-  clone.querySelectorAll('input').forEach(inp => {
-    const parent = inp.parentElement || inp;
-    parent.replaceChild(document.createTextNode(inp.value), inp);
-  });
-
-  clone.querySelectorAll('td, th').forEach(cell => {
-    let txt = (cell.textContent || '').replace(/\u00A0/g, ' ').trim();
-    if (txt === '') return;
-    const removed = txt.replace(/^Q\s*/i, '').replace(/,/g, '');
-    const n = Number(removed);
-    if (removed !== '' && isFinite(n)) cell.textContent = n;
-    else cell.textContent = txt;
-  });
-
-  const ws = XLSX.utils.table_to_sheet(clone, {raw:true});
-  ws['!cols'] = [
-    { wch: 6 }, { wch: 60 }, { wch: 20 }, { wch: 14 }, { wch: 12 }, { wch: 14 },
-    { wch: 10 }, { wch: 18 }, { wch: 18 }, { wch: 16 }, { wch: 16 }, { wch: 16 },
-    { wch: 20 }, { wch: 20 }
-  ];
-
-  const range = XLSX.utils.decode_range(ws['!ref']);
-  const headerRowIndex = range.s.r;
-  const maxCol = range.e.c;
-
-  for (let c = range.s.c; c <= maxCol; c++) {
-    const cellAddr = XLSX.utils.encode_cell({ c: c, r: headerRowIndex });
-    if (!ws[cellAddr]) continue;
-    ws[cellAddr].s = ws[cellAddr].s || {};
-    ws[cellAddr].s.fill = { patternType: "solid", fgColor: { rgb: "0EA5A4" } };
-    ws[cellAddr].s.font = { name: "Calibri", sz: 11, bold: true, color: { rgb: "FFFFFF" } };
-    ws[cellAddr].s.alignment = { vertical: "center", horizontal: "center" };
-    ws[cellAddr].s.border = {
-      top: { style: "thin", color: { rgb: "BFDCE3" } },
-      bottom: { style: "thin", color: { rgb: "BFDCE3" } },
-      left: { style: "thin", color: { rgb: "BFDCE3" } },
-      right: { style: "thin", color: { rgb: "BFDCE3" } }
-    };
-  }
-
-  let totalsRow = null;
-  for (let r = headerRowIndex + 1; r <= range.e.r; r++) {
-    const cellB = XLSX.utils.encode_cell({r, c: 1});
-    if (ws[cellB] && String(ws[cellB].v).toUpperCase().includes('TOTALES')) {
-      totalsRow = r;
-      break;
-    }
-  }
-  if (totalsRow === null) totalsRow = range.e.r;
-
-  for (let c = range.s.c; c <= maxCol; c++) {
-    const addr = XLSX.utils.encode_cell({r: totalsRow, c});
-    if (!ws[addr]) continue;
-    ws[addr].s = ws[addr].s || {};
-    ws[addr].s.fill = { patternType: "solid", fgColor: { rgb: "035E59" } };
-    ws[addr].s.font = { name: "Calibri", sz: 11, bold: true, color: { rgb: "FFFFFF" } };
-    ws[addr].s.alignment = { vertical: "center", horizontal: (c < 2 ? "left" : "right") };
-    ws[addr].s.border = {
-      top: { style: "medium", color: { rgb: "0B7285" } },
-      bottom: { style: "medium", color: { rgb: "0B7285" } },
-      left: { style: "thin", color: { rgb: "BFDCE3" } },
-      right: { style: "thin", color: { rgb: "BFDCE3" } }
-    };
-  }
-
-  for (let R = headerRowIndex; R <= range.e.r; ++R) {
-    for (let C = range.s.c; C <= maxCol; ++C) {
-      const addr = XLSX.utils.encode_cell({r:R,c:C});
-      if (!ws[addr]) continue;
-      ws[addr].s = ws[addr].s || {};
-      ws[addr].s.border = ws[addr].s.border || {
-        top: { style: "thin", color: { rgb: "E6EEF6" } },
-        bottom: { style: "thin", color: { rgb: "E6EEF6" } },
-        left: { style: "thin", color: { rgb: "E6EEF6" } },
-        right: { style: "thin", color: { rgb: "E6EEF6" } }
-      };
-    }
-  }
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Planilla");
-  wb.Workbook = wb.Workbook || {};
-  wb.Workbook.Views = wb.Workbook.Views || [{ RTL: false }];
-
-  const safeName = planillaName.replace(/[^a-z0-9_\- ]/gi,'').replace(/\s+/g,'_');
-  const filename = `${safeName}_${dateInput}.xlsx`;
-  XLSX.writeFile(wb, filename);
-});
-
-/* ------------------ Auto half-sueldo behavior (unchanged) ------------------ */
 (function(){
-  function parseNumberSafe(v){
-    if (v == null) return 0;
+  const PLANILLA_STORAGE_KEY = 'empaquetex_planilla_noviembre_v1';
+
+  // Util: formatea número a cadena Q 0.00
+  function fmt(n){ return 'Q ' + Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+  // Cargar combo de empleados desde API
+  function loadEmpleados(){
+    fetch('/api/empleados').then(r => r.json()).then(list => {
+      const sel = document.getElementById('empleadoSelect');
+      if(!Array.isArray(list)) return;
+      list.forEach(e => {
+        const opt = document.createElement('option');
+        opt.value = e.dpi || e.dpi;
+        opt.textContent = e.full_name || e.full_name || (e.Nombre ? (e.Apellidos + ' ' + e.Nombre) : e.dpi);
+        sel.appendChild(opt);
+      });
+    }).catch(()=>{ /* silent */ });
+  }
+
+  // Lee la planilla guardada en localStorage (devuelve objeto con rows[] y meta)
+  function loadPlanillaFromLocal(){
     try {
-      const s = String(v).replace(/\s+/g,'').replace(/,/g,'').trim();
-      const n = Number(s);
-      return isFinite(n) ? n : 0;
-    } catch {
-      return 0;
+      const raw = localStorage.getItem(PLANILLA_STORAGE_KEY);
+      if(!raw) return null;
+      const obj = JSON.parse(raw);
+      return obj && Array.isArray(obj.rows) ? obj : null;
+    } catch(e){
+      return null;
     }
   }
 
-  function applyHalfToSueldoInput(inp){
-    if (!inp) return;
-    const raw = inp.value;
-    const n = parseNumberSafe(raw);
-    if (n === 0) {
-      inp.value = n.toFixed(2);
-    } else {
-      const half = Math.round((n / 2 + Number.EPSILON) * 100) / 100;
-      if (inp.type === 'number') inp.value = half;
-      else inp.value = half.toFixed(2);
+  // Busca la fila de la planilla correspondiente al DPI (busca en rows[].dpi)
+  function findPlanillaRowByDpi(dpi){
+    const plan = loadPlanillaFromLocal();
+    if(!plan) return null;
+    const rows = plan.rows || [];
+    // buscar por campo dpi directamente
+    for(const r of rows){
+      if(String(r.dpi || r.DPI || '').trim() === String(dpi).trim()) return r;
+      // fallback: si nombre coincide (no ideal)
+      const full = (r.nombre || r.Nombre || '').trim();
+      if(full && full === document.getElementById('empleadoSelect').selectedOptions[0].text) return r;
     }
-    try {
-      const tr = inp.closest('tr');
-      if (typeof recalcRow === 'function' && tr) recalcRow(tr);
-      if (typeof recalcTotals === 'function') recalcTotals();
-      if (typeof saveToLocal === 'function') saveToLocal();
-    } catch (e) { console.error('Error aplicando mitad al sueldo:', e); }
+    return null;
   }
 
-  document.addEventListener('paste', function(e){
-    const t = e.target;
-    if (!t || !t.classList) return;
-    if (t.classList.contains('sueldo')) {
-      setTimeout(() => applyHalfToSueldoInput(t), 20);
+  // Safe number extractor: acepta strings, nulls, "Q 0.00"
+  function toNumberSafe(v){
+    if(v === null || v === undefined) return 0;
+    if(typeof v === 'number') return v;
+    const s = String(v).replace(/\s+/g,'').replace(/^Q/i,'').replace(/,/g,'').trim();
+    const n = Number(s);
+    return isFinite(n) ? n : 0;
+  }
+
+  // Cuando seleccionan empleado, traer datos y poblar campos
+  document.getElementById('empleadoSelect').addEventListener('change', function(){
+    const dpiVal = this.value;
+    if(!dpiVal){
+      // limpiar
+      ['nombre','apellidos','dpi','sueldoBase','comisiones','bonificacion','bonoIncentivo','hextrasMonto','igss','isr','otrasDeducciones'].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) el.value = (el.readOnly ? '' : 0);
+      });
+      recalcLiquido();
+      return;
     }
+
+    // Primero intentar tomar los valores desde la planilla local (localStorage)
+    const planRow = findPlanillaRowByDpi(dpiVal);
+
+    if(planRow){
+      // Poblamos directamente desde la planilla (prioridad)
+      document.getElementById('nombre').value = planRow.nombre || planRow.Nombre || '';
+      document.getElementById('apellidos').value = planRow.apellidos || planRow.Apellidos || '';
+      document.getElementById('dpi').value = planRow.dpi || planRow.DPI || dpiVal;
+
+      // Valores numéricos que la planilla almacena - uso toNumberSafe para evitar cadenas vacías
+      document.getElementById('sueldoBase').value = toNumberSafe(planRow.sueldo || planRow.Sueldo || 0);
+      document.getElementById('bonificacion').value = toNumberSafe(planRow.bono || planRow.bon || planRow.Bono || 0);
+      document.getElementById('comisiones').value = toNumberSafe(planRow.comisiones || planRow.Comisiones || 0);
+      // horas extras almacenadas como hextras en la serialización
+      document.getElementById('hextrasMonto').value = toNumberSafe(planRow.hextras || planRow.hextras_monto || planRow._hextras || 0);
+
+      // IGSS puede venir con varios nombres en la serialización de la planilla
+      const igssVal = toNumberSafe(planRow.igss || planRow.IGSS || planRow.igss_laboral || 0);
+      document.getElementById('igss').value = igssVal;
+
+      // ISR
+      document.getElementById('isr').value = toNumberSafe(planRow.isr || planRow._isrValue || 0);
+
+      document.getElementById('otrasDeducciones').value = toNumberSafe(planRow.otras || planRow.otras_deducciones || 0);
+
+      // Bonificación incentivo: varias variantes de clave
+      const bonoInc = toNumberSafe(planRow.bono_incentivo ?? planRow.bonoIncentivo ?? planRow.bono_incentive ?? 0);
+      document.getElementById('bonoIncentivo').value = bonoInc;
+
+      recalcLiquido();
+      return;
+    }
+
+    // Si no hay fila en la planilla, pedimos al backend datos del empleado y usamos fallback
+    fetch('/api/empleado/' + encodeURIComponent(dpiVal)).then(r => r.json()).then(data => {
+      document.getElementById('nombre').value = data.Nombre || data.nombre || '';
+      document.getElementById('apellidos').value = data.Apellidos || data.apellidos || '';
+      document.getElementById('dpi').value = data['Numero de DPI'] || data.dpi || dpiVal;
+
+      // Si la API devuelve salario u otros campos, los usamos como fallback
+      if(data.Sueldo !== undefined) document.getElementById('sueldoBase').value = toNumberSafe(data.Sueldo);
+      if(data.bono !== undefined) document.getElementById('bonificacion').value = toNumberSafe(data.bono);
+      if(data.comisiones !== undefined) document.getElementById('comisiones').value = toNumberSafe(data.comisiones);
+      if(data.hextras_monto !== undefined) document.getElementById('hextrasMonto').value = toNumberSafe(data.hextras_monto);
+
+      // IGSS fallback names
+      if(data.igss !== undefined) document.getElementById('igss').value = toNumberSafe(data.igss);
+      if(data._isrValue !== undefined) document.getElementById('isr').value = toNumberSafe(data._isrValue);
+      if(data.otras_deducciones !== undefined) document.getElementById('otrasDeducciones').value = toNumberSafe(data.otras_deducciones);
+
+      // bono incentivo
+      if(data.bono_incentivo !== undefined) document.getElementById('bonoIncentivo').value = toNumberSafe(data.bono_incentivo);
+      if(data.bonoIncentivo !== undefined) document.getElementById('bonoIncentivo').value = toNumberSafe(data.bonoIncentivo);
+
+      recalcLiquido();
+    }).catch(()=>{/* no mostrar errores aquí */});
   });
 
-  document.addEventListener('blur', function(e){
-    const t = e.target;
-    if (!t || !t.classList) return;
-    if (t.classList.contains('sueldo')) {
-      applyHalfToSueldoInput(t);
-    }
-  }, true);
+  // Recalcular líquido: sum(ganancias) - sum(deducciones)
+  function recalcLiquido(){
+    const toNum = id => Number(document.getElementById(id).value || 0);
+    const ganancias = toNum('sueldoBase') + toNum('hextrasMonto') + toNum('bonificacion') + toNum('bonoIncentivo') + toNum('comisiones');
+    const deducciones = toNum('igss') + toNum('isr') + toNum('otrasDeducciones');
+    const liquido = Math.round((ganancias - deducciones + Number.EPSILON) * 100) / 100;
+    document.getElementById('liquidoTotal').value = fmt(liquido);
+    document.getElementById('totalEnLetras').value = numeroALetras(liquido);
+  }
+
+  // Convertir número a texto en español (versión simple para enteros y centavos)
+  function numeroALetras(num){
+    if (isNaN(num)) return '';
+    const entero = Math.trunc(Math.abs(num));
+    const cent = Math.round((Math.abs(num) - entero) * 100);
+    const enteroForm = entero.toLocaleString('es-GT');
+    return `${enteroForm} QUETZALES ${cent.toString().padStart(2,'0')}/100`;
+  }
+
+  // Delegado: recalcula cuando cambian inputs numéricos relevantes
+  // Aunque las casillas son readonly, mantenemos el listener en caso de que valores se actualicen vía script
+  ['sueldoBase','hextrasMonto','bonificacion','bonoIncentivo','comisiones','igss','isr','otrasDeducciones'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('input', recalcLiquido);
+  });
+
+  // Inicializar
+  document.addEventListener('DOMContentLoaded', function(){
+    loadEmpleados();
+    recalcLiquido();
+  });
+
 })();
-
-/* ------------------ NEW: automatic sync with /api/empleados (unchanged) ------------------ */
-
-const POLL_INTERVAL_MS = 20000; // 20 seconds
-
-async function fetchEmployeesList() {
-  try {
-    const res = await fetch('/api/empleados');
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
-  } catch (e) {
-    console.warn('Error fetching /api/empleados:', e);
-    return [];
-  }
-}
-
-function addEmployeeRowIfMissing(emp) {
-  if (!emp) return false;
-  const dpi = String(emp.dpi || '').trim();
-  const full = (emp.full_name || emp.fullName || emp.fullname || emp.Nombre || '').trim();
-  if (!dpi || !full) return false;
-
-  const tbody = document.querySelector('#planillaTable tbody');
-  if (!tbody) return false;
-
-  const existing = tbody.querySelector(`tr[data-dpi="${dpi}"]`);
-  if (existing) return false;
-
-  const nameExists = Array.from(tbody.querySelectorAll('input.nombre')).some(inp => (inp.value||'').trim() === full);
-  if (nameExists) return false;
-
-  const idx = tbody.querySelectorAll('tr').length + 1;
-  const tr = document.createElement('tr');
-  tr.dataset.row = idx;
-  tr.dataset.dpi = dpi; // mark row with dpi
-  tr.innerHTML = createRowHtml(idx);
-
-  const nameInput = tr.querySelector('input.nombre');
-  if (nameInput) {
-    nameInput.value = full;
-    nameInput.setAttribute('readonly', 'readonly');
-  }
-  const sueldoInput = tr.querySelector('input.sueldo');
-  if (sueldoInput) sueldoInput.value = (0).toFixed(2);
-
-  const bonoInp = tr.querySelector('input.bono');
-  if (bonoInp) { bonoInp.value = 125.00; bonoInp.setAttribute('readonly','readonly'); }
-  const diasInp = tr.querySelector('input.dias');
-  if (diasInp) diasInp.value = 15;
-
-  tbody.appendChild(tr);
-  recalcRow(tr);
-  recalcTotals();
-  return true;
-}
-
-async function syncEmployeesOnce() {
-  const list = await fetchEmployeesList();
-  if (!list || !list.length) return;
-  let added = 0;
-  for (const emp of list) {
-    const ok = addEmployeeRowIfMissing(emp);
-    if (ok) added++;
-  }
-  if (added > 0) {
-    saveToLocal();
-  }
-}
-
-let pollHandle = null;
-function startEmployeesPolling() {
-  syncEmployeesOnce();
-  if (pollHandle) clearInterval(pollHandle);
-  pollHandle = setInterval(syncEmployeesOnce, POLL_INTERVAL_MS);
-}
-
-async function populateFromEmployeesIfEmpty() {
-  const restored = loadFromLocal();
-  if (restored) {
-    startEmployeesPolling();
-    return;
-  }
-  const employees = await fetchEmployeesList();
-  if (employees && employees.length) {
-    const tbody = document.querySelector('#planillaTable tbody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    employees.forEach((emp, i) => {
-      const dpi = String(emp.dpi || '').trim();
-      const full = (emp.full_name || emp.fullName || emp.fullname || emp.Nombre || '').trim();
-      const idx = i + 1;
-      const tr = document.createElement('tr');
-      tr.dataset.row = idx;
-      if (dpi) tr.dataset.dpi = dpi;
-      tr.innerHTML = createRowHtml(idx);
-      const nameInput = tr.querySelector('input.nombre');
-      if (nameInput) {
-        nameInput.value = full;
-        nameInput.setAttribute('readonly', 'readonly');
-      }
-      const sueldoInput = tr.querySelector('input.sueldo');
-      if (sueldoInput) sueldoInput.value = (0).toFixed(2);
-      const bonoInp = tr.querySelector('input.bono');
-      if (bonoInp) { bonoInp.value = 125.00; bonoInp.setAttribute('readonly','readonly'); }
-      const diasInp = tr.querySelector('input.dias');
-      if (diasInp) diasInp.value = 15;
-      tbody.appendChild(tr);
-    });
-    document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
-    recalcTotals();
-    saveToLocal();
-  }
-  startEmployeesPolling();
-}
-
-/* ------------------ LocalStorage helpers ------------------ */
-function saveToLocal() {
-  try {
-    const data = serializeTable();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (e) {
-    console.error('Error saving planilla to localStorage', e);
-  }
-}
-
-function loadFromLocal() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return false;
-    const obj = JSON.parse(raw);
-    if (obj && Array.isArray(obj.rows) && obj.rows.length) {
-      restoreTable(obj);
-      if (obj.meta) {
-        if (obj.meta.planillaName) document.getElementById('planillaName').value = obj.meta.planillaName;
-        if (obj.meta.emisionDate) document.getElementById('emisionDate').value = obj.meta.emisionDate;
-      }
-      return true;
-    }
-    return false;
-  } catch (e) {
-    console.error('Error loading planilla from localStorage', e);
-    return false;
-  }
-}
-
-/* ------------------ Initialization ------------------ */
-document.addEventListener('DOMContentLoaded', () => {
-  const restored = loadFromLocal();
-
-  initBonosYDias();
-  enforceFixedFieldsOnAllRows();
-
-  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
-  recalcTotals();
-
-  populateFromEmployeesIfEmpty();
-
-  if (!restored) saveToLocal();
-});
 </script>
 
 <style>
-  :root{
-    --bg-grad-start: #f3f6ff;
-    --bg-grad-end: #fafbff;
-    --muted: #6c757d;
-    --accent1: #0ea5a4;
-    --accent2: #0b7285;
-    --panel: #f8f9fa;
-    --planilla-cell-vertical-padding: 1.6rem;
-    --planilla-cell-horizontal-padding: 1.5rem;
-    --planilla-input-min-height: 60px;
-    --planilla-input-font-size: 1.03rem;
-    --planilla-money-min-width: 260px;
-    --planilla-name-col-min-width: 520px; /* made wider for Nombre completo */
-  }
-
-  body { background: linear-gradient(180deg,var(--bg-grad-start) 0%, var(--bg-grad-end) 100%); }
-  .card { border-radius: .6rem; }
-  .card .card-body { padding: 1rem 1.1rem; }
-  h3 { font-weight:600; color:var(--accent2); }
-
-  .form-control { border-radius:.45rem; font-size: var(--planilla-input-font-size); }
-
-  .btn-primary { background: linear-gradient(90deg,var(--accent1),var(--accent2)); border: none; box-shadow: 0 6px 20px rgba(11,114,133,0.08); }
-  .btn-outline-secondary { border-radius:.45rem; }
-  .btn-outline-danger { border-radius:.45rem; }
-  .table-header-custom { background: linear-gradient(90deg,#0ea5a4,#036b6a); }
-  .table-header-custom th { color:#fff; border:0; font-weight:700; padding:.9rem 1rem; }
-
-  .controls .me-4 { margin-right: 1.4rem; }
-
-  table.table { border-collapse: separate; border-spacing:0; border-radius:.6rem; overflow:hidden; box-shadow: 0 1px 2px rgba(15,23,42,0.04); width:100%; }
-  table.table td, table.table th {
-    vertical-align: middle;
-    padding: var(--planilla-cell-vertical-padding) var(--planilla-cell-horizontal-padding);
-  }
-
-  .horizontal-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-  .text-end { text-align:right; }
-  .fw-bold { font-weight:700; }
-
-  .money-inline {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    white-space: nowrap;
-    flex-wrap: nowrap;
-    vertical-align: middle;
-  }
-  .money-prefix {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 auto;
-    margin-right: 0;
-    min-width: 46px;
-    height: var(--planilla-input-min-height);
-    padding: 0 .8rem;
-    border-radius: .45rem;
-    background: linear-gradient(180deg,#fff 0%, #f3f6fb 100%);
-    border:1px solid rgba(0,0,0,0.06);
-    font-weight:600;
-    color:#333;
-    box-sizing: border-box;
-  }
-
-  .money-inline .form-control {
-    min-width: var(--planilla-money-min-width);
-    min-height: var(--planilla-input-min-height);
-    height: var(--planilla-input-min-height);
-    padding-top: .50rem;
-    padding-bottom: .50rem;
-    box-sizing: border-box;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  #planillaTable input.form-control {
-    font-size: var(--planilla-input-font-size);
-    min-height: var(--planilla-input-min-height);
-    height: var(--planilla-input-min-height);
-    box-sizing: border-box;
-    padding: .45rem .6rem;
-    white-space: nowrap;
-  }
-
-  #planillaTable td.total-devengado,
-  #planillaTable td.igss,
-  #planillaTable td.total-deducciones,
-  #planillaTable td.liquido,
-  #planillaTable td.isr-cell {
-    white-space: nowrap;
-  }
-
-  #planillaTable col:nth-child(2),
-  #planillaTable td:nth-child(2),
-  #planillaTable th:nth-child(2) {
-    min-width: var(--planilla-name-col-min-width);
-    white-space: normal;
-    word-break: break-word;
-  }
-
-  #planillaTable td input.horas {
-    text-align:center;
-    padding-top: .35rem;
-    padding-bottom: .35rem;
-    height: calc(var(--planilla-input-min-height) - .8rem);
-  }
-
-  table.table tbody tr { background: #fff; }
-  table.table tbody tr:nth-child(odd) { background: #fbfeff; }
-
-  @media (max-width: 1000px) {
-    :root {
-      --planilla-money-min-width: 200px;
-      --planilla-input-min-height: 56px;
-      --planilla-cell-horizontal-padding: 1.2rem;
-      --planilla-name-col-min-width: 420px;
-      --planilla-cell-vertical-padding: 1.2rem;
-    }
-    #planillaTable { min-width: 1400px; }
-  }
-
-  @media (max-width: 576px) {
-    :root {
-      --planilla-money-min-width: 140px;
-      --planilla-input-min-height: 50px;
-      --planilla-cell-horizontal-padding: 1.0rem;
-      --planilla-name-col-min-width: 300px;
-      --planilla-cell-vertical-padding: 1rem;
-    }
-    #planillaTable { min-width: 1100px; }
-  }
-
-table.table {
-  border-collapse: collapse;
-}
-table.table th,
-table.table td {
-  border-right: 1px solid #e6eef6;
-  border-bottom: 1px solid #e9f0f7;
-}
-table.table th:last-child,
-table.table td:last-child {
-  border-right: none;
-}
-.table-header-custom th {
-  border-bottom: 2px solid rgba(15,23,42,0.06);
-}
-table.table th:first-child,
-table.table td:first-child {
-  border-left: 1px solid #e6eef6;
-}
-table.table tbody tr:first-child td {
-  border-top: 1px solid #eef6fb;
-}
-.table-responsive { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-#planillaTable tfoot tr td {
-  border-top: 2px solid var(--tfoot-top-border);
-  border-right: 1px solid #e6eef6;
-}
-#planillaTable tfoot tr td:last-child {
-  border-right: none;
-}
+  /* Estilos mínimos para que quede ordenado y compacto */
+  .card-sm .card-body { padding: 0.9rem; }
+  .form-label.small { font-size: .85rem; color:#6b7280; }
+  input[readonly] { background:#f8f9fa; cursor: not-allowed; }
+  #liquidoTotal { background: #fff8eb; }
 </style>
-
 {% endblock %}
