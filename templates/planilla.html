@@ -81,9 +81,10 @@
           </thead>
 
           <tbody>
+            <!-- Row template initial row left intentionally minimal; populateFromEmployees will add rows -->
             <tr data-row="1">
               <td>1</td>
-              <td class="align-middle"></td>
+              <td class="align-middle"><input class="form-control form-control-sm nombre" type="text" value=""></td>
               <td>
                 <div class="money-inline">
                   <span class="money-prefix">Q</span>
@@ -151,21 +152,18 @@
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
 <script>
-/* Parámetros fiscales */
+/* ------------------ Fiscal constants and helpers (unchanged) ------------------ */
 const IGSS_RATE = 0.0483;
 const GASTOS_PERSONALES_ANUAL = 48000;
 const ISR_ANNUAL_RATE = 0.05;
 const ISR_MIN_SALARIO = 4000.00;
 
-/* localStorage key */
 const STORAGE_KEY = 'empaquetex_planilla_noviembre_v1';
 
-/* Helpers */
 function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
 function formatNum(n){ return Number(n).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); }
 function withQ(n){ return 'Q ' + formatNum(n); }
 
-/* Horas extras mensual: sueldo / dias / 8 * 1.5 * horas */
 function computeHorasMontoMensual(sueldo, dias, horas) {
   if (!dias || dias <= 0) return 0;
   const valorHora = sueldo / dias / 8;
@@ -173,7 +171,6 @@ function computeHorasMontoMensual(sueldo, dias, horas) {
   return round2(monto);
 }
 
-/* ISR según la nueva metodología solicitada */
 function computeISRMonthlyFromRow(sueldo, bono, comisiones, hextrasMensual) {
   if ((sueldo * 2) < 4000) return 0;
   const sueldoBaseAnual = (sueldo * 2) * 12;
@@ -189,7 +186,7 @@ function computeISRMonthlyFromRow(sueldo, bono, comisiones, hextrasMensual) {
   return isrMensual;
 }
 
-/* Recalcula fila */
+/* ------------------ Row calculations (unchanged) ------------------ */
 function recalcRow(tr) {
   if (!tr) return;
   const sueldo = parseFloat(tr.querySelector('input.sueldo')?.value) || 0;
@@ -225,7 +222,6 @@ function recalcRow(tr) {
   const liquiCell = tr.querySelector('.liquido'); if (liquiCell) liquiCell.textContent = withQ(liquido);
 }
 
-/* Recalcula totales */
 function recalcTotals() {
   const rows = document.querySelectorAll('#planillaTable tbody tr');
   let totals = {sueldo:0, bono:0, comisiones:0, horas:0, hextras:0, devengado:0, igss:0, isr:0, otras:0, deducciones:0, liquido:0};
@@ -271,7 +267,7 @@ function recalcTotals() {
   if (document.getElementById('total-liquido')) document.getElementById('total-liquido').textContent = withQ(totals.liquido);
 }
 
-/* Serializar tabla para localStorage */
+/* ------------------ Serialization (unchanged) ------------------ */
 function serializeTable() {
   const rows = [];
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
@@ -286,13 +282,13 @@ function serializeTable() {
     const observ = tr.querySelector('input.observaciones')?.value ?? '';
     const hextras = parseFloat(tr.dataset._hextras) || 0;
     const isr = parseFloat(tr.dataset._isrValue) || 0;
-    rows.push({ nombre, sueldo, bono, dias, comisiones, horas, otras, medioPago, observ, hextras, isr });
+    const dpi = tr.dataset.dpi || '';
+    rows.push({ nombre, sueldo, bono, dias, comisiones, horas, otras, medioPago, observ, hextras, isr, dpi });
   });
   const meta = { saved_at: new Date().toISOString(), planillaName: document.getElementById('planillaName')?.value ?? '', emisionDate: document.getElementById('emisionDate')?.value ?? '' };
   return { rows, meta };
 }
 
-/* Restaurar tabla desde objeto */
 function restoreTable(data) {
   if (!data || !Array.isArray(data.rows)) return;
   const tbody = document.querySelector('#planillaTable tbody');
@@ -302,6 +298,7 @@ function restoreTable(data) {
     const idx = i + 1;
     const tr = document.createElement('tr');
     tr.dataset.row = idx;
+    if (r.dpi) tr.dataset.dpi = r.dpi;
     tr.innerHTML = `
       <td>${idx}</td>
       <td class="align-middle"><input class="form-control form-control-sm nombre" type="text" value="${escapeHtml(r.nombre || '')}"></td>
@@ -328,43 +325,11 @@ function restoreTable(data) {
   recalcTotals();
 }
 
-/* Guardar en localStorage */
-function saveToLocal() {
-  try {
-    const data = serializeTable();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (e) {
-    console.error('Error guardando planilla en localStorage', e);
-  }
-}
-
-/* Cargar desde localStorage al inicio */
-function loadFromLocal() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return false;
-    const obj = JSON.parse(raw);
-    if (obj && Array.isArray(obj.rows) && obj.rows.length) {
-      restoreTable(obj);
-      if (obj.meta) {
-        if (obj.meta.planillaName) document.getElementById('planillaName').value = obj.meta.planillaName;
-        if (obj.meta.emisionDate) document.getElementById('emisionDate').value = obj.meta.emisionDate;
-      }
-      return true;
-    }
-    return false;
-  } catch (e) {
-    console.error('Error cargando planilla desde localStorage', e);
-    return false;
-  }
-}
-
-/* Escapar texto para insertar en value */
+/* ------------------ Utilities and UI handlers (unchanged behavior) ------------------ */
 function escapeHtml(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-/* Delegated listener para inputs: recalcula y guarda */
 document.addEventListener('input', (e) => {
   if (!e.target.classList) return;
   if (e.target.classList.contains('num-cell') || e.target.classList.contains('nombre') || e.target.classList.contains('medio-pago') || e.target.classList.contains('observaciones')) {
@@ -375,7 +340,6 @@ document.addEventListener('input', (e) => {
   }
 });
 
-/* Inicializar bonos y dias en filas actuales y proteger bonificación */
 function initBonosYDias() {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
     const bonoInp = tr.querySelector('input.bono');
@@ -394,7 +358,6 @@ function initBonosYDias() {
   recalcTotals();
 }
 
-/* Plantilla al agregar fila */
 function createRowHtml(index) {
   return `
     <td>${index}</td>
@@ -436,7 +399,6 @@ function createRowHtml(index) {
   `;
 }
 
-/* Listener que bloquea nombre cuando se llena por primera vez */
 document.addEventListener('blur', (e) => {
   if (!e.target.classList) return;
   if (e.target.classList.contains('nombre')) {
@@ -447,7 +409,6 @@ document.addEventListener('blur', (e) => {
   }
 }, true);
 
-/* Protección adicional para garantizar bono=125 y dias=15 en todas las filas */
 function enforceFixedFieldsOnAllRows() {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
     const bonoInp = tr.querySelector('input.bono');
@@ -460,7 +421,7 @@ function enforceFixedFieldsOnAllRows() {
   });
 }
 
-/* Add row handler */
+/* Row add/delete handlers (unchanged) */
 document.getElementById('addRow').addEventListener('click', () => {
   const tbody = document.querySelector('#planillaTable tbody');
   const newIndex = tbody.querySelectorAll('tr').length + 1;
@@ -485,7 +446,6 @@ document.getElementById('addRow').addEventListener('click', () => {
   saveToLocal();
 });
 
-/* Delete last row */
 document.getElementById('deleteRow').addEventListener('click', () => {
   const tbody = document.querySelector('#planillaTable tbody');
   const rows = tbody.querySelectorAll('tr');
@@ -495,10 +455,7 @@ document.getElementById('deleteRow').addEventListener('click', () => {
   saveToLocal();
 });
 
-/* Export to Excel (.xlsx): requiere fecha de emisión
-   Cambios realizados: colores y bordes en headers y fila de totales, ajustes de ancho,
-   importante: EL NOMBRE DE LA PLANILLA Y LA FECHA DE EMISIÓN NO se agregan dentro de la hoja — solo se usan para el NOMBRE DEL ARCHIVO.
-*/
+/* Export to Excel (unchanged) */
 document.getElementById('exportExcel').addEventListener('click', () => {
   const dateInput = document.getElementById('emisionDate').value;
   const planillaName = document.getElementById('planillaName').value.trim() || 'Planilla';
@@ -509,7 +466,6 @@ document.getElementById('exportExcel').addEventListener('click', () => {
   }
   if (exportHint) exportHint.style.display = 'none';
 
-  // Clonar tabla y reemplazar inputs por texto (valor actual)
   const table = document.getElementById('planillaTable');
   const clone = table.cloneNode(true);
   clone.querySelectorAll('input').forEach(inp => {
@@ -517,7 +473,6 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     parent.replaceChild(document.createTextNode(inp.value), inp);
   });
 
-  // Limpiar texto Q y comas, convertir a números donde corresponde
   clone.querySelectorAll('td, th').forEach(cell => {
     let txt = (cell.textContent || '').replace(/\u00A0/g, ' ').trim();
     if (txt === '') return;
@@ -527,30 +482,13 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     else cell.textContent = txt;
   });
 
-  // Crear sheet desde tabla limpia
   const ws = XLSX.utils.table_to_sheet(clone, {raw:true});
-
-  // Ajustar anchos de columna para mejor presentación (en caracteres aproximados)
   ws['!cols'] = [
-    { wch: 6 },   // No.
-    { wch: 40 },  // Apellido, Nombre
-    { wch: 20 },  // Sueldo Base (wider)
-    { wch: 14 },  // Bonificación
-    { wch: 12 },  // Días Laborados
-    { wch: 14 },  // Comisiones (wider)
-    { wch: 10 },  // Horas extra
-    { wch: 18 },  // Horas Extras (monto)
-    { wch: 18 },  // Total Devengado
-    { wch: 16 },  // Calculo del IGSS
-    { wch: 16 },  // Calculo del ISR
-    { wch: 16 },  // Otras deducciones
-    { wch: 20 },  // Total Deducciones
-    { wch: 20 },  // Líquido a recibir
-    { wch: 20 },  // Medio de pago
-    { wch: 24 }   // Observaciones
+    { wch: 6 }, { wch: 40 }, { wch: 20 }, { wch: 14 }, { wch: 12 }, { wch: 14 },
+    { wch: 10 }, { wch: 18 }, { wch: 18 }, { wch: 16 }, { wch: 16 }, { wch: 16 },
+    { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 24 }
   ];
 
-  // Estilos: header (row 1), totals row (detectar "TOTALES"), y bordes para todas las celdas
   const range = XLSX.utils.decode_range(ws['!ref']);
   const headerRowIndex = range.s.r;
   const maxCol = range.e.c;
@@ -570,7 +508,6 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     };
   }
 
-  // Find totals row by scanning for the cell that contains 'TOTALES' in column B (c=1) below header
   let totalsRow = null;
   for (let r = headerRowIndex + 1; r <= range.e.r; r++) {
     const cellB = XLSX.utils.encode_cell({r, c: 1});
@@ -596,7 +533,6 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     };
   }
 
-  // Apply thin borders to all data cells for better separation
   for (let R = headerRowIndex; R <= range.e.r; ++R) {
     for (let C = range.s.c; C <= maxCol; ++C) {
       const addr = XLSX.utils.encode_cell({r:R,c:C});
@@ -613,7 +549,6 @@ document.getElementById('exportExcel').addEventListener('click', () => {
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Planilla");
-
   wb.Workbook = wb.Workbook || {};
   wb.Workbook.Views = wb.Workbook.Views || [{ RTL: false }];
 
@@ -622,7 +557,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
   XLSX.writeFile(wb, filename);
 });
 
-/* Auto-dividir Sueldo Base entre 2 solo cuando el usuario termina de editar (blur) o pega (paste) */
+/* ------------------ Auto half-sueldo behavior (unchanged) ------------------ */
 (function(){
   function parseNumberSafe(v){
     if (v == null) return 0;
@@ -651,9 +586,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
       if (typeof recalcRow === 'function' && tr) recalcRow(tr);
       if (typeof recalcTotals === 'function') recalcTotals();
       if (typeof saveToLocal === 'function') saveToLocal();
-    } catch (e) {
-      console.error('Error aplicando mitad al sueldo:', e);
-    }
+    } catch (e) { console.error('Error aplicando mitad al sueldo:', e); }
   }
 
   document.addEventListener('paste', function(e){
@@ -673,84 +606,170 @@ document.getElementById('exportExcel').addEventListener('click', () => {
   }, true);
 })();
 
-/* ------------------ NUEVO: población desde empleados (/api/empleados) ------------------
-   Comportamiento:
-   - Consulta GET /api/empleados (formato esperado: [{dpi: "...", full_name: "Apellidos Nombre"}, ...])
-   - Crea una fila por empleado: coloca full_name en la columna Apellido(s), Nombre(s) (input readonly),
-     deja Sueldo Base en 0.00 (editable), y conserva todas las fórmulas/protecciones.
-   - No sobrescribe filas si hay datos guardados en localStorage (primero intenta cargar local).
+/* ------------------ NEW: automatic sync with /api/empleados ------------------ */
+
+/*
+ Behavior:
+ - On load: if localStorage had saved data, respect it; otherwise fetch /api/empleados and populate table.
+ - Once loaded, poll /api/empleados every POLL_INTERVAL_MS to detect new employees and append new rows automatically.
+ - Do not remove existing rows or overwrite manual edits.
+ - Each appended row gets tr.dataset.dpi set to the employee's dpi to avoid duplicates.
 */
+
+const POLL_INTERVAL_MS = 20000; // 20 seconds
+
 async function fetchEmployeesList() {
   try {
     const res = await fetch('/api/empleados');
-    if (!res.ok) throw new Error('Error al obtener empleados');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     return Array.isArray(data) ? data : [];
   } catch (e) {
-    console.warn('No se pudo cargar lista de empleados:', e);
+    console.warn('Error fetching /api/empleados:', e);
     return [];
   }
 }
 
-function populateFromEmployeesList(employees) {
-  if (!Array.isArray(employees) || employees.length === 0) return;
+function addEmployeeRowIfMissing(emp) {
+  if (!emp) return false;
+  const dpi = String(emp.dpi || '').trim();
+  const full = (emp.full_name || emp.fullName || emp.fullname || emp.Nombre || '').trim();
+  if (!dpi || !full) return false;
+
   const tbody = document.querySelector('#planillaTable tbody');
-  if (!tbody) return;
+  if (!tbody) return false;
 
-  // Si localStorage ya tiene filas (restaurado), no sobreescribir; solo añadir si tabla actual tiene una única fila vacía.
-  const currentRows = tbody.querySelectorAll('tr');
-  const isMostlyEmpty = currentRows.length === 1 && (currentRows[0].querySelector('input.nombre')?.value || '').trim() === '' && Number(currentRows[0].querySelector('input.sueldo')?.value || 0) === 0;
+  // If a row with same dpi exists, skip
+  const existing = tbody.querySelector(`tr[data-dpi="${dpi}"]`);
+  if (existing) return false;
 
-  if (!isMostlyEmpty && currentRows.length > 0) {
-    // Si la tabla ya tiene datos (guardados), no forzar reemplazo — se añade al final.
-    // Esto evita perder trabajo si el usuario ya tiene planilla abierta.
+  // Also check names to avoid duplicate when DPI missing
+  const nameExists = Array.from(tbody.querySelectorAll('input.nombre')).some(inp => (inp.value||'').trim() === full);
+  if (nameExists) return false;
+
+  const idx = tbody.querySelectorAll('tr').length + 1;
+  const tr = document.createElement('tr');
+  tr.dataset.row = idx;
+  tr.dataset.dpi = dpi; // mark row with dpi
+  tr.innerHTML = createRowHtml(idx);
+
+  // fill name (readonly) and default sueldo 0
+  const nameInput = tr.querySelector('input.nombre');
+  if (nameInput) {
+    nameInput.value = full;
+    nameInput.setAttribute('readonly', 'readonly');
   }
+  const sueldoInput = tr.querySelector('input.sueldo');
+  if (sueldoInput) sueldoInput.value = (0).toFixed(2);
 
-  // Append rows for each employee (skip duplicates by comparing name)
-  const existingNames = new Set();
-  document.querySelectorAll('#planillaTable tbody tr input.nombre').forEach(inp => {
-    const v = (inp.value || '').trim();
-    if (v) existingNames.add(v);
-  });
+  // ensure fixed fields
+  const bonoInp = tr.querySelector('input.bono');
+  if (bonoInp) { bonoInp.value = 125.00; bonoInp.setAttribute('readonly','readonly'); }
+  const diasInp = tr.querySelector('input.dias');
+  if (diasInp) diasInp.value = 15;
 
-  employees.forEach((emp, i) => {
-    const full = (emp.full_name || emp.fullName || emp.fullname || emp.nombre || '').trim();
-    if (!full) return;
-    if (existingNames.has(full)) return;
-    const tbodyRows = tbody.querySelectorAll('tr');
-    const newIndex = tbodyRows.length + 1;
-    const tr = document.createElement('tr');
-    tr.dataset.row = newIndex;
-    tr.innerHTML = createRowHtml(newIndex);
-    // Set name readonly and sueldo to 0
-    tr.querySelector('input.nombre').value = full;
-    tr.querySelector('input.nombre').setAttribute('readonly', 'readonly');
-    const sueldoInp = tr.querySelector('input.sueldo');
-    if (sueldoInp) sueldoInp.value = (0).toFixed(2);
-
-    // Ensure bono/dias defaults
-    const bonoInp = tr.querySelector('input.bono');
-    if (bonoInp) { bonoInp.value = 125.00; bonoInp.setAttribute('readonly','readonly'); }
-    const diasInp = tr.querySelector('input.dias');
-    if (diasInp) diasInp.value = 15;
-
-    tbody.appendChild(tr);
-    recalcRow(tr);
-  });
-
+  tbody.appendChild(tr);
+  recalcRow(tr);
   recalcTotals();
-  saveToLocal();
+  return true;
 }
 
-/* Poblar tabla desde la API de empleados si no hay datos guardados */
+async function syncEmployeesOnce() {
+  const list = await fetchEmployeesList();
+  if (!list || !list.length) return;
+  let added = 0;
+  for (const emp of list) {
+    const ok = addEmployeeRowIfMissing(emp);
+    if (ok) added++;
+  }
+  if (added > 0) {
+    saveToLocal();
+  }
+}
+
+let pollHandle = null;
+function startEmployeesPolling() {
+  // Run immediately once
+  syncEmployeesOnce();
+  // then poll periodically
+  if (pollHandle) clearInterval(pollHandle);
+  pollHandle = setInterval(syncEmployeesOnce, POLL_INTERVAL_MS);
+}
+
+/* populate on load only if localStorage empty; then start polling always to pick up future DB adds */
 async function populateFromEmployeesIfEmpty() {
   const restored = loadFromLocal();
-  if (restored) return; // si hay datos en local, respetarlos
+  if (restored) {
+    // respect saved data, but still start polling to append newcomers
+    startEmployeesPolling();
+    return;
+  }
   const employees = await fetchEmployeesList();
-  if (employees && employees.length) populateFromEmployeesList(employees);
+  if (employees && employees.length) {
+    // clear current minimal row(s) and populate from employees
+    const tbody = document.querySelector('#planillaTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    employees.forEach((emp, i) => {
+      const dpi = String(emp.dpi || '').trim();
+      const full = (emp.full_name || emp.fullName || emp.fullname || emp.Nombre || '').trim();
+      const idx = i + 1;
+      const tr = document.createElement('tr');
+      tr.dataset.row = idx;
+      if (dpi) tr.dataset.dpi = dpi;
+      tr.innerHTML = createRowHtml(idx);
+      const nameInput = tr.querySelector('input.nombre');
+      if (nameInput) {
+        nameInput.value = full;
+        nameInput.setAttribute('readonly', 'readonly');
+      }
+      const sueldoInput = tr.querySelector('input.sueldo');
+      if (sueldoInput) sueldoInput.value = (0).toFixed(2);
+      const bonoInp = tr.querySelector('input.bono');
+      if (bonoInp) { bonoInp.value = 125.00; bonoInp.setAttribute('readonly','readonly'); }
+      const diasInp = tr.querySelector('input.dias');
+      if (diasInp) diasInp.value = 15;
+      tbody.appendChild(tr);
+    });
+    document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
+    recalcTotals();
+    saveToLocal();
+  }
+  // start polling for later additions
+  startEmployeesPolling();
 }
 
-/* Init */
+/* ------------------ LocalStorage helpers ------------------ */
+function saveToLocal() {
+  try {
+    const data = serializeTable();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.error('Error saving planilla to localStorage', e);
+  }
+}
+
+function loadFromLocal() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const obj = JSON.parse(raw);
+    if (obj && Array.isArray(obj.rows) && obj.rows.length) {
+      restoreTable(obj);
+      if (obj.meta) {
+        if (obj.meta.planillaName) document.getElementById('planillaName').value = obj.meta.planillaName;
+        if (obj.meta.emisionDate) document.getElementById('emisionDate').value = obj.meta.emisionDate;
+      }
+      return true;
+    }
+    return false;
+  } catch (e) {
+    console.error('Error loading planilla from localStorage', e);
+    return false;
+  }
+}
+
+/* ------------------ Initialization ------------------ */
 document.addEventListener('DOMContentLoaded', () => {
   const restored = loadFromLocal();
 
@@ -760,13 +779,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
   recalcTotals();
 
-  if (!restored) {
-    // Si no hay guardado local, intentar poblar desde empleados (API)
-    populateFromEmployeesIfEmpty();
-  } else {
-    // si se restauró, asegurar campos y totales
-    recalcTotals();
-  }
+  // Populate from employees if no local saved data; always start polling afterwards
+  populateFromEmployeesIfEmpty();
 
   if (!restored) saveToLocal();
 });
@@ -780,13 +794,10 @@ document.addEventListener('DOMContentLoaded', () => {
     --accent1: #0ea5a4;
     --accent2: #0b7285;
     --panel: #f8f9fa;
-    /* Increased vertical padding for taller rows */
     --planilla-cell-vertical-padding: 1.6rem;
     --planilla-cell-horizontal-padding: 1.5rem;
-    /* Increased input height for wider boxes */
     --planilla-input-min-height: 60px;
     --planilla-input-font-size: 1.03rem;
-    /* Wider money/input min width to avoid wrapping Q and amount */
     --planilla-money-min-width: 260px;
     --planilla-name-col-min-width: 360px;
   }
@@ -804,7 +815,6 @@ document.addEventListener('DOMContentLoaded', () => {
   .table-header-custom { background: linear-gradient(90deg,#0ea5a4,#036b6a); }
   .table-header-custom th { color:#fff; border:0; font-weight:700; padding:.9rem 1rem; }
 
-  /* Controls spacing (kept as original) */
   .controls .me-4 { margin-right: 1.4rem; }
 
   table.table { border-collapse: separate; border-spacing:0; border-radius:.6rem; overflow:hidden; box-shadow: 0 1px 2px rgba(15,23,42,0.04); width:100%; }
@@ -817,7 +827,6 @@ document.addEventListener('DOMContentLoaded', () => {
   .text-end { text-align:right; }
   .fw-bold { font-weight:700; }
 
-  /* money-inline: ensure no wrap and items centered vertically */
   .money-inline {
     display: inline-flex;
     align-items: center;
@@ -855,7 +864,6 @@ document.addEventListener('DOMContentLoaded', () => {
     text-overflow: ellipsis;
   }
 
-  /* Make text inputs in numeric columns also wider and single-line */
   #planillaTable input.form-control {
     font-size: var(--planilla-input-font-size);
     min-height: var(--planilla-input-min-height);
@@ -865,7 +873,6 @@ document.addEventListener('DOMContentLoaded', () => {
     white-space: nowrap;
   }
 
-  /* Prevent splitting the currency and amount into two lines in these summary columns */
   #planillaTable td.total-devengado,
   #planillaTable td.igss,
   #planillaTable td.total-deducciones,
