@@ -84,9 +84,7 @@ def requerir_login():
         "login", "static", "db_test", "db-test",
         "guardar_empleado", "guardar_academico", "guardar_conyugue",
         "guardar_emergencia", "guardar_laboral", "guardar_medica",
-        "api_foto", "subir_foto", "eliminar_foto", "api_empleados_list", "api_empleado_get", "api_empleados",
-        # las rutas nuevas también deben permanecer accesibles sin sesión si así lo deseas
-        "recibos_list", "imprimir_recibo"
+        "api_foto", "subir_foto", "eliminar_foto", "api_empleados_list", "api_empleado_get", "api_empleados"
     }
     endpoint = request.endpoint or ""
     base_endpoint = endpoint.split(".")[0] if "." in endpoint else endpoint
@@ -432,24 +430,125 @@ def ficha():
     return render_template("ficha.html", usuario=session.get("usuario"))
 
 
-# Rutas añadidas (mínimas) para evitar errores de templates que referencian endpoints inexistentes
-@app.route("/recibos")
-def recibos_list():
-    # Redirige a planilla por defecto; puedes cambiar para renderizar una lista real si la implementas
-    return redirect(url_for("planilla"))
-
-@app.route("/imprimir_recibo/<numero>")
-def imprimir_recibo(numero):
-    # Renderiza recibo.html con recibo.numero disponible para impresión
-    recibo = {"numero": numero}
-    return render_template("recibo.html", usuario=session.get("usuario"), recibo=recibo)
-
-
+# <-- CAMBIO PRINCIPAL: recibo ahora siempre pasa la variable 'recibo' y datos auxiliares -->
 @app.route("/recibo")
 def recibo():
-    # Provee un objeto recibo vacío al template para evitar jinja2.exceptions.UndefinedError
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+
+    # optional: accept ?numero=... but do not fail if absent
+    numero = request.args.get("numero", None)
+
+    # If you later want to fetch a recibo from DB by numero, add logic here.
+    # For now return an empty dict so template has 'recibo' defined and url_for can resolve.
     recibo = {}
-    return render_template("recibo.html", usuario=session.get("usuario"), recibo=recibo)
+    if numero:
+        # attempt to fetch minimal recibo data if exists in DB (non-invasive)
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            # Example: if you store recibos in a table 'recibos' with column 'numero'
+            cursor.execute("SELECT * FROM recibos WHERE numero = %s LIMIT 1", (numero,))
+            row = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            if row:
+                # sanitize single row
+                recibo = {k: ("" if v is None else v) for k, v in row.items()}
+        except Exception:
+            # if table doesn't exist or any error, keep recibo as {}
+            recibo = {}
+
+    empresa_nombre = os.environ.get("EMPRESA_NOMBRE", "Empresa")
+    fecha_emision = datetime.utcnow().strftime("%Y-%m-%d")
+    current_date = fecha_emision
+
+    return render_template(
+        "recibo.html",
+        usuario=session.get("usuario"),
+        recibo=recibo,
+        empresa_nombre=empresa_nombre,
+        fecha_emision=fecha_emision,
+        current_date=current_date
+    )
+
+
+# Rutas auxiliares que el template espera (evitan BuildError en url_for)
+@app.route("/recibos")
+def recibos_list():
+    # minimal safe implementation: redirige a menu o muestra lista futura
+    # mantiene compatibilidad con templates que llaman url_for('recibos_list')
+    return redirect(url_for("menu"))
+
+
+@app.route("/recibo/imprimir/<numero>")
+def imprimir_recibo(numero):
+    # minimal: redirige a la vista recibo con query param numero
+    return redirect(url_for("recibo", numero=numero))
+
+
+# ---------------- Login ----------------
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        identificador = request.form.get("usuario", "").strip()
+        password = request.form.get("password", "")
+
+        if not identificador or not password:
+            flash("Usuario/Correo y contraseña son obligatorios", "danger")
+            return redirect(url_for("login"))
+
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT `Usuarios`, `Nombres`, `Correo Electronico`, `Constraseña`
+                FROM Usuarios
+                WHERE `Usuarios` = %s OR `Correo Electronico` = %s
+                LIMIT 1
+            """, (identificador, identificador))
+            user_row = cursor.fetchone()
+            cursor.close()
+            conn.close()
+
+            if not user_row:
+                flash("Usuario o correo no encontrado", "danger")
+                return redirect(url_for("login"))
+
+            stored_password = user_row.get("Constraseña")
+            if stored_password is None:
+                flash("Sin contraseña registrada para este usuario", "danger")
+                return redirect(url_for("login"))
+
+            if password == stored_password:
+                session["usuario"] = user_row.get("Usuarios") or user_row.get("Correo Electronico")
+                session.permanent = False
+                return redirect(url_for("menu"))
+            else:
+                flash("Contraseña incorrecta", "danger")
+                return redirect(url_for("login"))
+        except Exception as e:
+            flash(f"Error en autenticación: {e}", "danger")
+            return redirect(url_for("login"))
+
+    return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    resp = make_response(redirect(url_for("login")))
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    return resp
+
+
+@app.route("/planilla")
+def planilla():
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+    return render_template("planilla.html", usuario=session.get("usuario"))
 
 
 @app.route("/db-test")

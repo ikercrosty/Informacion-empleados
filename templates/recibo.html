@@ -121,7 +121,15 @@
   </div>
 
   <div class="text-end">
-    <a href="{{ url_for('imprimir_recibo', numero=r.get('numero')) if r.get('numero') else url_for('recibos_list') }}" class="btn btn-outline-primary">Volver / Imprimir</a>
+    {# Evitamos url_for a endpoints posiblemente inexistentes para impedir BuildError en renderizado.
+       Usamos history.back() para volver y un botón de impresión cuando existe número de recibo. #}
+
+    {% if r.get('numero') %}
+      <button type="button" class="btn btn-outline-primary" onclick="window.print();">Imprimir</button>
+      <a href="javascript:history.back()" class="btn btn-secondary ms-2">Volver</a>
+    {% else %}
+      <a href="javascript:history.back()" class="btn btn-outline-primary">Volver</a>
+    {% endif %}
   </div>
 </div>
 {% endblock %}
