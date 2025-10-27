@@ -77,27 +77,27 @@
 
               <div class="mb-2">
                 <label class="form-label small">Sueldo Base</label>
-                <input id="sueldoBase" class="form-control" type="number" step="0.01" value="{{ recibo.sueldo if recibo is defined else (recibo.Sueldo if recibo is defined else 0) }}">
+                <input id="sueldoBase" class="form-control" type="number" step="0.01" readonly value="{{ recibo.sueldo if recibo is defined else (recibo.Sueldo if recibo is defined else 0) }}">
               </div>
 
               <div class="mb-2">
                 <label class="form-label small">Horas extras (monto)</label>
-                <input id="hextrasMonto" class="form-control" type="number" step="0.01" value="{{ recibo.hextras_monto if recibo is defined else (recibo.hextras if recibo is defined else 0) }}">
+                <input id="hextrasMonto" class="form-control" type="number" step="0.01" readonly value="{{ recibo.hextras_monto if recibo is defined else (recibo.hextras if recibo is defined else 0) }}">
               </div>
 
               <div class="mb-2">
                 <label class="form-label small">Bonificación</label>
-                <input id="bonificacion" class="form-control" type="number" step="0.01" value="{{ recibo.bono if recibo is defined else 0 }}">
+                <input id="bonificacion" class="form-control" type="number" step="0.01" readonly value="{{ recibo.bono if recibo is defined else 0 }}">
               </div>
 
               <div class="mb-2">
                 <label class="form-label small">Bonificación incentivo</label>
-                <input id="bonoIncentivo" class="form-control" type="number" step="0.01" value="{{ recibo.bono_incentivo if recibo is defined else 0 }}">
+                <input id="bonoIncentivo" class="form-control" type="number" step="0.01" readonly value="{{ recibo.bono_incentivo if recibo is defined else 0 }}">
               </div>
 
               <div class="mb-2">
                 <label class="form-label small">Comisiones</label>
-                <input id="comisiones" class="form-control" type="number" step="0.01" value="{{ recibo.comisiones if recibo is defined else 0 }}">
+                <input id="comisiones" class="form-control" type="number" step="0.01" readonly value="{{ recibo.comisiones if recibo is defined else 0 }}">
               </div>
             </div>
           </div>
@@ -111,17 +111,17 @@
 
               <div class="mb-2">
                 <label class="form-label small">IGSS</label>
-                <input id="igss" class="form-control" type="number" step="0.01" value="{{ recibo.igss if recibo is defined else 0 }}">
+                <input id="igss" class="form-control" type="number" step="0.01" readonly value="{{ recibo.igss if recibo is defined else 0 }}">
               </div>
 
               <div class="mb-2">
                 <label class="form-label small">ISR</label>
-                <input id="isr" class="form-control" type="number" step="0.01" value="{{ recibo.isr if recibo is defined else (recibo._isrValue if recibo is defined else 0) }}">
+                <input id="isr" class="form-control" type="number" step="0.01" readonly value="{{ recibo.isr if recibo is defined else (recibo._isrValue if recibo is defined else 0) }}">
               </div>
 
               <div class="mb-2">
                 <label class="form-label small">Otras deducciones</label>
-                <input id="otrasDeducciones" class="form-control" type="number" step="0.01" value="{{ recibo.otras_deducciones if recibo is defined else 0 }}">
+                <input id="otrasDeducciones" class="form-control" type="number" step="0.01" readonly value="{{ recibo.otras_deducciones if recibo is defined else 0 }}">
               </div>
 
             </div>
@@ -339,6 +339,7 @@
   }
 
   // Delegado: recalcula cuando cambian inputs numéricos relevantes
+  // Aunque las casillas son readonly, mantenemos el listener en caso de que valores se actualicen vía script
   ['sueldoBase','hextrasMonto','bonificacion','bonoIncentivo','comisiones','igss','isr','otrasDeducciones'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.addEventListener('input', recalcLiquido);
@@ -357,7 +358,7 @@
   /* Estilos mínimos para que quede ordenado y compacto */
   .card-sm .card-body { padding: 0.9rem; }
   .form-label.small { font-size: .85rem; color:#6b7280; }
-  input[readonly] { background:#f8f9fa; }
+  input[readonly] { background:#f8f9fa; cursor: not-allowed; }
   #liquidoTotal { background: #fff8eb; }
 </style>
 {% endblock %}
