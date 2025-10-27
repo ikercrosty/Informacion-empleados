@@ -42,18 +42,14 @@
     </div>
   </div>
 
-  <!-- Datos trabajador -->
+  <!-- Datos trabajador: Nombre completo (más ancho), Apellidos eliminado -->
   <div class="card shadow-sm mb-4">
     <div class="card-body">
       <h5 class="mb-3">Datos del Trabajador</h5>
       <div class="row g-3">
-        <div class="col-md-4">
-          <label class="form-label">Nombre</label>
+        <div class="col-md-8">
+          <label class="form-label">Nombre completo</label>
           <input id="nombre" class="form-control" readonly value="{{ recibo.nombre if recibo is defined else '' }}">
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Apellidos</label>
-          <input id="apellidos" class="form-control" readonly value="{{ recibo.apellidos if recibo is defined else '' }}">
         </div>
         <div class="col-md-4">
           <label class="form-label">DPI / Identificación</label>
@@ -63,7 +59,7 @@
     </div>
   </div>
 
-  <!-- Detalle de pago: ganancias a la izquierda, descuentos a la derecha -->
+  <!-- Detalle de pago -->
   <div class="card shadow-sm mb-4">
     <div class="card-body">
       <h5 class="mb-3">Detalle de pago</h5>
@@ -91,13 +87,13 @@
               </div>
 
               <div class="mb-2">
-                <label class="form-label small">Bonificación incentivo</label>
-                <input id="bonoIncentivo" class="form-control" type="number" step="0.01" readonly value="{{ recibo.bono_incentivo if recibo is defined else (recibo.bonoIncentivo if recibo is defined else 0) }}">
+                <label class="form-label small">Comisiones</label>
+                <input id="comisiones" class="form-control" type="number" step="0.01" readonly value="{{ recibo.comisiones if recibo is defined else 0 }}">
               </div>
 
               <div class="mb-2">
-                <label class="form-label small">Comisiones</label>
-                <input id="comisiones" class="form-control" type="number" step="0.01" readonly value="{{ recibo.comisiones if recibo is defined else 0 }}">
+                <label class="form-label small">Otros ingresos</label>
+                <input id="otrosIngresos" class="form-control" type="number" step="0.01" readonly value="{{ recibo.otros_ingresos if recibo is defined else 0 }}">
               </div>
             </div>
           </div>
@@ -111,7 +107,7 @@
 
               <div class="mb-2">
                 <label class="form-label small">IGSS</label>
-                <input id="igss" class="form-control" type="number" step="0.01" readonly value="{{ recibo.igss if recibo is defined else (recibo.IGSS if recibo is defined else 0) }}">
+                <input id="igss" class="form-control" type="number" step="0.01" readonly value="{{ recibo.igss if recibo is defined else 0 }}">
               </div>
 
               <div class="mb-2">
@@ -129,7 +125,7 @@
         </div>
       </div>
 
-      <!-- Liquido a recibir destacado -->
+      <!-- Líquido -->
       <div class="row mt-3">
         <div class="col-md-12 text-end">
           <label class="form-label small">Líquido a recibir</label>
@@ -139,7 +135,7 @@
     </div>
   </div>
 
-  <!-- Sección inferior: Total en letras y Medios de pago -->
+  <!-- Total en letras y medios de pago -->
   <div class="card shadow-sm mb-4">
     <div class="card-body">
       <div class="row g-3">
@@ -210,6 +206,10 @@
       <div class="small text-muted">Firma de la empresa</div>
     </div>
   </div>
+
+  <div class="text-end">
+    <a href="{{ url_for('imprimir_recibo', numero=recibo.numero) if (recibo is defined and recibo.numero) else url_for('recibos_list') }}" class="btn btn-outline-primary">Volver / Imprimir</a>
+  </div>
 </div>
 
 <!-- Scripts: carga empleados y lógica para sincronizar con la planilla local -->
@@ -217,24 +217,21 @@
 (function(){
   const PLANILLA_STORAGE_KEY = 'empaquetex_planilla_noviembre_v1';
 
-  // Util: formatea número a cadena Q 0.00
   function fmt(n){ return 'Q ' + Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}); }
 
-  // Cargar combo de empleados desde API
   function loadEmpleados(){
     fetch('/api/empleados').then(r => r.json()).then(list => {
       const sel = document.getElementById('empleadoSelect');
       if(!Array.isArray(list)) return;
       list.forEach(e => {
         const opt = document.createElement('option');
-        opt.value = e.dpi || e.dpi;
-        opt.textContent = e.full_name || e.full_name || (e.Nombre ? (e.Apellidos + ' ' + e.Nombre) : e.dpi);
+        opt.value = e.dpi || '';
+        opt.textContent = e.full_name || e.full_name || e.dpi;
         sel.appendChild(opt);
       });
-    }).catch(()=>{ /* silent */ });
+    }).catch(()=>{});
   }
 
-  // Lee la planilla guardada en localStorage (devuelve objeto con rows[] y meta)
   function loadPlanillaFromLocal(){
     try {
       const raw = localStorage.getItem(PLANILLA_STORAGE_KEY);
@@ -246,22 +243,16 @@
     }
   }
 
-  // Busca la fila de la planilla correspondiente al DPI (busca en rows[].dpi)
   function findPlanillaRowByDpi(dpi){
     const plan = loadPlanillaFromLocal();
     if(!plan) return null;
     const rows = plan.rows || [];
-    // buscar por campo dpi directamente
     for(const r of rows){
-      if(String(r.dpi || r.DPI || '').trim() === String(dpi).trim()) return r;
-      // fallback: si nombre coincide (no ideal)
-      const full = (r.nombre || r.Nombre || '').trim();
-      if(full && full === document.getElementById('empleadoSelect').selectedOptions[0].text) return r;
+      if(String(r.dpi || '').trim() === String(dpi).trim()) return r;
     }
     return null;
   }
 
-  // Safe number extractor: acepta strings, nulls, "Q 0.00"
   function toNumberSafe(v){
     if(v === null || v === undefined) return 0;
     if(typeof v === 'number') return v;
@@ -270,12 +261,10 @@
     return isFinite(n) ? n : 0;
   }
 
-  // Cuando seleccionan empleado, traer datos y poblar campos
   document.getElementById('empleadoSelect').addEventListener('change', function(){
     const dpiVal = this.value;
     if(!dpiVal){
-      // limpiar
-      ['nombre','apellidos','dpi','sueldoBase','comisiones','bonificacion','bonoIncentivo','hextrasMonto','igss','isr','otrasDeducciones'].forEach(id=>{
+      ['nombre','dpi','sueldoBase','comisiones','bonificacion','hextrasMonto','igss','isr','otrasDeducciones','otrosIngresos'].forEach(id=>{
         const el = document.getElementById(id);
         if(el) el.value = (el.readOnly ? '' : 0);
       });
@@ -283,75 +272,57 @@
       return;
     }
 
-    // Primero intentar tomar los valores desde la planilla local (localStorage)
     const planRow = findPlanillaRowByDpi(dpiVal);
 
     if(planRow){
-      // Poblamos directamente desde la planilla (prioridad)
       document.getElementById('nombre').value = planRow.nombre || planRow.Nombre || '';
-      document.getElementById('apellidos').value = planRow.apellidos || planRow.Apellidos || '';
       document.getElementById('dpi').value = planRow.dpi || planRow.DPI || dpiVal;
 
-      // Valores numéricos que la planilla almacena - uso toNumberSafe para evitar cadenas vacías
       document.getElementById('sueldoBase').value = toNumberSafe(planRow.sueldo || planRow.Sueldo || 0);
-      document.getElementById('bonificacion').value = toNumberSafe(planRow.bono || planRow.bon || planRow.Bono || 0);
-      document.getElementById('comisiones').value = toNumberSafe(planRow.comisiones || planRow.Comisiones || 0);
-      // horas extras almacenadas como hextras en la serialización
-      document.getElementById('hextrasMonto').value = toNumberSafe(planRow.hextras || planRow.hextras_monto || planRow._hextras || 0);
+      document.getElementById('bonificacion').value = toNumberSafe(planRow.bono || planRow.bon || 0);
+      document.getElementById('comisiones').value = toNumberSafe(planRow.comisiones || 0);
+      document.getElementById('hextrasMonto').value = toNumberSafe(planRow.hextras || planRow._hextras || 0);
 
-      // IGSS puede venir con varios nombres en la serialización de la planilla
-      const igssVal = toNumberSafe(planRow.igss || planRow.IGSS || planRow.igss_laboral || 0);
+      // IGSS: prefer stored igss in planilla row; fallback compute
+      const igssVal = toNumberSafe(planRow.igss ?? planRow.IGSS ?? ( (planRow.sueldo||planRow.Sueldo||0) * 0.0483 ));
       document.getElementById('igss').value = igssVal;
 
-      // ISR
-      document.getElementById('isr').value = toNumberSafe(planRow.isr || planRow._isrValue || 0);
-
-      document.getElementById('otrasDeducciones').value = toNumberSafe(planRow.otras || planRow.otras_deducciones || 0);
-
-      // Bonificación incentivo: varias variantes de clave
-      const bonoInc = toNumberSafe(planRow.bono_incentivo ?? planRow.bonoIncentivo ?? planRow.bono_incentive ?? 0);
-      document.getElementById('bonoIncentivo').value = bonoInc;
+      document.getElementById('isr').value = toNumberSafe(planRow.isr ?? planRow._isrValue ?? 0);
+      document.getElementById('otrasDeducciones').value = toNumberSafe(planRow.otras ?? planRow.otras_deducciones ?? 0);
+      document.getElementById('otrosIngresos').value = toNumberSafe(planRow.otros_ingresos ?? 0);
 
       recalcLiquido();
       return;
     }
 
-    // Si no hay fila en la planilla, pedimos al backend datos del empleado y usamos fallback
     fetch('/api/empleado/' + encodeURIComponent(dpiVal)).then(r => r.json()).then(data => {
       document.getElementById('nombre').value = data.Nombre || data.nombre || '';
-      document.getElementById('apellidos').value = data.Apellidos || data.apellidos || '';
       document.getElementById('dpi').value = data['Numero de DPI'] || data.dpi || dpiVal;
 
-      // Si la API devuelve salario u otros campos, los usamos como fallback
       if(data.Sueldo !== undefined) document.getElementById('sueldoBase').value = toNumberSafe(data.Sueldo);
       if(data.bono !== undefined) document.getElementById('bonificacion').value = toNumberSafe(data.bono);
       if(data.comisiones !== undefined) document.getElementById('comisiones').value = toNumberSafe(data.comisiones);
       if(data.hextras_monto !== undefined) document.getElementById('hextrasMonto').value = toNumberSafe(data.hextras_monto);
-
-      // IGSS fallback names
       if(data.igss !== undefined) document.getElementById('igss').value = toNumberSafe(data.igss);
       if(data._isrValue !== undefined) document.getElementById('isr').value = toNumberSafe(data._isrValue);
       if(data.otras_deducciones !== undefined) document.getElementById('otrasDeducciones').value = toNumberSafe(data.otras_deducciones);
-
-      // bono incentivo
-      if(data.bono_incentivo !== undefined) document.getElementById('bonoIncentivo').value = toNumberSafe(data.bono_incentivo);
-      if(data.bonoIncentivo !== undefined) document.getElementById('bonoIncentivo').value = toNumberSafe(data.bonoIncentivo);
+      if(data.otros_ingresos !== undefined) document.getElementById('otrosIngresos').value = toNumberSafe(data.otros_ingresos);
 
       recalcLiquido();
-    }).catch(()=>{/* no mostrar errores aquí */});
+    }).catch(()=>{});
   });
 
-  // Recalcular líquido: sum(ganancias) - sum(deducciones)
+  function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
+
   function recalcLiquido(){
     const toNum = id => Number(document.getElementById(id).value || 0);
-    const ganancias = toNum('sueldoBase') + toNum('hextrasMonto') + toNum('bonificacion') + toNum('bonoIncentivo') + toNum('comisiones');
+    const ganancias = toNum('sueldoBase') + toNum('hextrasMonto') + toNum('bonificacion') + toNum('comisiones') + toNum('otrosIngresos');
     const deducciones = toNum('igss') + toNum('isr') + toNum('otrasDeducciones');
-    const liquido = Math.round((ganancias - deducciones + Number.EPSILON) * 100) / 100;
+    const liquido = round2(ganancias - deducciones);
     document.getElementById('liquidoTotal').value = fmt(liquido);
     document.getElementById('totalEnLetras').value = numeroALetras(liquido);
   }
 
-  // Convertir número a texto en español (versión simple para enteros y centavos)
   function numeroALetras(num){
     if (isNaN(num)) return '';
     const entero = Math.trunc(Math.abs(num));
@@ -360,14 +331,11 @@
     return `${enteroForm} QUETZALES ${cent.toString().padStart(2,'0')}/100`;
   }
 
-  // Delegado: recalcula cuando cambian inputs numéricos relevantes
-  // Aunque las casillas son readonly, mantenemos el listener en caso de que valores se actualicen vía script
-  ['sueldoBase','hextrasMonto','bonificacion','bonoIncentivo','comisiones','igss','isr','otrasDeducciones'].forEach(id=>{
+  ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones','otrosIngresos'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.addEventListener('input', recalcLiquido);
   });
 
-  // Inicializar
   document.addEventListener('DOMContentLoaded', function(){
     loadEmpleados();
     recalcLiquido();
@@ -377,7 +345,6 @@
 </script>
 
 <style>
-  /* Estilos mínimos para que quede ordenado y compacto */
   .card-sm .card-body { padding: 0.9rem; }
   .form-label.small { font-size: .85rem; color:#6b7280; }
   input[readonly] { background:#f8f9fa; cursor: not-allowed; }
