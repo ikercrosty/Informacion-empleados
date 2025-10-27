@@ -384,191 +384,6 @@ function enforceFixedFieldsOnAllRows() {
   });
 }
 
-/* Row add/delete handlers (unchanged) */
-document.getElementById('addRow').addEventListener('click', () => {
-  const tbody = document.querySelector('#planillaTable tbody');
-  const newIndex = tbody.querySelectorAll('tr').length + 1;
-  const tr = document.createElement('tr');
-  tr.dataset.row = newIndex;
-  tr.innerHTML = createRowHtml(newIndex);
-  tbody.appendChild(tr);
-
-  const nombreInp = tr.querySelector('input.nombre');
-  if (nombreInp) nombreInp.removeAttribute('readonly');
-
-  const bonoInp = tr.querySelector('input.bono');
-  if (bonoInp) {
-    bonoInp.value = 125.00;
-    bonoInp.setAttribute('readonly', 'readonly');
-  }
-  const diasInp = tr.querySelector('input.dias');
-  if (diasInp) diasInp.value = 15;
-
-  recalcRow(tr);
-  recalcTotals();
-  saveToLocal();
-});
-
-document.getElementById('deleteRow').addEventListener('click', () => {
-  const tbody = document.querySelector('#planillaTable tbody');
-  const rows = tbody.querySelectorAll('tr');
-  if (rows.length === 0) return;
-  tbody.removeChild(rows[rows.length - 1]);
-  recalcTotals();
-  saveToLocal();
-});
-
-/* Export to Excel (unchanged) */
-document.getElementById('exportExcel').addEventListener('click', () => {
-  const dateInput = document.getElementById('emisionDate').value;
-  const planillaName = document.getElementById('planillaName').value.trim() || 'Planilla';
-  const exportHint = document.getElementById('exportHint');
-  if (!dateInput) {
-    if (exportHint) exportHint.style.display = 'inline';
-    return;
-  }
-  if (exportHint) exportHint.style.display = 'none';
-
-  const table = document.getElementById('planillaTable');
-  const clone = table.cloneNode(true);
-  clone.querySelectorAll('input').forEach(inp => {
-    const parent = inp.parentElement || inp;
-    parent.replaceChild(document.createTextNode(inp.value), inp);
-  });
-
-  clone.querySelectorAll('td, th').forEach(cell => {
-    let txt = (cell.textContent || '').replace(/\u00A0/g, ' ').trim();
-    if (txt === '') return;
-    const removed = txt.replace(/^Q\s*/i, '').replace(/,/g, '');
-    const n = Number(removed);
-    if (removed !== '' && isFinite(n)) cell.textContent = n;
-    else cell.textContent = txt;
-  });
-
-  const ws = XLSX.utils.table_to_sheet(clone, {raw:true});
-  ws['!cols'] = [
-    { wch: 6 }, { wch: 40 }, { wch: 20 }, { wch: 14 }, { wch: 12 }, { wch: 14 },
-    { wch: 10 }, { wch: 18 }, { wch: 18 }, { wch: 16 }, { wch: 16 }, { wch: 16 },
-    { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 24 }
-  ];
-
-  const range = XLSX.utils.decode_range(ws['!ref']);
-  const headerRowIndex = range.s.r;
-  const maxCol = range.e.c;
-
-  for (let c = range.s.c; c <= maxCol; c++) {
-    const cellAddr = XLSX.utils.encode_cell({ c: c, r: headerRowIndex });
-    if (!ws[cellAddr]) continue;
-    ws[cellAddr].s = ws[cellAddr].s || {};
-    ws[cellAddr].s.fill = { patternType: "solid", fgColor: { rgb: "0EA5A4" } };
-    ws[cellAddr].s.font = { name: "Calibri", sz: 11, bold: true, color: { rgb: "FFFFFF" } };
-    ws[cellAddr].s.alignment = { vertical: "center", horizontal: "center" };
-    ws[cellAddr].s.border = {
-      top: { style: "thin", color: { rgb: "BFDCE3" } },
-      bottom: { style: "thin", color: { rgb: "BFDCE3" } },
-      left: { style: "thin", color: { rgb: "BFDCE3" } },
-      right: { style: "thin", color: { rgb: "BFDCE3" } }
-    };
-  }
-
-  let totalsRow = null;
-  for (let r = headerRowIndex + 1; r <= range.e.r; r++) {
-    const cellB = XLSX.utils.encode_cell({r, c: 1});
-    if (ws[cellB] && String(ws[cellB].v).toUpperCase().includes('TOTALES')) {
-      totalsRow = r;
-      break;
-    }
-  }
-  if (totalsRow === null) totalsRow = range.e.r;
-
-  for (let c = range.s.c; c <= maxCol; c++) {
-    const addr = XLSX.utils.encode_cell({r: totalsRow, c});
-    if (!ws[addr]) continue;
-    ws[addr].s = ws[addr].s || {};
-    ws[addr].s.fill = { patternType: "solid", fgColor: { rgb: "035E59" } };
-    ws[addr].s.font = { name: "Calibri", sz: 11, bold: true, color: { rgb: "FFFFFF" } };
-    ws[addr].s.alignment = { vertical: "center", horizontal: (c < 2 ? "left" : "right") };
-    ws[addr].s.border = {
-      top: { style: "medium", color: { rgb: "0B7285" } },
-      bottom: { style: "medium", color: { rgb: "0B7285" } },
-      left: { style: "thin", color: { rgb: "BFDCE3" } },
-      right: { style: "thin", color: { rgb: "BFDCE3" } }
-    };
-  }
-
-  for (let R = headerRowIndex; R <= range.e.r; ++R) {
-    for (let C = range.s.c; C <= maxCol; ++C) {
-      const addr = XLSX.utils.encode_cell({r:R,c:C});
-      if (!ws[addr]) continue;
-      ws[addr].s = ws[addr].s || {};
-      ws[addr].s.border = ws[addr].s.border || {
-        top: { style: "thin", color: { rgb: "E6EEF6" } },
-        bottom: { style: "thin", color: { rgb: "E6EEF6" } },
-        left: { style: "thin", color: { rgb: "E6EEF6" } },
-        right: { style: "thin", color: { rgb: "E6EEF6" } }
-      };
-    }
-  }
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Planilla");
-  wb.Workbook = wb.Workbook || {};
-  wb.Workbook.Views = wb.Workbook.Views || [{ RTL: false }];
-
-  const safeName = planillaName.replace(/[^a-z0-9_\- ]/gi,'').replace(/\s+/g,'_');
-  const filename = `${safeName}_${dateInput}.xlsx`;
-  XLSX.writeFile(wb, filename);
-});
-
-/* ------------------ Auto half-sueldo behavior (unchanged) ------------------ */
-(function(){
-  function parseNumberSafe(v){
-    if (v == null) return 0;
-    try {
-      const s = String(v).replace(/\s+/g,'').replace(/,/g,'').trim();
-      const n = Number(s);
-      return isFinite(n) ? n : 0;
-    } catch {
-      return 0;
-    }
-  }
-
-  function applyHalfToSueldoInput(inp){
-    if (!inp) return;
-    const raw = inp.value;
-    const n = parseNumberSafe(raw);
-    if (n === 0) {
-      inp.value = n.toFixed(2);
-    } else {
-      const half = Math.round((n / 2 + Number.EPSILON) * 100) / 100;
-      if (inp.type === 'number') inp.value = half;
-      else inp.value = half.toFixed(2);
-    }
-    try {
-      const tr = inp.closest('tr');
-      if (typeof recalcRow === 'function' && tr) recalcRow(tr);
-      if (typeof recalcTotals === 'function') recalcTotals();
-      if (typeof saveToLocal === 'function') saveToLocal();
-    } catch (e) { console.error('Error aplicando mitad al sueldo:', e); }
-  }
-
-  document.addEventListener('paste', function(e){
-    const t = e.target;
-    if (!t || !t.classList) return;
-    if (t.classList.contains('sueldo')) {
-      setTimeout(() => applyHalfToSueldoInput(t), 20);
-    }
-  });
-
-  document.addEventListener('blur', function(e){
-    const t = e.target;
-    if (!t || !t.classList) return;
-    if (t.classList.contains('sueldo')) {
-      applyHalfToSueldoInput(t);
-    }
-  }, true);
-})();
-
 /* ------------------ NEW: automatic sync with /api/empleados ------------------ */
 
 /*
@@ -577,6 +392,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
  - Once loaded, poll /api/empleados every POLL_INTERVAL_MS to detect new employees and append new rows automatically.
  - Do not remove existing rows or overwrite manual edits.
  - Each appended row gets tr.dataset.dpi set to the employee's dpi to avoid duplicates.
+ - Important change: remove placeholder blank rows that are not from DB (no DPI and empty name) so the UI doesn't show an extra empty row.
 */
 
 const POLL_INTERVAL_MS = 20000; // 20 seconds
@@ -659,19 +475,57 @@ function startEmployeesPolling() {
   pollHandle = setInterval(syncEmployeesOnce, POLL_INTERVAL_MS);
 }
 
+/* Remove placeholder rows that are blank and not associated with any DPI.
+   A placeholder row is considered removable when:
+   - It has no tr.dataset.dpi
+   - Its name input is empty
+   - All numeric fields are zero/empty
+*/
+function removeEmptyPlaceholderRows() {
+  const tbody = document.querySelector('#planillaTable tbody');
+  if (!tbody) return;
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  for (const tr of rows) {
+    const dpi = tr.dataset.dpi || '';
+    const name = (tr.querySelector('input.nombre')?.value || '').trim();
+    const sueldo = parseFloat(tr.querySelector('input.sueldo')?.value) || 0;
+    const bono = parseFloat(tr.querySelector('input.bono')?.value) || 0;
+    const dias = parseInt(tr.querySelector('input.dias')?.value) || 0;
+    const comisiones = parseFloat(tr.querySelector('input.comisiones')?.value) || 0;
+    const horas = parseInt(tr.querySelector('input.horas')?.value) || 0;
+    const otras = parseFloat(tr.querySelector('input.otras')?.value) || 0;
+
+    // If no DPI, no name and all numeric fields are zero -> remove
+    if (!dpi && !name && sueldo === 0 && bono === 0 && dias === 0 && comisiones === 0 && horas === 0 && otras === 0) {
+      tbody.removeChild(tr);
+    }
+  }
+
+  // reindex rows after removals
+  const remaining = tbody.querySelectorAll('tr');
+  remaining.forEach((tr, i) => {
+    tr.dataset.row = i + 1;
+    const firstCell = tr.cells[0];
+    if (firstCell) firstCell.textContent = (i + 1).toString();
+  });
+}
+
 /* populate on load only if localStorage empty; then start polling always to pick up future DB adds */
 async function populateFromEmployeesIfEmpty() {
   const restored = loadFromLocal();
   if (restored) {
+    // remove any stray empty placeholder rows (defensive)
+    removeEmptyPlaceholderRows();
     // respect saved data, but still start polling to append newcomers
     startEmployeesPolling();
     return;
   }
   const employees = await fetchEmployeesList();
+  const tbody = document.querySelector('#planillaTable tbody');
+  if (!tbody) return;
+
   if (employees && employees.length) {
     // clear current minimal row(s) and populate from employees
-    const tbody = document.querySelector('#planillaTable tbody');
-    if (!tbody) return;
     tbody.innerHTML = '';
     employees.forEach((emp, i) => {
       const dpi = String(emp.dpi || '').trim();
@@ -695,6 +549,12 @@ async function populateFromEmployeesIfEmpty() {
       tbody.appendChild(tr);
     });
     document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
+    recalcTotals();
+    saveToLocal();
+  } else {
+    // No employees returned from DB: remove any placeholder empty rows so UI is clean
+    removeEmptyPlaceholderRows();
+    // If after removal there are no rows, do nothing (user can add rows manually)
     recalcTotals();
     saveToLocal();
   }
@@ -744,6 +604,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Populate from employees if no local saved data; always start polling afterwards
   populateFromEmployeesIfEmpty();
+
+  // Ensure we don't leave stray placeholder rows on first run
+  removeEmptyPlaceholderRows();
 
   if (!restored) saveToLocal();
 });
