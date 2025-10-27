@@ -3,14 +3,14 @@
 
 {% block content %}
 <div class="container py-4">
-  <div class="card shadow-sm mb-4">
+  <div class="card header-card mb-4">
     <div class="card-body d-flex justify-content-between align-items-center">
       <div>
         <h3 class="mb-0 title-large">Recibo de pago de sueldos</h3>
         <div class="small text-muted">Empresa: {{ empresa_nombre|default('Empaques y texturas de Guatemala S.A') }}</div>
       </div>
 
-      <div class="text-end meta-block" style="min-width:320px;">
+      <div class="text-end meta-block">
         <div class="mb-2">
           <label class="form-label small text-muted">Comprobante No</label>
           <input id="comprobanteNumero" class="form-control form-control-sm" type="text" value="{{ recibo.numero if recibo is defined else '' }}">
@@ -30,8 +30,8 @@
     </div>
   </div>
 
-  <!-- Selección de empleado + Lugar moved under Nombre -->
-  <div class="card shadow-sm mb-4 section-card">
+  <!-- Selección de empleado -->
+  <div class="card section-card mb-4">
     <div class="card-body section-grid">
       <div class="section-left">
         <h5 class="mb-3">Seleccionar Trabajador</h5>
@@ -41,9 +41,6 @@
             <select id="empleadoSelect" class="form-select">
               <option value="">-- Seleccione empleado --</option>
             </select>
-          </div>
-          <div class="col-12 col-md-4 d-none d-md-block">
-            <!-- placeholder to keep layout on desktop; actual Lugar will appear under Nombre -->
           </div>
         </div>
       </div>
@@ -56,7 +53,7 @@
             <input id="nombre" class="form-control" readonly value="{{ recibo.nombre if recibo is defined else '' }}">
           </div>
 
-          <!-- Lugar / Ciudad moved here under Nombre as requested -->
+          <!-- Lugar / Ciudad under Nombre as requested -->
           <div class="col-12 mt-2">
             <label class="form-label">Lugar / Ciudad</label>
             <input id="lugarPago" class="form-control" type="text" placeholder="GUATEMALA" value="GUATEMALA">
@@ -72,7 +69,7 @@
   </div>
 
   <!-- Detalle de pago -->
-  <div class="card shadow-sm mb-4 section-card">
+  <div class="card section-card mb-4">
     <div class="card-body section-grid">
       <div class="section-left">
         <h5 class="mb-2">Ganancias</h5>
@@ -129,15 +126,14 @@
     </div>
   </div>
 
-  <!-- Total en letras -->
-  <div class="card shadow-sm mb-4">
+  <!-- Total en letras y medios de pago (medios below total as requested) -->
+  <div class="card mb-4">
     <div class="card-body d-flex gap-3 flex-wrap align-items-start">
       <div style="flex:1; min-width:260px;">
         <label class="form-label small">TOTAL EN LETRAS</label>
         <input id="totalEnLetras" class="form-control" type="text" readonly value="{{ recibo.total_letras if recibo is defined else '' }}">
       </div>
 
-      <!-- Metodo de pago moved here under Total en letras (on page visible) -->
       <div style="min-width:280px;">
         <h6 class="mb-2">MEDIOS DE PAGO</h6>
 
@@ -182,7 +178,7 @@
   </div>
 </div>
 
-<!-- Scripts: carga empleados y lógica para sincronizar con la planilla local, cálculo y conversión a letras -->
+<!-- Scripts: carga empleados y lógica para sincronizar con la planilla local, cálculo, y control de impresión -->
 <script>
 (function(){
   const PLANILLA_STORAGE_KEY = 'empaquetex_planilla_noviembre_v1';
@@ -361,7 +357,7 @@
     return parts.join(' ').replace(/\s+/g,' ').trim();
   }
 
-  // payment method toggles on screen (show extra fields when selected)
+  // on-screen toggle of extra payment fields
   function updateMediosOnScreen(){
     const val = document.querySelector('input[name="medioPago"]:checked')?.value;
     document.querySelectorAll('.transferencia-fields').forEach(el=>el.style.display = (val === 'TRANSFERENCIA') ? 'block' : 'none');
@@ -370,7 +366,7 @@
   document.querySelectorAll('input[name="medioPago"]').forEach(r=>r.addEventListener('change', updateMediosOnScreen));
   updateMediosOnScreen();
 
-  // Printing behavior: before print, add a class to body to indicate which medio is selected
+  // Print setup: set body class to show only selected payment option on print
   function beforePrintSetup(){
     const val = document.querySelector('input[name="medioPago"]:checked')?.value || '';
     document.body.classList.remove('print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
@@ -380,7 +376,6 @@
     document.body.classList.remove('print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
   }
 
-  // Attach print handlers: modern browsers support beforeprint/afterprint; also attach to the print button
   if (window.matchMedia) {
     const mql = window.matchMedia('print');
     mql.addListener((m) => { if(m.matches) beforePrintSetup(); else afterPrintCleanup(); });
@@ -388,11 +383,10 @@
   window.addEventListener('beforeprint', beforePrintSetup);
   window.addEventListener('afterprint', afterPrintCleanup);
 
-  // print button: ensure we run beforePrintSetup just in case, then print
   const imprimirBtn = document.getElementById('imprimirBtn');
   if(imprimirBtn) imprimirBtn.addEventListener('click', function(){
     beforePrintSetup();
-    setTimeout(()=> window.print(), 60);
+    setTimeout(()=> window.print(), 80);
   });
 
   ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones'].forEach(id=>{
@@ -418,113 +412,104 @@
   font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-/* Page */
+/* Page & container */
 body { background: linear-gradient(180deg, var(--bg-1), #fff6ee); color:#0f1724; margin:0; padding:0; }
-
-/* Header */
-.title-large { font-size: 1.6rem; font-weight: 800; color: var(--accent-azul); }
-
-/* Cards and layout */
 .container { max-width:1100px; margin:18px auto; padding:0 18px 40px; }
-.card { border-radius: 14px; background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,251,255,0.98)); border:1px solid rgba(11,19,30,0.04); box-shadow: var(--shadow-1); }
-.section-card .card-body.section-grid { display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap; padding:16px; }
+
+/* Cards */
+.card { border-radius: 12px; background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,251,255,0.98)); border:1px solid rgba(11,19,30,0.04); box-shadow: var(--shadow-1); }
+.header-card .card-body { padding: 14px; }
+.section-card .card-body.section-grid { display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap; padding:12px; }
 .section-card .section-left, .section-card .section-right { flex:1 1 320px; min-width:260px; }
 
-/* Inputs */
+/* Header */
+.title-large { font-size: 1.6rem; font-weight: 800; color: var(--accent-azul); margin:0; }
+
+/* Inputs & labels */
 .form-label { font-weight:600; color:var(--muted); }
-.form-control { border-radius:10px; border:1px solid rgba(11,19,30,0.06); background:#fff; padding:.6rem .75rem; }
+.form-label.small { font-size:.86rem; color:var(--muted); font-weight:600; }
+.form-control { border-radius:8px; border:1px solid rgba(11,19,30,0.06); background:#fff; padding:.5rem .7rem; }
 .form-control[readonly] { background: linear-gradient(180deg,#fbfdff,#f8fbff); color:#0b2a36; cursor:not-allowed; }
 
-/* Print button new design */
+/* Print button improved design */
 .btn-imprimir {
   background: linear-gradient(90deg, #0b7285, #ff7a18);
   color: #fff;
   border: none;
-  padding: .52rem .95rem;
-  border-radius: 12px;
-  font-weight: 700;
+  padding: .5rem .9rem;
+  border-radius: 10px;
+  font-weight: 800;
   box-shadow: 0 8px 24px rgba(11,114,133,0.12);
   cursor: pointer;
   transition: transform .14s ease, box-shadow .14s ease;
 }
 .btn-imprimir:hover { transform: translateY(-3px); box-shadow: 0 16px 36px rgba(11,114,133,0.18); }
 
-/* Compact look */
+/* Compact spacing */
 .row.g-2 > [class*="col-"], .row.g-3 > [class*="col-"] { padding-bottom:6px; }
 .mb-2 { margin-bottom:.5rem !important; }
-.card-body { padding: 16px; }
+.card-body { padding: 14px; }
 
-/* Signatures */
+/* Signature line */
 .sig-line { border-bottom:1px solid #ccc; height:1px; margin-bottom:8px; }
 
-/* Transfer / cheque fields off by default until selection */
+/* Transfer / cheque fields hidden by default on screen until selected */
 .transferencia-fields, .cheque-fields { display:none; }
-
-/* On-screen: show selected extra fields (handled by JS) */
 .transferencia-fields[style*="display: block"], .cheque-fields[style*="display: block"] { display:flex; flex-direction:column; gap:6px; }
 
 /* Accessibility focus */
 input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rgba(14,165,164,0.06); border-color: var(--accent-azul-claro); }
 
-/* Print styles */
+/* Print-specific adjustments to order and clarity */
 @media print {
-  @page { size: A4; margin: 10mm; }
-
-  /* Reset page visuals */
+  @page { size: A4; margin: 12mm; }
   body { background: #fff !important; color: #000; }
   .container { max-width:100%; padding:0; margin:0; }
   .card { box-shadow:none !important; border:none !important; background:transparent !important; }
   .card .card-body { padding:6px; }
 
-  /* Make inputs more visible in print */
+  /* Layout: enforce two-column compact layout */
+  .section-card .card-body.section-grid { display:flex; gap:8px; flex-wrap:nowrap; }
+  .section-card .section-left, .section-card .section-right { flex: 0 0 50%; min-width: 45%; }
+
+  /* Inputs print more visible: solid border and white background */
   input.form-control, input.form-control[readonly] {
     background: #fff !important;
     -webkit-print-color-adjust: exact;
     border: 1px solid #111 !important;
     color: #000 !important;
-    padding: 2px 4px;
+    padding: 2px 6px;
   }
 
-  /* Hide interactive controls (radios visible but labels/others handled below) */
-  .medio-radio { display:inline-block; }
+  /* Hide interactive-only elements that shouldn't appear in print UI */
+  .btn-imprimir, select, input[type="date"], .form-check-input { display:none !important; }
 
-  /* On-screen we show all 3 options; in print we show only the selected one */
-  /* Default: hide all printable-option blocks, then reveal only the chosen via body class added by JS */
+  /* Control which payment method prints: only the selected (body class set before print) */
   .printable-option { display:none; }
-
-  /* If EFECTIVO selected for print -> show only that block */
   body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:block; }
   body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:block; }
   body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:block; }
 
-  /* Show the extra fields for the selected option */
+  /* Show fields of selected payment option */
   body.print-medio-TRANSFERENCIA .transferencia-fields { display:block; }
   body.print-medio-CHEQUE .cheque-fields { display:block; }
 
-  /* Remove buttons and non-essential interactive elements */
-  button, select, input[type="date"], .btn-imprimir { display:none !important; }
-
-  /* Reduce font sizes slightly to fit one page */
+  /* Compact text sizes to fit on one page */
   h3, h5, h6, label, input { font-size: 10px; }
+  .small.text-muted { font-size:9px; color:#222; }
 
-  /* Avoid page breaks inside the main cards */
+  /* Avoid page breaks inside blocks */
   .card, .section-card, .signatures-row { page-break-inside: avoid; break-inside: avoid; }
-
-  /* Ensure total and liquido are compact but visible */
-  #liquidoTotal { font-weight:800; color:#111; }
 }
 
-/* Ensure on-screen the payment option extras show/hidden via JS */
-.printable-option .transferencia-fields, .printable-option .cheque-fields { display:none; }
-
-/* When user selects Transferencia/Cheque on screen we show extras */
+/* Ensure payment extra fields show on-screen when selected via CSS fallback (JS also manages) */
 input[name="medioPago"][value="TRANSFERENCIA"]:checked ~ .transferencia-fields,
 input[name="medioPago"][value="CHEQUE"]:checked ~ .cheque-fields {
   display:flex;
   flex-direction:column;
 }
 
-/* micro polish */
+/* Final polish */
 .small.text-muted { font-size:.88rem; color:var(--muted); }
 .form-check-label { font-weight:600; color:#233642; }
 </style>
