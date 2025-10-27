@@ -2,10 +2,216 @@
 {% block title %}Recibo{% endblock %}
 
 {% block content %}
-<div class="jumbotron">
-  <h1 class="display-4">Recibo</h1>
-  <p class="lead">Aquí irá la información del recibo.</p>
+<div class="container py-4">
+  <div class="card shadow-sm mb-4">
+    <div class="card-body d-flex align-items-center justify-content-between">
+      <div>
+        <h3 class="mb-0">Empaques y Texturas de Guatemala, S.A.</h3>
+        <div class="text-muted small">Recibo de pago</div>
+      </div>
+      <div class="text-end">
+        <div><strong>Fecha de Pago</strong></div>
+        <input id="fecha_pago" name="fecha_pago" class="form-control form-control-sm" type="date" value="">
+      </div>
+    </div>
+  </div>
+
+  <form id="reciboForm" class="card shadow-sm">
+    <div class="card-body p-4">
+
+      <h5 class="mb-3">Empleado</h5>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Nombre del Empleado</label>
+          <input id="nombre_empleado" name="nombre_empleado" class="form-control" type="text" value="">
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Número DPI</label>
+          <input id="dpi" name="dpi" class="form-control" type="text" value="">
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Número de Afiliación IGSS</label>
+          <input id="igss_num" name="igss_num" class="form-control" type="text" value="">
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Días Laborados</label>
+          <input id="dias_laborados" name="dias_laborados" class="form-control" type="number" min="0" value="">
+        </div>
+
+        <div class="col-md-9">
+          <label class="form-label">Concepto / Periodo</label>
+          <input id="concepto" name="concepto" class="form-control" type="text" placeholder="Pago de salario correspondiente al período del dd mm al dd mm del año" value="">
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <h5 class="mb-3">Detalle de Devengados</h5>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Salario Base (Q)</label>
+          <input id="salario_base" name="salario_base" class="form-control" type="number" step="0.01" value="">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Bonificación Incentivo (Q)</label>
+          <input id="bono" name="bono" class="form-control" type="number" step="0.01" value="">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Horas Extras (Q)</label>
+          <input id="horas_extras" name="horas_extras" class="form-control" type="number" step="0.01" value="">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Comisiones (Q)</label>
+          <input id="comisiones" name="comisiones" class="form-control" type="number" step="0.01" value="">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Otros (Q)</label>
+          <input id="otros_dev" name="otros_dev" class="form-control" type="number" step="0.01" value="">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label"><strong>Total Devengado (Q)</strong></label>
+          <input id="total_devengado" name="total_devengado" class="form-control" type="number" step="0.01" value="" readonly>
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <h5 class="mb-3">Deducciones</h5>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">IGSS (Q)</label>
+          <input id="ded_igss" name="ded_igss" class="form-control" type="number" step="0.01" value="">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">ISR (Q)</label>
+          <input id="ded_isr" name="ded_isr" class="form-control" type="number" step="0.01" value="">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Otros (Q)</label>
+          <input id="ded_otros" name="ded_otros" class="form-control" type="number" step="0.01" value="">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label"><strong>Total Deducciones (Q)</strong></label>
+          <input id="total_deducciones" name="total_deducciones" class="form-control" type="number" step="0.01" value="" readonly>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label"><strong>Líquido a Recibir (Q)</strong></label>
+          <input id="liquido_recibir" name="liquido_recibir" class="form-control" type="number" step="0.01" value="" readonly>
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <h5 class="mb-3">Total en Letras</h5>
+      <div class="mb-3">
+        <input id="total_letras" name="total_letras" class="form-control" type="text" placeholder="Ej. Tres mil... con 63/100" value="">
+      </div>
+
+      <hr class="my-4">
+
+      <h5 class="mb-3">Medios de Pago</h5>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Efectivo (Q)</label>
+          <input id="pago_efectivo" name="pago_efectivo" class="form-control" type="number" step="0.01" value="">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Transferencia Bancaria (Q)</label>
+          <input id="pago_transferencia" name="pago_transferencia" class="form-control" type="number" step="0.01" value="">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Cheque (Q)</label>
+          <input id="pago_cheque" name="pago_cheque" class="form-control" type="number" step="0.01" value="">
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <h5 class="mb-3">Firmas</h5>
+      <div class="row g-3 align-items-end">
+        <div class="col-md-6">
+          <label class="form-label">Firma del Empleado</label>
+          <div style="height:72px; border-bottom:1px solid #d0d7e6;"></div>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Firma del Empleador</label>
+          <div style="height:72px; border-bottom:1px solid #d0d7e6;"></div>
+        </div>
+      </div>
+
+      <div class="mt-4 text-end">
+        <button type="button" id="btn_calcular" class="btn btn-primary">Calcular Totales</button>
+      </div>
+    </div>
+  </form>
 </div>
 
+<script>
+/* Basic client-side calculations to help with preview.
+   These do not overwrite your backend logic; they only assist filling totals locally. */
 
+function num(v){ return parseFloat(v) || 0; }
+
+function recalcular() {
+  const sb = num(document.getElementById('salario_base').value);
+  const bono = num(document.getElementById('bono').value);
+  const hex = num(document.getElementById('horas_extras').value);
+  const com = num(document.getElementById('comisiones').value);
+  const otros = num(document.getElementById('otros_dev').value);
+
+  const totalDev = sb + bono + hex + com + otros;
+  document.getElementById('total_devengado').value = totalDev.toFixed(2);
+
+  const igss = num(document.getElementById('ded_igss').value);
+  const isr = num(document.getElementById('ded_isr').value);
+  const otrDed = num(document.getElementById('ded_otros').value);
+
+  const totalDed = igss + isr + otrDed;
+  document.getElementById('total_deducciones').value = totalDed.toFixed(2);
+
+  const liquido = totalDev - totalDed;
+  document.getElementById('liquido_recibir').value = liquido.toFixed(2);
+
+  /* auto-fill payment methods to match líquido if empty */
+  const tf = document.getElementById('pago_transferencia');
+  const ef = document.getElementById('pago_efectivo');
+  const ch = document.getElementById('pago_cheque');
+  if (num(tf.value) + num(ef.value) + num(ch.value) === 0) {
+    tf.value = liquido.toFixed(2);
+  }
+}
+
+document.getElementById('btn_calcular').addEventListener('click', recalcular);
+
+/* Recalculate when relevant inputs change */
+['salario_base','bono','horas_extras','comisiones','otros_dev','ded_igss','ded_isr','ded_otros'].forEach(id=>{
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', recalcular);
+});
+</script>
+
+<style>
+.container{ max-width:900px; margin:18px auto; }
+.card { border-radius:12px; }
+h5 { font-weight:700; color:#0b3b5a; }
+.form-label { font-weight:700; margin-bottom:6px; }
+input[readonly] { background:#f7f9fc; }
+.btn-primary { background: linear-gradient(90deg,#1565d8,#2b7be9); border: none; color:#fff; }
+@media (max-width:575px){ .row.g-3 > [class*="col-"] { flex: 0 0 100%; max-width:100%; } }
+</style>
 {% endblock %}
