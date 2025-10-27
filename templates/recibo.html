@@ -212,9 +212,11 @@
   </div>
 </div>
 
-<!-- Scripts: carga empleados y lógica básica de cálculo -->
+<!-- Scripts: carga empleados y lógica para sincronizar con la planilla local -->
 <script>
 (function(){
+  const PLANILLA_STORAGE_KEY = 'empaquetex_planilla_noviembre_v1';
+
   // Util: formatea número a cadena Q 0.00
   function fmt(n){ return 'Q ' + Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}); }
 
@@ -232,6 +234,33 @@
     }).catch(()=>{ /* silent */ });
   }
 
+  // Lee la planilla guardada en localStorage (devuelve objeto con rows[] y meta)
+  function loadPlanillaFromLocal(){
+    try {
+      const raw = localStorage.getItem(PLANILLA_STORAGE_KEY);
+      if(!raw) return null;
+      const obj = JSON.parse(raw);
+      return obj && Array.isArray(obj.rows) ? obj : null;
+    } catch(e){
+      return null;
+    }
+  }
+
+  // Busca la fila de la planilla correspondiente al DPI (busca en rows[].dpi)
+  function findPlanillaRowByDpi(dpi){
+    const plan = loadPlanillaFromLocal();
+    if(!plan) return null;
+    const rows = plan.rows || [];
+    // buscar por campo dpi directamente
+    for(const r of rows){
+      if(String(r.dpi || r.DPI || '').trim() === String(dpi).trim()) return r;
+      // fallback: si nombre coincide (no ideal)
+      const full = (r.nombre || r.Nombre || '').trim();
+      if(full && full === document.getElementById('empleadoSelect').selectedOptions[0].text) return r;
+    }
+    return null;
+  }
+
   // Cuando seleccionan empleado, traer datos y poblar campos
   document.getElementById('empleadoSelect').addEventListener('change', function(){
     const dpiVal = this.value;
@@ -244,20 +273,47 @@
       recalcLiquido();
       return;
     }
+
+    // Primero intentar tomar los valores desde la planilla local (localStorage)
+    const planRow = findPlanillaRowByDpi(dpiVal);
+
+    if(planRow){
+      // Poblamos directamente desde la planilla (prioridad)
+      document.getElementById('nombre').value = planRow.nombre || planRow.Nombre || '';
+      document.getElementById('apellidos').value = planRow.apellidos || planRow.Apellidos || '';
+      document.getElementById('dpi').value = planRow.dpi || planRow.DPI || dpiVal;
+
+      // Valores numéricos que la planilla almacena
+      document.getElementById('sueldoBase').value = Number(planRow.sueldo || 0);
+      document.getElementById('bonificacion').value = Number(planRow.bono || planRow.bon || 0);
+      document.getElementById('comisiones').value = Number(planRow.comisiones || 0);
+      // horas extras almacenadas como hextras en la serialización
+      document.getElementById('hextrasMonto').value = Number(planRow.hextras || 0);
+      document.getElementById('igss').value = Number(planRow.igss || 0) || 0;
+      document.getElementById('isr').value = Number(planRow.isr || 0) || 0;
+      document.getElementById('otrasDeducciones').value = Number(planRow.otras || planRow.otras_deducciones || 0) || 0;
+
+      // si planilla tiene bonoIncentivo campo, úsalo; si no, dejar el campo
+      if(planRow.bono_incentivo !== undefined) document.getElementById('bonoIncentivo').value = Number(planRow.bono_incentivo || 0);
+
+      recalcLiquido();
+      return;
+    }
+
+    // Si no hay fila en la planilla, pedimos al backend datos del empleado y usamos fallback
     fetch('/api/empleado/' + encodeURIComponent(dpiVal)).then(r => r.json()).then(data => {
-      // Mapea campos comunes. Ajusta según nombres exactos de tu API
       document.getElementById('nombre').value = data.Nombre || data.nombre || '';
       document.getElementById('apellidos').value = data.Apellidos || data.apellidos || '';
       document.getElementById('dpi').value = data['Numero de DPI'] || data.dpi || dpiVal;
 
-      // Si la planilla tiene información salarial almacenada en la fila del empleado, se debe traer desde otra API.
-      // Como fallback, dejamos sueldo/comisiones/bonos en 0 si no existen.
-      if(data.Sueldo) document.getElementById('sueldoBase').value = Number(data.Sueldo);
-      // Mantén campos numéricos a 0 por defecto si no vienen
-      ['comisiones','bonificacion','bonoIncentivo','hextrasMonto','igss','isr','otrasDeducciones'].forEach(id=>{
-        const el = document.getElementById(id);
-        if(el && (data[id] !== undefined)) el.value = Number(data[id]);
-      });
+      // Si la API devuelve salario u otros campos, los usamos como fallback
+      if(data.Sueldo !== undefined) document.getElementById('sueldoBase').value = Number(data.Sueldo);
+      if(data.bono !== undefined) document.getElementById('bonificacion').value = Number(data.bono);
+      if(data.comisiones !== undefined) document.getElementById('comisiones').value = Number(data.comisiones);
+      if(data.hextras_monto !== undefined) document.getElementById('hextrasMonto').value = Number(data.hextras_monto);
+      if(data.igss !== undefined) document.getElementById('igss').value = Number(data.igss);
+      if(data._isrValue !== undefined) document.getElementById('isr').value = Number(data._isrValue);
+      if(data.otras_deducciones !== undefined) document.getElementById('otrasDeducciones').value = Number(data.otras_deducciones);
 
       recalcLiquido();
     }).catch(()=>{/* no mostrar errores aquí */});
@@ -273,12 +329,11 @@
     document.getElementById('totalEnLetras').value = numeroALetras(liquido);
   }
 
-  // Convertir número a texto en español (versión simple para enteros y cientos con centavos)
+  // Convertir número a texto en español (versión simple para enteros y centavos)
   function numeroALetras(num){
     if (isNaN(num)) return '';
     const entero = Math.trunc(Math.abs(num));
     const cent = Math.round((Math.abs(num) - entero) * 100);
-    // representación sencilla para evitar librerías: usar Intl para miles y añadir texto
     const enteroForm = entero.toLocaleString('es-GT');
     return `${enteroForm} QUETZALES ${cent.toString().padStart(2,'0')}/100`;
   }
