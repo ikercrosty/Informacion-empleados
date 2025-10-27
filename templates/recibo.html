@@ -1,200 +1,127 @@
 {% extends "layout.html" %}
-{% block title %}Recibo de Pago{% endblock %}
+{% block title %}Recibo{% endblock %}
 
 {% block content %}
-<div class="recibo-card container mt-4 mb-5">
-  <div class="recibo-header d-flex justify-content-between align-items-start">
-    <div class="empresa-left">
-      <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="empresa-logo" />
-      <div class="empresa-meta">
-        <h2 class="empresa-nombre">EMPAQUES Y TEXTURAS DE GUATEMALA S.A.</h2>
-        <div class="empresa-direccion small text-muted">Dirección de la empresa · Ciudad · Guatemala</div>
-        <div class="empresa-rtn small text-muted">RTN: 12345678</div>
+{% set r = recibo or {} %}
+<div class="container py-4">
+  <div class="card shadow-sm mb-4">
+    <div class="card-body d-flex justify-content-between align-items-center">
+      <div>
+        <h3 class="mb-0">RECIBO DE PAGO</h3>
+        <div class="small text-muted">Empresa: {{ empresa_nombre|default('Empresa') }}</div>
       </div>
-    </div>
 
-    <div class="recibo-info text-end">
-      <h3 class="mb-1">RECIBO DE PAGO</h3>
-      <div class="small text-muted">Comprobante No: <strong>{{ recibo.numero or '——' }}</strong></div>
-      <div class="small text-muted">Fecha emisión: <strong>{{ recibo.fecha or '' }}</strong></div>
-      <div class="small text-muted">Periodo: <strong>{{ recibo.periodo or '' }}</strong></div>
+      <div class="text-end">
+        <div class="small text-muted">Comprobante No:
+          <strong>{{ r.get('numero') or '— —' }}</strong>
+        </div>
+        <div class="small text-muted">Fecha:
+          <strong>
+            {% if r.get('fecha') %}
+              {{ r.get('fecha') }}
+            {% elif fecha_emision is defined %}
+              {{ fecha_emision }}
+            {% else %}
+              {{ current_date|default('') }}
+            {% endif %}
+          </strong>
+        </div>
+      </div>
     </div>
   </div>
 
-  <hr class="divider" />
-
-  <section class="datos-empleado row g-3 mb-3">
-    <div class="col-md-6">
-      <label class="label">Empleado</label>
-      <div class="field">{{ empleado.Nombre ~ ' ' ~ (empleado.Apellidos or '') }}</div>
-    </div>
-    <div class="col-md-3">
-      <label class="label">DPI</label>
-      <div class="field">{{ empleado['Numero de DPI'] or empleado.dpi or '' }}</div>
-    </div>
-    <div class="col-md-3">
-      <label class="label">IGSS</label>
-      <div class="field">{{ empleado['Numero de Afiliaci�n del IGGS'] or empleado.iggs or '' }}</div>
-    </div>
-
-    <div class="col-md-3">
-      <label class="label">Puesto</label>
-      <div class="field">{{ empleado['Puesto de trabajo'] or '' }}</div>
-    </div>
-    <div class="col-md-3">
-      <label class="label">Tipo contrato</label>
-      <div class="field">{{ empleado['Tipo de contrato'] or '' }}</div>
-    </div>
-    <div class="col-md-3">
-      <label class="label">Jornada</label>
-      <div class="field">{{ empleado['Jornada laboral'] or '' }}</div>
-    </div>
-    <div class="col-md-3">
-      <label class="label">Días Laborados</label>
-      <div class="field">{{ recibo.dias_laborados or recibo.dias or '' }}</div>
-    </div>
-  </section>
-
-  <section class="tabla-devengos">
-    <table class="table table-sm w-100">
-      <thead>
-        <tr>
-          <th>Concepto</th>
-          <th class="text-end">Monto (Q)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Sueldo Base</td>
-          <td class="text-end">{{ recibo.sueldo_base | default(0) | float | round(2) }}</td>
-        </tr>
-        <tr>
-          <td>Bonificación / Incentivo</td>
-          <td class="text-end">{{ recibo.bono | default(0) | float | round(2) }}</td>
-        </tr>
-        <tr>
-          <td>Comisiones</td>
-          <td class="text-end">{{ recibo.comisiones | default(0) | float | round(2) }}</td>
-        </tr>
-        <tr>
-          <td>Horas extra (monto)</td>
-          <td class="text-end">{{ recibo.horas_extra_monto | default(0) | float | round(2) }}</td>
-        </tr>
-        <tr class="fw-bold total-row">
-          <td>Total Devengado</td>
-          <td class="text-end">{{ (recibo.sueldo_base|default(0) + recibo.bono|default(0) + recibo.comisiones|default(0) + recibo.horas_extra_monto|default(0)) | round(2) }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section class="tabla-deducciones mt-3">
-    <table class="table table-sm w-100">
-      <thead>
-        <tr>
-          <th>Concepto</th>
-          <th class="text-end">Monto (Q)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>IGSS ({{ (recibo.igss_rate * 100)|round(2) if recibo.igss_rate is defined else (4.83) }}%)</td>
-          <td class="text-end">{{ recibo.igss | default(0) | float | round(2) }}</td>
-        </tr>
-        <tr>
-          <td>ISR retenido</td>
-          <td class="text-end">{{ recibo.isr | default(0) | float | round(2) }}</td>
-        </tr>
-        <tr>
-          <td>Otras deducciones</td>
-          <td class="text-end">{{ recibo.otras_deducciones | default(0) | float | round(2) }}</td>
-        </tr>
-        <tr class="fw-bold total-row">
-          <td>Total Deducciones</td>
-          <td class="text-end">{{ (recibo.igss|default(0) + recibo.isr|default(0) + recibo.otras_deducciones|default(0)) | round(2) }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section class="resumen mt-4 d-flex justify-content-between align-items-center">
-    <div class="left">
-      <div class="small text-muted">Medio de pago</div>
-      <div class="field">{{ recibo.medio_pago or 'Deposito / Efectivo' }}</div>
-      <div class="small text-muted mt-2">Observaciones</div>
-      <div class="field">{{ recibo.observaciones or '' }}</div>
-    </div>
-
-    <div class="right text-end">
-      <div class="liquido-label small text-muted">Líquido a recibir</div>
-      <div class="liquido-amount h3">Q {{ ((recibo.sueldo_base|default(0) + recibo.bono|default(0) + recibo.comisiones|default(0) + recibo.horas_extra_monto|default(0)) - (recibo.igss|default(0) + recibo.isr|default(0) + recibo.otras_deducciones|default(0))) | round(2) }}</div>
-
-      <div class="mt-4 signatures d-flex gap-4 justify-content-end">
-        <div class="sign-block text-center">
-          <div class="sign-line" aria-hidden="true"></div>
-          <div class="sign-caption">Firma del empleado</div>
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <h5 class="mb-3">Datos del Trabajador</h5>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Nombre</label>
+          <input class="form-control" readonly value="{{ r.get('nombre') or r.get('Nombre') or '—' }}">
         </div>
-        <div class="sign-block text-center">
-          <div class="sign-line" aria-hidden="true"></div>
-          <div class="sign-caption">Recibí conforme</div>
+        <div class="col-md-4">
+          <label class="form-label">Apellidos</label>
+          <input class="form-control" readonly value="{{ r.get('apellidos') or r.get('Apellidos') or '—' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">DPI / Identificación</label>
+          <input class="form-control" readonly value="{{ r.get('dpi') or r.get('Numero de DPI') or '—' }}">
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <h5 class="mb-3">Detalle de pago</h5>
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label">Sueldo Base</label>
+          <input class="form-control" readonly value="Q {{ ('%.2f'|format((r.get('sueldo') or r.get('Sueldo') or 0)|float)) }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Bonificación</label>
+          <input class="form-control" readonly value="Q {{ ('%.2f'|format((r.get('bono') or r.get('Bono') or 0)|float)) }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Comisiones</label>
+          <input class="form-control" readonly value="Q {{ ('%.2f'|format((r.get('comisiones') or 0)|float)) }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Horas extras (monto)</label>
+          <input class="form-control" readonly value="Q {{ ('%.2f'|format((r.get('hextras_monto') or r.get('hextras') or 0)|float)) }}">
+        </div>
+      </div>
+
+      <div class="row g-3 mt-2">
+        <div class="col-md-4">
+          <label class="form-label">Total Devengado</label>
+          <input class="form-control" readonly value="Q {{ ('%.2f'|format((r.get('total_devengado') or 0)|float)) }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">IGSS</label>
+          <input class="form-control" readonly value="Q {{ ('%.2f'|format((r.get('igss') or 0)|float)) }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">ISR</label>
+          <input class="form-control" readonly value="Q {{ ('%.2f'|format((r.get('isr') or 0)|float)) }}">
+        </div>
+      </div>
+
+      <div class="row g-3 mt-2">
+        <div class="col-md-4">
+          <label class="form-label">Otras deducciones</label>
+          <input class="form-control" readonly value="Q {{ ('%.2f'|format((r.get('otras_deducciones') or 0)|float)) }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Total Deducciones</label>
+          <input class="form-control" readonly value="Q {{ ('%.2f'|format((r.get('total_deducciones') or 0)|float)) }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Líquido a recibir</label>
+          <input class="form-control fw-bold" readonly value="Q {{ ('%.2f'|format((r.get('liquido') or 0)|float)) }}">
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <h5 class="mb-2">Observaciones</h5>
+      <div class="mb-3">
+        <textarea class="form-control" rows="3" readonly>{{ r.get('observaciones') or '' }}</textarea>
+      </div>
+
+      <div class="row mt-5">
+        <div class="col-md-6 text-center">
+          <div style="border-bottom:1px solid #ccc; height:1px; margin-bottom:8px;"></div>
+          <div class="small text-muted">Firma del trabajador</div>
+        </div>
+        <div class="col-md-6 text-center">
+          <div style="border-bottom:1px solid #ccc; height:1px; margin-bottom:8px;"></div>
+          <div class="small text-muted">Representante de la empresa</div>
         </div>
       </div>
     </div>
-  </section>
+  </div>
 
-  <footer class="recibo-foot mt-4 small text-muted text-center">
-    Recibí en conformidad: El empleado declara haber recibido las cantidades indicadas mediante el presente recibo.
-  </footer>
+  <div class="text-end">
+    <a href="{{ url_for('imprimir_recibo', numero=r.get('numero')) if r.get('numero') else url_for('recibos_list') }}" class="btn btn-outline-primary">Volver / Imprimir</a>
+  </div>
 </div>
-
-<script>
-  (function(){
-    // Simple print helper: call window.print() when requested by outer UI
-    window.printRecibo = function(){ 
-      // remove fields that are empty and ensure styles for print
-      document.body.classList.add('recibo-print-mode');
-      setTimeout(function(){ window.print(); setTimeout(function(){ document.body.classList.remove('recibo-print-mode'); }, 300); }, 80);
-    };
-  })();
-</script>
-
-<style>
-  /* Layout */
-  .recibo-card { max-width: 920px; margin-left: auto; margin-right: auto; background: #fff; border-radius: 12px; padding: 22px; box-shadow: 0 18px 48px rgba(8, 20, 40, 0.06); font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; color: #072031; }
-  .recibo-header { gap: 18px; }
-  .empresa-left { display:flex; gap:12px; align-items:center; }
-  .empresa-logo { width:84px; height:auto; object-fit:contain; border-radius:8px; background:#fff; }
-  .empresa-nombre { margin:0; font-size:1.05rem; color:#0b2733; font-weight:800; }
-  .recibo-info h3 { margin:0; font-size:1.05rem; font-weight:900; color:#06202a; }
-  .divider { border:none; border-top:1px solid #eef6fb; margin:14px 0; }
-
-  .label { display:block; font-weight:700; color:#0b2733; margin-bottom:6px; font-size:.85rem; }
-  .field { padding:.55rem .7rem; background: linear-gradient(180deg,#fff,#fbfdff); border:1px solid #eef6fb; border-radius:8px; min-height:42px; display:flex; align-items:center; font-weight:600; color:#06202a; }
-
-  .tabla-devengos table, .tabla-deducciones table { border-collapse: collapse; background:transparent; }
-  .tabla-devengos th, .tabla-devengos td, .tabla-deducciones th, .tabla-deducciones td { padding:.6rem .75rem; border-bottom: 1px dashed rgba(6,32,50,0.04); }
-  .text-end { text-align:right; }
-  .fw-bold { font-weight:800; }
-
-  .total-row td { font-weight:900; background: linear-gradient(90deg, rgba(11,114,133,0.05), rgba(14,165,164,0.02)); }
-
-  .resumen { margin-top: 1rem; gap: 16px; }
-  .liquido-amount { color:#0b2733; font-weight:900; }
-  .sign-block .sign-line { width:220px; height:0; border-bottom:2px solid #000; margin-bottom:8px; }
-  .sign-caption { font-weight:700; color:#0b2733; font-size:.95rem; }
-
-  .recibo-foot { margin-top: 10px; color:#5c6b73; }
-
-  /* Print styles */
-  @media print {
-    body * { visibility: visible; }
-    .recibo-card { box-shadow:none; border:none; border-radius:0; margin:0; padding:6mm 8mm; }
-    .recibo-print-mode .empresa-logo { display:block; }
-    .recibo-print-mode .recibo-info { float:right; text-align:right; }
-    .recibo-header { page-break-after: avoid; }
-    .tabla-devengos table, .tabla-deducciones table { page-break-inside: avoid; break-inside: avoid; }
-    .sign-block .sign-line { border-bottom: 2px solid #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    @page { margin: 10mm 10mm; }
-  }
-</style>
 {% endblock %}
