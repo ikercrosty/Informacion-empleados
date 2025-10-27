@@ -138,46 +138,90 @@
     </div>
   </div>
 
-  <!-- Total en letras y medios de pago (sin Mes/Año ni Fecha de pago) -->
+  <!-- Total en letras y medios de pago (ordenado y claro) -->
   <div class="card shadow-sm mb-4">
     <div class="card-body">
-      <div class="row g-3">
-        <div class="col-md-12">
+      <div class="row g-3 align-items-start">
+        <div class="col-md-8">
           <label class="form-label small">TOTAL EN LETRAS</label>
           <input id="totalEnLetras" class="form-control" type="text" readonly value="{{ recibo.total_letras if recibo is defined else '' }}">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label small d-block">Fecha de pago (opcional)</label>
+          <input id="fechaPago" class="form-control" type="date" value="">
         </div>
       </div>
 
       <hr class="my-3">
 
       <h6 class="mb-2">MEDIOS DE PAGO</h6>
-      <div class="row g-2">
-        <div class="col-12">
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="medioPago" id="pagoEfectivo" value="EFECTIVO" checked>
-            <label class="form-check-label" for="pagoEfectivo">EFECTIVO</label>
-          </div>
-        </div>
 
-        <div class="col-12">
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="medioPago" id="pagoTransferencia" value="TRANSFERENCIA">
-            <label class="form-check-label" for="pagoTransferencia">TRANSFERENCIA BANCARIA</label>
+      <!-- Clear, ordered layout:
+           - radio buttons stacked with clear labels
+           - associated input groups arranged in a single 2-column grid
+           - only show the inputs for the selected method to reduce clutter
+      -->
+      <div id="mediosPagoWrapper">
+        <div class="row g-2">
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="medioPago" id="pagoEfectivo" value="EFECTIVO" checked>
+              <label class="form-check-label fw-semibold" for="pagoEfectivo">EFECTIVO</label>
+              <div class="ms-4 mt-2 medio-desc text-muted small">Pago en efectivo, sin datos bancarios necesarios.</div>
+            </div>
           </div>
-          <div class="mt-2 ms-4">
-            <input id="transCuenta" class="form-control mb-1" type="text" placeholder="No. de cuenta (transferencia)">
-            <input id="transBanco" class="form-control" type="text" placeholder="Banco (transferencia)">
-          </div>
-        </div>
 
-        <div class="col-12 mt-2">
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="medioPago" id="pagoCheque" value="CHEQUE">
-            <label class="form-check-label" for="pagoCheque">CHEQUE</label>
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="medioPago" id="pagoTransferencia" value="TRANSFERENCIA">
+              <label class="form-check-label fw-semibold" for="pagoTransferencia">TRANSFERENCIA BANCARIA</label>
+            </div>
+
+            <div id="transferenciaFields" class="mt-2 ms-4 row gx-2 gy-2 visually-hidden">
+              <div class="col-12">
+                <label class="form-label small mb-1">No. de cuenta</label>
+                <input id="transCuenta" class="form-control" type="text" placeholder="No. de cuenta (transferencia)">
+              </div>
+              <div class="col-12">
+                <label class="form-label small mb-1">Banco</label>
+                <input id="transBanco" class="form-control" type="text" placeholder="Banco (transferencia)">
+              </div>
+              <div class="col-12">
+                <div class="small text-muted">Revisa que los datos bancarios coincidan con la cuenta beneficiaria.</div>
+              </div>
+            </div>
           </div>
-          <div class="mt-2 ms-4">
-            <input id="chequeNumero" class="form-control mb-1" type="text" placeholder="No. de cheque">
-            <input id="chequeBanco" class="form-control" type="text" placeholder="Banco (cheque)">
+
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="medioPago" id="pagoCheque" value="CHEQUE">
+              <label class="form-check-label fw-semibold" for="pagoCheque">CHEQUE</label>
+            </div>
+
+            <div id="chequeFields" class="mt-2 ms-4 row gx-2 gy-2 visually-hidden">
+              <div class="col-12">
+                <label class="form-label small mb-1">No. de cheque</label>
+                <input id="chequeNumero" class="form-control" type="text" placeholder="No. de cheque">
+              </div>
+              <div class="col-12">
+                <label class="form-label small mb-1">Banco</label>
+                <input id="chequeBanco" class="form-control" type="text" placeholder="Banco (cheque)">
+              </div>
+              <div class="col-12">
+                <div class="small text-muted">Si el cheque será depositado, indique banco y número para conciliación.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Compact month/year fields kept separate and aligned -->
+          <div class="col-6 mt-3">
+            <label class="form-label small">Mes</label>
+            <input id="mesPago" class="form-control" type="text" placeholder="Mes" value="{{ recibo.mes if recibo is defined else '' }}">
+          </div>
+          <div class="col-6 mt-3">
+            <label class="form-label small">Año</label>
+            <input id="anoPago" class="form-control" type="text" placeholder="Año" value="{{ recibo.ano if recibo is defined else '' }}">
           </div>
         </div>
       </div>
@@ -317,14 +361,10 @@
     let resultado = enteroTexto + (entero === 1 ? ' Quetzal' : ' Quetzales');
 
     if (cent > 0){
-      // formar la parte de centavos en palabras y añadir "con ... centavos"
-      const centTexto = cent < 10 ? 'cero ' + cent : String(cent);
-      // Convertir centavos a palabras mínimas (ej. 09 -> nueve)
       const centPalabras = enteroALetras(cent);
       resultado += ' con ' + centPalabras + ' centavo' + (cent === 1 ? '' : 's');
     }
 
-    // Capitalizar la primera letra y mantener el resto en minúsculas salvo nombres propios
     resultado = resultado.charAt(0).toUpperCase() + resultado.slice(1);
     return (negativo ? 'menos ' : '') + resultado;
   }
@@ -386,11 +426,32 @@
     if(el) el.addEventListener('input', recalcLiquido);
   });
 
+  // Print button
   document.addEventListener('DOMContentLoaded', function(){
     loadEmpleados();
     recalcLiquido();
     const imp = document.getElementById('imprimirBtn');
     if(imp) imp.addEventListener('click', function(){ window.print(); });
+
+    // payment method toggles
+    const transferenciaFields = document.getElementById('transferenciaFields');
+    const chequeFields = document.getElementById('chequeFields');
+    const radios = document.querySelectorAll('input[name="medioPago"]');
+    function updateMediosVisibility(){
+      const val = document.querySelector('input[name="medioPago"]:checked')?.value;
+      if(val === 'TRANSFERENCIA'){
+        transferenciaFields.classList.remove('visually-hidden');
+        chequeFields.classList.add('visually-hidden');
+      } else if(val === 'CHEQUE'){
+        chequeFields.classList.remove('visually-hidden');
+        transferenciaFields.classList.add('visually-hidden');
+      } else {
+        transferenciaFields.classList.add('visually-hidden');
+        chequeFields.classList.add('visually-hidden');
+      }
+    }
+    radios.forEach(r => r.addEventListener('change', updateMediosVisibility));
+    updateMediosVisibility();
   });
 
 })();
@@ -401,11 +462,20 @@
   .form-label.small { font-size: .85rem; color:#6b7280; }
   input[readonly] { background:#f8f9fa; cursor: not-allowed; }
   #liquidoTotal { background: #fff8eb; }
+
+  /* visually-hidden utility (keeps DOM accessible but hides visually) */
+  .visually-hidden { display:none !important; }
+
+  /* medios de pago spacing and emphasis */
+  #mediosPagoWrapper .form-check { padding: .35rem 0; }
+  #mediosPagoWrapper .medio-desc { margin-top:.25rem; }
+
   /* asegurar el botón visible en móvil */
   @media (max-width:576px){
     #imprimirBtn { width:100%; }
     .text-end[style] { min-width: unset; }
   }
+
   /* ocultar controles irrelevantes en impresión */
   @media print{
     button, select, input[type="text"].form-control-sm, .form-check-input, .form-check-label, input[placeholder] { display: none !important; }
