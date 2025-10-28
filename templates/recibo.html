@@ -10,6 +10,13 @@
         <div class="small text-muted">Empresa: {{ empresa_nombre|default('Empaques y texturas de Guatemala S.A') }}</div>
       </div>
 
+      <div class="text-end meta-block" style="min-width:320px;">
+        <div class="mb-2">
+          <label class="form-label small text-muted">Comprobante No</label>
+          <input id="comprobanteNumero" class="form-control form-control-sm" type="text" value="{{ recibo.numero if recibo is defined else '' }}">
+          <div id="print_comprobanteNumero" class="print-only small-print" aria-hidden="true"></div>
+        </div>
+
         <div class="d-flex gap-2 align-items-end justify-content-end">
           <div style="flex:1; min-width:140px;">
             <label class="form-label small text-muted">Fecha</label>
@@ -482,7 +489,7 @@
   const imprimirBtn = document.getElementById('imprimirBtn');
   if(imprimirBtn) imprimirBtn.addEventListener('click', function(){
     beforePrintSetup();
-    setTimeout(()=> window.print(), 80);
+    setTimeout(()=> window.print(), 100);
   });
 
   ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones'].forEach(id=>{
@@ -529,7 +536,7 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
 
 /* Print button */
 .btn-imprimir {
-  background: linear-gradient(90deg, #ff9042, #ff7a18);
+  background: linear-gradient(90deg, #ffbd6c, #ff7a18);
   color: #fff;
   border: none;
   padding: .52rem .95rem;
@@ -542,15 +549,15 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
 .btn-imprimir:hover { transform: translateY(-2px); box-shadow: 0 18px 34px rgba(11,114,133,0.16); }
 
 /* Compact look */
-.row.g-2 > [class*="col-"], .row.g-3 > [class*="col-"] { padding-bottom:2px; }
-.mb-2 { margin-bottom:.3rem !important; }
-.card-body { padding: 8px; }
+.row.g-2 > [class*="col-"], .row.g-3 > [class*="col-"] { padding-bottom:6px; }
+.mb-2 { margin-bottom:.5rem !important; }
+.card-body { padding: 14px; }
 
 /* Signatures */
 .sig-line { border-bottom:1px dashed #bfc7cb; height:1px; margin-bottom:8px; }
 
 /* Hidden print helper */
-.print-only { display:none; font-weight:630; }
+.print-only { display:none; font-weight:700; }
 
 /* Transfer / cheque fields off by default until selection */
 .transferencia-fields, .cheque-fields { display:none; }
@@ -562,101 +569,86 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
 .payment-section .box-left,
 .payment-section .box-right {
   background: linear-gradient(180deg,#ffffff,#fbfcfd);
-  border-radius: 7px;
-  padding: 7px;
+  border-radius: 10px;
+  padding: 10px;
   border: 1px solid rgba(11,19,30,0.04);
 }
 
 /* Slight divider between columns */
-.payment-section .section-left { margin-right: 4px; }
-.payment-section .section-right { margin-left: 4px; }
+.payment-section .section-left { margin-right: 6px; }
+.payment-section .section-right { margin-left: 6px; }
 
-/* Print styles: make layout extremely compact while preserving order */
+/* Print styles: adjust only print appearance */
 @media print {
-  @page { size: A4; margin: 1mm; } /* minimal page margins */
+  @page { size: A4; margin: 1mm; }
 
   body { background: #fff !important; color: #000; }
 
-  /* Use almost full width; compress spacing and font sizes strongly */
-  .container {
-    width: 96%;
-    max-width: 96%;
-    margin: 2mm auto 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+  /* Restrict printed form area to roughly half the page, left aligned and compact */
+  .container { width: 48%; max-width: 48%; margin: 6mm 0 0 6mm; transform: none; padding:0; }
 
   .card { box-shadow:none !important; border:none !important; background:transparent !important; }
-  .card .card-body { padding:4px; } /* very small padding for compactness */
+  .card .card-body { padding:6px; }
 
-  /* Hide interactive controls and extras not needed in print */
+  /* Hide interactive controls and header comprobante and lugar as requested (print-only) */
   .empleado-selection, .form-check-input, select, .btn-imprimir, input[type="date"], .meta-block .form-control-sm { display: none !important; }
 
   /* Hide comprobante number input and lugar fields in print */
   .meta-block .mb-2 { display: none !important; }
   #comprobanteNumero { display:none !important; }
   #lugarPago { display:none !important; }
-  #print_lugar { display:none !important; }
+  #print_lugar { display:none !important; } /* hide print copy of Lugar */
 
-  /* Show mirrored printable header date only */
-  .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color: #111; margin-bottom:2px; }
+  /* Show mirrored printable header fields */
+  .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color: #111; }
 
-  /* Inputs: very tight padding and smaller font to pack more on page */
+  /* Inputs visible for values */
   input.form-control, input.form-control[readonly] {
     background: #fff !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     border: 1px solid #111 !important;
     color: #000 !important;
-    padding: 2px 5px;
-    font-size: 9px;
+    padding: 4px 6px;
     box-shadow: none;
   }
 
-  /* Reduce heading sizes and label spacing */
-  h3, h5, h6, label { margin:0; padding:0; font-weight:700; font-size:10px; }
-  .title-large { font-size: 12px; font-weight:800; margin-bottom:6px; }
-  .small.text-muted { font-size:9px; color:#111; margin-bottom:4px; }
+  /* Keep two-column layout for details in print */
+  .section-card .card-body.section-grid { display:flex; gap:12px; flex-wrap:nowrap; }
+  .section-card .section-left, .section-card .section-right { flex:0 0 50%; min-width:45%; }
 
-  /* Collapse gaps between sections and columns */
-  .section-card .card-body.section-grid { display:flex; gap:6px; flex-wrap:nowrap; align-items:flex-start; padding:0; }
-  .section-card .section-left, .section-card .section-right { flex:0 0 50%; min-width:45%; padding:4px; }
+  /* ---------- Clear boxed outlines for print (stronger separation) ---------- */
+  .section-card .section-left {
+    border: 1px solid #222;
+    padding: 10px;
+    border-radius: 6px;
+    background: #fff;
+  }
+  .section-card .section-right {
+    border: 1px solid #222;
+    padding: 10px;
+    border-radius: 6px;
+    background: #fff;
+  }
 
-  /* Box outlines minimal but visible */
-  .section-card .section-left { border: 1px solid #111; padding:4px; border-radius:3px; background:#fff; }
-  .section-card .section-right { border: 1px solid #111; padding:4px; border-radius:3px; background:#fff; }
+  /* Slight shadow effect in print via border only (keeps it printer-friendly) */
+  .totals-card { border-top: 2px solid #222; padding-top:8px; }
 
-  /* Liquido area compact and inline */
-  .liquido-row { padding:4px 0 6px 0; }
-  .liquido-row label { font-size:9px; display:block; margin-bottom:2px; }
-  #liquidoTotal { width:170px; font-size:10px; }
-
-  /* Totals and payment methods compact */
-  .totals-card { border-top: 1px solid #111; padding-top:6px; margin-top:6px; }
-  .payment-methods { margin-top:4px; }
-  .form-check-label { font-size:9px; font-weight:700; margin-left:4px; }
-
-  /* Signatures compressed */
-  .signatures-row { margin-top:8px; }
-  .sig-line { margin-bottom:6px; border-bottom:1px dashed #111; height:1px; }
-  .signatures-row .small.text-muted { font-size:9px; }
-
-  /* Reduce spacing inside totals */
-  .totals-card .card-body { padding:4px; }
-
-  /* Show only selected payment method in print */
-  .printable-option { display:none; font-size:9px; }
+  /* Payment method blocks: show only selected one in print */
+  .printable-option { display:none; }
   body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:block; }
   body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:block; }
   body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:block; }
-  body.print-medio-TRANSFERENCIA .transferencia-fields { display:block; margin-left:6px; }
-  body.print-medio-CHEQUE .cheque-fields { display:block; margin-left:6px; }
 
-  /* Avoid page breaks inside the compact receipt */
+  body.print-medio-TRANSFERENCIA .transferencia-fields { display:block; }
+  body.print-medio-CHEQUE .cheque-fields { display:block; }
+
+  /* Typography adjustments */
+  h3, h5, h6, label, input, .small-print { font-size: 11px; line-height: 1.1; }
+  .small.text-muted { font-size:10px; color:#222; }
+
+  /* Avoid page breaks inside important sections */
   .card, .section-card, .totals-card, .signatures-row { page-break-inside: avoid; break-inside: avoid; }
-
-  /* Final typography tweak to pack content */
-  input, label, .small-print { line-height: 1.0; }
 }
 
 /* Ensure on-screen payment extras controlled by JS appear correctly */
