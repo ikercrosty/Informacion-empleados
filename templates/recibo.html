@@ -10,6 +10,13 @@
         <div class="small text-muted">Empresa: {{ empresa_nombre|default('Empaques y texturas de Guatemala S.A') }}</div>
       </div>
 
+      <div class="text-end meta-block" style="min-width:320px;">
+        <div class="mb-2">
+          <label class="form-label small text-muted">Comprobante No</label>
+          <input id="comprobanteNumero" class="form-control form-control-sm" type="text" value="{{ recibo.numero if recibo is defined else '' }}">
+          <div id="print_comprobanteNumero" class="print-only small-print" aria-hidden="true"></div>
+        </div>
+
         <div class="d-flex gap-2 align-items-end justify-content-end">
           <div style="flex:1; min-width:140px;">
             <label class="form-label small text-muted">Fecha</label>
@@ -49,6 +56,11 @@
           </div>
 
           <div class="col-12 mt-2">
+            <label class="form-label">Lugar / Ciudad</label>
+            <input id="lugarPago" class="form-control" type="text" placeholder="GUATEMALA" value="{{ recibo.lugar if recibo is defined else 'GUATEMALA' }}">
+          </div>
+
+          <div class="col-12 mt-2">
             <label class="form-label">DPI / Identificación</label>
             <input id="dpi" class="form-control" readonly value="{{ recibo.dpi if recibo is defined else '' }}">
           </div>
@@ -65,6 +77,10 @@
         <div class="col-8">
           <label class="form-label small">Nombre completo</label>
           <input id="print_nombre" class="form-control" readonly value="{{ recibo.nombre if recibo is defined else '' }}">
+        </div>
+        <div class="col-4">
+          <label class="form-label small">Lugar / Ciudad</label>
+          <input id="print_lugar" class="form-control" readonly value="{{ recibo.lugar if recibo is defined else 'GUATEMALA' }}">
         </div>
         <div class="col-4 mt-2">
           <label class="form-label small">DPI / Identificación</label>
@@ -195,14 +211,24 @@
 
   function fmt(n){ return 'Q ' + Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}); }
 
+  // Defensive: devuelve el mejor identificador para comparar con planilla
+  function pickEmployeeKey(e){
+    // prefer DPI-like keys if present, fallback to id or email or full_name
+    return String(e.dpi || e.DPI || e.numero || e.numero_identificacion || e.id || e.numeroDPI || e.numero_dpi || e.numeroIdentificacion || e.NumeroDPI || e.full_name || '').trim();
+  }
+
   function loadEmpleados(){
     fetch('/api/empleados').then(r => r.json()).then(list => {
       const sel = document.getElementById('empleadoSelect');
       if(!Array.isArray(list) || !sel) return;
+      // clear existing options except placeholder
+      sel.querySelectorAll('option:not([value=""])').forEach(o => o.remove());
       list.forEach(e => {
         const opt = document.createElement('option');
-        opt.value = e.dpi || '';
-        opt.textContent = e.full_name || (e.Nombre ? ((e.Apellidos||'') + ' ' + (e.Nombre||'')) : e.dpi);
+        // use best matching key as value so it matches planilla rows (if planilla used DPI or id)
+        opt.value = pickEmployeeKey(e);
+        // label: prefer full name, fallback to DPI or id
+        opt.textContent = e.full_name || ( (e.Nombre || '') + (e.Apellidos ? (' ' + e.Apellidos) : '') ) || pickEmployeeKey(e) || 'Empleado';
         sel.appendChild(opt);
       });
     }).catch(()=>{});
@@ -219,12 +245,26 @@
     }
   }
 
+  // Robust planilla lookup: compare the selected value against many possible row keys
   function findPlanillaRowByDpi(dpi){
+    if(!dpi && dpi !== 0) return null;
     const plan = loadPlanillaFromLocal();
     if(!plan) return null;
     const rows = plan.rows || [];
+    const needle = String(dpi).trim();
     for(const r of rows){
-      if(String(r.dpi || '').trim() === String(dpi).trim()) return r;
+      // check multiple candidate fields inside each row
+      const candidates = [
+        r.dpi, r.DPI, r.Dpi,
+        r.numero, r.numero_identificacion, r.numeroDPI, r.numero_dpi,
+        r.id, r.ID, r.identificacion,
+        r.Nombre, r.nombre, (r.Apellidos ? (r.Apellidos + ' ' + (r.Nombre||'')) : null),
+        r.full_name, r.fullName
+      ];
+      for(const c of candidates){
+        if(c === undefined || c === null) continue;
+        if(String(c).trim() === needle) return r;
+      }
     }
     return null;
   }
@@ -234,7 +274,10 @@
     if(typeof v === 'number') return v;
     const s = String(v).replace(/\s+/g,'').replace(/^Q/i,'').replace(/,/g,'').trim();
     const n = Number(s);
-    return isFinite(n) ? n : 0;
+    if(isFinite(n)) return n;
+    // try parseFloat fallback
+    const f = parseFloat(s);
+    return isFinite(f) ? f : 0;
   }
 
   // sync printable comprobante fields
@@ -274,12 +317,6 @@
       el.dataset._orig = el.value;
       el.value = String(el.value).replace(/^Q\s*/i,'').trim();
     });
-    // hide Lugar/Ciudad fields visually for print by setting data flag (CSS will hide)
-    const lugar = document.getElementById('lugarPago');
-    if(lugar) lugar.dataset._hiddenForPrint = '1';
-    const printLugar = document.getElementById('print_lugar');
-    if(printLugar) printLugar.dataset._hiddenForPrint = '1';
-    // hide comprobante number label/value in print area (CSS will hide .meta-block .mb-2)
   }
 
   function restoreAmountsAfterPrint(){
@@ -292,15 +329,12 @@
         delete el.dataset._orig;
       }
     });
-    const lugar = document.getElementById('lugarPago');
-    if(lugar) delete lugar.dataset._hiddenForPrint;
-    const printLugar = document.getElementById('print_lugar');
-    if(printLugar) delete printLugar.dataset._hiddenForPrint;
   }
 
+  // When empleado is selected: try planilla row first, else fetch personal endpoint
   document.getElementById('empleadoSelect')?.addEventListener('change', function(){
-    const dpiVal = this.value;
-    if(!dpiVal){
+    const rawVal = this.value || '';
+    if(!rawVal){
       ['nombre','dpi','sueldoBase','comisiones','bonificacion','hextrasMonto','igss','isr','otrasDeducciones'].forEach(id=>{
         const el = document.getElementById(id);
         if(el) el.value = (el.readOnly ? '' : 0);
@@ -313,41 +347,51 @@
       return;
     }
 
-    const planRow = findPlanillaRowByDpi(dpiVal);
+    // first, try to find a matching planilla row
+    const planRow = findPlanillaRowByDpi(rawVal);
 
     if(planRow){
-      document.getElementById('nombre').value = planRow.nombre || planRow.Nombre || '';
-      document.getElementById('dpi').value = planRow.dpi || planRow.DPI || dpiVal;
+      // fill UI from planilla data (prefer planilla numeric fields, fallback to employee fields)
+      const nombre = planRow.nombre || planRow.Nombre || planRow.full_name || planRow.FullName || '';
+      const dpiVal = planRow.dpi || planRow.DPI || planRow.numero || planRow.numero_identificacion || planRow.id || '';
+      const lugar = planRow.lugar || planRow.ciudad || planRow.Lugar || planRow.Ciudad || document.getElementById('lugarPago')?.value || 'GUATEMALA';
 
-      // print-copy fields
-      document.getElementById('print_nombre').value = planRow.nombre || planRow.Nombre || '';
-      document.getElementById('print_dpi').value = planRow.dpi || planRow.DPI || dpiVal;
-      document.getElementById('print_lugar').value = planRow.lugar || planRow.ciudad || 'GUATEMALA';
+      document.getElementById('nombre').value = nombre;
+      document.getElementById('dpi').value = dpiVal;
 
-      document.getElementById('sueldoBase').value = toNumberSafe(planRow.sueldo || planRow.Sueldo || 0);
-      document.getElementById('bonificacion').value = toNumberSafe(planRow.bono || planRow.bon || 0);
-      document.getElementById('comisiones').value = toNumberSafe(planRow.comisiones || 0);
-      document.getElementById('hextrasMonto').value = toNumberSafe(planRow.hextras || planRow._hextras || 0);
+      document.getElementById('print_nombre').value = nombre;
+      document.getElementById('print_dpi').value = dpiVal;
+      document.getElementById('print_lugar').value = lugar;
+
+      document.getElementById('sueldoBase').value = toNumberSafe(planRow.sueldo ?? planRow.Sueldo ?? planRow.SALARIO ?? 0);
+      document.getElementById('bonificacion').value = toNumberSafe(planRow.bono ?? planRow.bon ?? planRow.bonus ?? 0);
+      // comisiones might be under different keys; handle sum if necessary
+      document.getElementById('comisiones').value = toNumberSafe(planRow.comisiones ?? planRow.Comisiones ?? planRow.commission ?? 0);
+      document.getElementById('hextrasMonto').value = toNumberSafe(planRow.hextras ?? planRow.hextras_monto ?? planRow._hextras ?? 0);
 
       const igssVal = toNumberSafe(planRow.igss ?? planRow.IGSS ?? ( (planRow.sueldo||planRow.Sueldo||0) * 0.0483 ));
       const igssTrunc = Math.trunc(igssVal * 100) / 100;
       document.getElementById('igss').value = igssTrunc.toFixed(2);
 
-      document.getElementById('isr').value = toNumberSafe(planRow.isr ?? planRow._isrValue ?? 0);
-      document.getElementById('otrasDeducciones').value = toNumberSafe(planRow.otras ?? planRow.otras_deducciones ?? 0);
+      document.getElementById('isr').value = toNumberSafe(planRow.isr ?? planRow._isrValue ?? planRow.ISR ?? 0);
+      document.getElementById('otrasDeducciones').value = toNumberSafe(planRow.otras ?? planRow.otras_deducciones ?? planRow.deducciones ?? 0);
 
       recalcLiquido();
       return;
     }
 
-    fetch('/api/empleado/' + encodeURIComponent(dpiVal)).then(r => r.json()).then(data => {
-      document.getElementById('nombre').value = data.Nombre || data.nombre || '';
-      document.getElementById('dpi').value = data['Numero de DPI'] || data.dpi || dpiVal;
+    // fallback: fetch employee personal and payroll fields from API endpoint
+    fetch('/api/empleado/' + encodeURIComponent(rawVal)).then(r => r.json()).then(data => {
+      const nombre = data.Nombre || data.nombre || data.full_name || '';
+      const dpiVal = data['Numero de DPI'] || data.dpi || data.numero || data.id || '';
+      const lugar = data.lugar || data.ciudad || document.getElementById('lugarPago')?.value || 'GUATEMALA';
 
-      // print copies
-      document.getElementById('print_nombre').value = data.Nombre || data.nombre || '';
-      document.getElementById('print_dpi').value = data['Numero de DPI'] || data.dpi || dpiVal;
-      document.getElementById('print_lugar').value = data.lugar || data.ciudad || 'GUATEMALA';
+      document.getElementById('nombre').value = nombre;
+      document.getElementById('dpi').value = dpiVal;
+
+      document.getElementById('print_nombre').value = nombre;
+      document.getElementById('print_dpi').value = dpiVal;
+      document.getElementById('print_lugar').value = lugar;
 
       if(data.Sueldo !== undefined) document.getElementById('sueldoBase').value = toNumberSafe(data.Sueldo);
       if(data.bono !== undefined) document.getElementById('bonificacion').value = toNumberSafe(data.bono);
@@ -364,7 +408,14 @@
       if(data.otras_deducciones !== undefined) document.getElementById('otrasDeducciones').value = toNumberSafe(data.otras_deducciones);
 
       recalcLiquido();
-    }).catch(()=>{});
+    }).catch(()=>{
+      // if fetch fails, clear numeric fields defensively
+      ['sueldoBase','bonificacion','comisiones','hextrasMonto','igss','isr','otrasDeducciones'].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) el.value = 0;
+      });
+      recalcLiquido();
+    });
   });
 
   function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
@@ -462,8 +513,6 @@
   document.querySelectorAll('input[name="medioPago"]').forEach(r=>r.addEventListener('change', updateMediosOnScreen));
   updateMediosOnScreen();
 
-  // Printing behavior: before print, add a class to body to indicate which medio is selected,
-  // sync comprobante values, and strip Q for print; restore after print
   function beforePrintSetup(){
     const val = document.querySelector('input[name="medioPago"]:checked')?.value || '';
     document.body.classList.remove('print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
@@ -478,7 +527,8 @@
 
   if (window.matchMedia) {
     const mql = window.matchMedia('print');
-    mql.addListener((m) => { if(m.matches) beforePrintSetup(); else afterPrintCleanup(); });
+    if (mql.addEventListener) mql.addEventListener('change', (m) => { if(m.matches) beforePrintSetup(); else afterPrintCleanup(); });
+    else mql.addListener((m) => { if(m.matches) beforePrintSetup(); else afterPrintCleanup(); });
   }
   window.addEventListener('beforeprint', beforePrintSetup);
   window.addEventListener('afterprint', afterPrintCleanup);
@@ -671,5 +721,4 @@ input[name="medioPago"][value="CHEQUE"]:checked ~ .cheque-fields {
 .small.text-muted { font-size:.88rem; color:var(--muted); }
 .form-check-label { font-weight:700; color:#233642; }
 </style>
-
 {% endblock %}
