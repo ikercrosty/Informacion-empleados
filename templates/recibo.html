@@ -550,7 +550,7 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
 .sig-line { border-bottom:1px dashed #bfc7cb; height:1px; margin-bottom:8px; }
 
 /* Hidden print helper */
-.print-only { display:none; font-weight:700; }
+.print-only { display:none; font-weight:630; }
 
 /* Transfer / cheque fields off by default until selection */
 .transferencia-fields, .cheque-fields { display:none; }
@@ -562,18 +562,18 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
 .payment-section .box-left,
 .payment-section .box-right {
   background: linear-gradient(180deg,#ffffff,#fbfcfd);
-  border-radius: 10px;
-  padding: 10px;
+  border-radius: 7px;
+  padding: 7px;
   border: 1px solid rgba(11,19,30,0.04);
 }
 
 /* Slight divider between columns */
-.payment-section .section-left { margin-right: 6px; }
-.payment-section .section-right { margin-left: 6px; }
+.payment-section .section-left { margin-right: 4px; }
+.payment-section .section-right { margin-left: 4px; }
 
 /* Print styles: make layout extremely compact while preserving order */
 @media print {
-  @page { size: A4; margin: 4mm; } /* minimal page margins */
+  @page { size: A4; margin: 1mm; } /* minimal page margins */
 
   body { background: #fff !important; color: #000; }
 
