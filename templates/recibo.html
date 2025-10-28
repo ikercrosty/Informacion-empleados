@@ -553,64 +553,57 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
 .form-control { border-radius:8px; border:1px solid rgba(11,19,30,0.06); background:#fff; padding:.55rem .7rem; }
 .form-control[readonly] { background: linear-gradient(180deg,#fbfdff,#f8fbff); color:#0b2a36; cursor:not-allowed; }
 
-/* --- CHANGES REQUESTED BY USER ---
-   - Make textboxes in Ganancias and Deducciones smaller in height and width and reduce font.
-   - When payment method fields (transfer/cheque) appear, make their textboxes wider.
-   Only the CSS below was adjusted to satisfy these exact requests. Do not change other behavior.
-*/
-
-/* Reduce size of the numeric/value textboxes in Ganancias and Deducciones (screen & print)
-   Target only the specific amount fields by id to avoid touching other inputs. */
-#sueldoBase,
-#hextrasMonto,
-#bonificacion,
-#comisiones,
-#igss,
-#isr,
-#otrasDeducciones {
-  /* smaller vertical size */
-  padding: 6px 8px;
-  font-size: 0.85rem;
-  height: 34px;
-  line-height: 1.1;
-  box-sizing: border-box;
-  /* narrower maximum width so they look smaller horizontally in the two-column layout */
-  max-width: 180px;
-  min-width: 120px;
+/* Print button */
+.btn-imprimir {
+  background: linear-gradient(90deg, #ff9042, #ff7a18);
+  color: #fff;
+  border: none;
+  padding: .52rem .95rem;
+  border-radius: 10px;
+  font-weight: 800;
+  letter-spacing: .3px;
+  box-shadow: 0 10px 26px rgba(11,114,133,0.12);
+  cursor: pointer;
 }
+.btn-imprimir:hover { transform: translateY(-2px); box-shadow: 0 18px 34px rgba(11,114,133,0.16); }
 
-/* Ensure read-only appearance remains consistent */
-#sueldoBase[readonly],
-#hextrasMonto[readonly],
-#bonificacion[readonly],
-#comisiones[readonly],
-#igss[readonly],
-#isr[readonly],
-#otrasDeducciones[readonly] {
-  background: linear-gradient(180deg,#fbfdff,#f8fbff);
-  cursor: not-allowed;
+/* Compact look */
+.row.g-2 > [class*="col-"], .row.g-3 > [class*="col-"] { padding-bottom:6px; }
+.mb-2 { margin-bottom:.5rem !important; }
+.card-body { padding: 14px; }
+
+/* Signatures */
+.sig-line { border-bottom:1px dashed #bfc7cb; height:1px; margin-bottom:8px; }
+
+/* Hidden print helper */
+.print-only { display:none; font-weight:700; }
+
+/* Transfer / cheque fields off by default until selection */
+.transferencia-fields, .cheque-fields { display:none; }
+
+/* New transfer fields styling */
+.transferencia-fields { display:none; margin-top:6px; gap:8px; align-items:center; flex-direction:row; }
+.transferencia-fields .field-row {
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-bottom:0;
 }
-
-/* Keep the layout responsive: when column becomes narrow, allow inputs to shrink */
-.section-card .section-left .row .col-6,
-.section-card .section-right .row .col-6 {
-  display: flex;
-  flex-direction: column;
+.field-row-inline { display:flex; flex-direction:column; gap:6px; margin-right:8px; }
+.field-row-inline input { min-width:160px; }
+.field-label {
+  font-weight:700;
+  font-size:0.85rem;
+  color:var(--muted);
+  margin-left:2px;
 }
+.field-label-inline { font-weight:700; font-size:0.85rem; color:var(--muted); margin-bottom:4px; }
 
-/* Slightly reduce label size in those blocks so visual balance remains */
-.section-card .section-left .form-label.small,
-.section-card .section-right .form-label.small {
-  font-size: 0.82rem;
-}
-
-/* Make payment method textboxes wider when visible on screen:
-   increase min/max widths of the trans-input elements. */
+/* Inputs more like screen */
 .trans-input {
-  width: 100%;
-  /* wider than before so they are clearly larger when shown */
-  min-width: 320px;
-  max-width: 560px;
+  width:100%;
+  min-width:220px;
+  max-width:420px;
   border-radius:10px;
   border:1px solid rgba(11,19,30,0.09);
   padding:10px 12px;
@@ -618,12 +611,10 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
   box-shadow: 0 6px 18px rgba(11,50,80,0.04);
   font-size:0.95rem;
 }
-
-/* Specific larger widths for cheque/transfer variants (keeps them aligned) */
-.trans-cuenta { min-width:320px; max-width:520px; }
-.trans-banco  { min-width:320px; max-width:520px; }
-.trans-cheque-num { min-width:240px; max-width:440px; }
-.trans-cheque-ban { min-width:240px; max-width:440px; }
+.trans-cuenta { letter-spacing:0.2px; }
+.trans-banco  {letter-spacing:0.2px; }
+.trans-cheque-num { min-width:140px; max-width:220px; }
+.trans-cheque-ban { min-width:140px; max-width:220px; }
 
 /* Liquido and Total inline on screen */
 .liquido-total-row { padding-top:8px; }
@@ -711,14 +702,14 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
     margin-left:6px;
   }
 
-  /* Make payment fields wider in print as well so they are clearly visible on the printed form */
+  /* Compact transfer inputs for print */
   body.print-medio-TRANSFERENCIA .trans-input,
   body.print-medio-CHEQUE .trans-input {
     box-shadow:none;
     border:1px solid #111 !important;
     padding:4px 6px;
-    min-width:220px;
-    max-width:420px;
+    min-width:100px;
+    max-width:220px;
     font-size:10px;
   }
   body.print-medio-TRANSFERENCIA .field-label,
