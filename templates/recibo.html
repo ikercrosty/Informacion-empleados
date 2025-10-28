@@ -529,7 +529,7 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
 
 /* Print button */
 .btn-imprimir {
-  background: linear-gradient(90deg, #ff9042, #eb6505);
+  background: linear-gradient(90deg, #ff9042, #ff7a18);
   color: #fff;
   border: none;
   padding: .52rem .95rem;
@@ -583,9 +583,12 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
   .card { box-shadow:none !important; border:none !important; background:transparent !important; }
   .card .card-body { padding:6px; }
 
- 
+  /* Hide interactive controls and header comprobante and lugar as requested (print-only) */
+  .empleado-selection, .form-check-input, select, .btn-imprimir, input[type="date"], .meta-block .form-control-sm { display: none !important; }
+
   /* Hide comprobante number input and lugar fields in print */
   .meta-block .mb-2 { display: none !important; }
+  #comprobanteNumero { display:none !important; }
   #lugarPago { display:none !important; }
   #print_lugar { display:none !important; } /* hide print copy of Lugar */
 
