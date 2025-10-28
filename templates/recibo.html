@@ -124,25 +124,24 @@
       </div>
     </div>
 
-    <!-- Líquido -->
-    <div class="card-body px-4 py-3 text-end liquido-row">
-      <label class="form-label small">Líquido a recibir</label>
-      <input id="liquidoTotal" class="form-control fw-bold text-end" readonly value="Q 0.00" style="font-size:1.1rem; display:inline-block; width:250px;">
-    </div>
-  </div>
-
-  <!-- Total en letras y medios de pago -->
-  <div class="card shadow-sm mb-4 totals-card">
-    <div class="card-body">
-      <div class="row g-3">
-        <div class="col-12">
+    <!-- Líquido and Total in same horizontal line -->
+    <div class="card-body px-4 py-3 liquido-total-row">
+      <div class="liquido-total-inner">
+        <div class="liquido-block">
+          <label class="form-label small">Líquido a recibir</label>
+          <input id="liquidoTotal" class="form-control fw-bold text-end" readonly value="Q 0.00" style="font-size:1.05rem; width:210px;">
+        </div>
+        <div class="letras-block">
           <label class="form-label small">TOTAL EN LETRAS</label>
           <input id="totalEnLetras" class="form-control" type="text" readonly value="{{ recibo.total_letras if recibo is defined else '' }}">
         </div>
       </div>
+    </div>
+  </div>
 
-      <hr class="my-3">
-
+  <!-- Medios de pago (debajo de líquido y total) -->
+  <div class="card shadow-sm mb-4 totals-card">
+    <div class="card-body">
       <div class="payment-methods">
         <h6 class="mb-2">MEDIOS DE PAGO</h6>
 
@@ -174,15 +173,17 @@
     </div>
   </div>
 
-  <!-- Firmas -->
-  <div class="row mb-5 signatures-row">
-    <div class="col-6 text-center">
-      <div class="sig-line"></div>
-      <div class="small text-muted">Firma del trabajador</div>
-    </div>
-    <div class="col-6 text-center">
-      <div class="sig-line"></div>
-      <div class="small text-muted">Firma de la empresa</div>
+  <!-- Firmas: same row, horizontal -->
+  <div class="card shadow-sm mb-4 signatures-card">
+    <div class="card-body signatures-row print-signatures">
+      <div class="sig-col">
+        <div class="sig-line"></div>
+        <div class="small text-muted">Firma del trabajador</div>
+      </div>
+      <div class="sig-col">
+        <div class="sig-line"></div>
+        <div class="small text-muted">Firma de la empresa</div>
+      </div>
     </div>
   </div>
 </div>
@@ -579,20 +580,26 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
   border: 1px solid rgba(11,19,30,0.04);
 }
 
-/* Slight divider between columns */
-.payment-section .section-left { margin-right: 6px; }
-.payment-section .section-right { margin-left: 6px; }
+/* Liquido and Total inline on screen */
+.liquido-total-row { padding-top:8px; }
+.liquido-total-inner { display:flex; gap:12px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
+.liquido-block { display:flex; flex-direction:column; gap:6px; }
+.letras-block { flex:1 1 60%; min-width:200px; display:flex; flex-direction:column; gap:6px; }
 
-/* Print styles: compact and remove removed fields cleanly */
+/* Signatures horizontal */
+.signatures-row { display:flex; gap:18px; align-items:center; justify-content:space-between; }
+.signatures-row .sig-col { flex:1 1 48%; text-align:center; }
+
+/* Print styles */
 @media print {
-  @page { size: A4; margin: 3mm; }
+  @page { size: A5; margin: 8mm; } /* set A5 page size as requested */
 
   body { background: #fff !important; color: #000; }
 
   .container {
-    width: 48%;
-    max-width: 48%;
-    margin: 6mm 0 0 6mm;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
     padding:0;
     box-sizing:border-box;
   }
@@ -626,27 +633,30 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
     background:#fff;
   }
 
-  .liquido-row { padding:4px 0 6px 0; margin-top:4px; }
-  #liquidoTotal { width:140px; font-size:10px; }
+  /* Liquido and Total same line in print */
+  .liquido-total-row { padding:6px 0 8px 0; page-break-inside: avoid; }
+  .liquido-total-inner { display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:nowrap; }
+  .liquido-block { min-width:140px; }
+  #liquidoTotal { width:140px; font-size:11px; padding:6px; }
 
-  .totals-card { border-top: 2px solid #222; padding-top:6px; margin-top:6px; }
-  .totals-card .card-body { padding:6px; display:flex; gap:8px; align-items:center; }
-  .totals-card .card-body .col-9 { width:70%; }
-  .totals-card .card-body .col-3 { width:30%; text-align:right; }
+  .totals-card { border-top: 1px solid #222; padding-top:6px; margin-top:6px; }
+  .totals-card .card-body { padding:6px; display:block; }
 
-  .form-check { display:inline-flex; gap:4px; align-items:center; margin-left:6px; }
+  .payment-methods { margin-top:6px; }
+  .form-check { display:inline-flex; gap:6px; align-items:center; margin-right:8px; }
   .form-check-label { font-size:10px; font-weight:700; }
 
   .printable-option { display:none; }
-  body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:block; }
-  body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:block; }
-  body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:block; }
-  body.print-medio-TRANSFERENCIA .transferencia-fields { display:block; margin-top:4px; }
-  body.print-medio-CHEQUE .cheque-fields { display:block; margin-top:4px; }
+  body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:inline-flex; }
+  body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:inline-flex; }
+  body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:inline-flex; }
+  body.print-medio-TRANSFERENCIA .transferencia-fields { display:inline-block; margin-left:6px; }
+  body.print-medio-CHEQUE .cheque-fields { display:inline-block; margin-left:6px; }
 
-  .signatures-row { display:flex; gap:12px; margin-top:8px; }
-  .signatures-row .col-6 { padding:0 6px; }
-  .sig-line { margin-bottom:6px; }
+  /* Signatures on same horizontal line */
+  .print-signatures { display:flex; gap:12px; justify-content:space-between; align-items:center; padding-top:6px; }
+  .print-signatures .sig-col { flex:1 1 48%; text-align:center; padding:0 6px; }
+  .sig-line { margin-bottom:8px; border-bottom:1px dashed #111; height:1px; }
 
   h3, h5, h6, label, input, .small-print { font-size:10.5px; line-height:1.05; }
   .small.text-muted { font-size:10px; color:#222; }
