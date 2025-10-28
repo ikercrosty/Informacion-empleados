@@ -740,3 +740,767 @@ input[name="medioPago"][value="CHEQUE"]:checked ~ .cheque-fields {
 .form-check-label { font-weight:700; color:#233642; }
 </style>
 {% endblock %}
+{% extends "layout.html" %}
+{% block title %}Recibo de Pago{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="card shadow-sm mb-4">
+    <div class="card-body d-flex justify-content-between align-items-center">
+      <div>
+        <h3 class="mb-0 title-large">Recibo de pago de sueldos</h3>
+        <div class="small text-muted">Empresa: {{ empresa_nombre|default('Empaques y texturas de Guatemala S.A') }}</div>
+      </div>
+
+      <div class="d-flex gap-2 align-items-end justify-content-end">
+        <div style="flex:1; min-width:140px;">
+          <label class="form-label small text-muted">Fecha</label>
+          <input id="comprobanteFecha" class="form-control form-control-sm" type="date" value="{{ recibo.fecha if recibo is defined else fecha_emision if fecha_emision is defined else '' }}">
+          <div id="print_comprobanteFecha" class="print-only small-print" aria-hidden="true"></div>
+        </div>
+
+        <div style="align-self:flex-end;">
+          <button id="imprimirBtn" class="btn-imprimir" title="Imprimir recibo">Imprimir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN: Selección de empleado (se mantiene en pantalla, se oculta en impresión) -->
+  <div class="card shadow-sm mb-4 section-card empleado-selection">
+    <div class="card-body section-grid">
+      <div class="section-left">
+        <h5 class="mb-3">Seleccionar Trabajador</h5>
+        <div class="row g-3">
+          <div class="col-12 col-md-8">
+            <label class="form-label">Empleado</label>
+            <select id="empleadoSelect" class="form-select">
+              <option value="">-- Seleccione empleado --</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-right">
+        <div class="row g-2">
+          <div class="col-12">
+            <label class="form-label">Nombre completo</label>
+            <input id="nombre" class="form-control" readonly value="{{ recibo.nombre if recibo is defined else '' }}">
+          </div>
+
+          <div class="col-12 mt-2">
+            <label class="form-label">DPI / Identificación</label>
+            <input id="dpi" class="form-control" readonly value="{{ recibo.dpi if recibo is defined else '' }}">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Imprimible Datos del Trabajador (síncronizados) -->
+  <div class="card shadow-sm mb-4 datos-trabajador-print">
+    <div class="card-body">
+      <div class="row g-2">
+        <div class="col-8">
+          <label class="form-label small">Nombre completo</label>
+          <input id="print_nombre" class="form-control" readonly value="{{ recibo.nombre if recibo is defined else '' }}">
+        </div>
+        <div class="col-4 mt-2">
+          <label class="form-label small">DPI / Identificación</label>
+          <input id="print_dpi" class="form-control" readonly value="{{ recibo.dpi if recibo is defined else '' }}">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detalle de pago -->
+  <div class="card shadow-sm mb-4 section-card payment-section">
+    <div class="card-body section-grid">
+      <div class="section-left box-left">
+        <h5 class="mb-2">Ganancias</h5>
+
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label small">Sueldo Base</label>
+            <input id="sueldoBase" class="form-control" type="number" step="0.01" readonly value="{{ recibo.sueldo if recibo is defined else (recibo.Sueldo if recibo is defined else 0) }}">
+          </div>
+
+          <div class="col-6">
+            <label class="form-label small">Horas extras (monto)</label>
+            <input id="hextrasMonto" class="form-control" type="number" step="0.01" readonly value="{{ recibo.hextras_monto if recibo is defined else (recibo.hextras if recibo is defined else 0) }}">
+          </div>
+
+          <div class="col-6 mt-2">
+            <label class="form-label small">Bonificación</label>
+            <input id="bonificacion" class="form-control" type="number" step="0.01" readonly value="{{ recibo.bono if recibo is defined else 0 }}">
+          </div>
+
+          <div class="col-6 mt-2">
+            <label class="form-label small">Comisiones</label>
+            <input id="comisiones" class="form-control" type="number" step="0.01" readonly value="{{ recibo.comisiones if recibo is defined else 0 }}">
+          </div>
+        </div>
+      </div>
+
+      <div class="section-right box-right">
+        <h5 class="mb-2">Deducciones</h5>
+
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label small">IGSS</label>
+            <input id="igss" class="form-control" type="text" readonly value="{{ '%.2f'|format(recibo.igss) if recibo is defined and recibo.igss is defined else '0.00' }}">
+          </div>
+
+          <div class="col-6">
+            <label class="form-label small">ISR</label>
+            <input id="isr" class="form-control" type="number" step="0.01" readonly value="{{ recibo.isr if recibo is defined else (recibo._isrValue if recibo is defined else 0) }}">
+          </div>
+
+          <div class="col-12 mt-2">
+            <label class="form-label small">Otras deducciones</label>
+            <input id="otrasDeducciones" class="form-control" type="number" step="0.01" readonly value="{{ recibo.otras_deducciones if recibo is defined else 0 }}">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Líquido and Total in same horizontal line -->
+    <div class="card-body px-4 py-3 liquido-total-row">
+      <div class="liquido-total-inner">
+        <div class="liquido-block">
+          <label class="form-label small">Líquido a recibir</label>
+          <input id="liquidoTotal" class="form-control fw-bold text-end" readonly value="Q 0.00" style="font-size:1.05rem; width:210px;">
+        </div>
+        <div class="letras-block">
+          <label class="form-label small">TOTAL EN LETRAS</label>
+          <input id="totalEnLetras" class="form-control" type="text" readonly value="{{ recibo.total_letras if recibo is defined else '' }}">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Medios de pago (debajo de líquido y total) -->
+  <div class="card shadow-sm mb-4 totals-card">
+    <div class="card-body">
+      <div class="payment-methods">
+        <h6 class="mb-2">MEDIOS DE PAGO</h6>
+
+        <div class="payment-row">
+          <div class="form-check printable-option" data-option="EFECTIVO">
+            <input class="form-check-input medio-radio" type="radio" name="medioPago" id="pagoEfectivo" value="EFECTIVO" checked>
+            <label class="form-check-label" for="pagoEfectivo">EFECTIVO</label>
+          </div>
+
+          <div class="form-check printable-option" data-option="TRANSFERENCIA">
+            <input class="form-check-input medio-radio" type="radio" name="medioPago" id="pagoTransferencia" value="TRANSFERENCIA">
+            <label class="form-check-label" for="pagoTransferencia">TRANSFERENCIA BANCARIA</label>
+
+            <div class="transferencia-fields mt-1 ms-3">
+              <div class="field-row">
+                <label class="field-label" for="transCuenta">No. de cuenta</label>
+                <input id="transCuenta" class="form-control trans-input trans-cuenta" type="text" aria-label="Número de cuenta (transferencia)">
+              </div>
+              <div class="field-row">
+                <label class="field-label" for="transBanco">Banco</label>
+                <input id="transBanco" class="form-control trans-input trans-banco" type="text" aria-label="Banco (transferencia)">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-check printable-option" data-option="CHEQUE">
+            <input class="form-check-input medio-radio" type="radio" name="medioPago" id="pagoCheque" value="CHEQUE">
+            <label class="form-check-label" for="pagoCheque">CHEQUE</label>
+
+            <div class="cheque-fields mt-1 ms-3">
+              <div class="field-row-inline">
+                <label class="field-label-inline" for="chequeNumero">No. de cheque</label>
+                <input id="chequeNumero" class="form-control trans-input trans-cheque-num" type="text" aria-label="Número de cheque">
+              </div>
+              <div class="field-row-inline">
+                <label class="field-label-inline" for="chequeBanco">Banco</label>
+                <input id="chequeBanco" class="form-control trans-input trans-cheque-ban" type="text" aria-label="Banco (cheque)">
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Firmas: same row, horizontal -->
+  <div class="card shadow-sm mb-4 signatures-card">
+    <div class="card-body signatures-row print-signatures">
+      <div class="sig-col">
+        <div class="sig-line"></div>
+        <div class="small text-muted">Firma del trabajador</div>
+      </div>
+      <div class="sig-col">
+        <div class="sig-line"></div>
+        <div class="small text-muted">Firma de la empresa</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts: carga empleados y lógica para sincronizar con la planilla local, cálculo y control de impresión -->
+<script>
+(function(){
+  const PLANILLA_STORAGE_KEY = 'empaquetex_planilla_noviembre_v1';
+
+  function fmt(n){ return 'Q ' + Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+  function pickEmployeeKey(e){
+    return String(e.dpi || e.DPI || e.numero || e.numero_identificacion || e.id || e.full_name || '').trim();
+  }
+
+  function loadEmpleados(){
+    fetch('/api/empleados').then(r => r.json()).then(list => {
+      const sel = document.getElementById('empleadoSelect');
+      if(!Array.isArray(list) || !sel) return;
+      sel.querySelectorAll('option:not([value=""])').forEach(o => o.remove());
+      list.forEach(e => {
+        const opt = document.createElement('option');
+        opt.value = pickEmployeeKey(e);
+        opt.textContent = e.full_name || ((e.Nombre || '') + (e.Apellidos ? (' ' + e.Apellidos) : '')) || pickEmployeeKey(e) || 'Empleado';
+        sel.appendChild(opt);
+      });
+    }).catch(()=>{});
+  }
+
+  function loadPlanillaFromLocal(){
+    try {
+      const raw = localStorage.getItem(PLANILLA_STORAGE_KEY);
+      if(!raw) return null;
+      const obj = JSON.parse(raw);
+      return obj && Array.isArray(obj.rows) ? obj : null;
+    } catch(e){
+      return null;
+    }
+  }
+
+  function findPlanillaRowByDpi(dpi){
+    if(dpi === undefined || dpi === null) return null;
+    const plan = loadPlanillaFromLocal();
+    if(!plan) return null;
+    const rows = plan.rows || [];
+    const needle = String(dpi).trim();
+    for(const r of rows){
+      const candidates = [
+        r.dpi, r.DPI, r.Dpi,
+        r.numero, r.numero_identificacion, r.numeroDPI, r.numero_dpi,
+        r.id, r.ID, r.identificacion,
+        r.Nombre, r.nombre,
+        r.full_name, r.fullName
+      ];
+      for(const c of candidates){
+        if(c === undefined || c === null) continue;
+        if(String(c).trim() === needle) return r;
+      }
+    }
+    return null;
+  }
+
+  function toNumberSafe(v){
+    if(v === null || v === undefined) return 0;
+    if(typeof v === 'number') return v;
+    const s = String(v).replace(/\s+/g,'').replace(/^Q/i,'').replace(/,/g,'').trim();
+    const n = Number(s);
+    if(isFinite(n)) return n;
+    const f = parseFloat(s);
+    return isFinite(f) ? f : 0;
+  }
+
+  function syncPrintableComprobante(){
+    const fecha = document.getElementById('comprobanteFecha')?.value || '';
+    const printFecha = document.getElementById('print_comprobanteFecha');
+    if(printFecha) {
+      let text = fecha;
+      if(fecha){
+        try{
+          const d = new Date(fecha);
+          if(!isNaN(d)) {
+            const dd = String(d.getDate()).padStart(2,'0');
+            const mm = String(d.getMonth()+1).padStart(2,'0');
+            const yyyy = d.getFullYear();
+            text = 'Fecha: ' + dd + '/' + mm + '/' + yyyy;
+          } else {
+            text = 'Fecha: ' + fecha;
+          }
+        }catch(e){
+          text = 'Fecha: ' + fecha;
+        }
+      }
+      printFecha.textContent = fecha ? text : '';
+    }
+  }
+
+  function stripQForPrint(){
+    const amountIds = ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones','liquidoTotal'];
+    amountIds.forEach(id=>{
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.dataset._orig = el.value;
+      el.value = String(el.value).replace(/^Q\s*/i,'').trim();
+    });
+  }
+
+  function restoreAmountsAfterPrint(){
+    const amountIds = ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones','liquidoTotal'];
+    amountIds.forEach(id=>{
+      const el = document.getElementById(id);
+      if(!el) return;
+      if(el.dataset._orig !== undefined){
+        el.value = el.dataset._orig;
+        delete el.dataset._orig;
+      }
+    });
+  }
+
+  document.getElementById('empleadoSelect')?.addEventListener('change', function(){
+    const rawVal = this.value || '';
+    if(!rawVal){
+      ['nombre','dpi','sueldoBase','comisiones','bonificacion','hextrasMonto','igss','isr','otrasDeducciones'].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) el.value = (el.readOnly ? '' : 0);
+      });
+      document.getElementById('print_nombre').value = '';
+      document.getElementById('print_dpi').value = '';
+      recalcLiquido();
+      return;
+    }
+
+    const planRow = findPlanillaRowByDpi(rawVal);
+
+    if(planRow){
+      const nombre = planRow.nombre || planRow.Nombre || planRow.full_name || '';
+      const dpiVal = planRow.dpi || planRow.DPI || planRow.numero || planRow.id || rawVal;
+
+      document.getElementById('nombre').value = nombre;
+      document.getElementById('dpi').value = dpiVal;
+
+      document.getElementById('print_nombre').value = nombre;
+      document.getElementById('print_dpi').value = dpiVal;
+
+      document.getElementById('sueldoBase').value = toNumberSafe(planRow.sueldo ?? planRow.Sueldo ?? 0);
+      document.getElementById('bonificacion').value = toNumberSafe(planRow.bono ?? planRow.bon ?? 0);
+      document.getElementById('comisiones').value = toNumberSafe(planRow.comisiones ?? planRow.Comisiones ?? 0);
+      document.getElementById('hextrasMonto').value = toNumberSafe(planRow.hextras ?? planRow.hextras_monto ?? 0);
+
+      const igssVal = toNumberSafe(planRow.igss ?? planRow.IGSS ?? ((planRow.sueldo||planRow.Sueldo||0) * 0.0483));
+      const igssTrunc = Math.trunc(igssVal * 100) / 100;
+      document.getElementById('igss').value = igssTrunc.toFixed(2);
+
+      document.getElementById('isr').value = toNumberSafe(planRow.isr ?? planRow._isrValue ?? 0);
+      document.getElementById('otrasDeducciones').value = toNumberSafe(planRow.otras ?? planRow.otras_deducciones ?? 0);
+
+      recalcLiquido();
+      return;
+    }
+
+    fetch('/api/empleado/' + encodeURIComponent(rawVal)).then(r => r.json()).then(data => {
+      const nombre = data.Nombre || data.nombre || data.full_name || '';
+      const dpiVal = data['Numero de DPI'] || data.dpi || data.numero || rawVal;
+
+      document.getElementById('nombre').value = nombre;
+      document.getElementById('dpi').value = dpiVal;
+
+      document.getElementById('print_nombre').value = nombre;
+      document.getElementById('print_dpi').value = dpiVal;
+
+      if(data.Sueldo !== undefined) document.getElementById('sueldoBase').value = toNumberSafe(data.Sueldo);
+      if(data.bono !== undefined) document.getElementById('bonificacion').value = toNumberSafe(data.bono);
+      if(data.comisiones !== undefined) document.getElementById('comisiones').value = toNumberSafe(data.comisiones);
+      if(data.hextras_monto !== undefined) document.getElementById('hextrasMonto').value = toNumberSafe(data.hextras_monto);
+
+      if(data.igss !== undefined){
+        const ig = toNumberSafe(data.igss);
+        const igTr = Math.trunc(ig * 100) / 100;
+        document.getElementById('igss').value = igTr.toFixed(2);
+      }
+
+      if(data._isrValue !== undefined) document.getElementById('isr').value = toNumberSafe(data._isrValue);
+      if(data.otras_deducciones !== undefined) document.getElementById('otrasDeducciones').value = toNumberSafe(data.otras_deducciones);
+
+      recalcLiquido();
+    }).catch(()=>{
+      ['sueldoBase','bonificacion','comisiones','hextrasMonto','igss','isr','otrasDeducciones'].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) el.value = 0;
+      });
+      recalcLiquido();
+    });
+  });
+
+  function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
+
+  function recalcLiquido(){
+    const toNum = id => {
+      const el = document.getElementById(id);
+      if(!el) return 0;
+      const v = String(el.value || '').replace(/^Q\s*/i,'').replace(/,/g,'').trim();
+      const n = Number(v);
+      return isFinite(n) ? n : 0;
+    };
+    const ganancias = toNum('sueldoBase') + toNum('hextrasMonto') + toNum('bonificacion') + toNum('comisiones');
+    const deducciones = toNum('igss') + toNum('isr') + toNum('otrasDeducciones');
+    const liquido = round2(ganancias - deducciones);
+    document.getElementById('liquidoTotal').value = fmt(liquido);
+    document.getElementById('totalEnLetras').value = numeroALetrasEnEspañol(liquido);
+  }
+
+  function numeroALetrasEnEspañol(num){
+    if (isNaN(num)) return '';
+    const negativo = num < 0;
+    const absNum = Math.abs(num);
+    const entero = Math.trunc(absNum);
+    const cent = Math.round((absNum - entero) * 100);
+
+    const enteroTexto = entero === 0 ? 'cero' : enteroALetras(entero);
+    let resultado = enteroTexto + (entero === 1 ? ' Quetzal' : ' Quetzales');
+
+    if (cent > 0){
+      const centPalabras = enteroALetras(cent);
+      resultado += ' con ' + centPalabras + ' centavo' + (cent === 1 ? '' : 's');
+    }
+
+    resultado = resultado.charAt(0).toUpperCase() + resultado.slice(1);
+    return (negativo ? 'menos ' : '') + resultado;
+  }
+
+  function enteroALetras(n){
+    if (n === 0) return 'cero';
+    const unidades = ['','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve'];
+    const especiales = ['diez','once','doce','trece','catorce','quince','dieciseis','diecisiete','dieciocho','diecinueve'];
+    const decenas = ['','','veinte','treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa'];
+    const centenas = ['','ciento','doscientos','trescientos','cuatrocientos','quinientos','seiscientos','setecientos','ochocientos','novecientos'];
+
+    function tresCifrasToText(n){
+      let s = '';
+      const c = Math.floor(n / 100);
+      const r = n % 100;
+      if (n === 100) return 'cien';
+      if (c > 0) s += centenas[c] + (r ? ' ' : '');
+      if (r >= 10 && r <= 19){
+        s += especiales[r - 10];
+      } else if (r >= 20){
+        const d = Math.floor(r / 10);
+        const u = r % 10;
+        if (d === 2 && u > 0){
+          s += 'veinti' + unidades[u];
+        } else {
+          s += decenas[d];
+          if (u > 0) s += ' y ' + unidades[u];
+        }
+      } else if (r > 0){
+        s += unidades[r];
+      }
+      return s;
+    }
+
+    let parts = [];
+    const millones = Math.floor(n / 1000000);
+    const restoMillones = n % 1000000;
+    const miles = Math.floor(restoMillones / 1000);
+    const centenasResto = restoMillones % 1000;
+
+    if (millones > 0){
+      if (millones === 1) parts.push('un millón');
+      else parts.push(tresCifrasToText(millones) + ' millones');
+    }
+    if (miles > 0){
+      if (miles === 1) parts.push('mil');
+      else parts.push(tresCifrasToText(miles) + ' mil');
+    }
+    if (centenasResto > 0){
+      parts.push(tresCifrasToText(centenasResto));
+    }
+
+    return parts.join(' ').replace(/\s+/g,' ').trim();
+  }
+
+  function updateMediosOnScreen(){
+    const val = document.querySelector('input[name="medioPago"]:checked')?.value;
+    document.querySelectorAll('.transferencia-fields').forEach(el=>el.style.display = (val === 'TRANSFERENCIA') ? 'flex' : 'none');
+    document.querySelectorAll('.cheque-fields').forEach(el=>el.style.display = (val === 'CHEQUE') ? 'flex' : 'none');
+  }
+  document.querySelectorAll('input[name="medioPago"]').forEach(r=>r.addEventListener('change', updateMediosOnScreen));
+  updateMediosOnScreen();
+
+  function beforePrintSetup(){
+    const val = document.querySelector('input[name="medioPago"]:checked')?.value || '';
+    document.body.classList.remove('print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
+    if(val) document.body.classList.add('print-medio-' + val);
+    syncPrintableComprobante();
+    stripQForPrint();
+  }
+  function afterPrintCleanup(){
+    document.body.classList.remove('print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
+    restoreAmountsAfterPrint();
+  }
+
+  if (window.matchMedia) {
+    const mql = window.matchMedia('print');
+    if (mql.addEventListener) mql.addEventListener('change', (m) => { if(m.matches) beforePrintSetup(); else afterPrintCleanup(); });
+    else mql.addListener((m) => { if(m.matches) beforePrintSetup(); else afterPrintCleanup(); });
+  }
+  window.addEventListener('beforeprint', beforePrintSetup);
+  window.addEventListener('afterprint', afterPrintCleanup);
+
+  const imprimirBtn = document.getElementById('imprimirBtn');
+  if(imprimirBtn) imprimirBtn.addEventListener('click', function(){
+    beforePrintSetup();
+    setTimeout(()=> window.print(), 100);
+  });
+
+  ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('input', recalcLiquido);
+  });
+
+  document.addEventListener('DOMContentLoaded', function(){
+    loadEmpleados();
+    recalcLiquido();
+    syncPrintableComprobante();
+  });
+})();
+</script>
+
+<style>
+:root{
+  --bg-1: #f7f6f3;
+  --muted: #6b7280;
+  --accent-naranja: #ff7a18;
+  --accent-azul: #0b7285;
+  --accent-azul-claro: #0ea5a4;
+  --card-bg: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,251,255,0.98));
+  --shadow-1: 0 10px 30px rgba(11,50,80,0.06);
+  font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Page */
+body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
+
+/* Header */
+.title-large { font-size: 1.6rem; font-weight: 800; color: var(--accent-azul); letter-spacing: -0.2px; }
+
+/* Cards and layout */
+.container { max-width:1100px; margin:20px auto; padding:0 18px 40px; }
+.card { border-radius: 12px; background: var(--card-bg); border:1px solid rgba(11,19,30,0.04); box-shadow: var(--shadow-1); }
+.section-card .card-body.section-grid { display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap; padding:16px; }
+.section-card .section-left, .section-card .section-right { flex:1 1 320px; min-width:260px; }
+
+/* Inputs */
+.form-label { font-weight:700; color:var(--muted); font-size:.86rem; }
+.form-control { border-radius:8px; border:1px solid rgba(11,19,30,0.06); background:#fff; padding:.55rem .7rem; }
+.form-control[readonly] { background: linear-gradient(180deg,#fbfdff,#f8fbff); color:#0b2a36; cursor:not-allowed; }
+
+/* SMALLER TEXTBOXES IN GANANCIAS / DEDUCCIONES */
+/* Only change sizes for the inputs that appear inside the Gains and Deductions boxes */
+.payment-section .box-left .form-control,
+.payment-section .box-right .form-control {
+  padding: .35rem .5rem;
+  font-size: 0.85rem;
+  height: 34px;
+  line-height: 1.1;
+}
+
+/* Print button */
+.btn-imprimir {
+  background: linear-gradient(90deg, #ff9042, #ff7a18);
+  color: #fff;
+  border: none;
+  padding: .52rem .95rem;
+  border-radius: 10px;
+  font-weight: 800;
+  letter-spacing: .3px;
+  box-shadow: 0 10px 26px rgba(11,114,133,0.12);
+  cursor: pointer;
+}
+.btn-imprimir:hover { transform: translateY(-2px); box-shadow: 0 18px 34px rgba(11,114,133,0.16); }
+
+/* Compact look */
+.row.g-2 > [class*="col-"], .row.g-3 > [class*="col-"] { padding-bottom:6px; }
+.mb-2 { margin-bottom:.5rem !important; }
+.card-body { padding: 14px; }
+
+/* Signatures */
+.sig-line { border-bottom:1px dashed #bfc7cb; height:1px; margin-bottom:8px; }
+
+/* Hidden print helper */
+.print-only { display:none; font-weight:700; }
+
+/* Transfer / cheque fields off by default until selection */
+.transferencia-fields, .cheque-fields { display:none; }
+
+/* New transfer fields styling */
+.transferencia-fields { display:none; margin-top:6px; gap:8px; align-items:center; flex-direction:row; }
+.transferencia-fields .field-row {
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-bottom:0;
+}
+.field-row-inline { display:flex; flex-direction:column; gap:6px; margin-right:8px; }
+.field-row-inline input { min-width:160px; }
+.field-label {
+  font-weight:700;
+  font-size:0.85rem;
+  color:var(--muted);
+  margin-left:2px;
+}
+.field-label-inline { font-weight:700; font-size:0.85rem; color:var(--muted); margin-bottom:4px; }
+
+/* Inputs more like screen */
+.trans-input {
+  width:100%;
+  min-width:220px;
+  max-width:420px;
+  border-radius:10px;
+  border:1px solid rgba(11,19,30,0.09);
+  padding:10px 12px;
+  background:#fff;
+  box-shadow: 0 6px 18px rgba(11,50,80,0.04);
+  font-size:0.95rem;
+}
+.trans-cuenta { letter-spacing:0.2px; }
+.trans-banco  {letter-spacing:0.2px; }
+.trans-cheque-num { min-width:140px; max-width:220px; }
+.trans-cheque-ban { min-width:140px; max-width:220px; }
+
+/* MAKE PAYMENT-METHOD TEXTBOXES WIDER WHEN THEY APPEAR */
+/* This increases width only for the transfer/cheque inputs when visible on screen */
+.transferencia-fields .trans-input,
+.cheque-fields .trans-input,
+.transferencia-fields input.form-control,
+.cheque-fields input.form-control {
+  min-width: 320px;
+  max-width: 520px;
+  font-size: 0.98rem;
+  padding: 10px 12px;
+}
+
+/* Liquido and Total inline on screen */
+.liquido-total-row { padding-top:8px; }
+.liquido-total-inner { display:flex; gap:12px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
+.liquido-block { display:flex; flex-direction:column; gap:6px; }
+.letras-block { flex:1 1 60%; min-width:200px; display:flex; flex-direction:column; gap:6px; }
+
+/* Payment row: allow inline layout */
+.payment-row { display:flex; gap:18px; align-items:center; flex-wrap:wrap; }
+
+/* Signatures horizontal */
+.signatures-row { display:flex; gap:18px; align-items:center; justify-content:space-between; }
+.signatures-row .sig-col { flex:1 1 48%; text-align:center; }
+
+/* Print styles */
+@media print {
+  @page { size: A4; margin: 2mm; } /* A5 as requested */
+
+  body { background: #fff !important; color: #000; }
+
+  .container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding:0;
+    box-sizing:border-box;
+  }
+
+  .card { box-shadow:none !important; border:none !important; background:transparent !important; }
+  .card .card-body { padding:6px; }
+
+  /* Hide interactive controls not needed on print */
+  .empleado-selection, .form-check-input, select, .btn-imprimir, input[type="date"] { display:none !important; }
+
+  /* Show mirrored printable date only */
+  .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color:#111; font-size:10px; margin-bottom:4px; }
+
+  /* Inputs: compact padding and smaller font to reduce vertical length */
+  input.form-control, input.form-control[readonly] {
+    background: #fff !important;
+    border: 1px solid #111 !important;
+    color: #000 !important;
+    padding: 2px 4px;
+    font-size: 10px;
+    box-shadow: none;
+  }
+
+  .section-card .card-body.section-grid { display:flex; gap:8px; flex-wrap:nowrap; align-items:flex-start; padding:4px 0; }
+  .section-card .section-left, .section-card .section-right { flex:0 0 50%; min-width:0; padding:6px; }
+
+  .section-card .section-left, .section-card .section-right {
+    border: 1px solid #222;
+    border-radius:6px;
+    padding:8px;
+    background:#fff;
+  }
+
+  /* Liquido and Total same line in print with reduced gap */
+  .liquido-total-row { padding:6px 0 8px 0; page-break-inside: avoid; margin-bottom:4px; }
+  .liquido-total-inner { display:flex; gap:6px; align-items:center; justify-content:space-between; flex-wrap:nowrap; }
+  .liquido-block { min-width:120px; }
+  #liquidoTotal { width:120px; font-size:11px; padding:6px; }
+
+  /* Make TOTAL EN LETRAS and MEDIOS DE PAGO closer: eliminate large top margins */
+  .totals-card { border-top: 1px solid #222; padding-top:6px; margin-top:4px; }
+  .totals-card .card-body { padding:6px; display:block; }
+
+  .payment-methods { margin-top:6px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
+  /* Show payment options inline horizontally for selected transfer/cheque */
+  .form-check { display:inline-flex; gap:6px; align-items:center; margin-right:10px; vertical-align:middle; }
+  .form-check-label { font-size:10px; font-weight:700; margin-left:4px; }
+
+  .printable-option { display:none; }
+  body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:inline-flex; }
+  body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:inline-flex; }
+  body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:inline-flex; }
+
+  /* Inline display of transfer/cheque fields in print */
+  body.print-medio-TRANSFERENCIA .transferencia-fields,
+  body.print-medio-CHEQUE .cheque-fields {
+    display:inline-flex !important;
+    gap:8px;
+    align-items:center;
+    margin-left:6px;
+  }
+
+  /* Compact transfer inputs for print */
+  body.print-medio-TRANSFERENCIA .trans-input,
+  body.print-medio-CHEQUE .trans-input {
+    box-shadow:none;
+    border:1px solid #111 !important;
+    padding:4px 6px;
+    min-width:100px;
+    max-width:220px;
+    font-size:10px;
+  }
+  body.print-medio-TRANSFERENCIA .field-label,
+  body.print-medio-CHEQUE .field-label-inline { font-size:10px; color:#111; margin-left:0; display:block; }
+
+  /* Signatures on same horizontal line */
+  .print-signatures { display:flex; gap:12px; justify-content:space-between; align-items:center; padding-top:6px; }
+  .print-signatures .sig-col { flex:1 1 48%; text-align:center; padding:0 6px; }
+  .sig-line { margin-bottom:8px; border-bottom:1px dashed #111; height:1px; }
+
+  h3, h5, h6, label, input, .small-print { font-size:10.5px; line-height:1.05; }
+  .small.text-muted { font-size:10px; color:#222; }
+
+  .card, .section-card, .totals-card, .signatures-row { page-break-inside: avoid; break-inside: avoid; }
+}
+
+/* Ensure on-screen payment extras controlled by JS appear correctly: show inline row for transfer/cheque */
+input[name="medioPago"][value="TRANSFERENCIA"]:checked ~ .transferencia-fields,
+input[name="medioPago"][value="CHEQUE"]:checked ~ .cheque-fields {
+  display:flex;
+  flex-direction:row;
+  gap:10px;
+  align-items:center;
+}
+
+/* Micro polish */
+.small.text-muted { font-size:.88rem; color:var(--muted); }
+.form-check-label { font-weight:700; color:#233642; }
+</style>
+{% endblock %}
