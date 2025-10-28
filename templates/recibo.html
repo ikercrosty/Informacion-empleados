@@ -476,6 +476,10 @@
   }
   window.addEventListener('beforeprint', beforePrintSetup);
   window.addEventListener('afterprint', afterPrintCleanup);
+  function beforePrintSetup(){
+  syncPrintableComprobante();
+  stripQForPrint();
+}
 
   const imprimirBtn = document.getElementById('imprimirBtn');
   if(imprimirBtn) imprimirBtn.addEventListener('click', function(){
@@ -573,11 +577,10 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
   .card .card-body { padding:4px !important; }
 
   /* Hide interactive elements */
-  .empleado-selection, .form-check-input, select, .btn-imprimir, input[type="date"], .header-controls { display:none !important; }
+  .empleado-selection, .form-check-input, select, .btn-imprimir, input[type="date"] { display:none !important; }
 
-  /* Compact typography */
-  h3, h5, h6, label { margin:0; padding:0; font-weight:700; font-size:10px; line-height:1; }
-  .title-large { font-size:11px; font-weight:800; }
+  /* Show mirrored printable date only (ensure print-only visible even if the header-controls are hidden on screen) */
+  .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color:#111; font-size:13px; margin-bottom:4px; }
 
   /* Inputs inside print: tamaño de letra aumentado en textboxes (CORRECCIÓN APLICADA) */
   input[type="text"],
