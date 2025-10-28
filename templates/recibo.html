@@ -2,7 +2,7 @@
 {% block title %}Recibo de Pago{% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container py-4 compact-print">
   <div class="card shadow-sm mb-4">
     <div class="card-body d-flex justify-content-between align-items-center">
       <div>
@@ -11,7 +11,7 @@
       </div>
 
       <div class="text-end meta-block" style="min-width:320px;">
-        <div class="mb-2">
+        <div class="mb-2 comprobante-block">
           <label class="form-label small text-muted">Comprobante No</label>
           <input id="comprobanteNumero" class="form-control form-control-sm" type="text" value="{{ recibo.numero if recibo is defined else '' }}">
           <div id="print_comprobanteNumero" class="print-only small-print" aria-hidden="true"></div>
@@ -55,7 +55,7 @@
             <input id="nombre" class="form-control" readonly value="{{ recibo.nombre if recibo is defined else '' }}">
           </div>
 
-          <div class="col-12 mt-2">
+          <div class="col-12 mt-2 lugar-block">
             <label class="form-label">Lugar / Ciudad</label>
             <input id="lugarPago" class="form-control" type="text" placeholder="GUATEMALA" value="GUATEMALA">
           </div>
@@ -69,7 +69,7 @@
     </div>
   </div>
 
-  <!-- Imprimible Datos del Trabajador justo arriba de Ganancias (visible on screen and print copy fields synced) -->
+  <!-- Imprimible Datos del Trabajador justo arriba de Ganancias -->
   <div class="card shadow-sm mb-4 datos-trabajador-print">
     <div class="card-body">
       <h6 class="mb-2">Datos del Trabajador</h6>
@@ -78,7 +78,7 @@
           <label class="form-label small">Nombre completo</label>
           <input id="print_nombre" class="form-control" readonly value="{{ recibo.nombre if recibo is defined else '' }}">
         </div>
-        <div class="col-4">
+        <div class="col-4 print-lugar-col">
           <label class="form-label small">Lugar / Ciudad</label>
           <input id="print_lugar" class="form-control" readonly value="{{ recibo.lugar if recibo is defined else ( 'GUATEMALA' ) }}">
         </div>
@@ -90,8 +90,8 @@
     </div>
   </div>
 
-  <!-- Detalle de pago -->
-  <div class="card shadow-sm mb-4 section-card payment-section">
+  <!-- Detalle de pago: Ganancias y Deducciones -->
+  <div class="card shadow-sm mb-4 section-card payment-section compact-boxes">
     <div class="card-body section-grid">
       <div class="section-left box-left">
         <h5 class="mb-2">Ganancias</h5>
@@ -99,22 +99,22 @@
         <div class="row g-2">
           <div class="col-6">
             <label class="form-label small">Sueldo Base</label>
-            <input id="sueldoBase" class="form-control" type="number" step="0.01" readonly value="{{ recibo.sueldo if recibo is defined else (recibo.Sueldo if recibo is defined else 0) }}">
+            <input id="sueldoBase" class="form-control amount-field" type="text" readonly value="{{ ('Q ' + ('%.2f'|format(recibo.sueldo))) if recibo is defined and recibo.sueldo is defined else 'Q 0.00' }}">
           </div>
 
           <div class="col-6">
             <label class="form-label small">Horas extras (monto)</label>
-            <input id="hextrasMonto" class="form-control" type="number" step="0.01" readonly value="{{ recibo.hextras_monto if recibo is defined else (recibo.hextras if recibo is defined else 0) }}">
+            <input id="hextrasMonto" class="form-control amount-field" type="text" readonly value="{{ ('Q ' + ('%.2f'|format(recibo.hextras_monto))) if recibo is defined and recibo.hextras_monto is defined else 'Q 0.00' }}">
           </div>
 
           <div class="col-6 mt-2">
             <label class="form-label small">Bonificación</label>
-            <input id="bonificacion" class="form-control" type="number" step="0.01" readonly value="{{ recibo.bono if recibo is defined else 0 }}">
+            <input id="bonificacion" class="form-control amount-field" type="text" readonly value="{{ ('Q ' + ('%.2f'|format(recibo.bono))) if recibo is defined and recibo.bono is defined else 'Q 0.00' }}">
           </div>
 
           <div class="col-6 mt-2">
             <label class="form-label small">Comisiones</label>
-            <input id="comisiones" class="form-control" type="number" step="0.01" readonly value="{{ recibo.comisiones if recibo is defined else 0 }}">
+            <input id="comisiones" class="form-control amount-field" type="text" readonly value="{{ ('Q ' + ('%.2f'|format(recibo.comisiones))) if recibo is defined and recibo.comisiones is defined else 'Q 0.00' }}">
           </div>
         </div>
       </div>
@@ -125,26 +125,26 @@
         <div class="row g-2">
           <div class="col-6">
             <label class="form-label small">IGSS</label>
-            <input id="igss" class="form-control" type="text" readonly value="{{ '%.2f'|format(recibo.igss) if recibo is defined and recibo.igss is defined else '0.00' }}">
+            <input id="igss" class="form-control amount-field" type="text" readonly value="{{ 'Q ' + ('%.2f'|format(recibo.igss)) if recibo is defined and recibo.igss is defined else 'Q 0.00' }}">
           </div>
 
           <div class="col-6">
             <label class="form-label small">ISR</label>
-            <input id="isr" class="form-control" type="number" step="0.01" readonly value="{{ recibo.isr if recibo is defined else (recibo._isrValue if recibo is defined else 0) }}">
+            <input id="isr" class="form-control amount-field" type="text" readonly value="{{ 'Q ' + ('%.2f'|format(recibo.isr)) if recibo is defined and recibo.isr is defined else 'Q 0.00' }}">
           </div>
 
           <div class="col-12 mt-2">
             <label class="form-label small">Otras deducciones</label>
-            <input id="otrasDeducciones" class="form-control" type="number" step="0.01" readonly value="{{ recibo.otras_deducciones if recibo is defined else 0 }}">
+            <input id="otrasDeducciones" class="form-control amount-field" type="text" readonly value="{{ 'Q ' + ('%.2f'|format(recibo.otras_deducciones)) if recibo is defined and recibo.otras_deducciones is defined else 'Q 0.00' }}">
           </div>
         </div>
       </div>
     </div>
 
     <!-- Líquido -->
-    <div class="card-body px-4 py-3 text-end liquido-row">
+    <div class="card-body px-4 py-3 text-end liquido-row compact-liquido">
       <label class="form-label small">Líquido a recibir</label>
-      <input id="liquidoTotal" class="form-control fw-bold text-end" readonly value="Q 0.00" style="font-size:1.1rem; display:inline-block; width:250px;">
+      <input id="liquidoTotal" class="form-control fw-bold text-end amount-field" readonly value="Q 0.00" style="font-size:1.02rem; display:inline-block; width:200px;">
     </div>
   </div>
 
@@ -253,7 +253,7 @@
     return isFinite(n) ? n : 0;
   }
 
-  // sync printable header fields
+  // keep printable comprobante fields updated (but comprobante will be hidden in print per request)
   function syncPrintableComprobante(){
     const num = document.getElementById('comprobanteNumero')?.value || '';
     const fecha = document.getElementById('comprobanteFecha')?.value || '';
@@ -281,18 +281,17 @@
     }
   }
 
-  document.addEventListener('input', function(e){
-    if(e.target && (e.target.id === 'comprobanteNumero' || e.target.id === 'comprobanteFecha')){
-      syncPrintableComprobante();
-    }
-  });
-
+  // When empleado selected populate fields; format amounts with Q prefix
   document.getElementById('empleadoSelect')?.addEventListener('change', function(){
     const dpiVal = this.value;
     if(!dpiVal){
-      ['nombre','dpi','sueldoBase','comisiones','bonificacion','hextrasMonto','igss','isr','otrasDeducciones'].forEach(id=>{
+      ['nombre','dpi'].forEach(id=>{
         const el = document.getElementById(id);
-        if(el) el.value = (el.readOnly ? '' : 0);
+        if(el) el.value = '';
+      });
+      ['sueldoBase','comisiones','bonificacion','hextrasMonto','igss','isr','otrasDeducciones'].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) el.value = 'Q 0.00';
       });
       document.getElementById('print_nombre').value = '';
       document.getElementById('print_dpi').value = '';
@@ -311,17 +310,18 @@
       document.getElementById('print_dpi').value = planRow.dpi || planRow.DPI || dpiVal;
       document.getElementById('print_lugar').value = planRow.lugar || planRow.ciudad || 'GUATEMALA';
 
-      document.getElementById('sueldoBase').value = toNumberSafe(planRow.sueldo || planRow.Sueldo || 0);
-      document.getElementById('bonificacion').value = toNumberSafe(planRow.bono || planRow.bon || 0);
-      document.getElementById('comisiones').value = toNumberSafe(planRow.comisiones || 0);
-      document.getElementById('hextrasMonto').value = toNumberSafe(planRow.hextras || planRow._hextras || 0);
+      document.getElementById('sueldoBase').value = fmt(toNumberSafe(planRow.sueldo || planRow.Sueldo || 0));
+      document.getElementById('bonificacion').value = fmt(toNumberSafe(planRow.bono || planRow.bon || 0));
+      document.getElementById('comisiones').value = fmt(toNumberSafe(planRow.comisiones || 0));
+      document.getElementById('hextrasMonto').value = fmt(toNumberSafe(planRow.hextras || planRow._hextras || 0));
 
       const igssVal = toNumberSafe(planRow.igss ?? planRow.IGSS ?? ( (planRow.sueldo||planRow.Sueldo||0) * 0.0483 ));
+      // Do not round IGSS — truncate to two decimals as requested
       const igssTrunc = Math.trunc(igssVal * 100) / 100;
-      document.getElementById('igss').value = igssTrunc.toFixed(2);
+      document.getElementById('igss').value = 'Q ' + igssTrunc.toFixed(2);
 
-      document.getElementById('isr').value = toNumberSafe(planRow.isr ?? planRow._isrValue ?? 0);
-      document.getElementById('otrasDeducciones').value = toNumberSafe(planRow.otras ?? planRow.otras_deducciones ?? 0);
+      document.getElementById('isr').value = fmt(toNumberSafe(planRow.isr ?? planRow._isrValue ?? 0));
+      document.getElementById('otrasDeducciones').value = fmt(toNumberSafe(planRow.otras ?? planRow.otras_deducciones ?? 0));
 
       recalcLiquido();
       return;
@@ -335,19 +335,19 @@
       document.getElementById('print_dpi').value = data['Numero de DPI'] || data.dpi || dpiVal;
       document.getElementById('print_lugar').value = data.lugar || data.ciudad || 'GUATEMALA';
 
-      if(data.Sueldo !== undefined) document.getElementById('sueldoBase').value = toNumberSafe(data.Sueldo);
-      if(data.bono !== undefined) document.getElementById('bonificacion').value = toNumberSafe(data.bono);
-      if(data.comisiones !== undefined) document.getElementById('comisiones').value = toNumberSafe(data.comisiones);
-      if(data.hextras_monto !== undefined) document.getElementById('hextrasMonto').value = toNumberSafe(data.hextras_monto);
+      if(data.Sueldo !== undefined) document.getElementById('sueldoBase').value = fmt(toNumberSafe(data.Sueldo));
+      if(data.bono !== undefined) document.getElementById('bonificacion').value = fmt(toNumberSafe(data.bono));
+      if(data.comisiones !== undefined) document.getElementById('comisiones').value = fmt(toNumberSafe(data.comisiones));
+      if(data.hextras_monto !== undefined) document.getElementById('hextrasMonto').value = fmt(toNumberSafe(data.hextras_monto));
 
       if(data.igss !== undefined){
         const ig = toNumberSafe(data.igss);
         const igTr = Math.trunc(ig * 100) / 100;
-        document.getElementById('igss').value = igTr.toFixed(2);
+        document.getElementById('igss').value = 'Q ' + igTr.toFixed(2);
       }
 
-      if(data._isrValue !== undefined) document.getElementById('isr').value = toNumberSafe(data._isrValue);
-      if(data.otras_deducciones !== undefined) document.getElementById('otrasDeducciones').value = toNumberSafe(data.otras_deducciones);
+      if(data._isrValue !== undefined) document.getElementById('isr').value = fmt(toNumberSafe(data._isrValue));
+      if(data.otras_deducciones !== undefined) document.getElementById('otrasDeducciones').value = fmt(toNumberSafe(data.otras_deducciones));
 
       recalcLiquido();
     }).catch(()=>{});
@@ -356,7 +356,7 @@
   function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
 
   function recalcLiquido(){
-    const toNum = id => Number(document.getElementById(id).value || 0);
+    const toNum = id => toNumberSafe(document.getElementById(id).value);
     const ganancias = toNum('sueldoBase') + toNum('hextrasMonto') + toNum('bonificacion') + toNum('comisiones');
     const deducciones = toNum('igss') + toNum('isr') + toNum('otrasDeducciones');
     const liquido = round2(ganancias - deducciones);
@@ -364,6 +364,7 @@
     document.getElementById('totalEnLetras').value = numeroALetrasEnEspañol(liquido);
   }
 
+  // Conversión a letras en español
   function numeroALetrasEnEspañol(num){
     if (isNaN(num)) return '';
     const negativo = num < 0;
@@ -434,6 +435,7 @@
     return parts.join(' ').replace(/\s+/g,' ').trim();
   }
 
+  // on-screen toggle of extra payment fields
   function updateMediosOnScreen(){
     const val = document.querySelector('input[name="medioPago"]:checked')?.value;
     document.querySelectorAll('.transferencia-fields').forEach(el=>el.style.display = (val === 'TRANSFERENCIA') ? 'block' : 'none');
@@ -442,6 +444,7 @@
   document.querySelectorAll('input[name="medioPago"]').forEach(r=>r.addEventListener('change', updateMediosOnScreen));
   updateMediosOnScreen();
 
+  // Printing behavior: before print, add a class to body to indicate which medio is selected and sync comprobante values
   function beforePrintSetup(){
     const val = document.querySelector('input[name="medioPago"]:checked')?.value || '';
     document.body.classList.remove('print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
@@ -465,11 +468,15 @@
     setTimeout(()=> window.print(), 80);
   });
 
-  ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones'].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.addEventListener('input', recalcLiquido);
+  // Ensure fields that can change still recalc
+  document.querySelectorAll('.amount-field').forEach(el => {
+    el.addEventListener('input', () => {
+      // normalize possible "Q " prefixes to numbers then recalc
+      recalcLiquido();
+    });
   });
 
+  // initial sync on load
   document.addEventListener('DOMContentLoaded', function(){
     loadEmpleados();
     recalcLiquido();
@@ -480,93 +487,71 @@
 
 <style>
 :root{
-  --bg-1: #f7f6f3;
+  --bg-1: #f7f7f7;
   --muted: #6b7280;
-  --accent-naranja: #ff7a18;
   --accent-azul: #0b7285;
-  --accent-azul-claro: #0ea5a4;
-  --card-bg: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,251,255,0.98));
-  --shadow-1: 0 10px 30px rgba(11,50,80,0.06);
+  --card-bg: #ffffff;
   font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 /* Page */
 body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
 
+/* Container kept narrow for compact print */
+.container.compact-print { max-width:540px; }
+
 /* Header */
-.title-large { font-size: 1.6rem; font-weight: 800; color: var(--accent-azul); letter-spacing: -0.2px; }
+.title-large { font-size: 1.2rem; font-weight: 800; color: var(--accent-azul); }
 
-/* Cards and layout */
-.container { max-width:1100px; margin:20px auto; padding:0 18px 40px; }
-.card { border-radius: 12px; background: var(--card-bg); border:1px solid rgba(11,19,30,0.04); box-shadow: var(--shadow-1); }
-.section-card .card-body.section-grid { display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap; padding:16px; }
-.section-card .section-left, .section-card .section-right { flex:1 1 320px; min-width:260px; }
+/* Cards */
+.card { border-radius: 10px; background: var(--card-bg); border:1px solid rgba(0,0,0,0.06); box-shadow: 0 6px 18px rgba(0,0,0,0.04); margin-bottom:12px; }
+.card-body { padding:12px; }
 
-/* Inputs */
-.form-label { font-weight:700; color:var(--muted); font-size:.86rem; }
-.form-control { border-radius:8px; border:1px solid rgba(11,19,30,0.06); background:#fff; padding:.55rem .7rem; }
-.form-control[readonly] { background: linear-gradient(180deg,#fbfdff,#f8fbff); color:#0b2a36; cursor:not-allowed; }
+/* Labels and inputs */
+.form-label { font-weight:700; color:var(--muted); font-size:0.86rem; }
+.form-control { border-radius:8px; border:1px solid rgba(0,0,0,0.06); background:#fff; padding:.5rem .7rem; font-size:0.95rem; }
+.form-control[readonly] { background: #fbfcfd; color:#0b2a36; cursor:not-allowed; }
 
-/* Print button */
-.btn-imprimir {
-  background: linear-gradient(90deg, #0b7285, #ff7a18);
-  color: #fff;
-  border: none;
-  padding: .52rem .95rem;
-  border-radius: 10px;
-  font-weight: 800;
-  letter-spacing: .3px;
-  box-shadow: 0 10px 26px rgba(11,114,133,0.12);
-  cursor: pointer;
-}
-.btn-imprimir:hover { transform: translateY(-2px); box-shadow: 0 18px 34px rgba(11,114,133,0.16); }
-
-/* Compact look */
-.row.g-2 > [class*="col-"], .row.g-3 > [class*="col-"] { padding-bottom:6px; }
-.mb-2 { margin-bottom:.5rem !important; }
-.card-body { padding: 14px; }
-
-/* Signatures */
-.sig-line { border-bottom:1px dashed #bfc7cb; height:1px; margin-bottom:8px; }
-
-/* Hidden print helper */
-.print-only { display:none; font-weight:700; }
-
-/* Transfer / cheque fields off by default until selection */
-.transferencia-fields, .cheque-fields { display:none; }
-
-/* Focus states */
-input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rgba(14,165,164,0.06); border-color: var(--accent-azul-claro); }
-
-/* Visual separation for Gains and Deductions on screen (subtle) */
+/* Compact boxes separation for Ganancias / Deducciones */
 .payment-section .box-left,
 .payment-section .box-right {
-  background: linear-gradient(180deg,#ffffff,#fbfcfd);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 10px;
-  border: 1px solid rgba(11,19,30,0.04);
+  border: 1px solid rgba(0,0,0,0.08);
+  background: linear-gradient(180deg,#ffffff,#fbfcfd);
 }
 
-/* Slight divider between columns */
-.payment-section .section-left { margin-right: 6px; }
-.payment-section .section-right { margin-left: 6px; }
+/* Slight spacing between columns for on-screen */
+.payment-section .section-left { margin-right:6px; }
+.payment-section .section-right { margin-left:6px; }
 
-/* Print styles: enhanced but structure preserved */
+/* Amount fields styles (show Q prefix in value) */
+.amount-field { text-align: right; font-weight:600; }
+
+/* Liquido compact */
+.compact-liquido { padding-top:8px; padding-bottom:8px; }
+
+/* Print-only helpers */
+.print-only { display:none; }
+
+/* Print styles */
 @media print {
   @page { size: A4; margin: 12mm; }
 
   body { background: #fff !important; color: #000; }
-  .container { max-width:100%; padding:0; margin:0; }
-  .card { box-shadow:none !important; border:none !important; background:transparent !important; }
-  .card .card-body { padding:8px; }
 
-  /* Hide UI controls not needed in print */
-  .empleado-selection, .form-check-input, select, .btn-imprimir, input[type="date"], .meta-block .form-control-sm { display: none !important; }
+  /* LIMIT printed area to roughly half page: scale container and keep centered */
+  .container { width: 48%; margin: 0 0 0 0; transform-origin: top left; transform: scale(0.98); }
 
-  /* Show mirrored printable header fields */
-  .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color: #111; }
+  /* Hide controls not needed in print */
+  .empleado-selection, .form-check-input, select, .btn-imprimir { display: none !important; }
 
-  /* Inputs visible for values */
+  /* Remove Comprobante No and Lugar/ciudad from print as requested */
+  .comprobante-block, .lugar-block, .print-lugar-col { display: none !important; }
+  #comprobanteNumero, #lugarPago, #print_lugar { display:none !important; }
+  #print_comprobanteNumero { display: none !important; }
+
+  /* Make amount fields clearly visible with Q */
   input.form-control, input.form-control[readonly] {
     background: #fff !important;
     -webkit-print-color-adjust: exact;
@@ -574,31 +559,24 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
     border: 1px solid #111 !important;
     color: #000 !important;
     padding: 4px 6px;
-    box-shadow: none;
   }
 
-  /* Keep two-column layout for details in print */
-  .section-card .card-body.section-grid { display:flex; gap:12px; flex-wrap:nowrap; }
-  .section-card .section-left, .section-card .section-right { flex:0 0 50%; min-width:45%; }
-
-  /* ---------- Clear boxed outlines for print (stronger separation) ---------- */
-  .section-card .section-left {
+  /* Boxes: clear outline so gains/deductions are visually separate */
+  .section-card .section-left, .section-card .section-right {
     border: 1px solid #222;
-    padding: 10px;
-    border-radius: 6px;
-    background: #fff;
-  }
-  .section-card .section-right {
-    border: 1px solid #222;
-    padding: 10px;
+    padding: 8px;
     border-radius: 6px;
     background: #fff;
   }
 
-  /* Slight shadow effect in print via border only (keeps it printer-friendly) */
-  .totals-card { border-top: 2px solid #222; padding-top:8px; }
+  /* Reduce typographic scale to fit compact half-page look */
+  h3, h5, h6, label, input { font-size: 10px; line-height: 1.05; }
+  .small.text-muted { font-size:9px; color:#222; }
 
-  /* Payment method blocks: show only selected one in print */
+  /* Avoid page breaks inside main printed area */
+  .card, .section-card, .totals-card, .signatures-row { page-break-inside: avoid; break-inside: avoid; }
+
+  /* Keep payment method below total and only show selected */
   .printable-option { display:none; }
   body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:block; }
   body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:block; }
@@ -606,24 +584,19 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
 
   body.print-medio-TRANSFERENCIA .transferencia-fields { display:block; }
   body.print-medio-CHEQUE .cheque-fields { display:block; }
-
-  /* Typography adjustments */
-  h3, h5, h6, label, input, .small-print { font-size: 11px; line-height: 1.1; }
-  .small.text-muted { font-size:10px; color:#222; }
-
-  /* Avoid page breaks inside important sections */
-  .card, .section-card, .totals-card, .signatures-row { page-break-inside: avoid; break-inside: avoid; }
 }
 
-/* Ensure on-screen payment extras controlled by JS appear correctly */
+/* On-screen: show payment extras correctly */
+.transferencia-fields, .cheque-fields { display:none; }
 input[name="medioPago"][value="TRANSFERENCIA"]:checked ~ .transferencia-fields,
 input[name="medioPago"][value="CHEQUE"]:checked ~ .cheque-fields {
-  display:flex;
-  flex-direction:column;
+  display:flex; flex-direction:column;
 }
 
 /* Micro polish */
-.small.text-muted { font-size:.88rem; color:var(--muted); }
+.sig-line { border-bottom:1px dashed #bfc7cb; height:1px; margin-bottom:8px; }
+.small.text-muted { font-size:.82rem; color:var(--muted); }
 .form-check-label { font-weight:700; color:#233642; }
+.btn-imprimir { padding:.45rem .8rem; border-radius:8px; font-weight:700; }
 </style>
 {% endblock %}
