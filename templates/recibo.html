@@ -14,7 +14,6 @@
         <div class="mb-2">
           <label class="form-label small text-muted">Comprobante No</label>
           <input id="comprobanteNumero" class="form-control form-control-sm" type="text" value="{{ recibo.numero if recibo is defined else '' }}">
-          <!-- Printable copy (hidden on screen, shown only in print) -->
           <div id="print_comprobanteNumero" class="print-only small-print" aria-hidden="true"></div>
         </div>
 
@@ -22,7 +21,6 @@
           <div style="flex:1; min-width:140px;">
             <label class="form-label small text-muted">Fecha</label>
             <input id="comprobanteFecha" class="form-control form-control-sm" type="date" value="{{ recibo.fecha if recibo is defined else fecha_emision if fecha_emision is defined else '' }}">
-            <!-- Printable copy (hidden on screen, shown only in print) -->
             <div id="print_comprobanteFecha" class="print-only small-print" aria-hidden="true"></div>
           </div>
 
@@ -71,7 +69,7 @@
     </div>
   </div>
 
-  <!-- NEW: Imprimible Datos del Trabajador justo arriba de Ganancias (printed and visible on screen) -->
+  <!-- Imprimible Datos del Trabajador justo arriba de Ganancias (visible on screen and print copy fields synced) -->
   <div class="card shadow-sm mb-4 datos-trabajador-print">
     <div class="card-body">
       <h6 class="mb-2">Datos del Trabajador</h6>
@@ -93,9 +91,9 @@
   </div>
 
   <!-- Detalle de pago -->
-  <div class="card shadow-sm mb-4 section-card">
+  <div class="card shadow-sm mb-4 section-card payment-section">
     <div class="card-body section-grid">
-      <div class="section-left">
+      <div class="section-left box-left">
         <h5 class="mb-2">Ganancias</h5>
 
         <div class="row g-2">
@@ -121,7 +119,7 @@
         </div>
       </div>
 
-      <div class="section-right">
+      <div class="section-right box-right">
         <h5 class="mb-2">Deducciones</h5>
 
         <div class="row g-2">
@@ -150,7 +148,7 @@
     </div>
   </div>
 
-  <!-- Total en letras y medios de pago: medios DEBEN aparecer debajo del total en letras -->
+  <!-- Total en letras y medios de pago -->
   <div class="card shadow-sm mb-4 totals-card">
     <div class="card-body">
       <div class="row g-3">
@@ -255,7 +253,7 @@
     return isFinite(n) ? n : 0;
   }
 
-  // keep printable comprobante fields updated
+  // sync printable header fields
   function syncPrintableComprobante(){
     const num = document.getElementById('comprobanteNumero')?.value || '';
     const fecha = document.getElementById('comprobanteFecha')?.value || '';
@@ -263,7 +261,6 @@
     const printFecha = document.getElementById('print_comprobanteFecha');
     if(printNum) printNum.textContent = num ? ('Comprobante No: ' + num) : '';
     if(printFecha) {
-      // format date to human friendly (YYYY-MM-DD -> DD/MM/YYYY) for print
       let text = fecha;
       if(fecha){
         try{
@@ -284,7 +281,6 @@
     }
   }
 
-  // wire inputs to keep print copies in sync when user types
   document.addEventListener('input', function(e){
     if(e.target && (e.target.id === 'comprobanteNumero' || e.target.id === 'comprobanteFecha')){
       syncPrintableComprobante();
@@ -298,7 +294,6 @@
         const el = document.getElementById(id);
         if(el) el.value = (el.readOnly ? '' : 0);
       });
-      // clear print copies
       document.getElementById('print_nombre').value = '';
       document.getElementById('print_dpi').value = '';
       document.getElementById('print_lugar').value = 'GUATEMALA';
@@ -312,7 +307,6 @@
       document.getElementById('nombre').value = planRow.nombre || planRow.Nombre || '';
       document.getElementById('dpi').value = planRow.dpi || planRow.DPI || dpiVal;
 
-      // print-copy fields
       document.getElementById('print_nombre').value = planRow.nombre || planRow.Nombre || '';
       document.getElementById('print_dpi').value = planRow.dpi || planRow.DPI || dpiVal;
       document.getElementById('print_lugar').value = planRow.lugar || planRow.ciudad || 'GUATEMALA';
@@ -337,7 +331,6 @@
       document.getElementById('nombre').value = data.Nombre || data.nombre || '';
       document.getElementById('dpi').value = data['Numero de DPI'] || data.dpi || dpiVal;
 
-      // print copies
       document.getElementById('print_nombre').value = data.Nombre || data.nombre || '';
       document.getElementById('print_dpi').value = data['Numero de DPI'] || data.dpi || dpiVal;
       document.getElementById('print_lugar').value = data.lugar || data.ciudad || 'GUATEMALA';
@@ -441,7 +434,6 @@
     return parts.join(' ').replace(/\s+/g,' ').trim();
   }
 
-  // payment method toggles on screen (show extra fields when selected)
   function updateMediosOnScreen(){
     const val = document.querySelector('input[name="medioPago"]:checked')?.value;
     document.querySelectorAll('.transferencia-fields').forEach(el=>el.style.display = (val === 'TRANSFERENCIA') ? 'block' : 'none');
@@ -450,7 +442,6 @@
   document.querySelectorAll('input[name="medioPago"]').forEach(r=>r.addEventListener('change', updateMediosOnScreen));
   updateMediosOnScreen();
 
-  // Printing behavior: before print, add a class to body to indicate which medio is selected and sync comprobante values
   function beforePrintSetup(){
     const val = document.querySelector('input[name="medioPago"]:checked')?.value || '';
     document.body.classList.remove('print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
@@ -479,7 +470,6 @@
     if(el) el.addEventListener('input', recalcLiquido);
   });
 
-  // initial sync of printable comprobante fields on load
   document.addEventListener('DOMContentLoaded', function(){
     loadEmpleados();
     recalcLiquido();
@@ -490,64 +480,78 @@
 
 <style>
 :root{
-  --bg-1: #f3e7dd;
+  --bg-1: #f7f6f3;
   --muted: #6b7280;
   --accent-naranja: #ff7a18;
   --accent-azul: #0b7285;
   --accent-azul-claro: #0ea5a4;
-  --shadow-1: 0 8px 28px rgba(11,50,80,0.06);
+  --card-bg: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,251,255,0.98));
+  --shadow-1: 0 10px 30px rgba(11,50,80,0.06);
   font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 /* Page */
-body { background: linear-gradient(180deg, var(--bg-1), #fff6ee); color:#0f1724; margin:0; padding:0; }
+body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
 
 /* Header */
-.title-large { font-size: 1.6rem; font-weight: 800; color: var(--accent-azul); }
+.title-large { font-size: 1.6rem; font-weight: 800; color: var(--accent-azul); letter-spacing: -0.2px; }
 
 /* Cards and layout */
-.container { max-width:1100px; margin:18px auto; padding:0 18px 40px; }
-.card { border-radius: 14px; background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,251,255,0.98)); border:1px solid rgba(11,19,30,0.04); box-shadow: var(--shadow-1); }
+.container { max-width:1100px; margin:20px auto; padding:0 18px 40px; }
+.card { border-radius: 12px; background: var(--card-bg); border:1px solid rgba(11,19,30,0.04); box-shadow: var(--shadow-1); }
 .section-card .card-body.section-grid { display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap; padding:16px; }
 .section-card .section-left, .section-card .section-right { flex:1 1 320px; min-width:260px; }
 
 /* Inputs */
-.form-label { font-weight:600; color:var(--muted); }
-.form-control { border-radius:10px; border:1px solid rgba(11,19,30,0.08); background:#fff; padding:.6rem .75rem; }
+.form-label { font-weight:700; color:var(--muted); font-size:.86rem; }
+.form-control { border-radius:8px; border:1px solid rgba(11,19,30,0.06); background:#fff; padding:.55rem .7rem; }
 .form-control[readonly] { background: linear-gradient(180deg,#fbfdff,#f8fbff); color:#0b2a36; cursor:not-allowed; }
 
-/* Improved print button */
+/* Print button */
 .btn-imprimir {
   background: linear-gradient(90deg, #0b7285, #ff7a18);
   color: #fff;
   border: none;
   padding: .52rem .95rem;
-  border-radius: 12px;
-  font-weight: 700;
-  box-shadow: 0 8px 24px rgba(11,114,133,0.12);
+  border-radius: 10px;
+  font-weight: 800;
+  letter-spacing: .3px;
+  box-shadow: 0 10px 26px rgba(11,114,133,0.12);
   cursor: pointer;
-  transition: transform .14s ease, box-shadow .14s ease;
 }
-.btn-imprimir:hover { transform: translateY(-3px); box-shadow: 0 16px 36px rgba(11,114,133,0.18); }
+.btn-imprimir:hover { transform: translateY(-2px); box-shadow: 0 18px 34px rgba(11,114,133,0.16); }
 
 /* Compact look */
 .row.g-2 > [class*="col-"], .row.g-3 > [class*="col-"] { padding-bottom:6px; }
 .mb-2 { margin-bottom:.5rem !important; }
-.card-body { padding: 16px; }
+.card-body { padding: 14px; }
 
 /* Signatures */
-.sig-line { border-bottom:1px solid #ccc; height:1px; margin-bottom:8px; }
+.sig-line { border-bottom:1px dashed #bfc7cb; height:1px; margin-bottom:8px; }
+
+/* Hidden print helper */
+.print-only { display:none; font-weight:700; }
 
 /* Transfer / cheque fields off by default until selection */
 .transferencia-fields, .cheque-fields { display:none; }
 
-/* On-screen: show selected extra fields (handled by JS) */
-.transferencia-fields[style*="display: block"], .cheque-fields[style*="display: block"] { display:flex; flex-direction:column; gap:6px; }
-
-/* Accessibility focus */
+/* Focus states */
 input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rgba(14,165,164,0.06); border-color: var(--accent-azul-claro); }
 
-/* Print styles: tidy, ordered and clear */
+/* Visual separation for Gains and Deductions on screen (subtle) */
+.payment-section .box-left,
+.payment-section .box-right {
+  background: linear-gradient(180deg,#ffffff,#fbfcfd);
+  border-radius: 10px;
+  padding: 10px;
+  border: 1px solid rgba(11,19,30,0.04);
+}
+
+/* Slight divider between columns */
+.payment-section .section-left { margin-right: 6px; }
+.payment-section .section-right { margin-left: 6px; }
+
+/* Print styles: enhanced but structure preserved */
 @media print {
   @page { size: A4; margin: 12mm; }
 
@@ -556,76 +560,70 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
   .card { box-shadow:none !important; border:none !important; background:transparent !important; }
   .card .card-body { padding:8px; }
 
-  /* Hide UI elements not needed in print: selection controls and print button but show mirrored printable fields */
-  .empleado-selection, .form-check-input, select, .btn-imprimir, .form-control-sm { display: none !important; }
-  input[type="date"].form-control-sm { display: none !important; }
-  .print-only { display:block !important; font-size:11px; color:#000; margin-top:6px; }
+  /* Hide UI controls not needed in print */
+  .empleado-selection, .form-check-input, select, .btn-imprimir, input[type="date"], .meta-block .form-control-sm { display: none !important; }
 
-  /* Make inputs highly visible in print */
+  /* Show mirrored printable header fields */
+  .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color: #111; }
+
+  /* Inputs visible for values */
   input.form-control, input.form-control[readonly] {
     background: #fff !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     border: 1px solid #111 !important;
     color: #000 !important;
-    padding: 3px 6px;
+    padding: 4px 6px;
     box-shadow: none;
   }
 
-  /* Enforce clear two-column layout for details */
-  .section-card .card-body.section-grid { display:flex; gap:10px; flex-wrap:nowrap; }
+  /* Keep two-column layout for details in print */
+  .section-card .card-body.section-grid { display:flex; gap:12px; flex-wrap:nowrap; }
   .section-card .section-left, .section-card .section-right { flex:0 0 50%; min-width:45%; }
 
-  /* ---------- VISUAL SEPARATION FOR PRINT ---------- */
-  /* Add clear boxed outlines for Ganancias and Deducciones when printing */
+  /* ---------- Clear boxed outlines for print (stronger separation) ---------- */
   .section-card .section-left {
     border: 1px solid #222;
-    padding: 8px;
-    border-radius: 8px;
-    background: #ffffff;
+    padding: 10px;
+    border-radius: 6px;
+    background: #fff;
   }
   .section-card .section-right {
     border: 1px solid #222;
-    padding: 8px;
-    border-radius: 8px;
-    background: #ffffff;
+    padding: 10px;
+    border-radius: 6px;
+    background: #fff;
   }
-  /* Slight spacing between the two boxes */
-  .section-card { gap: 18px; }
 
-  /* Only selected payment method prints (method blocks are below total) */
+  /* Slight shadow effect in print via border only (keeps it printer-friendly) */
+  .totals-card { border-top: 2px solid #222; padding-top:8px; }
+
+  /* Payment method blocks: show only selected one in print */
   .printable-option { display:none; }
   body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:block; }
   body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:block; }
   body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:block; }
 
-  /* Show associated extra fields only for selected payment method */
   body.print-medio-TRANSFERENCIA .transferencia-fields { display:block; }
   body.print-medio-CHEQUE .cheque-fields { display:block; }
 
-  /* Typography adjustments for print */
-  h3, h5, h6, label, input, .small-print { font-size: 11px; }
-  .small.text-muted { font-size:9px; color:#222; }
+  /* Typography adjustments */
+  h3, h5, h6, label, input, .small-print { font-size: 11px; line-height: 1.1; }
+  .small.text-muted { font-size:10px; color:#222; }
 
   /* Avoid page breaks inside important sections */
   .card, .section-card, .totals-card, .signatures-row { page-break-inside: avoid; break-inside: avoid; }
 }
 
-/* Hide mirrored print elements on screen */
-.print-only { display:none; }
-
-/* Ensure on-screen the payment option extras show/hidden via JS */
-.printable-option .transferencia-fields, .printable-option .cheque-fields { display:none; }
-
-/* When user selects Transferencia/Cheque on screen we show extras */
+/* Ensure on-screen payment extras controlled by JS appear correctly */
 input[name="medioPago"][value="TRANSFERENCIA"]:checked ~ .transferencia-fields,
 input[name="medioPago"][value="CHEQUE"]:checked ~ .cheque-fields {
   display:flex;
   flex-direction:column;
 }
 
-/* micro polish */
+/* Micro polish */
 .small.text-muted { font-size:.88rem; color:var(--muted); }
-.form-check-label { font-weight:600; color:#233642; }
+.form-check-label { font-weight:700; color:#233642; }
 </style>
 {% endblock %}
