@@ -289,10 +289,6 @@
         delete el.dataset._orig;
       }
     });
-    const lugar = document.getElementById('lugarPago');
-    if(lugar) delete lugar.dataset._hiddenForPrint;
-    const printLugar = document.getElementById('print_lugar');
-    if(printLugar) delete printLugar.dataset._hiddenForPrint;
   }
 
   document.getElementById('empleadoSelect')?.addEventListener('change', function(){
@@ -571,35 +567,41 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
 .payment-section .section-left { margin-right: 6px; }
 .payment-section .section-right { margin-left: 6px; }
 
-/* Print styles: aggressive compacting to bring everything closer vertically */
+/* Print styles: compact vertically to reduce document length */
 @media print {
-  @page { size: A4; margin: 3mm; } /* minimal page margins */
+  @page { size: A4; margin: 6mm 8mm 6mm 8mm; } /* narrow top/bottom, narrow sides */
 
-  body { background: #fff !important; color: #000; }
+  body { background: #fff !important; color: #000; font-size: 10px; }
 
-  /* Use nearly full width; minimize vertical spacing */
+  /* Use full printable width; compress vertical spacing strongly */
   .container {
-    width: 96%;
-    max-width: 96%;
-    margin: 2mm auto 0;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
     padding: 0;
     box-sizing: border-box;
   }
 
   .card { box-shadow:none !important; border:none !important; background:transparent !important; }
-  .card .card-body { padding:3px; } /* very small padding to compact sections */
+  .card .card-body { padding:4px 6px; } /* much smaller padding */
 
-  /* Hide UI controls and non-print elements */
+  /* Header compact: bring title and company up, reduce margins */
+  .title-large { font-size: 12px; margin-bottom: 2px; }
+  .small.text-muted { font-size: 9px; margin-bottom: 4px; }
+
+  /* Hide interactive controls and non-print elements */
   .empleado-selection, .form-check-input, select, .btn-imprimir, input[type="date"], .meta-block .form-control-sm { display: none !important; }
+
+  /* Hide comprobante number and lugar inputs in print */
   .meta-block .mb-2 { display: none !important; }
   #comprobanteNumero { display:none !important; }
   #lugarPago { display:none !important; }
   #print_lugar { display:none !important; }
 
-  /* Show only compact printable header date */
-  .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color: #111; margin-bottom:2px; font-size:10px; }
+  /* Show mirrored printable header fields (date) */
+  .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color: #111; margin-bottom:2px; font-size:9.5px; }
 
-  /* Inputs: very tight padding and smaller font to pack more vertically */
+  /* Inputs: very tight padding and smaller font to pack vertically */
   input.form-control, input.form-control[readonly] {
     background: #fff !important;
     -webkit-print-color-adjust: exact;
@@ -607,52 +609,56 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
     border: 1px solid #111 !important;
     color: #000 !important;
     padding: 2px 6px;
-    font-size: 9.2px;
+    font-size: 9.0px;
     box-shadow: none;
   }
 
-  /* Collapse heading sizes and remove extra margins to bring sections closer */
+  /* Headings and labels micro-sized to reduce height */
   h3, h5, h6, label { margin:0; padding:0; font-weight:700; font-size:10px; line-height:1; }
-  .title-large { font-size: 12px; font-weight:800; margin-bottom:4px; }
+  .title-large { font-size:12px; }
 
-  /* Reduce vertical gaps between rows and columns */
+  /* Reduce vertical gaps between rows and sections strongly */
   .section-card .card-body.section-grid { display:flex; gap:6px; flex-wrap:wrap; align-items:flex-start; padding:2px 0; }
-  .section-card .section-left, .section-card .section-right { flex:0 0 50%; min-width:40%; padding:4px; }
+  .section-card .section-left, .section-card .section-right { flex:0 0 50%; min-width:45%; padding:4px; margin:0; }
 
-  /* Minimal box outlines */
+  /* Minimal box outlines, small padding */
   .section-card .section-left { border: 1px solid #111; padding:4px; border-radius:3px; background:#fff; }
   .section-card .section-right { border: 1px solid #111; padding:4px; border-radius:3px; background:#fff; }
 
-  /* Liquido area compact and inline */
-  .liquido-row { padding:2px 0 4px 0; }
+  /* Reduce spacing in gains/deductions rows */
+  .row.g-2 > [class*="col-"] { padding-bottom:4px; }
+  .col-6 { padding-bottom:3px; }
+
+  /* Liquido area compact and inline; reduce vertical space */
+  .liquido-row { padding:2px 0 4px 0; text-align:right; }
   .liquido-row label { font-size:9px; display:block; margin-bottom:2px; }
-  #liquidoTotal { width:150px; font-size:10px; }
+  #liquidoTotal { width:160px; font-size:10px; display:inline-block; }
 
   /* Totals and payment methods compact */
   .totals-card { border-top: 1px solid #111; padding-top:4px; margin-top:4px; }
-  .totals-card .card-body { padding:4px; }
+  .totals-card .card-body { padding:6px 4px; }
+  .payment-methods { margin-top:4px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .form-check { margin:0; padding:0; display:inline-flex; align-items:center; gap:4px; }
 
-  .payment-methods { margin-top:4px; }
-  .form-check { margin:0; padding:0; display:inline-block; margin-right:8px; vertical-align:middle; }
-  .form-check-label { font-size:9px; font-weight:700; margin-left:4px; display:inline-block; vertical-align:middle; }
+  .form-check-label { font-size:9px; font-weight:700; }
 
-  /* Signatures compressed */
-  .signatures-row { margin-top:6px; }
+  /* Compact signatures row */
+  .signatures-row { margin-top:6px; display:flex; gap:8px; }
+  .signatures-row .col-6 { width:50%; padding:0 6px; }
   .sig-line { margin-bottom:6px; border-bottom:1px dashed #111; height:1px; }
-  .signatures-row .small.text-muted { font-size:9px; }
 
   /* Show only selected payment method in print */
-  .printable-option { display:none; font-size:9px; }
-  body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:inline-block; }
-  body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:inline-block; }
-  body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:inline-block; }
+  .printable-option { display:none; }
+  body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:inline-flex; }
+  body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:inline-flex; }
+  body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:inline-flex; }
   body.print-medio-TRANSFERENCIA .transferencia-fields { display:inline-block; margin-left:6px; }
   body.print-medio-CHEQUE .cheque-fields { display:inline-block; margin-left:6px; }
 
-  /* Reduce line-height to pack content */
+  /* Reduce line-height for maximal vertical packing */
   input, label, .small-print { line-height: 1.0; }
 
-  /* Prevent page breaks inside the receipt */
+  /* Prevent page breaks inside the compact receipt */
   .card, .section-card, .totals-card, .signatures-row { page-break-inside: avoid; break-inside: avoid; }
 }
 
