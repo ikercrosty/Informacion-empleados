@@ -155,8 +155,14 @@
           <label class="form-check-label" for="pagoTransferencia">TRANSFERENCIA BANCARIA</label>
 
           <div class="transferencia-fields mt-2 ms-3">
-            <input id="transCuenta" class="form-control mb-1" type="text" placeholder="No. de cuenta (transferencia)">
-            <input id="transBanco" class="form-control" type="text" placeholder="Banco (transferencia)">
+            <div class="field-row">
+              <label class="field-label" for="transCuenta">No. de cuenta</label>
+              <input id="transCuenta" class="form-control trans-input trans-cuenta" type="text" aria-label="Número de cuenta (transferencia)">
+            </div>
+            <div class="field-row">
+              <label class="field-label" for="transBanco">Banco</label>
+              <input id="transBanco" class="form-control trans-input trans-banco" type="text" aria-label="Banco (transferencia)">
+            </div>
           </div>
         </div>
 
@@ -568,17 +574,33 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
 /* Transfer / cheque fields off by default until selection */
 .transferencia-fields, .cheque-fields { display:none; }
 
-/* Focus states */
-input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rgba(14,165,164,0.06); border-color: var(--accent-azul-claro); }
-
-/* Visual separation for Gains and Deductions on screen (subtle) */
-.payment-section .box-left,
-.payment-section .box-right {
-  background: linear-gradient(180deg,#ffffff,#fbfcfd);
-  border-radius: 10px;
-  padding: 10px;
-  border: 1px solid rgba(11,19,30,0.04);
+/* New transfer fields styling */
+.transferencia-fields { display:none; margin-top:6px; }
+.transferencia-fields .field-row {
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-bottom:6px;
 }
+.transferencia-fields .field-label {
+  font-weight:700;
+  font-size:0.85rem;
+  color:var(--muted);
+  margin-left:2px;
+}
+.trans-input {
+  width:100%;
+  min-width:260px;
+  max-width:520px;
+  border-radius:12px;
+  border:1px solid rgba(11,19,30,0.09);
+  padding:10px 12px;
+  background:#fff;
+  box-shadow: 0 6px 18px rgba(11,50,80,0.04);
+  font-size:0.95rem;
+}
+.trans-cuenta { letter-spacing:0.3px; }
+.trans-banco  { letter-spacing:0.3px; }
 
 /* Liquido and Total inline on screen */
 .liquido-total-row { padding-top:8px; }
@@ -592,7 +614,7 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
 
 /* Print styles */
 @media print {
-  @page { size: A4; margin: 5mm; } /* set A5 page size as requested */
+  @page { size: A5; margin: 8mm; } /* set A5 page size as requested */
 
   body { background: #fff !important; color: #000; }
 
@@ -652,6 +674,17 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
   body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:inline-flex; }
   body.print-medio-TRANSFERENCIA .transferencia-fields { display:inline-block; margin-left:6px; }
   body.print-medio-CHEQUE .cheque-fields { display:inline-block; margin-left:6px; }
+
+  /* Compact transfer fields in print */
+  body.print-medio-TRANSFERENCIA .trans-input {
+    box-shadow:none;
+    border:1px solid #111 !important;
+    padding:4px 6px;
+    min-width:120px;
+    max-width:260px;
+    font-size:10px;
+  }
+  body.print-medio-TRANSFERENCIA .field-label { font-size:10px; color:#111; margin-left:0; }
 
   /* Signatures on same horizontal line */
   .print-signatures { display:flex; gap:12px; justify-content:space-between; align-items:center; padding-top:6px; }
