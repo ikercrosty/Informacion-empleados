@@ -571,13 +571,13 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
 .payment-section .section-left { margin-right: 6px; }
 .payment-section .section-right { margin-left: 6px; }
 
-/* Print styles: make layout extremely compact while preserving order */
+/* Print styles: aggressive compacting to bring everything closer vertically */
 @media print {
-  @page { size: A4; margin: 4mm; } /* minimal page margins */
+  @page { size: A4; margin: 3mm; } /* minimal page margins */
 
   body { background: #fff !important; color: #000; }
 
-  /* Use almost full width; compress spacing and font sizes strongly */
+  /* Use nearly full width; minimize vertical spacing */
   .container {
     width: 96%;
     max-width: 96%;
@@ -587,76 +587,73 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
   }
 
   .card { box-shadow:none !important; border:none !important; background:transparent !important; }
-  .card .card-body { padding:4px; } /* very small padding for compactness */
+  .card .card-body { padding:3px; } /* very small padding to compact sections */
 
-  /* Hide interactive controls and extras not needed in print */
+  /* Hide UI controls and non-print elements */
   .empleado-selection, .form-check-input, select, .btn-imprimir, input[type="date"], .meta-block .form-control-sm { display: none !important; }
-
-  /* Hide comprobante number input and lugar fields in print */
   .meta-block .mb-2 { display: none !important; }
   #comprobanteNumero { display:none !important; }
   #lugarPago { display:none !important; }
   #print_lugar { display:none !important; }
 
-  /* Show mirrored printable header date only */
-  .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color: #111; margin-bottom:2px; }
+  /* Show only compact printable header date */
+  .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color: #111; margin-bottom:2px; font-size:10px; }
 
-  /* Inputs: very tight padding and smaller font to pack more on page */
+  /* Inputs: very tight padding and smaller font to pack more vertically */
   input.form-control, input.form-control[readonly] {
     background: #fff !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     border: 1px solid #111 !important;
     color: #000 !important;
-    padding: 2px 5px;
-    font-size: 9px;
+    padding: 2px 6px;
+    font-size: 9.2px;
     box-shadow: none;
   }
 
-  /* Reduce heading sizes and label spacing */
-  h3, h5, h6, label { margin:0; padding:0; font-weight:700; font-size:10px; }
-  .title-large { font-size: 12px; font-weight:800; margin-bottom:6px; }
-  .small.text-muted { font-size:9px; color:#111; margin-bottom:4px; }
+  /* Collapse heading sizes and remove extra margins to bring sections closer */
+  h3, h5, h6, label { margin:0; padding:0; font-weight:700; font-size:10px; line-height:1; }
+  .title-large { font-size: 12px; font-weight:800; margin-bottom:4px; }
 
-  /* Collapse gaps between sections and columns */
-  .section-card .card-body.section-grid { display:flex; gap:6px; flex-wrap:nowrap; align-items:flex-start; padding:0; }
-  .section-card .section-left, .section-card .section-right { flex:0 0 50%; min-width:45%; padding:4px; }
+  /* Reduce vertical gaps between rows and columns */
+  .section-card .card-body.section-grid { display:flex; gap:6px; flex-wrap:wrap; align-items:flex-start; padding:2px 0; }
+  .section-card .section-left, .section-card .section-right { flex:0 0 50%; min-width:40%; padding:4px; }
 
-  /* Box outlines minimal but visible */
+  /* Minimal box outlines */
   .section-card .section-left { border: 1px solid #111; padding:4px; border-radius:3px; background:#fff; }
   .section-card .section-right { border: 1px solid #111; padding:4px; border-radius:3px; background:#fff; }
 
   /* Liquido area compact and inline */
-  .liquido-row { padding:4px 0 6px 0; }
+  .liquido-row { padding:2px 0 4px 0; }
   .liquido-row label { font-size:9px; display:block; margin-bottom:2px; }
-  #liquidoTotal { width:170px; font-size:10px; }
+  #liquidoTotal { width:150px; font-size:10px; }
 
   /* Totals and payment methods compact */
-  .totals-card { border-top: 1px solid #111; padding-top:6px; margin-top:6px; }
+  .totals-card { border-top: 1px solid #111; padding-top:4px; margin-top:4px; }
+  .totals-card .card-body { padding:4px; }
+
   .payment-methods { margin-top:4px; }
-  .form-check-label { font-size:9px; font-weight:700; margin-left:4px; }
+  .form-check { margin:0; padding:0; display:inline-block; margin-right:8px; vertical-align:middle; }
+  .form-check-label { font-size:9px; font-weight:700; margin-left:4px; display:inline-block; vertical-align:middle; }
 
   /* Signatures compressed */
-  .signatures-row { margin-top:8px; }
+  .signatures-row { margin-top:6px; }
   .sig-line { margin-bottom:6px; border-bottom:1px dashed #111; height:1px; }
   .signatures-row .small.text-muted { font-size:9px; }
 
-  /* Reduce spacing inside totals */
-  .totals-card .card-body { padding:4px; }
-
   /* Show only selected payment method in print */
   .printable-option { display:none; font-size:9px; }
-  body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:block; }
-  body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:block; }
-  body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:block; }
-  body.print-medio-TRANSFERENCIA .transferencia-fields { display:block; margin-left:6px; }
-  body.print-medio-CHEQUE .cheque-fields { display:block; margin-left:6px; }
+  body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:inline-block; }
+  body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:inline-block; }
+  body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:inline-block; }
+  body.print-medio-TRANSFERENCIA .transferencia-fields { display:inline-block; margin-left:6px; }
+  body.print-medio-CHEQUE .cheque-fields { display:inline-block; margin-left:6px; }
 
-  /* Avoid page breaks inside the compact receipt */
-  .card, .section-card, .totals-card, .signatures-row { page-break-inside: avoid; break-inside: avoid; }
-
-  /* Final typography tweak to pack content */
+  /* Reduce line-height to pack content */
   input, label, .small-print { line-height: 1.0; }
+
+  /* Prevent page breaks inside the receipt */
+  .card, .section-card, .totals-card, .signatures-row { page-break-inside: avoid; break-inside: avoid; }
 }
 
 /* Ensure on-screen payment extras controlled by JS appear correctly */
