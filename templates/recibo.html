@@ -14,12 +14,16 @@
         <div class="mb-2">
           <label class="form-label small text-muted">Comprobante No</label>
           <input id="comprobanteNumero" class="form-control form-control-sm" type="text" value="{{ recibo.numero if recibo is defined else '' }}">
+          <!-- Printable copy (hidden on screen, shown only in print) -->
+          <div id="print_comprobanteNumero" class="print-only small-print" aria-hidden="true"></div>
         </div>
 
         <div class="d-flex gap-2 align-items-end justify-content-end">
           <div style="flex:1; min-width:140px;">
             <label class="form-label small text-muted">Fecha</label>
             <input id="comprobanteFecha" class="form-control form-control-sm" type="date" value="{{ recibo.fecha if recibo is defined else fecha_emision if fecha_emision is defined else '' }}">
+            <!-- Printable copy (hidden on screen, shown only in print) -->
+            <div id="print_comprobanteFecha" class="print-only small-print" aria-hidden="true"></div>
           </div>
 
           <div style="align-self:flex-end;">
@@ -202,7 +206,7 @@
   </div>
 </div>
 
-<!-- Scripts: carga empleados y lógica para sincronizar con la planilla local, cálculo y conversión a letras -->
+<!-- Scripts: carga empleados y lógica para sincronizar con la planilla local, cálculo y control de impresión -->
 <script>
 (function(){
   const PLANILLA_STORAGE_KEY = 'empaquetex_planilla_noviembre_v1';
@@ -250,6 +254,42 @@
     const n = Number(s);
     return isFinite(n) ? n : 0;
   }
+
+  // keep printable comprobante fields updated
+  function syncPrintableComprobante(){
+    const num = document.getElementById('comprobanteNumero')?.value || '';
+    const fecha = document.getElementById('comprobanteFecha')?.value || '';
+    const printNum = document.getElementById('print_comprobanteNumero');
+    const printFecha = document.getElementById('print_comprobanteFecha');
+    if(printNum) printNum.textContent = num ? ('Comprobante No: ' + num) : '';
+    if(printFecha) {
+      // format date to human friendly (YYYY-MM-DD -> DD/MM/YYYY) for print
+      let text = fecha;
+      if(fecha){
+        try{
+          const d = new Date(fecha);
+          if(!isNaN(d)) {
+            const dd = String(d.getDate()).padStart(2,'0');
+            const mm = String(d.getMonth()+1).padStart(2,'0');
+            const yyyy = d.getFullYear();
+            text = 'Fecha: ' + dd + '/' + mm + '/' + yyyy;
+          } else {
+            text = 'Fecha: ' + fecha;
+          }
+        }catch(e){
+          text = 'Fecha: ' + fecha;
+        }
+      }
+      printFecha.textContent = fecha ? text : '';
+    }
+  }
+
+  // wire inputs to keep print copies in sync when user types
+  document.addEventListener('input', function(e){
+    if(e.target && (e.target.id === 'comprobanteNumero' || e.target.id === 'comprobanteFecha')){
+      syncPrintableComprobante();
+    }
+  });
 
   document.getElementById('empleadoSelect')?.addEventListener('change', function(){
     const dpiVal = this.value;
@@ -324,7 +364,6 @@
 
   function recalcLiquido(){
     const toNum = id => Number(document.getElementById(id).value || 0);
-    // igss input is text (formatted to 2 decimals); toNum will parse correctly
     const ganancias = toNum('sueldoBase') + toNum('hextrasMonto') + toNum('bonificacion') + toNum('comisiones');
     const deducciones = toNum('igss') + toNum('isr') + toNum('otrasDeducciones');
     const liquido = round2(ganancias - deducciones);
@@ -332,7 +371,6 @@
     document.getElementById('totalEnLetras').value = numeroALetrasEnEspañol(liquido);
   }
 
-  // Conversión a letras en español (maneja hasta millones, negativos y centavos)
   function numeroALetrasEnEspañol(num){
     if (isNaN(num)) return '';
     const negativo = num < 0;
@@ -412,11 +450,12 @@
   document.querySelectorAll('input[name="medioPago"]').forEach(r=>r.addEventListener('change', updateMediosOnScreen));
   updateMediosOnScreen();
 
-  // Printing behavior: before print, add a class to body to indicate which medio is selected
+  // Printing behavior: before print, add a class to body to indicate which medio is selected and sync comprobante values
   function beforePrintSetup(){
     const val = document.querySelector('input[name="medioPago"]:checked')?.value || '';
     document.body.classList.remove('print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
     if(val) document.body.classList.add('print-medio-' + val);
+    syncPrintableComprobante();
   }
   function afterPrintCleanup(){
     document.body.classList.remove('print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
@@ -429,7 +468,6 @@
   window.addEventListener('beforeprint', beforePrintSetup);
   window.addEventListener('afterprint', afterPrintCleanup);
 
-  // print button: ensure we run beforePrintSetup just in case, then print
   const imprimirBtn = document.getElementById('imprimirBtn');
   if(imprimirBtn) imprimirBtn.addEventListener('click', function(){
     beforePrintSetup();
@@ -441,9 +479,11 @@
     if(el) el.addEventListener('input', recalcLiquido);
   });
 
+  // initial sync of printable comprobante fields on load
   document.addEventListener('DOMContentLoaded', function(){
     loadEmpleados();
     recalcLiquido();
+    syncPrintableComprobante();
   });
 })();
 </script>
@@ -516,8 +556,10 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
   .card { box-shadow:none !important; border:none !important; background:transparent !important; }
   .card .card-body { padding:8px; }
 
-  /* Hide UI elements not needed in print: selection controls and print button */
-  .empleado-selection, .form-check-input, select, .btn-imprimir, input[type="date"], .meta-block .form-control-sm { display: none !important; }
+  /* Hide UI elements not needed in print: selection controls and print button but show mirrored printable fields */
+  .empleado-selection, .form-check-input, select, .btn-imprimir, .form-control-sm { display: none !important; }
+  input[type="date"].form-control-sm { display: none !important; }
+  .print-only { display:block !important; font-size:11px; color:#000; margin-top:6px; }
 
   /* Make inputs highly visible in print */
   input.form-control, input.form-control[readonly] {
@@ -545,14 +587,20 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
   body.print-medio-CHEQUE .cheque-fields { display:block; }
 
   /* Typography adjustments for print */
-  h3, h5, h6, label, input { font-size: 11px; }
+  h3, h5, h6, label, input, .small-print { font-size: 11px; }
   .small.text-muted { font-size:9px; color:#222; }
 
   /* Avoid page breaks inside important sections */
   .card, .section-card, .totals-card, .signatures-row { page-break-inside: avoid; break-inside: avoid; }
 }
 
-/* CSS fallback so on-screen selection still shows extras */
+/* Hide mirrored print elements on screen */
+.print-only { display:none; }
+
+/* Ensure on-screen the payment option extras show/hidden via JS */
+.printable-option .transferencia-fields, .printable-option .cheque-fields { display:none; }
+
+/* When user selects Transferencia/Cheque on screen we show extras */
 input[name="medioPago"][value="TRANSFERENCIA"]:checked ~ .transferencia-fields,
 input[name="medioPago"][value="CHEQUE"]:checked ~ .cheque-fields {
   display:flex;
