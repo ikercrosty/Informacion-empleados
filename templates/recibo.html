@@ -571,63 +571,71 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
 .payment-section .section-left { margin-right: 6px; }
 .payment-section .section-right { margin-left: 6px; }
 
-/* Print styles: adjust only print appearance */
+/* Print styles: compact adjustments only */
 @media print {
-  @page { size: A4; margin: 1mm; }
+  @page { size: A4; margin: 6mm 6mm 6mm 6mm; } /* margen de página reducido */
 
   body { background: #fff !important; color: #000; }
 
-  /* Restrict printed form area to roughly half the page, left aligned and compact */
-  .container { width: 48%; max-width: 48%; margin: 6mm 0 0 6mm; transform: none; padding:0; }
+  /* Use full printable width but add a small inner padding to avoid clipping */
+  .container {
+    width: 48%;
+    max-width: 48%;
+    margin: 3mm 0 0 3mm; /* menos espacio en blanco arriba */
+    transform: none;
+    padding: 0 4mm 0 0;
+    box-sizing: border-box;
+  }
 
   .card { box-shadow:none !important; border:none !important; background:transparent !important; }
-  .card .card-body { padding:6px; }
+  .card .card-body { padding:4px; } /* menos padding para compactar */
 
-  /* Hide interactive controls and header comprobante and lugar as requested (print-only) */
+  /* Hide interactive controls and header comprobante and lugar as requested */
   .empleado-selection, .form-check-input, select, .btn-imprimir, input[type="date"], .meta-block .form-control-sm { display: none !important; }
 
   /* Hide comprobante number input and lugar fields in print */
   .meta-block .mb-2 { display: none !important; }
   #comprobanteNumero { display:none !important; }
   #lugarPago { display:none !important; }
-  #print_lugar { display:none !important; } /* hide print copy of Lugar */
+  #print_lugar { display:none !important; }
 
   /* Show mirrored printable header fields */
-  .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color: #111; }
+  .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color: #111; margin-bottom:4px; }
 
-  /* Inputs visible for values */
+  /* Inputs visible for values — tighter padding */
   input.form-control, input.form-control[readonly] {
     background: #fff !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     border: 1px solid #111 !important;
     color: #000 !important;
-    padding: 4px 6px;
+    padding: 3px 6px;
+    font-size: 10px;
     box-shadow: none;
   }
 
-  /* Keep two-column layout for details in print */
-  .section-card .card-body.section-grid { display:flex; gap:12px; flex-wrap:nowrap; }
-  .section-card .section-left, .section-card .section-right { flex:0 0 50%; min-width:45%; }
+  /* Keep two-column layout for details in print; reduce gaps and padding */
+  .section-card .card-body.section-grid { display:flex; gap:8px; flex-wrap:nowrap; }
+  .section-card .section-left, .section-card .section-right { flex:0 0 50%; min-width:45%; padding:6px; }
 
-  /* ---------- Clear boxed outlines for print (stronger separation) ---------- */
+  /* Box outlines for print */
   .section-card .section-left {
     border: 1px solid #222;
-    padding: 10px;
-    border-radius: 6px;
+    padding: 6px;
+    border-radius: 4px;
     background: #fff;
   }
   .section-card .section-right {
     border: 1px solid #222;
-    padding: 10px;
-    border-radius: 6px;
+    padding: 6px;
+    border-radius: 4px;
     background: #fff;
   }
 
-  /* Slight shadow effect in print via border only (keeps it printer-friendly) */
-  .totals-card { border-top: 2px solid #222; padding-top:8px; }
+  /* Compact totals area */
+  .totals-card { border-top: 1px solid #222; padding-top:6px; margin-top:6px; }
 
-  /* Payment method blocks: show only selected one in print */
+  /* Payment method: show only selected */
   .printable-option { display:none; }
   body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:block; }
   body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:block; }
@@ -636,11 +644,11 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
   body.print-medio-TRANSFERENCIA .transferencia-fields { display:block; }
   body.print-medio-CHEQUE .cheque-fields { display:block; }
 
-  /* Typography adjustments */
-  h3, h5, h6, label, input, .small-print { font-size: 11px; line-height: 1.1; }
-  .small.text-muted { font-size:10px; color:#222; }
+  /* Typography adjustments smaller to fit half page */
+  h3, h5, h6, label, input, .small-print { font-size: 10px; line-height: 1.02; }
+  .small.text-muted { font-size:9px; color:#222; }
 
-  /* Avoid page breaks inside important sections */
+  /* Avoid page breaks inside main printed area */
   .card, .section-card, .totals-card, .signatures-row { page-break-inside: avoid; break-inside: avoid; }
 }
 
