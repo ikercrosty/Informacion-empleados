@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="container py-4">
-  <div class="card shadow-sm mb-4">
+  <div class="card shadow-sm mb-4 header-card">
     <div class="card-body d-flex justify-content-between align-items-center">
       <div>
         <h3 class="mb-0 title-large">Recibo de pago de sueldos</h3>
@@ -30,8 +30,8 @@
     </div>
   </div>
 
-  <!-- Selección de empleado + Lugar debajo del nombre -->
-  <div class="card shadow-sm mb-4 section-card">
+  <!-- SECCIÓN: Selección de empleado (se mantiene en pantalla, se oculta en impresión) -->
+  <div class="card shadow-sm mb-4 section-card empleado-selection">
     <div class="card-body section-grid">
       <div class="section-left">
         <h5 class="mb-3">Seleccionar Trabajador</h5>
@@ -41,9 +41,6 @@
             <select id="empleadoSelect" class="form-select">
               <option value="">-- Seleccione empleado --</option>
             </select>
-          </div>
-          <div class="col-12 col-md-4 d-none d-md-block">
-            <!-- placeholder to keep layout on desktop -->
           </div>
         </div>
       </div>
@@ -129,15 +126,19 @@
     </div>
   </div>
 
-  <!-- Total en letras y medios de pago (medios debajo total) -->
-  <div class="card shadow-sm mb-4">
-    <div class="card-body d-flex gap-3 flex-wrap align-items-start">
-      <div style="flex:1; min-width:260px;">
-        <label class="form-label small">TOTAL EN LETRAS</label>
-        <input id="totalEnLetras" class="form-control" type="text" readonly value="{{ recibo.total_letras if recibo is defined else '' }}">
+  <!-- Total en letras y medios de pago: medios DEBEN aparecer debajo del total en letras (también en impresión) -->
+  <div class="card shadow-sm mb-4 totals-card">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label small">TOTAL EN LETRAS</label>
+          <input id="totalEnLetras" class="form-control" type="text" readonly value="{{ recibo.total_letras if recibo is defined else '' }}">
+        </div>
       </div>
 
-      <div style="min-width:280px;">
+      <hr class="my-3">
+
+      <div class="payment-methods">
         <h6 class="mb-2">MEDIOS DE PAGO</h6>
 
         <div class="form-check printable-option" data-option="EFECTIVO">
@@ -191,11 +192,11 @@
   function loadEmpleados(){
     fetch('/api/empleados').then(r => r.json()).then(list => {
       const sel = document.getElementById('empleadoSelect');
-      if(!Array.isArray(list)) return;
+      if(!Array.isArray(list) || !sel) return;
       list.forEach(e => {
         const opt = document.createElement('option');
         opt.value = e.dpi || '';
-        opt.textContent = e.full_name || (e.Nombre ? ( (e.Apellidos||'') + ' ' + (e.Nombre||'') ) : e.dpi);
+        opt.textContent = e.full_name || (e.Nombre ? ((e.Apellidos||'') + ' ' + (e.Nombre||'')) : e.dpi);
         sel.appendChild(opt);
       });
     }).catch(()=>{});
@@ -230,7 +231,7 @@
     return isFinite(n) ? n : 0;
   }
 
-  document.getElementById('empleadoSelect').addEventListener('change', function(){
+  document.getElementById('empleadoSelect')?.addEventListener('change', function(){
     const dpiVal = this.value;
     if(!dpiVal){
       ['nombre','dpi','sueldoBase','comisiones','bonificacion','hextrasMonto','igss','isr','otrasDeducciones'].forEach(id=>{
@@ -289,7 +290,6 @@
     document.getElementById('totalEnLetras').value = numeroALetrasEnEspañol(liquido);
   }
 
-  // Conversión a letras en español (maneja hasta millones, negativos y centavos)
   function numeroALetrasEnEspañol(num){
     if (isNaN(num)) return '';
     const negativo = num < 0;
@@ -369,7 +369,7 @@
   document.querySelectorAll('input[name="medioPago"]').forEach(r=>r.addEventListener('change', updateMediosOnScreen));
   updateMediosOnScreen();
 
-  // Printing behavior: before print, add a class to body to indicate which medio is selected
+  // Printing behavior: before print, remove unneeded controls and show only selected payment method
   function beforePrintSetup(){
     const val = document.querySelector('input[name="medioPago"]:checked')?.value || '';
     document.body.classList.remove('print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
@@ -389,7 +389,7 @@
   const imprimirBtn = document.getElementById('imprimirBtn');
   if(imprimirBtn) imprimirBtn.addEventListener('click', function(){
     beforePrintSetup();
-    setTimeout(()=> window.print(), 60);
+    setTimeout(()=> window.print(), 80);
   });
 
   ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones'].forEach(id=>{
@@ -429,10 +429,10 @@ body { background: linear-gradient(180deg, var(--bg-1), #fff6ee); color:#0f1724;
 
 /* Inputs */
 .form-label { font-weight:600; color:var(--muted); }
-.form-control { border-radius:10px; border:1px solid rgba(11,19,30,0.06); background:#fff; padding:.6rem .75rem; }
+.form-control { border-radius:10px; border:1px solid rgba(11,19,30,0.08); background:#fff; padding:.6rem .75rem; }
 .form-control[readonly] { background: linear-gradient(180deg,#fbfdff,#f8fbff); color:#0b2a36; cursor:not-allowed; }
 
-/* Print button new design */
+/* Improved print button */
 .btn-imprimir {
   background: linear-gradient(90deg, #0b7285, #ff7a18);
   color: #fff;
@@ -463,56 +463,52 @@ body { background: linear-gradient(180deg, var(--bg-1), #fff6ee); color:#0f1724;
 /* Accessibility focus */
 input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rgba(14,165,164,0.06); border-color: var(--accent-azul-claro); }
 
-/* Print styles */
+/* Print styles: tidy, ordered and clear */
 @media print {
-  @page { size: A4; margin: 10mm; }
+  @page { size: A4; margin: 12mm; }
 
-  /* Reset page visuals */
   body { background: #fff !important; color: #000; }
   .container { max-width:100%; padding:0; margin:0; }
   .card { box-shadow:none !important; border:none !important; background:transparent !important; }
-  .card .card-body { padding:6px; }
+  .card .card-body { padding:8px; }
 
-  /* Make inputs more visible in print */
+  /* Hide UI elements not needed in print: selection controls and print button */
+  .empleado-selection, .form-check-input, select, .btn-imprimir, input[type="date"], .meta-block .form-control-sm { display: none !important; }
+
+  /* Make inputs highly visible in print */
   input.form-control, input.form-control[readonly] {
     background: #fff !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     border: 1px solid #111 !important;
     color: #000 !important;
-    padding: 2px 4px;
+    padding: 3px 6px;
+    box-shadow: none;
   }
 
-  /* Hide interactive controls (radios visible but labels/others handled below) */
-  .medio-radio { display:inline-block; }
+  /* Enforce clear two-column layout for details */
+  .section-card .card-body.section-grid { display:flex; gap:10px; flex-wrap:nowrap; }
+  .section-card .section-left, .section-card .section-right { flex:0 0 50%; min-width:45%; }
 
-  /* On-screen we show all 3 options; in print we show only the selected one */
-  .printable-option { display:none; }
+  /* Ensure total and payment method render below total (already in DOM) and only selected payment method prints */
+  .printable-option { display:none; } /* hide all payment blocks by default */
   body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:block; }
   body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:block; }
   body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:block; }
 
-  /* Show the extra fields for the selected option */
+  /* Show associated extra fields only for selected payment method */
   body.print-medio-TRANSFERENCIA .transferencia-fields { display:block; }
   body.print-medio-CHEQUE .cheque-fields { display:block; }
 
-  /* Remove buttons and non-essential interactive elements */
-  button, select, input[type="date"], .btn-imprimir { display:none !important; }
+  /* Typography adjustments for print */
+  h3, h5, h6, label, input { font-size: 11px; }
+  .small.text-muted { font-size:9px; color:#222; }
 
-  /* Reduce font sizes slightly to fit one page */
-  h3, h5, h6, label, input { font-size: 10px; }
-
-  /* Avoid page breaks inside the main cards */
-  .card, .section-card, .signatures-row { page-break-inside: avoid; break-inside: avoid; }
-
-  /* Ensure total and liquido are compact but visible */
-  #liquidoTotal { font-weight:800; color:#111; }
+  /* Avoid page breaks inside important sections */
+  .card, .section-card, .totals-card, .signatures-row { page-break-inside: avoid; break-inside: avoid; }
 }
 
-/* Ensure on-screen the payment option extras show/hidden via JS */
-.printable-option .transferencia-fields, .printable-option .cheque-fields { display:none; }
-
-/* When user selects Transferencia/Cheque on screen we show extras */
+/* CSS fallback so on-screen selection still shows extras */
 input[name="medioPago"][value="TRANSFERENCIA"]:checked ~ .transferencia-fields,
 input[name="medioPago"][value="CHEQUE"]:checked ~ .cheque-fields {
   display:flex;
