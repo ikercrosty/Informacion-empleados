@@ -114,11 +114,6 @@
             <label class="form-label small">Comisiones</label>
             <input id="comisiones" class="form-control" type="number" step="0.01" readonly value="{{ recibo.comisiones if recibo is defined else 0 }}">
           </div>
-
-          <div class="col-12 mt-2">
-            <label class="form-label small">Otros ingresos</label>
-            <input id="otrosIngresos" class="form-control" type="number" step="0.01" readonly value="{{ recibo.otros_ingresos if recibo is defined else 0 }}">
-          </div>
         </div>
       </div>
 
@@ -128,7 +123,7 @@
         <div class="row g-2">
           <div class="col-6">
             <label class="form-label small">IGSS</label>
-            <input id="igss" class="form-control" type="number" step="0.01" readonly value="{{ recibo.igss if recibo is defined else 0 }}">
+            <input id="igss" class="form-control" type="text" readonly value="{{ '%.2f'|format(recibo.igss) if recibo is defined and recibo.igss is defined else '0.00' }}">
           </div>
 
           <div class="col-6">
@@ -207,7 +202,7 @@
   </div>
 </div>
 
-<!-- Scripts: carga empleados y lógica para sincronizar con la planilla local, cálculo y control de impresión -->
+<!-- Scripts: carga empleados y lógica para sincronizar con la planilla local, cálculo y conversión a letras -->
 <script>
 (function(){
   const PLANILLA_STORAGE_KEY = 'empaquetex_planilla_noviembre_v1';
@@ -256,11 +251,10 @@
     return isFinite(n) ? n : 0;
   }
 
-  // When empleado selected populate both screen fields and print-ready fields (no puesto/fecha_ingreso)
   document.getElementById('empleadoSelect')?.addEventListener('change', function(){
     const dpiVal = this.value;
     if(!dpiVal){
-      ['nombre','dpi','sueldoBase','comisiones','bonificacion','hextrasMonto','igss','isr','otrasDeducciones','otrosIngresos'].forEach(id=>{
+      ['nombre','dpi','sueldoBase','comisiones','bonificacion','hextrasMonto','igss','isr','otrasDeducciones'].forEach(id=>{
         const el = document.getElementById(id);
         if(el) el.value = (el.readOnly ? '' : 0);
       });
@@ -278,7 +272,7 @@
       document.getElementById('nombre').value = planRow.nombre || planRow.Nombre || '';
       document.getElementById('dpi').value = planRow.dpi || planRow.DPI || dpiVal;
 
-      // print-copy fields (no puesto, no fecha_ingreso)
+      // print-copy fields
       document.getElementById('print_nombre').value = planRow.nombre || planRow.Nombre || '';
       document.getElementById('print_dpi').value = planRow.dpi || planRow.DPI || dpiVal;
       document.getElementById('print_lugar').value = planRow.lugar || planRow.ciudad || 'GUATEMALA';
@@ -287,10 +281,10 @@
       document.getElementById('bonificacion').value = toNumberSafe(planRow.bono || planRow.bon || 0);
       document.getElementById('comisiones').value = toNumberSafe(planRow.comisiones || 0);
       document.getElementById('hextrasMonto').value = toNumberSafe(planRow.hextras || planRow._hextras || 0);
-      document.getElementById('otrosIngresos').value = toNumberSafe(planRow.otros_ingresos || 0);
 
       const igssVal = toNumberSafe(planRow.igss ?? planRow.IGSS ?? ( (planRow.sueldo||planRow.Sueldo||0) * 0.0483 ));
-      document.getElementById('igss').value = igssVal;
+      const igssTrunc = Math.trunc(igssVal * 100) / 100;
+      document.getElementById('igss').value = igssTrunc.toFixed(2);
 
       document.getElementById('isr').value = toNumberSafe(planRow.isr ?? planRow._isrValue ?? 0);
       document.getElementById('otrasDeducciones').value = toNumberSafe(planRow.otras ?? planRow.otras_deducciones ?? 0);
@@ -312,8 +306,13 @@
       if(data.bono !== undefined) document.getElementById('bonificacion').value = toNumberSafe(data.bono);
       if(data.comisiones !== undefined) document.getElementById('comisiones').value = toNumberSafe(data.comisiones);
       if(data.hextras_monto !== undefined) document.getElementById('hextrasMonto').value = toNumberSafe(data.hextras_monto);
-      if(data.otros_ingresos !== undefined) document.getElementById('otrosIngresos').value = toNumberSafe(data.otros_ingresos);
-      if(data.igss !== undefined) document.getElementById('igss').value = toNumberSafe(data.igss);
+
+      if(data.igss !== undefined){
+        const ig = toNumberSafe(data.igss);
+        const igTr = Math.trunc(ig * 100) / 100;
+        document.getElementById('igss').value = igTr.toFixed(2);
+      }
+
       if(data._isrValue !== undefined) document.getElementById('isr').value = toNumberSafe(data._isrValue);
       if(data.otras_deducciones !== undefined) document.getElementById('otrasDeducciones').value = toNumberSafe(data.otras_deducciones);
 
@@ -325,13 +324,15 @@
 
   function recalcLiquido(){
     const toNum = id => Number(document.getElementById(id).value || 0);
-    const ganancias = toNum('sueldoBase') + toNum('hextrasMonto') + toNum('bonificacion') + toNum('comisiones') + toNum('otrosIngresos');
+    // igss input is text (formatted to 2 decimals); toNum will parse correctly
+    const ganancias = toNum('sueldoBase') + toNum('hextrasMonto') + toNum('bonificacion') + toNum('comisiones');
     const deducciones = toNum('igss') + toNum('isr') + toNum('otrasDeducciones');
     const liquido = round2(ganancias - deducciones);
     document.getElementById('liquidoTotal').value = fmt(liquido);
     document.getElementById('totalEnLetras').value = numeroALetrasEnEspañol(liquido);
   }
 
+  // Conversión a letras en español (maneja hasta millones, negativos y centavos)
   function numeroALetrasEnEspañol(num){
     if (isNaN(num)) return '';
     const negativo = num < 0;
@@ -402,7 +403,7 @@
     return parts.join(' ').replace(/\s+/g,' ').trim();
   }
 
-  // on-screen toggle of extra payment fields
+  // payment method toggles on screen (show extra fields when selected)
   function updateMediosOnScreen(){
     const val = document.querySelector('input[name="medioPago"]:checked')?.value;
     document.querySelectorAll('.transferencia-fields').forEach(el=>el.style.display = (val === 'TRANSFERENCIA') ? 'block' : 'none');
@@ -411,7 +412,7 @@
   document.querySelectorAll('input[name="medioPago"]').forEach(r=>r.addEventListener('change', updateMediosOnScreen));
   updateMediosOnScreen();
 
-  // Printing behavior: before print, remove unneeded controls and show only selected payment method
+  // Printing behavior: before print, add a class to body to indicate which medio is selected
   function beforePrintSetup(){
     const val = document.querySelector('input[name="medioPago"]:checked')?.value || '';
     document.body.classList.remove('print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
@@ -428,13 +429,14 @@
   window.addEventListener('beforeprint', beforePrintSetup);
   window.addEventListener('afterprint', afterPrintCleanup);
 
+  // print button: ensure we run beforePrintSetup just in case, then print
   const imprimirBtn = document.getElementById('imprimirBtn');
   if(imprimirBtn) imprimirBtn.addEventListener('click', function(){
     beforePrintSetup();
     setTimeout(()=> window.print(), 80);
   });
 
-  ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones','otrosIngresos'].forEach(id=>{
+  ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.addEventListener('input', recalcLiquido);
   });
@@ -532,8 +534,8 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
   .section-card .card-body.section-grid { display:flex; gap:10px; flex-wrap:nowrap; }
   .section-card .section-left, .section-card .section-right { flex:0 0 50%; min-width:45%; }
 
-  /* Ensure total and payment method render below total (already in DOM) and only selected payment method prints */
-  .printable-option { display:none; } /* hide all payment blocks by default */
+  /* Only selected payment method prints (method blocks are below total) */
+  .printable-option { display:none; }
   body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:block; }
   body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:block; }
   body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:block; }
