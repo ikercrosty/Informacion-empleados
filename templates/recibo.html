@@ -145,36 +145,45 @@
       <div class="payment-methods">
         <h6 class="mb-2">MEDIOS DE PAGO</h6>
 
-        <div class="form-check printable-option" data-option="EFECTIVO">
-          <input class="form-check-input medio-radio" type="radio" name="medioPago" id="pagoEfectivo" value="EFECTIVO" checked>
-          <label class="form-check-label" for="pagoEfectivo">EFECTIVO</label>
-        </div>
+        <div class="payment-row">
+          <div class="form-check printable-option" data-option="EFECTIVO">
+            <input class="form-check-input medio-radio" type="radio" name="medioPago" id="pagoEfectivo" value="EFECTIVO" checked>
+            <label class="form-check-label" for="pagoEfectivo">EFECTIVO</label>
+          </div>
 
-        <div class="form-check printable-option" data-option="TRANSFERENCIA">
-          <input class="form-check-input medio-radio" type="radio" name="medioPago" id="pagoTransferencia" value="TRANSFERENCIA">
-          <label class="form-check-label" for="pagoTransferencia">TRANSFERENCIA BANCARIA</label>
+          <div class="form-check printable-option" data-option="TRANSFERENCIA">
+            <input class="form-check-input medio-radio" type="radio" name="medioPago" id="pagoTransferencia" value="TRANSFERENCIA">
+            <label class="form-check-label" for="pagoTransferencia">TRANSFERENCIA BANCARIA</label>
 
-          <div class="transferencia-fields mt-2 ms-3">
-            <div class="field-row">
-              <label class="field-label" for="transCuenta">No. de cuenta</label>
-              <input id="transCuenta" class="form-control trans-input trans-cuenta" type="text" aria-label="Número de cuenta (transferencia)">
+            <div class="transferencia-fields mt-1 ms-3">
+              <div class="field-row">
+                <label class="field-label" for="transCuenta">No. de cuenta</label>
+                <input id="transCuenta" class="form-control trans-input trans-cuenta" type="text" aria-label="Número de cuenta (transferencia)">
+              </div>
+              <div class="field-row">
+                <label class="field-label" for="transBanco">Banco</label>
+                <input id="transBanco" class="form-control trans-input trans-banco" type="text" aria-label="Banco (transferencia)">
+              </div>
             </div>
-            <div class="field-row">
-              <label class="field-label" for="transBanco">Banco</label>
-              <input id="transBanco" class="form-control trans-input trans-banco" type="text" aria-label="Banco (transferencia)">
+          </div>
+
+          <div class="form-check printable-option" data-option="CHEQUE">
+            <input class="form-check-input medio-radio" type="radio" name="medioPago" id="pagoCheque" value="CHEQUE">
+            <label class="form-check-label" for="pagoCheque">CHEQUE</label>
+
+            <div class="cheque-fields mt-1 ms-3">
+              <div class="field-row-inline">
+                <label class="field-label-inline" for="chequeNumero">No. de cheque</label>
+                <input id="chequeNumero" class="form-control trans-input trans-cheque-num" type="text" aria-label="Número de cheque">
+              </div>
+              <div class="field-row-inline">
+                <label class="field-label-inline" for="chequeBanco">Banco</label>
+                <input id="chequeBanco" class="form-control trans-input trans-cheque-ban" type="text" aria-label="Banco (cheque)">
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="form-check printable-option" data-option="CHEQUE">
-          <input class="form-check-input medio-radio" type="radio" name="medioPago" id="pagoCheque" value="CHEQUE">
-          <label class="form-check-label" for="pagoCheque">CHEQUE</label>
-
-          <div class="cheque-fields mt-2 ms-3">
-            <input id="chequeNumero" class="form-control mb-1" type="text" placeholder="No. de cheque">
-            <input id="chequeBanco" class="form-control" type="text" placeholder="Banco (cheque)">
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -472,8 +481,8 @@
 
   function updateMediosOnScreen(){
     const val = document.querySelector('input[name="medioPago"]:checked')?.value;
-    document.querySelectorAll('.transferencia-fields').forEach(el=>el.style.display = (val === 'TRANSFERENCIA') ? 'block' : 'none');
-    document.querySelectorAll('.cheque-fields').forEach(el=>el.style.display = (val === 'CHEQUE') ? 'block' : 'none');
+    document.querySelectorAll('.transferencia-fields').forEach(el=>el.style.display = (val === 'TRANSFERENCIA') ? 'flex' : 'none');
+    document.querySelectorAll('.cheque-fields').forEach(el=>el.style.display = (val === 'CHEQUE') ? 'flex' : 'none');
   }
   document.querySelectorAll('input[name="medioPago"]').forEach(r=>r.addEventListener('change', updateMediosOnScreen));
   updateMediosOnScreen();
@@ -575,32 +584,39 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
 .transferencia-fields, .cheque-fields { display:none; }
 
 /* New transfer fields styling */
-.transferencia-fields { display:none; margin-top:6px; }
+.transferencia-fields { display:none; margin-top:6px; gap:8px; align-items:center; flex-direction:row; }
 .transferencia-fields .field-row {
   display:flex;
   flex-direction:column;
   gap:6px;
-  margin-bottom:6px;
+  margin-bottom:0;
 }
-.transferencia-fields .field-label {
+.field-row-inline { display:flex; flex-direction:column; gap:6px; margin-right:8px; }
+.field-row-inline input { min-width:160px; }
+.field-label {
   font-weight:700;
   font-size:0.85rem;
   color:var(--muted);
   margin-left:2px;
 }
+.field-label-inline { font-weight:700; font-size:0.85rem; color:var(--muted); margin-bottom:4px; }
+
+/* Inputs more like screen */
 .trans-input {
   width:100%;
-  min-width:260px;
-  max-width:520px;
-  border-radius:12px;
+  min-width:220px;
+  max-width:420px;
+  border-radius:10px;
   border:1px solid rgba(11,19,30,0.09);
   padding:10px 12px;
   background:#fff;
   box-shadow: 0 6px 18px rgba(11,50,80,0.04);
   font-size:0.95rem;
 }
-.trans-cuenta { letter-spacing:0.3px; }
-.trans-banco  { letter-spacing:0.3px; }
+.trans-cuenta { letter-spacing:0.2px; }
+.trans-banco  {letter-spacing:0.2px; }
+.trans-cheque-num { min-width:140px; max-width:220px; }
+.trans-cheque-ban { min-width:140px; max-width:220px; }
 
 /* Liquido and Total inline on screen */
 .liquido-total-row { padding-top:8px; }
@@ -608,13 +624,16 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
 .liquido-block { display:flex; flex-direction:column; gap:6px; }
 .letras-block { flex:1 1 60%; min-width:200px; display:flex; flex-direction:column; gap:6px; }
 
+/* Payment row: allow inline layout */
+.payment-row { display:flex; gap:18px; align-items:center; flex-wrap:wrap; }
+
 /* Signatures horizontal */
 .signatures-row { display:flex; gap:18px; align-items:center; justify-content:space-between; }
 .signatures-row .sig-col { flex:1 1 48%; text-align:center; }
 
 /* Print styles */
 @media print {
-  @page { size: A4; margin: 3mm; } /* set A5 page size as requested */
+  @page { size: A5; margin: 8mm; } /* A5 as requested */
 
   body { background: #fff !important; color: #000; }
 
@@ -655,36 +674,48 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
     background:#fff;
   }
 
-  /* Liquido and Total same line in print */
-  .liquido-total-row { padding:6px 0 8px 0; page-break-inside: avoid; }
-  .liquido-total-inner { display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:nowrap; }
-  .liquido-block { min-width:140px; }
-  #liquidoTotal { width:140px; font-size:11px; padding:6px; }
+  /* Liquido and Total same line in print with reduced gap */
+  .liquido-total-row { padding:6px 0 8px 0; page-break-inside: avoid; margin-bottom:4px; }
+  .liquido-total-inner { display:flex; gap:6px; align-items:center; justify-content:space-between; flex-wrap:nowrap; }
+  .liquido-block { min-width:120px; }
+  #liquidoTotal { width:120px; font-size:11px; padding:6px; }
 
-  .totals-card { border-top: 1px solid #222; padding-top:6px; margin-top:6px; }
+  /* Make TOTAL EN LETRAS and MEDIOS DE PAGO closer: eliminate large top margins */
+  .totals-card { border-top: 1px solid #222; padding-top:6px; margin-top:4px; }
   .totals-card .card-body { padding:6px; display:block; }
 
-  .payment-methods { margin-top:6px; }
-  .form-check { display:inline-flex; gap:6px; align-items:center; margin-right:8px; }
-  .form-check-label { font-size:10px; font-weight:700; }
+  .payment-methods { margin-top:6px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
+  /* Show payment options inline horizontally for selected transfer/cheque */
+  .form-check { display:inline-flex; gap:6px; align-items:center; margin-right:10px; vertical-align:middle; }
+  .form-check-label { font-size:10px; font-weight:700; margin-left:4px; }
 
   .printable-option { display:none; }
   body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:inline-flex; }
   body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:inline-flex; }
   body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:inline-flex; }
-  body.print-medio-TRANSFERENCIA .transferencia-fields { display:inline-block; margin-left:6px; }
-  body.print-medio-CHEQUE .cheque-fields { display:inline-block; margin-left:6px; }
 
-  /* Compact transfer fields in print */
-  body.print-medio-TRANSFERENCIA .trans-input {
+  /* Inline display of transfer/cheque fields in print */
+  body.print-medio-TRANSFERENCIA .transferencia-fields,
+  body.print-medio-CHEQUE .cheque-fields {
+    display:inline-flex !important;
+    gap:8px;
+    align-items:center;
+    margin-left:6px;
+  }
+
+  /* Compact transfer inputs for print */
+  body.print-medio-TRANSFERENCIA .trans-input,
+  body.print-medio-CHEQUE .trans-input {
     box-shadow:none;
     border:1px solid #111 !important;
     padding:4px 6px;
-    min-width:120px;
-    max-width:260px;
+    min-width:100px;
+    max-width:220px;
     font-size:10px;
   }
-  body.print-medio-TRANSFERENCIA .field-label { font-size:10px; color:#111; margin-left:0; }
+  body.print-medio-TRANSFERENCIA .field-label,
+  body.print-medio-CHEQUE .field-label-inline { font-size:10px; color:#111; margin-left:0; display:block; }
 
   /* Signatures on same horizontal line */
   .print-signatures { display:flex; gap:12px; justify-content:space-between; align-items:center; padding-top:6px; }
@@ -697,11 +728,13 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
   .card, .section-card, .totals-card, .signatures-row { page-break-inside: avoid; break-inside: avoid; }
 }
 
-/* Ensure on-screen payment extras controlled by JS appear correctly */
+/* Ensure on-screen payment extras controlled by JS appear correctly: show inline row for transfer/cheque */
 input[name="medioPago"][value="TRANSFERENCIA"]:checked ~ .transferencia-fields,
 input[name="medioPago"][value="CHEQUE"]:checked ~ .cheque-fields {
   display:flex;
-  flex-direction:column;
+  flex-direction:row;
+  gap:10px;
+  align-items:center;
 }
 
 /* Micro polish */
