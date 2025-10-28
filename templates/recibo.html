@@ -513,12 +513,12 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
 .small { font-size:0.86rem; }
 
 /* Inputs */
-.form-control { border-radius:6px; border:1px solid rgba(11,19,30,0.06); background:#fff; padding:6px 8px; font-size:1.15rem; }
+.form-control { border-radius:6px; border:1px solid rgba(11,19,30,0.06); background:#fff; padding:6px 8px; font-size:0.92rem; }
 .form-control[readonly] { background:#fbfdff; color:#0b2a36; }
-.compact-input { padding:5px 6px; font-size:20px; }
+.compact-input { padding:5px 6px; font-size:0.88rem; }
 
 /* Compact amount */
-.compact-amount { width:150px; padding:6px; font-size:20px; }
+.compact-amount { width:150px; padding:6px; font-size:0.95rem; }
 
 /* Small visual card */
 .card { border-radius:8px; background:linear-gradient(180deg,#fff,#fbfcff); border:1px solid rgba(11,19,30,0.04); margin-bottom:6px; box-shadow:0 6px 18px rgba(11,50,80,0.03); }
@@ -568,20 +568,20 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
   .empleado-selection, .form-check-input, select, .btn-imprimir, input[type="date"], .header-controls { display:none !important; }
 
   /* Compact typography */
-  h3, h5, h6, label { margin:0; padding:0; font-weight:700; font-size:14px; line-height:1; }
-  .title-large { font-size:15px; font-weight:800; }
+  h3, h5, h6, label { margin:0; padding:0; font-weight:700; font-size:10px; line-height:1; }
+  .title-large { font-size:11px; font-weight:800; }
 
-  /* Inputs smaller in print - FONT SIZE INCREASED INSIDE TEXTBOXES */
+  /* Inputs smaller in print */
   input.form-control, input.form-control[readonly] {
     background:#fff !important;
     border:1px solid #111 !important;
     color:#000 !important;
     padding:3px 6px !important;
-    font-size:11px !important;
+    font-size:9px !important;
     box-shadow:none;
   }
-  .compact-input { font-size:11px !important; padding:3px 6px !important; }
-  .compact-amount { width:120px !important; font-size:12px !important; padding:4px 6px !important; }
+  .compact-input { font-size:9px !important; padding:3px 6px !important; }
+  .compact-amount { width:120px !important; font-size:10px !important; padding:4px 6px !important; }
 
   /* Tighten layout */
   .section-grid { gap:6px; flex-wrap:nowrap; align-items:flex-start; }
@@ -592,7 +592,7 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
   .letras-block { min-width:100px; }
 
   /* Payment methods: show only selected option */
-  .printable-option { display:none; font-size:12px; }
+  .printable-option { display:none; font-size:9px; }
   body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:inline-block; }
   body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:inline-block; }
   body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:inline-block; }
