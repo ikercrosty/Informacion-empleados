@@ -583,6 +583,11 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
   .card { box-shadow:none !important; border:none !important; background:transparent !important; }
   .card .card-body { padding:6px; }
 
+ 
+  /* Hide comprobante number input and lugar fields in print */
+  .meta-block .mb-2 { display: none !important; }
+  #lugarPago { display:none !important; }
+  #print_lugar { display:none !important; } /* hide print copy of Lugar */
 
   /* Show mirrored printable header fields */
   .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color: #111; }
