@@ -171,7 +171,6 @@
   </div>
 </div>
 
-<!-- Scripts: (JS corregido para evitar errores) -->
 <script>
 (function(){
   const PLANILLA_STORAGE_KEY = 'empaquetex_planilla_noviembre_v1';
@@ -449,11 +448,10 @@
     return parts.join(' ').replace(/\s+/g,' ').trim();
   }
 
+  // ---------- Control de medios de pago (pantalla + impresión) ----------
   function updateMediosOnScreen(){
-    // Get the currently checked value
     const val = document.querySelector('input[name="medioPago"]:checked')?.value || '';
 
-    // Explicitly show/hide on-screen sections
     document.querySelectorAll('.transferencia-fields').forEach(el => {
       el.style.display = (val === 'TRANSFERENCIA') ? 'flex' : 'none';
       el.setAttribute('aria-hidden', (val === 'TRANSFERENCIA') ? 'false' : 'true');
@@ -463,21 +461,16 @@
       el.setAttribute('aria-hidden', (val === 'CHEQUE') ? 'false' : 'true');
     });
 
-    // Keep printable-option labels visibility in sync for print
     document.body.classList.remove('print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
     if(val) document.body.classList.add('print-medio-' + val);
   }
-
-  // Attach change listeners to radios and run once
   document.querySelectorAll('input[name="medioPago"]').forEach(radio => {
     radio.addEventListener('change', updateMediosOnScreen);
   });
-  // ensure correct initial state on page load
   updateMediosOnScreen();
 
   // ---------- Print handlers ----------
   function beforePrintSetup(){
-    // set body class for print to reflect selected medioPago
     updateMediosOnScreen();
     syncPrintableComprobante();
     stripQForPrint();
@@ -510,7 +503,6 @@
     loadEmpleados();
     recalcLiquido();
     syncPrintableComprobante();
-    // ensure payment fields reflect current selection after DOM ready
     updateMediosOnScreen();
   });
 })();
@@ -545,6 +537,9 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
 .form-control[readonly] { background:#fbfdff; color:#0b2a36; }
 .compact-input { padding:5px 6px; font-size:0.88rem; }
 
+/* Transfer inputs default wider on screen */
+.trans-input { min-width:220px; max-width:520px; padding:8px 10px; }
+
 /* Compact amount */
 .compact-amount { width:150px; padding:6px; font-size:0.95rem; }
 
@@ -558,7 +553,6 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
 
 /* Payment method extras */
 .transferencia-fields, .cheque-fields { display:none; gap:6px; align-items:center; }
-.trans-input { min-width:120px; padding:6px; }
 
 /* Signatures */
 .sig-line { border-bottom:1px dashed #bfc7cb; height:1px; margin-bottom:6px; }
@@ -579,80 +573,66 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
 .mb-1 { margin-bottom:6px !important; }
 .mt-1 { margin-top:6px !important; }
 
-/* Print styles: compact to fit two receipts per page */
+/* Print styles */
 @media print {
   @page { size: A4; margin: 4mm; }
 
   body { background:#fff; color:#000; margin:0; padding:0; }
 
-  /* Each .container should occupy ~48% width so two fit side-by-side */
   .receipt-root { width:48%; max-width:48%; float:left; margin:3mm 1% 0 1%; box-sizing:border-box; }
 
-  /* Remove shadows and large borders for print */
   .card { box-shadow:none !important; border:1px solid #ffffff !important; background:#fff !important; margin:0 0 4px 0; border-radius:4px !important; }
   .card .card-body { padding:4px !important; }
 
-  /* Hide interactive elements except radio inputs so selection and labels can be printed */
+  /* Hide interactive controls not needed on print */
   .empleado-selection, select, .btn-imprimir, input[type="date"], .header-controls { display:none !important; }
 
-  /* Compact typography */
-  h3, h5, h6, label { margin:0; padding:0; font-weight:700; font-size:10px; line-height:1; }
-  .title-large { font-size:11px; font-weight:800; }
+  /* IMPORTANT: hide the radio control visuals in print so the 'botoncito' doesn't appear */
+  .form-check-input { display:none !important; }
 
-  /* Inputs inside print: tamaño de letra aumentado en textboxes (CORRECCIÓN APLICADA) */
-  input[type="text"],
-  input[type="number"],
-  input[type="tel"],
-  input[type="email"],
-  input[type="date"],
-  textarea,
-  select,
-  input.form-control,
-  input.form-control[readonly],
-  .compact-input,
-  .compact-amount {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    -webkit-text-size-adjust: none;
-    font-size: 13px !important;
-    line-height: 1.15 !important;
-    padding: 3px 6px !important;
-    -webkit-appearance: none !important;
-    appearance: none !important;
+  /* Labels for payment options must remain visible */
+  .form-check-label { display:inline-block !important; }
+
+  /* Ensure print-only date mirror is visible */
+  .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color:#111; font-size:11px; margin-bottom:6px; }
+
+  /* Inputs in print: compact padding and readable font */
+  input.form-control, input.form-control[readonly] {
+    background: #fff !important;
+    border: 1px solid #111 !important;
+    color: #000 !important;
+    padding: 4px 6px !important;
+    font-size: 11px !important;
+    box-shadow:none;
   }
 
-  /* Tighten layout */
-  .section-grid { gap:6px; flex-wrap:nowrap; align-items:flex-start; }
-  .section-left, .section-right { flex:0 0 50%; min-width:0; padding:4px; }
-  .box-left, .box-right { padding:4px; border:1px solid #111; border-radius:3px; }
+  /* Make transferencia / cheque textboxes wider in print so long values fit */
+  body.print-medio-TRANSFERENCIA .transferencia-fields .trans-input,
+  body.print-medio-CHEQUE .cheque-fields .trans-input {
+    min-width:260px !important;
+    max-width:380px !important;
+    padding:5px 8px !important;
+    font-size:11px !important;
+  }
 
-  .liquido-total-row { padding:4px 0; margin-top:4px; }
-  .letras-block { min-width:100px; }
-
-  /* Payment methods: show only selected option */
-  .printable-option { display:none; font-size:9px; }
-  body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:inline-block; }
-  body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:inline-block; }
-  body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:inline-block; }
+  /* Payment methods presentation in print */
+  .printable-option { display:none; font-size:10px; }
+  body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:inline-flex; }
+  body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:inline-flex; }
+  body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:inline-flex; }
 
   /* Show transfer/cheque fields inline in print when selected */
   body.print-medio-TRANSFERENCIA .transferencia-fields,
   body.print-medio-CHEQUE .cheque-fields {
     display:inline-flex !important;
-    gap:6px;
+    gap:8px;
     align-items:center;
     margin-left:6px;
   }
 
-  /* Signatures compressed */
+  /* Compact signatures */
   .print-signatures .sig-col { flex:1 1 48%; text-align:center; padding:0 4px; }
   .sig-line { margin-bottom:6px; border-bottom:1px dashed #111; }
-
-  /* Prevent page breaks inside each receipt */
-  .receipt-root, .card, .section-card, .totals-card, .signatures-row { page-break-inside: avoid; break-inside: avoid; }
-
-  /* Remove floats break for second column on last page */
-  .receipt-root:last-of-type { margin-bottom:6mm; }
 }
 
 /* Ensure on-screen payment extras controlled by JS appear correctly */
