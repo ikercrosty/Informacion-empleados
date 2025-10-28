@@ -55,10 +55,7 @@
             <input id="nombre" class="form-control" readonly value="{{ recibo.nombre if recibo is defined else '' }}">
           </div>
 
-          <div class="col-12 mt-2">
-            <label class="form-label">Lugar / Ciudad</label>
-            <input id="lugarPago" class="form-control" type="text" placeholder="GUATEMALA" value="GUATEMALA">
-          </div>
+
 
           <div class="col-12 mt-2">
             <label class="form-label">DPI / Identificación</label>
@@ -290,12 +287,6 @@
       el.dataset._orig = el.value;
       el.value = String(el.value).replace(/^Q\s*/i,'').trim();
     });
-    // hide Lugar/Ciudad fields visually for print by setting data flag (CSS will hide)
-    const lugar = document.getElementById('lugarPago');
-    if(lugar) lugar.dataset._hiddenForPrint = '1';
-    const printLugar = document.getElementById('print_lugar');
-    if(printLugar) printLugar.dataset._hiddenForPrint = '1';
-    // hide comprobante number label/value in print area (CSS will hide .meta-block .mb-2)
   }
 
   // restore originals after print
