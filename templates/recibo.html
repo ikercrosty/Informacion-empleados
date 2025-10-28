@@ -10,23 +10,15 @@
         <div class="small text-muted">Empresa: {{ empresa_nombre|default('Empaques y texturas de Guatemala S.A') }}</div>
       </div>
 
-      <div class="text-end meta-block" style="min-width:320px;">
-        <div class="mb-2">
-          <label class="form-label small text-muted">Comprobante No</label>
-          <input id="comprobanteNumero" class="form-control form-control-sm" type="text" value="{{ recibo.numero if recibo is defined else '' }}">
-          <div id="print_comprobanteNumero" class="print-only small-print" aria-hidden="true"></div>
+      <div class="d-flex gap-2 align-items-end justify-content-end">
+        <div style="flex:1; min-width:140px;">
+          <label class="form-label small text-muted">Fecha</label>
+          <input id="comprobanteFecha" class="form-control form-control-sm" type="date" value="{{ recibo.fecha if recibo is defined else fecha_emision if fecha_emision is defined else '' }}">
+          <div id="print_comprobanteFecha" class="print-only small-print" aria-hidden="true"></div>
         </div>
 
-        <div class="d-flex gap-2 align-items-end justify-content-end">
-          <div style="flex:1; min-width:140px;">
-            <label class="form-label small text-muted">Fecha</label>
-            <input id="comprobanteFecha" class="form-control form-control-sm" type="date" value="{{ recibo.fecha if recibo is defined else fecha_emision if fecha_emision is defined else '' }}">
-            <div id="print_comprobanteFecha" class="print-only small-print" aria-hidden="true"></div>
-          </div>
-
-          <div style="align-self:flex-end;">
-            <button id="imprimirBtn" class="btn-imprimir" title="Imprimir recibo">Imprimir</button>
-          </div>
+        <div style="align-self:flex-end;">
+          <button id="imprimirBtn" class="btn-imprimir" title="Imprimir recibo">Imprimir</button>
         </div>
       </div>
     </div>
@@ -56,11 +48,6 @@
           </div>
 
           <div class="col-12 mt-2">
-            <label class="form-label">Lugar / Ciudad</label>
-            <input id="lugarPago" class="form-control" type="text" placeholder="GUATEMALA" value="{{ recibo.lugar if recibo is defined else 'GUATEMALA' }}">
-          </div>
-
-          <div class="col-12 mt-2">
             <label class="form-label">DPI / Identificación</label>
             <input id="dpi" class="form-control" readonly value="{{ recibo.dpi if recibo is defined else '' }}">
           </div>
@@ -69,7 +56,7 @@
     </div>
   </div>
 
-  <!-- Imprimible Datos del Trabajador justo arriba de Ganancias (visible on screen and print copy fields synced) -->
+  <!-- Imprimible Datos del Trabajador (síncronizados) -->
   <div class="card shadow-sm mb-4 datos-trabajador-print">
     <div class="card-body">
       <h6 class="mb-2">Datos del Trabajador</h6>
@@ -77,10 +64,6 @@
         <div class="col-8">
           <label class="form-label small">Nombre completo</label>
           <input id="print_nombre" class="form-control" readonly value="{{ recibo.nombre if recibo is defined else '' }}">
-        </div>
-        <div class="col-4">
-          <label class="form-label small">Lugar / Ciudad</label>
-          <input id="print_lugar" class="form-control" readonly value="{{ recibo.lugar if recibo is defined else 'GUATEMALA' }}">
         </div>
         <div class="col-4 mt-2">
           <label class="form-label small">DPI / Identificación</label>
@@ -211,24 +194,19 @@
 
   function fmt(n){ return 'Q ' + Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}); }
 
-  // Defensive: devuelve el mejor identificador para comparar con planilla
   function pickEmployeeKey(e){
-    // prefer DPI-like keys if present, fallback to id or email or full_name
-    return String(e.dpi || e.DPI || e.numero || e.numero_identificacion || e.id || e.numeroDPI || e.numero_dpi || e.numeroIdentificacion || e.NumeroDPI || e.full_name || '').trim();
+    return String(e.dpi || e.DPI || e.numero || e.numero_identificacion || e.id || e.full_name || '').trim();
   }
 
   function loadEmpleados(){
     fetch('/api/empleados').then(r => r.json()).then(list => {
       const sel = document.getElementById('empleadoSelect');
       if(!Array.isArray(list) || !sel) return;
-      // clear existing options except placeholder
       sel.querySelectorAll('option:not([value=""])').forEach(o => o.remove());
       list.forEach(e => {
         const opt = document.createElement('option');
-        // use best matching key as value so it matches planilla rows (if planilla used DPI or id)
         opt.value = pickEmployeeKey(e);
-        // label: prefer full name, fallback to DPI or id
-        opt.textContent = e.full_name || ( (e.Nombre || '') + (e.Apellidos ? (' ' + e.Apellidos) : '') ) || pickEmployeeKey(e) || 'Empleado';
+        opt.textContent = e.full_name || ((e.Nombre || '') + (e.Apellidos ? (' ' + e.Apellidos) : '')) || pickEmployeeKey(e) || 'Empleado';
         sel.appendChild(opt);
       });
     }).catch(()=>{});
@@ -245,20 +223,18 @@
     }
   }
 
-  // Robust planilla lookup: compare the selected value against many possible row keys
   function findPlanillaRowByDpi(dpi){
-    if(!dpi && dpi !== 0) return null;
+    if(dpi === undefined || dpi === null) return null;
     const plan = loadPlanillaFromLocal();
     if(!plan) return null;
     const rows = plan.rows || [];
     const needle = String(dpi).trim();
     for(const r of rows){
-      // check multiple candidate fields inside each row
       const candidates = [
         r.dpi, r.DPI, r.Dpi,
         r.numero, r.numero_identificacion, r.numeroDPI, r.numero_dpi,
         r.id, r.ID, r.identificacion,
-        r.Nombre, r.nombre, (r.Apellidos ? (r.Apellidos + ' ' + (r.Nombre||'')) : null),
+        r.Nombre, r.nombre,
         r.full_name, r.fullName
       ];
       for(const c of candidates){
@@ -275,18 +251,13 @@
     const s = String(v).replace(/\s+/g,'').replace(/^Q/i,'').replace(/,/g,'').trim();
     const n = Number(s);
     if(isFinite(n)) return n;
-    // try parseFloat fallback
     const f = parseFloat(s);
     return isFinite(f) ? f : 0;
   }
 
-  // sync printable comprobante fields
   function syncPrintableComprobante(){
-    const num = document.getElementById('comprobanteNumero')?.value || '';
     const fecha = document.getElementById('comprobanteFecha')?.value || '';
-    const printNum = document.getElementById('print_comprobanteNumero');
     const printFecha = document.getElementById('print_comprobanteFecha');
-    if(printNum) printNum.textContent = num ? ('Comprobante No: ' + num) : '';
     if(printFecha) {
       let text = fecha;
       if(fecha){
@@ -308,7 +279,6 @@
     }
   }
 
-  // strip leading "Q " from amount inputs for print, store originals
   function stripQForPrint(){
     const amountIds = ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones','liquidoTotal'];
     amountIds.forEach(id=>{
@@ -331,7 +301,6 @@
     });
   }
 
-  // When empleado is selected: try planilla row first, else fetch personal endpoint
   document.getElementById('empleadoSelect')?.addEventListener('change', function(){
     const rawVal = this.value || '';
     if(!rawVal){
@@ -339,59 +308,49 @@
         const el = document.getElementById(id);
         if(el) el.value = (el.readOnly ? '' : 0);
       });
-      // clear print copies
       document.getElementById('print_nombre').value = '';
       document.getElementById('print_dpi').value = '';
-      document.getElementById('print_lugar').value = 'GUATEMALA';
       recalcLiquido();
       return;
     }
 
-    // first, try to find a matching planilla row
     const planRow = findPlanillaRowByDpi(rawVal);
 
     if(planRow){
-      // fill UI from planilla data (prefer planilla numeric fields, fallback to employee fields)
-      const nombre = planRow.nombre || planRow.Nombre || planRow.full_name || planRow.FullName || '';
-      const dpiVal = planRow.dpi || planRow.DPI || planRow.numero || planRow.numero_identificacion || planRow.id || '';
-      const lugar = planRow.lugar || planRow.ciudad || planRow.Lugar || planRow.Ciudad || document.getElementById('lugarPago')?.value || 'GUATEMALA';
+      const nombre = planRow.nombre || planRow.Nombre || planRow.full_name || '';
+      const dpiVal = planRow.dpi || planRow.DPI || planRow.numero || planRow.id || rawVal;
 
       document.getElementById('nombre').value = nombre;
       document.getElementById('dpi').value = dpiVal;
 
       document.getElementById('print_nombre').value = nombre;
       document.getElementById('print_dpi').value = dpiVal;
-      document.getElementById('print_lugar').value = lugar;
 
-      document.getElementById('sueldoBase').value = toNumberSafe(planRow.sueldo ?? planRow.Sueldo ?? planRow.SALARIO ?? 0);
-      document.getElementById('bonificacion').value = toNumberSafe(planRow.bono ?? planRow.bon ?? planRow.bonus ?? 0);
-      // comisiones might be under different keys; handle sum if necessary
-      document.getElementById('comisiones').value = toNumberSafe(planRow.comisiones ?? planRow.Comisiones ?? planRow.commission ?? 0);
-      document.getElementById('hextrasMonto').value = toNumberSafe(planRow.hextras ?? planRow.hextras_monto ?? planRow._hextras ?? 0);
+      document.getElementById('sueldoBase').value = toNumberSafe(planRow.sueldo ?? planRow.Sueldo ?? 0);
+      document.getElementById('bonificacion').value = toNumberSafe(planRow.bono ?? planRow.bon ?? 0);
+      document.getElementById('comisiones').value = toNumberSafe(planRow.comisiones ?? planRow.Comisiones ?? 0);
+      document.getElementById('hextrasMonto').value = toNumberSafe(planRow.hextras ?? planRow.hextras_monto ?? 0);
 
-      const igssVal = toNumberSafe(planRow.igss ?? planRow.IGSS ?? ( (planRow.sueldo||planRow.Sueldo||0) * 0.0483 ));
+      const igssVal = toNumberSafe(planRow.igss ?? planRow.IGSS ?? ((planRow.sueldo||planRow.Sueldo||0) * 0.0483));
       const igssTrunc = Math.trunc(igssVal * 100) / 100;
       document.getElementById('igss').value = igssTrunc.toFixed(2);
 
-      document.getElementById('isr').value = toNumberSafe(planRow.isr ?? planRow._isrValue ?? planRow.ISR ?? 0);
-      document.getElementById('otrasDeducciones').value = toNumberSafe(planRow.otras ?? planRow.otras_deducciones ?? planRow.deducciones ?? 0);
+      document.getElementById('isr').value = toNumberSafe(planRow.isr ?? planRow._isrValue ?? 0);
+      document.getElementById('otrasDeducciones').value = toNumberSafe(planRow.otras ?? planRow.otras_deducciones ?? 0);
 
       recalcLiquido();
       return;
     }
 
-    // fallback: fetch employee personal and payroll fields from API endpoint
     fetch('/api/empleado/' + encodeURIComponent(rawVal)).then(r => r.json()).then(data => {
       const nombre = data.Nombre || data.nombre || data.full_name || '';
-      const dpiVal = data['Numero de DPI'] || data.dpi || data.numero || data.id || '';
-      const lugar = data.lugar || data.ciudad || document.getElementById('lugarPago')?.value || 'GUATEMALA';
+      const dpiVal = data['Numero de DPI'] || data.dpi || data.numero || rawVal;
 
       document.getElementById('nombre').value = nombre;
       document.getElementById('dpi').value = dpiVal;
 
       document.getElementById('print_nombre').value = nombre;
       document.getElementById('print_dpi').value = dpiVal;
-      document.getElementById('print_lugar').value = lugar;
 
       if(data.Sueldo !== undefined) document.getElementById('sueldoBase').value = toNumberSafe(data.Sueldo);
       if(data.bono !== undefined) document.getElementById('bonificacion').value = toNumberSafe(data.bono);
@@ -409,7 +368,6 @@
 
       recalcLiquido();
     }).catch(()=>{
-      // if fetch fails, clear numeric fields defensively
       ['sueldoBase','bonificacion','comisiones','hextrasMonto','igss','isr','otrasDeducciones'].forEach(id=>{
         const el = document.getElementById(id);
         if(el) el.value = 0;
@@ -625,88 +583,74 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
 .payment-section .section-left { margin-right: 6px; }
 .payment-section .section-right { margin-left: 6px; }
 
-/* Print styles: aggressive compacting to bring everything closer vertically */
+/* Print styles: compact and remove removed fields cleanly */
 @media print {
-  @page { size: A4; margin: 3mm; } /* minimal page margins */
+  @page { size: A4; margin: 3mm; }
 
   body { background: #fff !important; color: #000; }
 
-  /* Use nearly full width; minimize vertical spacing */
   .container {
-    width: 96%;
-    max-width: 96%;
-    margin: 2mm auto 0;
-    padding: 0;
-    box-sizing: border-box;
+    width: 48%;
+    max-width: 48%;
+    margin: 6mm 0 0 6mm;
+    padding:0;
+    box-sizing:border-box;
   }
 
   .card { box-shadow:none !important; border:none !important; background:transparent !important; }
-  .card .card-body { padding:3px; } /* very small padding to compact sections */
+  .card .card-body { padding:6px; }
 
-  /* Hide UI controls and non-print elements */
-  .empleado-selection, .form-check-input, select, .btn-imprimir, input[type="date"], .meta-block .form-control-sm { display: none !important; }
-  .meta-block .mb-2 { display: none !important; }
-  #comprobanteNumero { display:none !important; }
-  #lugarPago { display:none !important; }
-  #print_lugar { display:none !important; }
+  /* Hide interactive controls not needed on print */
+  .empleado-selection, .form-check-input, select, .btn-imprimir, input[type="date"] { display:none !important; }
 
-  /* Show only compact printable header date */
-  .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color: #111; margin-bottom:2px; font-size:10px; }
+  /* Show mirrored printable date only */
+  .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color:#111; font-size:10px; margin-bottom:4px; }
 
-  /* Inputs: very tight padding and smaller font to pack more vertically */
+  /* Inputs: compact padding and smaller font to reduce vertical length */
   input.form-control, input.form-control[readonly] {
     background: #fff !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
     border: 1px solid #111 !important;
     color: #000 !important;
-    padding: 2px 6px;
-    font-size: 9.2px;
+    padding: 4px 6px;
+    font-size: 10px;
     box-shadow: none;
   }
 
-  /* Collapse heading sizes and remove extra margins to bring sections closer */
-  h3, h5, h6, label { margin:0; padding:0; font-weight:700; font-size:10px; line-height:1; }
-  .title-large { font-size: 12px; font-weight:800; margin-bottom:4px; }
+  .section-card .card-body.section-grid { display:flex; gap:8px; flex-wrap:nowrap; align-items:flex-start; padding:4px 0; }
+  .section-card .section-left, .section-card .section-right { flex:0 0 50%; min-width:0; padding:6px; }
 
-  /* Reduce vertical gaps between rows and columns */
-  .section-card .card-body.section-grid { display:flex; gap:6px; flex-wrap:wrap; align-items:flex-start; padding:2px 0; }
-  .section-card .section-left, .section-card .section-right { flex:0 0 50%; min-width:40%; padding:4px; }
+  .section-card .section-left, .section-card .section-right {
+    border: 1px solid #222;
+    border-radius:6px;
+    padding:8px;
+    background:#fff;
+  }
 
-  /* Minimal box outlines */
-  .section-card .section-left { border: 1px solid #111; padding:4px; border-radius:3px; background:#fff; }
-  .section-card .section-right { border: 1px solid #111; padding:4px; border-radius:3px; background:#fff; }
+  .liquido-row { padding:4px 0 6px 0; margin-top:4px; }
+  #liquidoTotal { width:140px; font-size:10px; }
 
-  /* Liquido area compact and inline */
-  .liquido-row { padding:2px 0 4px 0; }
-  .liquido-row label { font-size:9px; display:block; margin-bottom:2px; }
-  #liquidoTotal { width:150px; font-size:10px; }
+  .totals-card { border-top: 2px solid #222; padding-top:6px; margin-top:6px; }
+  .totals-card .card-body { padding:6px; display:flex; gap:8px; align-items:center; }
+  .totals-card .card-body .col-9 { width:70%; }
+  .totals-card .card-body .col-3 { width:30%; text-align:right; }
 
-  /* Totals and payment methods compact */
-  .totals-card { border-top: 1px solid #111; padding-top:4px; margin-top:4px; }
-  .totals-card .card-body { padding:4px; }
+  .form-check { display:inline-flex; gap:4px; align-items:center; margin-left:6px; }
+  .form-check-label { font-size:10px; font-weight:700; }
 
-  .payment-methods { margin-top:4px; }
-  .form-check { margin:0; padding:0; display:inline-block; margin-right:8px; vertical-align:middle; }
-  .form-check-label { font-size:9px; font-weight:700; margin-left:4px; display:inline-block; vertical-align:middle; }
+  .printable-option { display:none; }
+  body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:block; }
+  body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:block; }
+  body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:block; }
+  body.print-medio-TRANSFERENCIA .transferencia-fields { display:block; margin-top:4px; }
+  body.print-medio-CHEQUE .cheque-fields { display:block; margin-top:4px; }
 
-  /* Signatures compressed */
-  .signatures-row { margin-top:6px; }
-  .sig-line { margin-bottom:6px; border-bottom:1px dashed #111; height:1px; }
-  .signatures-row .small.text-muted { font-size:9px; }
+  .signatures-row { display:flex; gap:12px; margin-top:8px; }
+  .signatures-row .col-6 { padding:0 6px; }
+  .sig-line { margin-bottom:6px; }
 
-  /* Show only selected payment method in print */
-  .printable-option { display:none; font-size:9px; }
-  body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:inline-block; }
-  body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:inline-block; }
-  body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:inline-block; }
-  body.print-medio-TRANSFERENCIA .transferencia-fields { display:inline-block; margin-left:6px; }
-  body.print-medio-CHEQUE .cheque-fields { display:inline-block; margin-left:6px; }
+  h3, h5, h6, label, input, .small-print { font-size:10.5px; line-height:1.05; }
+  .small.text-muted { font-size:10px; color:#222; }
 
-  /* Reduce line-height to pack content */
-  input, label, .small-print { line-height: 1.0; }
-
-  /* Prevent page breaks inside the receipt */
   .card, .section-card, .totals-card, .signatures-row { page-break-inside: avoid; break-inside: avoid; }
 }
 
