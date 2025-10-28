@@ -253,7 +253,7 @@
     return isFinite(n) ? n : 0;
   }
 
-  // keep printable comprobante fields updated
+  // sync printable comprobante fields
   function syncPrintableComprobante(){
     const num = document.getElementById('comprobanteNumero')?.value || '';
     const fecha = document.getElementById('comprobanteFecha')?.value || '';
@@ -281,19 +281,23 @@
     }
   }
 
-  // store originals of amount fields before print, remove leading "Q " for printing
+  // strip leading "Q " from amount inputs for print, store originals
   function stripQForPrint(){
     const amountIds = ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones','liquidoTotal'];
     amountIds.forEach(id=>{
       const el = document.getElementById(id);
       if(!el) return;
       el.dataset._orig = el.value;
-      // remove any leading Q and whitespace for print view
       el.value = String(el.value).replace(/^Q\s*/i,'').trim();
     });
+    // hide Lugar/Ciudad fields visually for print by setting data flag (CSS will hide)
+    const lugar = document.getElementById('lugarPago');
+    if(lugar) lugar.dataset._hiddenForPrint = '1';
+    const printLugar = document.getElementById('print_lugar');
+    if(printLugar) printLugar.dataset._hiddenForPrint = '1';
+    // hide comprobante number label/value in print area (CSS will hide .meta-block .mb-2)
   }
 
-  // restore originals after print
   function restoreAmountsAfterPrint(){
     const amountIds = ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones','liquidoTotal'];
     amountIds.forEach(id=>{
@@ -304,9 +308,12 @@
         delete el.dataset._orig;
       }
     });
+    const lugar = document.getElementById('lugarPago');
+    if(lugar) delete lugar.dataset._hiddenForPrint;
+    const printLugar = document.getElementById('print_lugar');
+    if(printLugar) delete printLugar.dataset._hiddenForPrint;
   }
 
-  // When empleado selected populate both screen fields and print-ready fields
   document.getElementById('empleadoSelect')?.addEventListener('change', function(){
     const dpiVal = this.value;
     if(!dpiVal){
@@ -362,6 +369,7 @@
       if(data.bono !== undefined) document.getElementById('bonificacion').value = toNumberSafe(data.bono);
       if(data.comisiones !== undefined) document.getElementById('comisiones').value = toNumberSafe(data.comisiones);
       if(data.hextras_monto !== undefined) document.getElementById('hextrasMonto').value = toNumberSafe(data.hextras_monto);
+
       if(data.igss !== undefined){
         const ig = toNumberSafe(data.igss);
         const igTr = Math.trunc(ig * 100) / 100;
@@ -388,7 +396,6 @@
     const ganancias = toNum('sueldoBase') + toNum('hextrasMonto') + toNum('bonificacion') + toNum('comisiones');
     const deducciones = toNum('igss') + toNum('isr') + toNum('otrasDeducciones');
     const liquido = round2(ganancias - deducciones);
-    // keep display with Q on screen
     document.getElementById('liquidoTotal').value = fmt(liquido);
     document.getElementById('totalEnLetras').value = numeroALetrasEnEspañol(liquido);
   }
@@ -463,7 +470,6 @@
     return parts.join(' ').replace(/\s+/g,' ').trim();
   }
 
-  // on-screen toggle of extra payment fields
   function updateMediosOnScreen(){
     const val = document.querySelector('input[name="medioPago"]:checked')?.value;
     document.querySelectorAll('.transferencia-fields').forEach(el=>el.style.display = (val === 'TRANSFERENCIA') ? 'block' : 'none');
@@ -473,7 +479,7 @@
   updateMediosOnScreen();
 
   // Printing behavior: before print, add a class to body to indicate which medio is selected,
-  // hide comprobante and lugar inputs in print, strip "Q " prefix from amounts, and scale layout via CSS.
+  // sync comprobante values, and strip Q for print; restore after print
   function beforePrintSetup(){
     const val = document.querySelector('input[name="medioPago"]:checked')?.value || '';
     document.body.classList.remove('print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
@@ -595,22 +601,24 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
   .container { width: 48%; max-width: 48%; margin: 10mm 0 0 10mm; transform: none; padding:0; }
 
   .card { box-shadow:none !important; border:none !important; background:transparent !important; }
-  .card .card-body { padding:6px; }
+  .card .card-body { padding:8px; }
 
   /* Hide interactive controls and header comprobante and lugar as requested (print-only) */
   .empleado-selection, .form-check-input, select, .btn-imprimir, input[type="date"], .meta-block .form-control-sm { display: none !important; }
 
-  /* Hide comprobante number input and lugar fields in print */
-  .meta-block .mb-2 { display: none !important; } /* hides the Comprobante No block */
-  #comprobanteNumero { display:none !important; }
-  #lugarPago { display:none !important; }
-  #print_lugar { display:none !important; } /* hide print copy of Lugar */
+  /* Hide comprobante number block (label+input) in print */
+  .meta-block .mb-2 { display: none !important; }
 
-  /* Show mirrored printable header date field only */
-  .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color: #111; }
+  /* Hide Lugar / Ciudad in the Datos del Trabajador and its print copy */
+  .section-right .row.g-2 > .col-12.mt-2:nth-of-type(2),
+  .datos-trabajador-print .row.g-2 > .col-4:nth-of-type(2) {
+    display: none !important;
+  }
 
-  /* Remove "Q " prefix visually by showing values without currency for print:
-     The script strips Q before print; ensure inputs look clean */
+  /* Show mirrored printable header date field only (if needed) */
+  .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color: #111; margin-top:4px; }
+
+  /* Remove Q prefix visually because script strips it before printing */
   input.form-control, input.form-control[readonly] {
     background: #fff !important;
     -webkit-print-color-adjust: exact;
@@ -621,7 +629,7 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
   }
 
   /* Keep two-column layout for details in print */
-  .section-card .card-body.section-grid { display:flex; gap:8px; flex-wrap:nowrap; }
+  .section-card .card-body.section-grid { display:flex; gap:10px; flex-wrap:nowrap; }
   .section-card .section-left, .section-card .section-right { flex:0 0 50%; min-width:45%; }
 
   /* Clear boxed outlines for print (stronger separation) */
@@ -650,15 +658,11 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
   body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:block; }
   body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:block; }
   body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:block; }
-
   body.print-medio-TRANSFERENCIA .transferencia-fields { display:block; }
   body.print-medio-CHEQUE .cheque-fields { display:block; }
-
-  /* Hide any residual date inputs */
-  input[type="date"] { display:none !important; }
 }
 
-/* Ensure on-screen the payment option extras show/hidden via JS */
+/* Ensure on-screen payment extras controlled by JS appear correctly */
 input[name="medioPago"][value="TRANSFERENCIA"]:checked ~ .transferencia-fields,
 input[name="medioPago"][value="CHEQUE"]:checked ~ .cheque-fields {
   display:flex;
