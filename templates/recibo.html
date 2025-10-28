@@ -576,6 +576,23 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
   .section-card .card-body.section-grid { display:flex; gap:10px; flex-wrap:nowrap; }
   .section-card .section-left, .section-card .section-right { flex:0 0 50%; min-width:45%; }
 
+  /* ---------- VISUAL SEPARATION FOR PRINT ---------- */
+  /* Add clear boxed outlines for Ganancias and Deducciones when printing */
+  .section-card .section-left {
+    border: 1px solid #222;
+    padding: 8px;
+    border-radius: 8px;
+    background: #ffffff;
+  }
+  .section-card .section-right {
+    border: 1px solid #222;
+    padding: 8px;
+    border-radius: 8px;
+    background: #ffffff;
+  }
+  /* Slight spacing between the two boxes */
+  .section-card { gap: 18px; }
+
   /* Only selected payment method prints (method blocks are below total) */
   .printable-option { display:none; }
   body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:block; }
