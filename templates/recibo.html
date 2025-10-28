@@ -75,10 +75,6 @@
           <label class="form-label small">Nombre completo</label>
           <input id="print_nombre" class="form-control" readonly value="{{ recibo.nombre if recibo is defined else '' }}">
         </div>
-        <div class="col-4">
-          <label class="form-label small">Lugar / Ciudad</label>
-          <input id="print_lugar" class="form-control" readonly value="{{ recibo.lugar if recibo is defined else ( 'GUATEMALA' ) }}">
-        </div>
         <div class="col-4 mt-2">
           <label class="form-label small">DPI / Identificación</label>
           <input id="print_dpi" class="form-control" readonly value="{{ recibo.dpi if recibo is defined else '' }}">
