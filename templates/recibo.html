@@ -315,7 +315,6 @@
     if(printLugar) delete printLugar.dataset._hiddenForPrint;
   }
 
-  // When empleado selected populate both screen fields and print-ready fields
   document.getElementById('empleadoSelect')?.addEventListener('change', function(){
     const dpiVal = this.value;
     if(!dpiVal){
@@ -323,7 +322,6 @@
         const el = document.getElementById(id);
         if(el) el.value = (el.readOnly ? '' : 0);
       });
-      // clear print copies
       document.getElementById('print_nombre').value = '';
       document.getElementById('print_dpi').value = '';
       document.getElementById('print_lugar').value = 'GUATEMALA';
@@ -337,7 +335,6 @@
       document.getElementById('nombre').value = planRow.nombre || planRow.Nombre || '';
       document.getElementById('dpi').value = planRow.dpi || planRow.DPI || dpiVal;
 
-      // print-copy fields
       document.getElementById('print_nombre').value = planRow.nombre || planRow.Nombre || '';
       document.getElementById('print_dpi').value = planRow.dpi || planRow.DPI || dpiVal;
       document.getElementById('print_lugar').value = planRow.lugar || planRow.ciudad || 'GUATEMALA';
@@ -362,7 +359,6 @@
       document.getElementById('nombre').value = data.Nombre || data.nombre || '';
       document.getElementById('dpi').value = data['Numero de DPI'] || data.dpi || dpiVal;
 
-      // print copies
       document.getElementById('print_nombre').value = data.Nombre || data.nombre || '';
       document.getElementById('print_dpi').value = data['Numero de DPI'] || data.dpi || dpiVal;
       document.getElementById('print_lugar').value = data.lugar || data.ciudad || 'GUATEMALA';
@@ -597,20 +593,12 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
 
 /* Print styles: adjust only print appearance */
 @media print {
-  @page { size: A4; margin: 10mm; }
+  @page { size: A4; margin: 6mm; }
 
   body { background: #fff !important; color: #000; }
 
-  /* Ensure printed content fits within paper margins.
-     Make container use the page width minus safe printable margins and center it.
-     This fixes right-side cut-off by preventing layout overflow. */
-  .container {
-    max-width: 190mm;            /* A4 printable width minus small tolerance */
-    width: 100%;
-    box-sizing: border-box;
-    margin: 6mm auto 0;          /* keep it near top and centered horizontally */
-    padding: 0 6mm;              /* small internal padding to avoid clipping at edges */
-  }
+  /* Restrict printed form area to roughly half the page, left aligned and compact */
+  .container { width: 48%; max-width: 48%; margin: 6mm 0 0 6mm; transform: none; padding:0; }
 
   .card { box-shadow:none !important; border:none !important; background:transparent !important; }
   .card .card-body { padding:6px; }
