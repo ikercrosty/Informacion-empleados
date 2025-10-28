@@ -84,14 +84,6 @@
           <label class="form-label small">DPI / Identificación</label>
           <input id="print_dpi" class="form-control" readonly value="{{ recibo.dpi if recibo is defined else '' }}">
         </div>
-        <div class="col-4 mt-2">
-          <label class="form-label small">Puesto</label>
-          <input id="print_puesto" class="form-control" readonly value="{{ recibo.puesto if recibo is defined else '' }}">
-        </div>
-        <div class="col-4 mt-2">
-          <label class="form-label small">Fecha de ingreso</label>
-          <input id="print_fecha_ingreso" class="form-control" readonly value="{{ recibo.fecha_ingreso if recibo is defined else '' }}">
-        </div>
       </div>
     </div>
   </div>
@@ -264,7 +256,7 @@
     return isFinite(n) ? n : 0;
   }
 
-  // When empleado selected populate both screen fields and print-ready fields
+  // When empleado selected populate both screen fields and print-ready fields (no puesto/fecha_ingreso)
   document.getElementById('empleadoSelect')?.addEventListener('change', function(){
     const dpiVal = this.value;
     if(!dpiVal){
@@ -276,8 +268,6 @@
       document.getElementById('print_nombre').value = '';
       document.getElementById('print_dpi').value = '';
       document.getElementById('print_lugar').value = 'GUATEMALA';
-      document.getElementById('print_puesto').value = '';
-      document.getElementById('print_fecha_ingreso').value = '';
       recalcLiquido();
       return;
     }
@@ -288,12 +278,10 @@
       document.getElementById('nombre').value = planRow.nombre || planRow.Nombre || '';
       document.getElementById('dpi').value = planRow.dpi || planRow.DPI || dpiVal;
 
-      // print-copy fields
+      // print-copy fields (no puesto, no fecha_ingreso)
       document.getElementById('print_nombre').value = planRow.nombre || planRow.Nombre || '';
       document.getElementById('print_dpi').value = planRow.dpi || planRow.DPI || dpiVal;
       document.getElementById('print_lugar').value = planRow.lugar || planRow.ciudad || 'GUATEMALA';
-      document.getElementById('print_puesto').value = planRow.puesto || '';
-      document.getElementById('print_fecha_ingreso').value = planRow.fecha_ingreso || '';
 
       document.getElementById('sueldoBase').value = toNumberSafe(planRow.sueldo || planRow.Sueldo || 0);
       document.getElementById('bonificacion').value = toNumberSafe(planRow.bono || planRow.bon || 0);
@@ -319,8 +307,6 @@
       document.getElementById('print_nombre').value = data.Nombre || data.nombre || '';
       document.getElementById('print_dpi').value = data['Numero de DPI'] || data.dpi || dpiVal;
       document.getElementById('print_lugar').value = data.lugar || data.ciudad || 'GUATEMALA';
-      document.getElementById('print_puesto').value = data.puesto || '';
-      document.getElementById('print_fecha_ingreso').value = data.fecha_ingreso || '';
 
       if(data.Sueldo !== undefined) document.getElementById('sueldoBase').value = toNumberSafe(data.Sueldo);
       if(data.bono !== undefined) document.getElementById('bonificacion').value = toNumberSafe(data.bono);
@@ -546,8 +532,8 @@ input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rg
   .section-card .card-body.section-grid { display:flex; gap:10px; flex-wrap:nowrap; }
   .section-card .section-left, .section-card .section-right { flex:0 0 50%; min-width:45%; }
 
-  /* Only selected payment method prints (method blocks are below total) */
-  .printable-option { display:none; }
+  /* Ensure total and payment method render below total (already in DOM) and only selected payment method prints */
+  .printable-option { display:none; } /* hide all payment blocks by default */
   body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:block; }
   body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:block; }
   body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:block; }
