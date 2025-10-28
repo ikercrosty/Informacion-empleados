@@ -3,15 +3,22 @@
 
 {% block content %}
 <div class="container py-4">
-  <div class="card shadow-sm mb-4">
+  <div class="card shadow-sm mb-2 header-card">
     <div class="card-body d-flex justify-content-between align-items-center">
-      <div>
+      <div class="header-left">
         <h3 class="mb-0 title-large">Recibo de pago de sueldos</h3>
         <div class="small text-muted">Empresa: {{ empresa_nombre|default('Empaques y texturas de Guatemala S.A') }}</div>
       </div>
 
-        <div class="d-flex gap-2 align-items-end justify-content-end">
-          <div style="flex:1; min-width:140px;">
+      <div class="text-end meta-block" style="min-width:220px;">
+        <div class="mb-1">
+          <label class="form-label small text-muted">Comprobante No</label>
+          <input id="comprobanteNumero" class="form-control form-control-sm" type="text" value="{{ recibo.numero if recibo is defined else '' }}">
+          <div id="print_comprobanteNumero" class="print-only small-print" aria-hidden="true"></div>
+        </div>
+
+        <div class="d-flex gap-1 align-items-end justify-content-end">
+          <div style="flex:1; min-width:120px;">
             <label class="form-label small text-muted">Fecha</label>
             <input id="comprobanteFecha" class="form-control form-control-sm" type="date" value="{{ recibo.fecha if recibo is defined else fecha_emision if fecha_emision is defined else '' }}">
             <div id="print_comprobanteFecha" class="print-only small-print" aria-hidden="true"></div>
@@ -25,12 +32,12 @@
     </div>
   </div>
 
-  <!-- SECCIÓN: Selección de empleado (se mantiene en pantalla, se oculta en impresión) -->
-  <div class="card shadow-sm mb-4 section-card empleado-selection">
+  <!-- Selección de empleado (oculta en impresión) -->
+  <div class="card shadow-sm mb-3 section-card empleado-selection">
     <div class="card-body section-grid">
       <div class="section-left">
-        <h5 class="mb-3">Seleccionar Trabajador</h5>
-        <div class="row g-3">
+        <h5 class="mb-2">Seleccionar Trabajador</h5>
+        <div class="row g-2">
           <div class="col-12 col-md-8">
             <label class="form-label">Empleado</label>
             <select id="empleadoSelect" class="form-select">
@@ -41,14 +48,14 @@
       </div>
 
       <div class="section-right">
-        <h5 class="mb-3">Datos del Trabajador</h5>
-        <div class="row g-2">
+        <h5 class="mb-2">Datos del Trabajador</h5>
+        <div class="row g-1">
           <div class="col-12">
             <label class="form-label">Nombre completo</label>
             <input id="nombre" class="form-control" readonly value="{{ recibo.nombre if recibo is defined else '' }}">
           </div>
 
-          <div class="col-12 mt-2">
+          <div class="col-12 mt-1">
             <label class="form-label">DPI / Identificación</label>
             <input id="dpi" class="form-control" readonly value="{{ recibo.dpi if recibo is defined else '' }}">
           </div>
@@ -57,17 +64,16 @@
     </div>
   </div>
 
-  <!-- Imprimible Datos del Trabajador justo arriba de Ganancias (visible on screen and print copy fields synced) -->
-  <div class="card shadow-sm mb-4 datos-trabajador-print">
+  <!-- Imprimible Datos del Trabajador (síncronizados) -->
+  <div class="card shadow-sm mb-2 datos-trabajador-print">
     <div class="card-body">
-      <h6 class="mb-2">Datos del Trabajador</h6>
-      <div class="row g-2">
+      <div class="row g-1">
         <div class="col-8">
           <label class="form-label small">Nombre completo</label>
           <input id="print_nombre" class="form-control" readonly value="{{ recibo.nombre if recibo is defined else '' }}">
         </div>
-        <div class="col-4 mt-2">
-          <label class="form-label small">DPI / Identificación</label>
+        <div class="col-4">
+          <label class="form-label small">DPI</label>
           <input id="print_dpi" class="form-control" readonly value="{{ recibo.dpi if recibo is defined else '' }}">
         </div>
       </div>
@@ -75,28 +81,28 @@
   </div>
 
   <!-- Detalle de pago -->
-  <div class="card shadow-sm mb-4 section-card payment-section">
+  <div class="card shadow-sm mb-2 section-card payment-section">
     <div class="card-body section-grid">
       <div class="section-left box-left">
-        <h5 class="mb-2">Ganancias</h5>
+        <h5 class="mb-1">Ganancias</h5>
 
-        <div class="row g-2">
+        <div class="row g-1">
           <div class="col-6">
             <label class="form-label small">Sueldo Base</label>
             <input id="sueldoBase" class="form-control" type="number" step="0.01" readonly value="{{ recibo.sueldo if recibo is defined else (recibo.Sueldo if recibo is defined else 0) }}">
           </div>
 
           <div class="col-6">
-            <label class="form-label small">Horas extras (monto)</label>
+            <label class="form-label small">Horas extras</label>
             <input id="hextrasMonto" class="form-control" type="number" step="0.01" readonly value="{{ recibo.hextras_monto if recibo is defined else (recibo.hextras if recibo is defined else 0) }}">
           </div>
 
-          <div class="col-6 mt-2">
+          <div class="col-6 mt-1">
             <label class="form-label small">Bonificación</label>
             <input id="bonificacion" class="form-control" type="number" step="0.01" readonly value="{{ recibo.bono if recibo is defined else 0 }}">
           </div>
 
-          <div class="col-6 mt-2">
+          <div class="col-6 mt-1">
             <label class="form-label small">Comisiones</label>
             <input id="comisiones" class="form-control" type="number" step="0.01" readonly value="{{ recibo.comisiones if recibo is defined else 0 }}">
           </div>
@@ -104,9 +110,9 @@
       </div>
 
       <div class="section-right box-right">
-        <h5 class="mb-2">Deducciones</h5>
+        <h5 class="mb-1">Deducciones</h5>
 
-        <div class="row g-2">
+        <div class="row g-1">
           <div class="col-6">
             <label class="form-label small">IGSS</label>
             <input id="igss" class="form-control" type="text" readonly value="{{ '%.2f'|format(recibo.igss) if recibo is defined and recibo.igss is defined else '0.00' }}">
@@ -117,7 +123,7 @@
             <input id="isr" class="form-control" type="number" step="0.01" readonly value="{{ recibo.isr if recibo is defined else (recibo._isrValue if recibo is defined else 0) }}">
           </div>
 
-          <div class="col-12 mt-2">
+          <div class="col-12 mt-1">
             <label class="form-label small">Otras deducciones</label>
             <input id="otrasDeducciones" class="form-control" type="number" step="0.01" readonly value="{{ recibo.otras_deducciones if recibo is defined else 0 }}">
           </div>
@@ -126,57 +132,58 @@
     </div>
 
     <!-- Líquido -->
-    <div class="card-body px-4 py-3 text-end liquido-row">
-      <label class="form-label small">Líquido a recibir</label>
-      <input id="liquidoTotal" class="form-control fw-bold text-end" readonly value="Q 0.00" style="font-size:1.1rem; display:inline-block; width:250px;">
+    <div class="card-body px-2 py-2 text-end liquido-row">
+      <div class="d-flex justify-content-end align-items-center gap-2">
+        <div style="min-width:120px;">
+          <label class="form-label small">Líquido a recibir</label>
+          <input id="liquidoTotal" class="form-control fw-bold text-end" readonly value="Q 0.00" style="font-size:1rem; width:160px;">
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- Total en letras y medios de pago -->
-  <div class="card shadow-sm mb-4 totals-card">
+  <div class="card shadow-sm mb-2 totals-card">
     <div class="card-body">
-      <div class="row g-3">
-        <div class="col-12">
+      <div class="row g-1 align-items-center">
+        <div class="col-9">
           <label class="form-label small">TOTAL EN LETRAS</label>
           <input id="totalEnLetras" class="form-control" type="text" readonly value="{{ recibo.total_letras if recibo is defined else '' }}">
         </div>
+
+        <div class="col-3 text-end">
+          <label class="form-label small">&nbsp;</label>
+          <div class="form-check-inline payment-quick">
+            <div class="form-check printable-option" data-option="EFECTIVO">
+              <input class="form-check-input medio-radio" type="radio" name="medioPago" id="pagoEfectivo" value="EFECTIVO" checked>
+              <label class="form-check-label" for="pagoEfectivo">EFECTIVO</label>
+            </div>
+            <div class="form-check printable-option" data-option="TRANSFERENCIA">
+              <input class="form-check-input medio-radio" type="radio" name="medioPago" id="pagoTransferencia" value="TRANSFERENCIA">
+              <label class="form-check-label" for="pagoTransferencia">TRANSFER.</label>
+            </div>
+            <div class="form-check printable-option" data-option="CHEQUE">
+              <input class="form-check-input medio-radio" type="radio" name="medioPago" id="pagoCheque" value="CHEQUE">
+              <label class="form-check-label" for="pagoCheque">CHEQ.</label>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <hr class="my-3">
+      <div class="transferencia-fields mt-1" style="display:none;">
+        <input id="transCuenta" class="form-control mb-1" type="text" placeholder="No. de cuenta">
+        <input id="transBanco" class="form-control" type="text" placeholder="Banco">
+      </div>
 
-      <div class="payment-methods">
-        <h6 class="mb-2">MEDIOS DE PAGO</h6>
-
-        <div class="form-check printable-option" data-option="EFECTIVO">
-          <input class="form-check-input medio-radio" type="radio" name="medioPago" id="pagoEfectivo" value="EFECTIVO" checked>
-          <label class="form-check-label" for="pagoEfectivo">EFECTIVO</label>
-        </div>
-
-        <div class="form-check printable-option" data-option="TRANSFERENCIA">
-          <input class="form-check-input medio-radio" type="radio" name="medioPago" id="pagoTransferencia" value="TRANSFERENCIA">
-          <label class="form-check-label" for="pagoTransferencia">TRANSFERENCIA BANCARIA</label>
-
-          <div class="transferencia-fields mt-2 ms-3">
-            <input id="transCuenta" class="form-control mb-1" type="text" placeholder="No. de cuenta (transferencia)">
-            <input id="transBanco" class="form-control" type="text" placeholder="Banco (transferencia)">
-          </div>
-        </div>
-
-        <div class="form-check printable-option" data-option="CHEQUE">
-          <input class="form-check-input medio-radio" type="radio" name="medioPago" id="pagoCheque" value="CHEQUE">
-          <label class="form-check-label" for="pagoCheque">CHEQUE</label>
-
-          <div class="cheque-fields mt-2 ms-3">
-            <input id="chequeNumero" class="form-control mb-1" type="text" placeholder="No. de cheque">
-            <input id="chequeBanco" class="form-control" type="text" placeholder="Banco (cheque)">
-          </div>
-        </div>
+      <div class="cheque-fields mt-1" style="display:none;">
+        <input id="chequeNumero" class="form-control mb-1" type="text" placeholder="No. de cheque">
+        <input id="chequeBanco" class="form-control" type="text" placeholder="Banco (cheque)">
       </div>
     </div>
   </div>
 
   <!-- Firmas -->
-  <div class="row mb-5 signatures-row">
+  <div class="row signatures-row">
     <div class="col-6 text-center">
       <div class="sig-line"></div>
       <div class="small text-muted">Firma del trabajador</div>
@@ -188,7 +195,7 @@
   </div>
 </div>
 
-<!-- Scripts: carga empleados y lógica para sincronizar con la planilla local, cálculo y control de impresión -->
+<!-- Scripts -->
 <script>
 (function(){
   const PLANILLA_STORAGE_KEY = 'empaquetex_planilla_noviembre_v1';
@@ -237,7 +244,6 @@
     return isFinite(n) ? n : 0;
   }
 
-  // sync printable comprobante fields
   function syncPrintableComprobante(){
     const num = document.getElementById('comprobanteNumero')?.value || '';
     const fecha = document.getElementById('comprobanteFecha')?.value || '';
@@ -265,7 +271,6 @@
     }
   }
 
-  // strip leading "Q " from amount inputs for print, store originals
   function stripQForPrint(){
     const amountIds = ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones','liquidoTotal'];
     amountIds.forEach(id=>{
@@ -274,12 +279,6 @@
       el.dataset._orig = el.value;
       el.value = String(el.value).replace(/^Q\s*/i,'').trim();
     });
-    // hide Lugar/Ciudad fields visually for print by setting data flag (CSS will hide)
-    const lugar = document.getElementById('lugarPago');
-    if(lugar) lugar.dataset._hiddenForPrint = '1';
-    const printLugar = document.getElementById('print_lugar');
-    if(printLugar) printLugar.dataset._hiddenForPrint = '1';
-    // hide comprobante number label/value in print area (CSS will hide .meta-block .mb-2)
   }
 
   function restoreAmountsAfterPrint(){
@@ -292,10 +291,6 @@
         delete el.dataset._orig;
       }
     });
-    const lugar = document.getElementById('lugarPago');
-    if(lugar) delete lugar.dataset._hiddenForPrint;
-    const printLugar = document.getElementById('print_lugar');
-    if(printLugar) delete printLugar.dataset._hiddenForPrint;
   }
 
   document.getElementById('empleadoSelect')?.addEventListener('change', function(){
@@ -305,10 +300,8 @@
         const el = document.getElementById(id);
         if(el) el.value = (el.readOnly ? '' : 0);
       });
-      // clear print copies
       document.getElementById('print_nombre').value = '';
       document.getElementById('print_dpi').value = '';
-      document.getElementById('print_lugar').value = 'GUATEMALA';
       recalcLiquido();
       return;
     }
@@ -319,10 +312,8 @@
       document.getElementById('nombre').value = planRow.nombre || planRow.Nombre || '';
       document.getElementById('dpi').value = planRow.dpi || planRow.DPI || dpiVal;
 
-      // print-copy fields
       document.getElementById('print_nombre').value = planRow.nombre || planRow.Nombre || '';
       document.getElementById('print_dpi').value = planRow.dpi || planRow.DPI || dpiVal;
-      document.getElementById('print_lugar').value = planRow.lugar || planRow.ciudad || 'GUATEMALA';
 
       document.getElementById('sueldoBase').value = toNumberSafe(planRow.sueldo || planRow.Sueldo || 0);
       document.getElementById('bonificacion').value = toNumberSafe(planRow.bono || planRow.bon || 0);
@@ -344,10 +335,8 @@
       document.getElementById('nombre').value = data.Nombre || data.nombre || '';
       document.getElementById('dpi').value = data['Numero de DPI'] || data.dpi || dpiVal;
 
-      // print copies
       document.getElementById('print_nombre').value = data.Nombre || data.nombre || '';
       document.getElementById('print_dpi').value = data['Numero de DPI'] || data.dpi || dpiVal;
-      document.getElementById('print_lugar').value = data.lugar || data.ciudad || 'GUATEMALA';
 
       if(data.Sueldo !== undefined) document.getElementById('sueldoBase').value = toNumberSafe(data.Sueldo);
       if(data.bono !== undefined) document.getElementById('bonificacion').value = toNumberSafe(data.bono);
@@ -462,8 +451,6 @@
   document.querySelectorAll('input[name="medioPago"]').forEach(r=>r.addEventListener('change', updateMediosOnScreen));
   updateMediosOnScreen();
 
-  // Printing behavior: before print, add a class to body to indicate which medio is selected,
-  // sync comprobante values, and strip Q for print; restore after print
   function beforePrintSetup(){
     const val = document.querySelector('input[name="medioPago"]:checked')?.value || '';
     document.body.classList.remove('print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
@@ -486,7 +473,7 @@
   const imprimirBtn = document.getElementById('imprimirBtn');
   if(imprimirBtn) imprimirBtn.addEventListener('click', function(){
     beforePrintSetup();
-    setTimeout(()=> window.print(), 100);
+    setTimeout(()=> window.print(), 80);
   });
 
   ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones'].forEach(id=>{
@@ -509,158 +496,117 @@
   --accent-naranja: #ff7a18;
   --accent-azul: #0b7285;
   --accent-azul-claro: #0ea5a4;
-  --card-bg: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,251,255,0.98));
-  --shadow-1: 0 10px 30px rgba(11,50,80,0.06);
   font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-/* Page */
+/* Base layout */
 body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
+.container { max-width:1100px; margin:12px auto; padding:0 12px 20px; }
+.card { border-radius:8px; background:#fff; border:1px solid rgba(11,19,30,0.04); }
 
 /* Header */
-.title-large { font-size: 1.6rem; font-weight: 800; color: var(--accent-azul); letter-spacing: -0.2px; }
+.title-large { font-size:1.15rem; font-weight:800; color:var(--accent-azul); margin:0; }
+.header-card .card-body { padding:8px 10px; }
 
-/* Cards and layout */
-.container { max-width:1100px; margin:20px auto; padding:0 18px 40px; }
-.card { border-radius: 12px; background: var(--card-bg); border:1px solid rgba(11,19,30,0.04); box-shadow: var(--shadow-1); }
-.section-card .card-body.section-grid { display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap; padding:16px; }
-.section-card .section-left, .section-card .section-right { flex:1 1 320px; min-width:260px; }
-
-/* Inputs */
-.form-label { font-weight:700; color:var(--muted); font-size:.86rem; }
-.form-control { border-radius:8px; border:1px solid rgba(11,19,30,0.06); background:#fff; padding:.55rem .7rem; }
-.form-control[readonly] { background: linear-gradient(180deg,#fbfdff,#f8fbff); color:#0b2a36; cursor:not-allowed; }
+/* Controls */
+.form-label { font-weight:700; color:var(--muted); font-size:.82rem; margin-bottom:4px; display:block; }
+.form-control { border-radius:6px; border:1px solid rgba(11,19,30,0.06); background:#fff; padding:.4rem .5rem; font-size:0.92rem; }
+.form-control[readonly] { background: #fbfdff; cursor:not-allowed; }
 
 /* Print button */
 .btn-imprimir {
   background: linear-gradient(90deg, #ff9042, #ff7a18);
-  color: #fff;
-  border: none;
-  padding: .52rem .95rem;
-  border-radius: 10px;
-  font-weight: 800;
-  letter-spacing: .3px;
-  box-shadow: 0 10px 26px rgba(11,114,133,0.12);
-  cursor: pointer;
+  color:#fff; border:none; padding:6px 10px; border-radius:8px; font-weight:800; font-size:0.86rem;
 }
-.btn-imprimir:hover { transform: translateY(-2px); box-shadow: 0 18px 34px rgba(11,114,133,0.16); }
 
-/* Compact look */
-.row.g-2 > [class*="col-"], .row.g-3 > [class*="col-"] { padding-bottom:6px; }
-.mb-2 { margin-bottom:.5rem !important; }
-.card-body { padding: 14px; }
+/* Compact visuals */
+.section-card .card-body.section-grid { display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; padding:8px; }
+.section-card .section-left, .section-card .section-right { flex:1 1 320px; min-width:200px; }
+.row.g-1 > [class*="col-"] { padding-bottom:4px; }
+.mb-1 { margin-bottom:6px; }
 
 /* Signatures */
-.sig-line { border-bottom:1px dashed #bfc7cb; height:1px; margin-bottom:8px; }
+.sig-line { border-bottom:1px dashed #bfc7cb; height:1px; margin-bottom:6px; }
 
 /* Hidden print helper */
 .print-only { display:none; font-weight:700; }
 
-/* Transfer / cheque fields off by default until selection */
+/* Transfer / cheque fields */
 .transferencia-fields, .cheque-fields { display:none; }
 
-/* Focus states */
-input:focus, select:focus, button:focus { outline:none; box-shadow: 0 0 0 4px rgba(14,165,164,0.06); border-color: var(--accent-azul-claro); }
-
-/* Visual separation for Gains and Deductions on screen (subtle) */
-.payment-section .box-left,
-.payment-section .box-right {
-  background: linear-gradient(180deg,#ffffff,#fbfcfd);
-  border-radius: 10px;
-  padding: 10px;
-  border: 1px solid rgba(11,19,30,0.04);
-}
-
-/* Slight divider between columns */
-.payment-section .section-left { margin-right: 6px; }
-.payment-section .section-right { margin-left: 6px; }
-
-/* Print styles: aggressive compacting to bring everything closer vertically */
+/* Print styles — aggressive vertical compression while keeping width usage */
 @media print {
-  @page { size: A4; margin: 3mm; } /* minimal page margins */
+  @page { size: A4; margin: 6mm 8mm 6mm 8mm; } /* small margins top/bottom and sides */
 
-  body { background: #fff !important; color: #000; }
+  body { background:#fff !important; color:#000; font-size:10.5px; }
 
-  /* Use nearly full width; minimize vertical spacing */
-  .container {
-    width: 96%;
-    max-width: 96%;
-    margin: 2mm auto 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+  /* Use full printable width but compress vertical gaps */
+  .container { width:100%; max-width:100%; margin:0; padding:0; }
 
+  /* Remove visual chrome */
   .card { box-shadow:none !important; border:none !important; background:transparent !important; }
-  .card .card-body { padding:3px; } /* very small padding to compact sections */
+  .card .card-body { padding:2px 4px !important; }
 
-  /* Hide UI controls and non-print elements */
-  .empleado-selection, .form-check-input, select, .btn-imprimir, input[type="date"], .meta-block .form-control-sm { display: none !important; }
-  .meta-block .mb-2 { display: none !important; }
-  #comprobanteNumero { display:none !important; }
-  #lugarPago { display:none !important; }
-  #print_lugar { display:none !important; }
+  /* Header: bring header very close to top and reduce spacing */
+  .header-card { margin-bottom:2px; }
+  .title-large { font-size:12px; }
+  .header-left .small.text-muted { font-size:9px; margin-top:2px; }
 
-  /* Show only compact printable header date */
-  .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color: #111; margin-bottom:2px; font-size:10px; }
+  /* Hide elements not needed on print */
+  .empleado-selection, .form-check-input, select, .btn-imprimir { display:none !important; }
 
-  /* Inputs: very tight padding and smaller font to pack more vertically */
+  /* Reduce label and input sizes and spacing vertically */
+  label.form-label, h5, h6 { font-size:9.5px; margin:0 0 2px 0; line-height:1; }
   input.form-control, input.form-control[readonly] {
+    padding:2px 4px !important;
+    font-size:9.2px !important;
+    border:1px solid #111 !important;
     background: #fff !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    border: 1px solid #111 !important;
-    color: #000 !important;
-    padding: 2px 6px;
-    font-size: 9.2px;
-    box-shadow: none;
   }
 
-  /* Collapse heading sizes and remove extra margins to bring sections closer */
-  h3, h5, h6, label { margin:0; padding:0; font-weight:700; font-size:10px; line-height:1; }
-  .title-large { font-size: 12px; font-weight:800; margin-bottom:4px; }
+  /* Collapse the employee data and gains/deductions blocks tightly */
+  .section-card .card-body.section-grid { display:flex; gap:6px; flex-wrap:nowrap; align-items:flex-start; padding:2px 0; }
+  .section-card .section-left, .section-card .section-right { flex:0 0 50%; min-width:0; padding:4px; }
 
-  /* Reduce vertical gaps between rows and columns */
-  .section-card .card-body.section-grid { display:flex; gap:6px; flex-wrap:wrap; align-items:flex-start; padding:2px 0; }
-  .section-card .section-left, .section-card .section-right { flex:0 0 50%; min-width:40%; padding:4px; }
+  /* Make boxed outlines minimal and compact */
+  .section-card .section-left, .section-card .section-right {
+    border:1px solid #111; border-radius:4px; padding:6px; background:#fff;
+  }
 
-  /* Minimal box outlines */
-  .section-card .section-left { border: 1px solid #111; padding:4px; border-radius:3px; background:#fff; }
-  .section-card .section-right { border: 1px solid #111; padding:4px; border-radius:3px; background:#fff; }
+  /* Liquido area: inline and compact */
+  .liquido-row { padding:2px 0 4px 0; margin-top:2px; }
+  #liquidoTotal { width:140px; font-size:10px; padding:2px 4px; }
 
-  /* Liquido area compact and inline */
-  .liquido-row { padding:2px 0 4px 0; }
-  .liquido-row label { font-size:9px; display:block; margin-bottom:2px; }
-  #liquidoTotal { width:150px; font-size:10px; }
+  /* Totals and payment methods: inline with minimal height */
+  .totals-card { border-top:1px solid #111; padding-top:4px; margin-top:4px; }
+  .totals-card .card-body { padding:4px; display:flex; gap:6px; align-items:center; }
+  .totals-card .card-body .col-9 { width:70%; padding-right:6px; }
+  .totals-card .card-body .col-3 { width:30%; text-align:right; }
 
-  /* Totals and payment methods compact */
-  .totals-card { border-top: 1px solid #111; padding-top:4px; margin-top:4px; }
-  .totals-card .card-body { padding:4px; }
+  .form-check { display:inline-flex; gap:4px; align-items:center; margin-left:6px; }
+  .form-check-label { font-size:9px; font-weight:700; }
 
-  .payment-methods { margin-top:4px; }
-  .form-check { margin:0; padding:0; display:inline-block; margin-right:8px; vertical-align:middle; }
-  .form-check-label { font-size:9px; font-weight:700; margin-left:4px; display:inline-block; vertical-align:middle; }
+  /* Payment extras displayed only if selected */
+  .printable-option { display:none; }
+  body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:inline-flex; }
+  body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:inline-flex; }
+  body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:inline-flex; }
+  body.print-medio-TRANSFERENCIA .transferencia-fields { display:block; margin-top:4px; }
+  body.print-medio-CHEQUE .cheque-fields { display:block; margin-top:4px; }
 
-  /* Signatures compressed */
-  .signatures-row { margin-top:6px; }
-  .sig-line { margin-bottom:6px; border-bottom:1px dashed #111; height:1px; }
-  .signatures-row .small.text-muted { font-size:9px; }
+  /* Reduce vertical spacing of signature area */
+  .signatures-row { display:flex; gap:8px; margin-top:6px; }
+  .signatures-row .col-6 { padding:0 6px; }
+  .sig-line { margin-bottom:4px; }
 
-  /* Show only selected payment method in print */
-  .printable-option { display:none; font-size:9px; }
-  body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:inline-block; }
-  body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:inline-block; }
-  body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:inline-block; }
-  body.print-medio-TRANSFERENCIA .transferencia-fields { display:inline-block; margin-left:6px; }
-  body.print-medio-CHEQUE .cheque-fields { display:inline-block; margin-left:6px; }
+  /* Reduce line height to pack more */
+  input, label, .small-print { line-height:1; }
 
-  /* Reduce line-height to pack content */
-  input, label, .small-print { line-height: 1.0; }
-
-  /* Prevent page breaks inside the receipt */
+  /* Prevent internal page breaks */
   .card, .section-card, .totals-card, .signatures-row { page-break-inside: avoid; break-inside: avoid; }
 }
 
-/* Ensure on-screen payment extras controlled by JS appear correctly */
+/* On-screen helper to show transfer/cheque blocks */
 input[name="medioPago"][value="TRANSFERENCIA"]:checked ~ .transferencia-fields,
 input[name="medioPago"][value="CHEQUE"]:checked ~ .cheque-fields {
   display:flex;
@@ -668,8 +614,8 @@ input[name="medioPago"][value="CHEQUE"]:checked ~ .cheque-fields {
 }
 
 /* Micro polish */
-.small.text-muted { font-size:.88rem; color:var(--muted); }
+.small.text-muted { font-size:.85rem; color:var(--muted); }
 .form-check-label { font-weight:700; color:#233642; }
 </style>
-
 {% endblock %}
+
