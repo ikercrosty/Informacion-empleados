@@ -171,7 +171,7 @@
   </div>
 </div>
 
-<!-- Scripts: (mantengo la lógica original, con los eventos de impresión ya conectados) -->
+<!-- Scripts: (JS corregido para evitar errores) -->
 <script>
 (function(){
   const PLANILLA_STORAGE_KEY = 'empaquetex_planilla_noviembre_v1';
@@ -179,7 +179,7 @@
   function fmt(n){ return 'Q ' + Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}); }
 
   function pickEmployeeKey(e){
-    return String(e.dpi || e.DPI || e.numero || e.numero_identificacion || e.id || e.full_name || '').trim();
+    return String(e && (e.dpi || e.DPI || e.numero || e.numero_identificacion || e.id || e.full_name) || '').trim();
   }
 
   function loadEmpleados(){
@@ -215,11 +215,11 @@
     const needle = String(dpi).trim();
     for(const r of rows){
       const candidates = [
-        r.dpi, r.DPI, r.Dpi,
-        r.numero, r.numero_identificacion, r.numeroDPI, r.numero_dpi,
-        r.id, r.ID, r.identificacion,
-        r.Nombre, r.nombre,
-        r.full_name, r.fullName
+        r && r.dpi, r && r.DPI, r && r.Dpi,
+        r && r.numero, r && r.numero_identificacion, r && r.numeroDPI, r && r.numero_dpi,
+        r && r.id, r && r.ID, r && r.identificacion,
+        r && r.Nombre, r && r.nombre,
+        r && r.full_name, r && r.fullName
       ];
       for(const c of candidates){
         if(c === undefined || c === null) continue;
@@ -292,8 +292,8 @@
         const el = document.getElementById(id);
         if(el) el.value = (el.readOnly ? '' : 0);
       });
-      document.getElementById('print_nombre').value = '';
-      document.getElementById('print_dpi').value = '';
+      const pn = document.getElementById('print_nombre'); if(pn) pn.value = '';
+      const pd = document.getElementById('print_dpi'); if(pd) pd.value = '';
       recalcLiquido();
       return;
     }
@@ -304,20 +304,25 @@
       const nombre = planRow.nombre || planRow.Nombre || planRow.full_name || '';
       const dpiVal = planRow.dpi || planRow.DPI || planRow.numero || planRow.id || rawVal;
 
-      document.getElementById('print_nombre').value = nombre;
-      document.getElementById('print_dpi').value = dpiVal;
+      const nombreEl = document.getElementById('nombre'); if(nombreEl) nombreEl.value = nombre;
+      const dpiEl = document.getElementById('dpi'); if(dpiEl) dpiEl.value = dpiVal;
 
-      document.getElementById('sueldoBase').value = toNumberSafe(planRow.sueldo ?? planRow.Sueldo ?? 0);
-      document.getElementById('bonificacion').value = toNumberSafe(planRow.bono ?? planRow.bon ?? 0);
-      document.getElementById('comisiones').value = toNumberSafe(planRow.comisiones ?? planRow.Comisiones ?? 0);
-      document.getElementById('hextrasMonto').value = toNumberSafe(planRow.hextras ?? planRow.hextras_monto ?? 0);
+      const pn = document.getElementById('print_nombre'); if(pn) pn.value = nombre;
+      const pd = document.getElementById('print_dpi'); if(pd) pd.value = dpiVal;
+
+      const setIf = (id, val) => { const el = document.getElementById(id); if(el) el.value = toNumberSafe(val); };
+
+      setIf('sueldoBase', planRow.sueldo ?? planRow.Sueldo ?? 0);
+      setIf('bonificacion', planRow.bono ?? planRow.bon ?? 0);
+      setIf('comisiones', planRow.comisiones ?? planRow.Comisiones ?? 0);
+      setIf('hextrasMonto', planRow.hextras ?? planRow.hextras_monto ?? 0);
 
       const igssVal = toNumberSafe(planRow.igss ?? planRow.IGSS ?? ((planRow.sueldo||planRow.Sueldo||0) * 0.0483));
       const igssTrunc = Math.trunc(igssVal * 100) / 100;
-      document.getElementById('igss').value = igssTrunc.toFixed(2);
+      const igssEl = document.getElementById('igss'); if(igssEl) igssEl.value = igssTrunc.toFixed(2);
 
-      document.getElementById('isr').value = toNumberSafe(planRow.isr ?? planRow._isrValue ?? 0);
-      document.getElementById('otrasDeducciones').value = toNumberSafe(planRow.otras ?? planRow.otras_deducciones ?? 0);
+      const isrEl = document.getElementById('isr'); if(isrEl) isrEl.value = toNumberSafe(planRow.isr ?? planRow._isrValue ?? 0);
+      const otrasEl = document.getElementById('otrasDeducciones'); if(otrasEl) otrasEl.value = toNumberSafe(planRow.otras ?? planRow.otras_deducciones ?? 0);
 
       recalcLiquido();
       return;
@@ -327,22 +332,25 @@
       const nombre = data.Nombre || data.nombre || data.full_name || '';
       const dpiVal = data['Numero de DPI'] || data.dpi || data.numero || rawVal;
 
-      document.getElementById('print_nombre').value = nombre;
-      document.getElementById('print_dpi').value = dpiVal;
+      const nombreEl = document.getElementById('nombre'); if(nombreEl) nombreEl.value = nombre;
+      const dpiEl = document.getElementById('dpi'); if(dpiEl) dpiEl.value = dpiVal;
 
-      if(data.Sueldo !== undefined) document.getElementById('sueldoBase').value = toNumberSafe(data.Sueldo);
-      if(data.bono !== undefined) document.getElementById('bonificacion').value = toNumberSafe(data.bono);
-      if(data.comisiones !== undefined) document.getElementById('comisiones').value = toNumberSafe(data.comisiones);
-      if(data.hextras_monto !== undefined) document.getElementById('hextrasMonto').value = toNumberSafe(data.hextras_monto);
+      const pn = document.getElementById('print_nombre'); if(pn) pn.value = nombre;
+      const pd = document.getElementById('print_dpi'); if(pd) pd.value = dpiVal;
+
+      if(data.Sueldo !== undefined) { const el = document.getElementById('sueldoBase'); if(el) el.value = toNumberSafe(data.Sueldo); }
+      if(data.bono !== undefined) { const el = document.getElementById('bonificacion'); if(el) el.value = toNumberSafe(data.bono); }
+      if(data.comisiones !== undefined) { const el = document.getElementById('comisiones'); if(el) el.value = toNumberSafe(data.comisiones); }
+      if(data.hextras_monto !== undefined) { const el = document.getElementById('hextrasMonto'); if(el) el.value = toNumberSafe(data.hextras_monto); }
 
       if(data.igss !== undefined){
         const ig = toNumberSafe(data.igss);
         const igTr = Math.trunc(ig * 100) / 100;
-        document.getElementById('igss').value = igTr.toFixed(2);
+        const el = document.getElementById('igss'); if(el) el.value = igTr.toFixed(2);
       }
 
-      if(data._isrValue !== undefined) document.getElementById('isr').value = toNumberSafe(data._isrValue);
-      if(data.otras_deducciones !== undefined) document.getElementById('otrasDeducciones').value = toNumberSafe(data.otras_deducciones);
+      if(data._isrValue !== undefined) { const el = document.getElementById('isr'); if(el) el.value = toNumberSafe(data._isrValue); }
+      if(data.otras_deducciones !== undefined) { const el = document.getElementById('otrasDeducciones'); if(el) el.value = toNumberSafe(data.otras_deducciones); }
 
       recalcLiquido();
     }).catch(()=>{
@@ -367,8 +375,8 @@
     const ganancias = toNum('sueldoBase') + toNum('hextrasMonto') + toNum('bonificacion') + toNum('comisiones');
     const deducciones = toNum('igss') + toNum('isr') + toNum('otrasDeducciones');
     const liquido = round2(ganancias - deducciones);
-    document.getElementById('liquidoTotal').value = fmt(liquido);
-    document.getElementById('totalEnLetras').value = numeroALetrasEnEspañol(liquido);
+    const liqEl = document.getElementById('liquidoTotal'); if(liqEl) liqEl.value = fmt(liquido);
+    const letraEl = document.getElementById('totalEnLetras'); if(letraEl) letraEl.value = numeroALetrasEnEspañol(liquido);
   }
 
   function numeroALetrasEnEspañol(num){
@@ -397,11 +405,11 @@
     const decenas = ['','','veinte','treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa'];
     const centenas = ['','ciento','doscientos','trescientos','cuatrocientos','quinientos','seiscientos','setecientos','ochocientos','novecientos'];
 
-    function tresCifrasToText(n){
+    function tresCifrasToText(m){
       let s = '';
-      const c = Math.floor(n / 100);
-      const r = n % 100;
-      if (n === 100) return 'cien';
+      const c = Math.floor(m / 100);
+      const r = m % 100;
+      if (m === 100) return 'cien';
       if (c > 0) s += centenas[c] + (r ? ' ' : '');
       if (r >= 10 && r <= 19){
         s += especiales[r - 10];
@@ -571,17 +579,27 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
   h3, h5, h6, label { margin:0; padding:0; font-weight:700; font-size:10px; line-height:1; }
   .title-large { font-size:11px; font-weight:800; }
 
-  /* Inputs smaller in print */
-  input.form-control, input.form-control[readonly] {
-    background:#fff !important;
-    border:1px solid #111 !important;
-    color:#000 !important;
-    padding:3px 6px !important;
-    font-size:9px !important;
-    box-shadow:none;
+  /* Inputs inside print: tamaño de letra aumentado en textboxes (CORRECCIÓN APLICADA) */
+  input[type="text"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="email"],
+  input[type="date"],
+  textarea,
+  select,
+  input.form-control,
+  input.form-control[readonly],
+  .compact-input,
+  .compact-amount {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    -webkit-text-size-adjust: none;
+    font-size: 13px !important;
+    line-height: 1.15 !important;
+    padding: 3px 6px !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
   }
-  .compact-input { font-size:9px !important; padding:3px 6px !important; }
-  .compact-amount { width:120px !important; font-size:10px !important; padding:4px 6px !important; }
 
   /* Tighten layout */
   .section-grid { gap:6px; flex-wrap:nowrap; align-items:flex-start; }
