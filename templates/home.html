@@ -368,6 +368,40 @@
   else tryRegister(20);
 
 })();
+const btnEliminar = document.getElementById('btnEliminar');
+if (btnEliminar) {
+  btnEliminar.addEventListener('click', async () => {
+    // comprueba rol en el cliente
+    if (CURRENT_ROLE !== 'admin') { flash('Permisos insuficientes', 'warning'); return; }
+
+    const tr = tabla.querySelector('tbody tr.selected');
+    if (!tr) { flash('Debes seleccionar una fila antes de eliminar', 'warning'); return; }
+
+    const dpi = (tr.cells[0] && tr.cells[0].innerText || '').trim();
+    if (!dpi) { flash('No se pudo obtener el DPI', 'danger'); return; }
+
+    if (!confirm(`¿Estás seguro de eliminar al empleado con DPI ${dpi}?`)) return;
+
+    try {
+      const res = await fetch('/eliminar_empleado', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dpi })
+      });
+      const j = await res.json().catch(()=>({}));
+      if (res.ok) {
+        flash(j.mensaje || 'Empleado eliminado', 'success');
+        tr.remove(); // quita la fila del DOM
+        // limpia panel foto...
+      } else {
+        flash(j.mensaje || j.error || 'Error al eliminar', 'danger');
+      }
+    } catch (err) {
+      flash('Error al eliminar: ' + (err.message||err), 'danger');
+    }
+  });
+}
+
 </script>
 
 {% endblock %}
