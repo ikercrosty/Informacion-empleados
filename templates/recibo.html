@@ -246,7 +246,6 @@
     return isFinite(f) ? f : 0;
   }
 
-  // Parse YYYY-MM-DD from <input type=date> and return a Date in local timezone
   function parseDateInputAsLocal(dateStr){
     if(!dateStr || typeof dateStr !== 'string') return null;
     const parts = dateStr.split('-');
@@ -282,16 +281,6 @@
     }
   }
 
-  // Previously removed Q for print. To preserve Q in printed output, these functions are no-op.
-  function stripQForPrint(){
-    // intentionally left blank to keep "Q " prefix visible in print
-  }
-
-  function restoreAmountsAfterPrint(){
-    // intentionally left blank (no changes were made in stripQForPrint)
-  }
-
-  // Helper that writes a formatted Q value into an input
   function writeMoneyInput(id, value){
     const el = document.getElementById(id);
     if(!el) return;
@@ -473,8 +462,7 @@
   });
   updateMediosOnScreen();
 
-  // ---------- Print duplication logic ----------
-  // create a printable duplicate of #receipt_main immediately before print, then remove it after
+  // ---------- Print duplication logic (clon sincronizado) ----------
   function removeAllIds(node){
     if(node.removeAttribute) node.removeAttribute('id');
     for(const ch of node.children ? Array.from(node.children) : []){
@@ -487,15 +475,12 @@
     if(node.tagName === 'BUTTON') { node.remove(); return; }
     if(node.tagName === 'SELECT') { node.remove(); return; }
     if(node.tagName === 'INPUT' || node.tagName === 'TEXTAREA') {
-      if(node.tagName === 'INPUT') {
-        const val = node.value;
-        const span = document.createElement('span');
-        span.textContent = val;
-        span.className = 'print-static';
-        node.replaceWith(span);
-        return;
-      }
-      node.remove();
+      // replace interactive controls with non-interactive equivalent but keep displayed value
+      const value = node.value || '';
+      const span = document.createElement('span');
+      span.className = 'print-static';
+      span.textContent = value;
+      node.replaceWith(span);
       return;
     }
     if(node.tagName === 'SCRIPT') { node.remove(); return; }
@@ -507,15 +492,76 @@
 
   let currentPrintClone = null;
 
+  function syncInputValuesToClone(original, clone){
+    const origInputs = Array.from(original.querySelectorAll('input, textarea, select'));
+    const cloneInputs = Array.from(clone.querySelectorAll('input, textarea, select'));
+
+    // If counts match, copy by index; otherwise try to match by name/id fallback
+    if(origInputs.length === cloneInputs.length){
+      for(let i=0;i<origInputs.length;i++){
+        const o = origInputs[i];
+        const c = cloneInputs[i];
+        try {
+          if(c.tagName === 'INPUT' || c.tagName === 'TEXTAREA') c.value = o.value;
+          if(c.type === 'radio' || c.type === 'checkbox') c.checked = o.checked;
+        } catch(e){}
+      }
+    } else {
+      // fallback: copy by matching name then id
+      origInputs.forEach(o=>{
+        let selector = '';
+        if(o.name) selector = '[name="' + CSS.escape(o.name) + '"]';
+        else if(o.id) selector = '#' + CSS.escape(o.id);
+        const c = selector ? clone.querySelector(selector) : null;
+        if(c){
+          try {
+            if(c.tagName === 'INPUT' || c.tagName === 'TEXTAREA') c.value = o.value;
+            if(c.type === 'radio' || c.type === 'checkbox') c.checked = o.checked;
+          } catch(e){}
+        }
+      });
+    }
+    // copy visible text nodes used for totals or labels
+    const origTexts = ['totalEnLetras','liquidoTotal','print_nombre','print_dpi'];
+    origTexts.forEach(id=>{
+      const o = document.getElementById(id);
+      if(!o) return;
+      // find element in clone by same id or by role; remove id on clone later, so search by attribute data-clone-source if present
+      let c = clone.querySelector('#' + CSS.escape(id));
+      if(!c){
+        c = clone.querySelector('[data-clone="' + id + '"]');
+      }
+      if(c){
+        if(c.tagName === 'INPUT' || c.tagName === 'TEXTAREA') c.value = o.value;
+        else c.textContent = o.value || o.textContent || '';
+      }
+    });
+  }
+
   function createPrintClone(){
     if(currentPrintClone) return;
     const main = document.getElementById('receipt_main');
     if(!main) return;
+
+    // deep clone
     const clone = main.cloneNode(true);
+
+    // sync dynamic values from original to clone to ensure exact equality
+    try {
+      syncInputValuesToClone(main, clone);
+    } catch(e){}
+
+    // remove ids on clone to avoid duplicate ids in DOM
     removeAllIds(clone);
+
+    // disable interactive elements in clone by replacing them with non-interactive spans but keeping displayed text
     disableInteractiveInClone(clone);
+
+    // mark clone and hide on screen; will be shown in print via CSS
     clone.classList.add('print-duplicate');
     clone.setAttribute('aria-hidden','true');
+
+    // append clone inside placeholder
     const placeholder = document.getElementById('print_clone_placeholder');
     placeholder.style.display = 'block';
     placeholder.appendChild(clone);
@@ -540,11 +586,9 @@
     syncPrintableComprobante();
     createPrintClone();
     document.body.classList.add('printing-multiple');
-    stripQForPrint();
   }
   function afterPrintCleanup(){
     document.body.classList.remove('printing-multiple','print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
-    restoreAmountsAfterPrint();
     removePrintClone();
   }
 
@@ -700,7 +744,6 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
   }
 
   /* Add extra vertical space only before the cloned second receipt */
-  /* This is the change that moves the second receipt down a bit */
   #print_clone_placeholder .print-duplicate {
     margin-top: 12mm !important;
     display:block;
