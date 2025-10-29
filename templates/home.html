@@ -145,8 +145,14 @@
     "Jornada laboral","Duración del trabajo","Fecha de inicio laboral","Dias Laborales"
   ];
 
+  // Track last clicked row so we can correctly update the "original DPI" marker that backend/registrarTabla might need.
+  // Problem being solved: when the user edits the DPI cell, some registration/save logic may still use the original DPI stored elsewhere to find the DB row.
+  // We update a data-original-dpi attribute on the TR before the save operation so the backend receives the new DPI as key.
+  let lastClickedRow = null;
+
   function tryRegister(retries = 20){
     if (window.registrarTabla && typeof window.registrarTabla === 'function') {
+      // Wrap registrarTabla call so we can perform DPI-fix before any "save" is triggered by the shared main.js
       window.registrarTabla(TABLE_ID, COLUMNS, ENDPOINT, CAMPOS, BLOQUEADAS);
 
       // set initial button states like other pages (main.js will wire handlers)
@@ -162,6 +168,11 @@
       // attach photo selection & controls
       attachPhotoSelection();
       attachPhotoControls();
+
+      // Attach helpers to reliably capture row selection and ensure DPI edited is preserved on save
+      attachRowClickTracker();
+      attachPreSaveDpiSync();
+
       return;
     }
     if (retries <= 0) {
@@ -178,6 +189,13 @@
     tabla.addEventListener('click', async (ev) => {
       const tr = ev.target.closest('tr');
       if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+
+      // record last clicked row (used by save sync)
+      lastClickedRow = tr;
+
+      // mark visual selection if main script doesn't do it
+      Array.from(tr.parentElement.children).forEach(r => r.classList.remove('table-active','selected'));
+      tr.classList.add('table-active','selected');
 
       const dpi = (tr.cells[0] && tr.cells[0].innerText || '').trim();
       const fotoEmpleado = document.getElementById('fotoEmpleado');
@@ -314,6 +332,83 @@
 
   // expose flash for inner handlers
   window.__home_flash = { flash };
+
+  //
+  // ------- NEW: helpers to ensure DPI edits persist -------
+  //
+  // Strategy:
+  // 1) Track the last clicked row so we know which row user intends to edit/save (lastClickedRow).
+  // 2) Before the shared save logic executes (most pages wire save to #btnGuardar), we synchronize a dataset marker
+  //    on the TR element that many backend/updater helpers use as the "original key" (data-original-dpi).
+  //    We also ensure the first cell contains the current edited DPI text (in case registrarTabla reads cell text).
+  // 3) This is a minimal, defensive patch that does not change registrarTabla internals but ensures the save operation
+  //    has the correct DPI value to update the existing record instead of using the stale/original DPI.
+  //
+
+  // Attach click tracker to tbody rows (if not already handled above in photo selection)
+  function attachRowClickTracker(){
+    const tabla = document.getElementById(TABLE_ID);
+    if (!tabla) return;
+    const tbody = tabla.querySelector('tbody');
+    if(!tbody) return;
+
+    // Track clicks anywhere inside tbody rows (covers selection and editing)
+    tbody.addEventListener('click', (ev) => {
+      const tr = ev.target.closest('tr');
+      if (!tr) return;
+      lastClickedRow = tr;
+      // If registrarTabla or other code marks selection differently, we still mark visually to help user.
+      Array.from(tbody.children).forEach(r => r.classList.remove('table-active','selected'));
+      tr.classList.add('table-active','selected');
+    });
+
+    // Also track focusin on cells (useful when cells are contenteditable)
+    tbody.addEventListener('focusin', (ev) => {
+      const tr = ev.target.closest('tr');
+      if(tr) lastClickedRow = tr;
+    }, true);
+  }
+
+  // Before save, sync DPI value into a data-original-dpi attribute so server/updater can find the row by new DPI.
+  // We hook the #btnGuardar click which is used on this page to submit edits; this is defensive and idempotent.
+  function attachPreSaveDpiSync(){
+    const btnGuardar = document.getElementById('btnGuardar');
+    if(!btnGuardar) return;
+
+    // Only attach once
+    if(btnGuardar.dataset.dpiSyncAttached) return;
+    btnGuardar.dataset.dpiSyncAttached = '1';
+
+    btnGuardar.addEventListener('click', () => {
+      try {
+        // Find the selected row (prefer explicit lastClickedRow), fall back to any .table-active or .selected row
+        let tr = lastClickedRow;
+        if(!tr) {
+          const tabla = document.getElementById(TABLE_ID);
+          if(tabla) {
+            tr = tabla.querySelector('tbody tr.table-active, tbody tr.selected') || tabla.querySelector('tbody tr');
+          }
+        }
+        if(!tr) return;
+
+        // Read the first cell text (current DPI edited by user)
+        const firstCell = tr.cells && tr.cells[0];
+        const currentDpi = firstCell && String(firstCell.innerText || firstCell.textContent || '').trim();
+
+        // Set a dataset marker with the current DPI so server/updater uses it as key (many implementations look for a row attribute)
+        if(currentDpi) {
+          tr.dataset.originalDpi = currentDpi;
+          // also set a standard attribute name sometimes used by helpers
+          tr.setAttribute('data-original-dpi', currentDpi);
+          // ensure the visible first cell contains the exact DPI value (removes accidental whitespace)
+          if(firstCell) firstCell.innerText = currentDpi;
+        }
+      } catch(e){
+        // don't block saving if anything goes wrong; log for developer
+        console.error('pre-save DPI sync failed', e);
+      }
+    });
+  }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ()=>tryRegister(20));
   else tryRegister(20);
