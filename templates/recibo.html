@@ -608,6 +608,10 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
   .empleado-selection, select, .btn-imprimir, .header-controls { display:none !important; }
   input[type="date"] { display:none !important; }
 
+  /* Also hide the whole form-check container so the radio input glyph never prints */
+  .form-check { display:none !important; }
+  .form-check-input { display:none !important; }
+
   /* Show mirrored printable date and force header-print-row visible */
   .header-print-row { display:block !important; }
   .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color:#111; font-size:11px; margin-bottom:6px; text-align:right; }
@@ -621,20 +625,11 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
     box-shadow:none;
   }
 
-  /* Make transferencia / cheque textboxes wider in print so long values fit */
-  body.print-medio-TRANSFERENCIA .transferencia-fields .trans-input,
-  body.print-medio-CHEQUE .cheque-fields .trans-input {
-    min-width:260px !important;
-    max-width:380px !important;
-    padding:5px 8px !important;
-    font-size:11px !important;
-  }
-
-  /* Payment methods presentation in print */
-  .printable-option { display:none; font-size:10px; }
-  body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:inline-flex; }
-  body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:inline-flex; }
-  body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:inline-flex; }
+  /* Payment methods: show only the printable-option label for the selected medio */
+  .printable-option { display:none !important; font-size:10px; }
+  body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:inline-flex !important; }
+  body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:inline-flex !important; }
+  body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:inline-flex !important; }
 
   /* Show transfer/cheque fields inline in print when selected */
   body.print-medio-TRANSFERENCIA .transferencia-fields,
@@ -645,7 +640,15 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
     margin-left:6px;
   }
 
-  /* Compact signatures */
+  /* Wider transfer/cheque textboxes in print so long values fit */
+  body.print-medio-TRANSFERENCIA .transferencia-fields .trans-input,
+  body.print-medio-CHEQUE .cheque-fields .trans-input {
+    min-width:260px !important;
+    max-width:380px !important;
+    padding:5px 8px !important;
+    font-size:11px !important;
+  }
+
   .print-signatures .sig-col { flex:1 1 48%; text-align:center; padding:0 4px; }
   .sig-line { margin-bottom:6px; border-bottom:1px dashed #111; }
 
