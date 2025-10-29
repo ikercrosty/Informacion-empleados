@@ -276,7 +276,14 @@ def api_empleado_get(dpi):
     # PUT: actualizar empleado (compatibilidad)
     if request.method == "PUT":
         data = request.get_json() or {}
-        dpi_val = dpi
+        # Accept potential new DPI value and original DPI marker
+        new_dpi = data.get("Numero de DPI") or data.get("dpi") or data.get("nuevo_dpi")
+        original_dpi = data.get("original_dpi") or data.get("dpi_original") or data.get("old_dpi") or dpi
+
+        # Fallback: ensure we have a key to search by
+        if not original_dpi:
+            original_dpi = dpi
+
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -300,9 +307,15 @@ def api_empleado_get(dpi):
             inicio = data.get("Fecha de inicio laboral") or data.get("inicio")
             dias = data.get("Dias Laborales") or data.get("dias")
 
+            # If no explicit new_dpi given, keep same as original
+            if not new_dpi:
+                new_dpi = original_dpi
+
+            # Perform UPDATE including Numero de DPI in SET and using original_dpi in WHERE
             cursor.execute("""
                 UPDATE empleados_info
-                SET `Nombre`=%s, `Apellidos`=%s, `Apellidos de casada`=%s, `Estado Civil`=%s,
+                SET `Numero de DPI`=%s,
+                    `Nombre`=%s, `Apellidos`=%s, `Apellidos de casada`=%s, `Estado Civil`=%s,
                     `Nacionalidad`=%s, `Departamento`=%s, `Fecha de nacimiento`=%s,
                     `Lugar de nacimiento`=%s, `Numero de Afiliación del IGGS`=%s,
                     `Dirección del Domicilio`=%s, `Numero de Telefono`=%s, `Religión`=%s,
@@ -311,13 +324,13 @@ def api_empleado_get(dpi):
                     `Dias Laborales`=%s
                 WHERE `Numero de DPI`=%s
             """, (
-                nombre, apellidos, apellidos_casada, estado_civil,
+                new_dpi, nombre, apellidos, apellidos_casada, estado_civil,
                 nacionalidad, departamento, fecha_nacimiento,
                 lugar_nacimiento, iggs,
                 direccion, telefono, religion,
                 correo, puesto, contrato,
                 jornada, duracion, inicio,
-                dias, dpi_val
+                dias, original_dpi
             ))
             conn.commit()
             cursor.close()
@@ -570,7 +583,10 @@ def db_test():
 def guardar_empleado():
     data = request.get_json() or {}
 
+    # Accept new DPI and optional original_dpi (sent by frontend when editing)
     dpi_val = data.get("Numero de DPI") or data.get("dpi") or data.get("Numero_de_DPI") or data.get("NumeroDeDPI") or data.get("NumeroDeDpi")
+    original_dpi = data.get("original_dpi") or data.get("dpi_original") or data.get("old_dpi") or data.get("dpiOld")
+
     if not dpi_val:
         return jsonify({"mensaje": "El campo DPI es obligatorio"}), 400
 
@@ -618,9 +634,14 @@ def guardar_empleado():
             ))
             mensaje = "Empleado agregado correctamente"
         else:
+            # Use original_dpi as key to find the row; fallback to dpi_val if not provided
+            key_dpi = original_dpi if original_dpi else dpi_val
+
+            # Update including Numero de DPI so changes to DPI are saved
             cursor.execute("""
                 UPDATE empleados_info
-                SET `Nombre`=%s, `Apellidos`=%s, `Apellidos de casada`=%s, `Estado Civil`=%s,
+                SET `Numero de DPI`=%s,
+                    `Nombre`=%s, `Apellidos`=%s, `Apellidos de casada`=%s, `Estado Civil`=%s,
                     `Nacionalidad`=%s, `Departamento`=%s, `Fecha de nacimiento`=%s,
                     `Lugar de nacimiento`=%s, `Numero de Afiliación del IGGS`=%s,
                     `Dirección del Domicilio`=%s, `Numero de Telefono`=%s, `Religión`=%s,
@@ -629,13 +650,13 @@ def guardar_empleado():
                     `Dias Laborales`=%s
                 WHERE `Numero de DPI`=%s
             """, (
-                nombre, apellidos, apellidos_casada, estado_civil,
+                dpi_val, nombre, apellidos, apellidos_casada, estado_civil,
                 nacionalidad, departamento, fecha_nacimiento,
                 lugar_nacimiento, iggs,
                 direccion, telefono, religion,
                 correo, puesto, contrato,
                 jornada, duracion, inicio,
-                dias, dpi_val
+                dias, key_dpi
             ))
             mensaje = "Empleado actualizado correctamente"
 
