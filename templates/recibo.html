@@ -2,7 +2,7 @@
 {% block title %}Recibo de Pago{% endblock %}
 
 {% block content %}
-<div class="container py-2 receipt-root">
+<div class="container py-2 receipt-root" id="receipt_main">
   <!-- Header card -->
   <div class="card header-card">
     <div class="card-body header-body d-flex justify-content-between align-items-center">
@@ -144,6 +144,8 @@
             <div class="transferencia-fields compact-transfer">
               <input id="transCuenta" class="form-control trans-input compact-input" type="text" aria-label="Número de cuenta (transferencia)" placeholder="No. cuenta">
               <input id="transBanco" class="form-control trans-input compact-input" type="text" aria-label="Banco (transferencia)" placeholder="Banco">
+              <!-- Nuevo campo: Número de Autorización -->
+              <input id="transAutorizacion" class="form-control trans-input compact-input" type="text" aria-label="Número de Autorización" placeholder="No. de Autorización">
             </div>
           </div>
 
@@ -243,6 +245,17 @@
     return isFinite(f) ? f : 0;
   }
 
+  function parseDateInputAsLocal(dateStr){
+    if(!dateStr || typeof dateStr !== 'string') return null;
+    const parts = dateStr.split('-');
+    if(parts.length !== 3) return null;
+    const y = parseInt(parts[0],10);
+    const m = parseInt(parts[1],10);
+    const d = parseInt(parts[2],10);
+    if(!isFinite(y) || !isFinite(m) || !isFinite(d)) return null;
+    return new Date(y, m - 1, d);
+  }
+
   function syncPrintableComprobante(){
     const fecha = document.getElementById('comprobanteFecha')?.value || '';
     const printFecha = document.getElementById('print_comprobanteFecha');
@@ -250,8 +263,8 @@
       let text = fecha;
       if(fecha){
         try{
-          const d = new Date(fecha);
-          if(!isNaN(d)) {
+          const d = parseDateInputAsLocal(fecha);
+          if(d && !isNaN(d.getTime())) {
             const dd = String(d.getDate()).padStart(2,'0');
             const mm = String(d.getMonth()+1).padStart(2,'0');
             const yyyy = d.getFullYear();
@@ -458,6 +471,12 @@
   });
   updateMediosOnScreen();
 
+  // Validación de fecha antes de imprimir
+  function hasFechaValid(){
+    const fecha = document.getElementById('comprobanteFecha')?.value || '';
+    return String(fecha).trim() !== '';
+  }
+
   // ---------- Print handlers ----------
   function beforePrintSetup(){
     updateMediosOnScreen();
@@ -479,14 +498,33 @@
 
   if (window.matchMedia) {
     const mql = window.matchMedia('print');
-    if (mql.addEventListener) mql.addEventListener('change', (m) => { if(m.matches) beforePrintSetup(); else afterPrintCleanup(); });
-    else mql.addListener((m) => { if(m.matches) beforePrintSetup(); else afterPrintCleanup(); });
+    if (mql.addEventListener) mql.addEventListener('change', (m) => { if(m.matches) {
+        if(!hasFechaValid()){
+          // Cancel print if media query triggered without fecha (best-effort)
+          alert('Por favor ingrese una fecha antes de imprimir.');
+          // afterprint cleanup will run when user cancels; no window.print() to abort here
+        } else {
+          beforePrintSetup();
+        }
+      } else afterPrintCleanup(); });
+    else mql.addListener((m) => { if(m.matches) {
+        if(!hasFechaValid()){
+          alert('Por favor ingrese una fecha antes de imprimir.');
+        } else {
+          beforePrintSetup();
+        }
+      } else afterPrintCleanup(); });
   }
   window.addEventListener('beforeprint', beforePrintSetup);
   window.addEventListener('afterprint', afterPrintCleanup);
 
   const imprimirBtn = document.getElementById('imprimirBtn');
   if(imprimirBtn) imprimirBtn.addEventListener('click', function(){
+    // Prevent printing if no fecha
+    if(!hasFechaValid()){
+      alert('No se puede imprimir: ingrese la fecha en el comprobante antes de imprimir.');
+      return;
+    }
     beforePrintSetup();
     setTimeout(()=> window.print(), 120);
   });
