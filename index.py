@@ -225,7 +225,7 @@ def api_empleados_list():
         return jsonify({"mensaje": f"Error: {e}"}), 500
 
 
-        # Compatibilidad rápida para frontend que pide /api/categories
+# Compatibilidad rápida para frontend que pide /api/categories
 @app.route("/api/categories", methods=["GET"])
 def api_categories_compat():
     try:
@@ -246,7 +246,6 @@ def api_categories_compat():
     except Exception as e:
         app.logger.exception("Error en /api/categories")
         return jsonify({"error": str(e)}), 500
-
 
 
 # Devuelve todos los campos relevantes de un empleado por DPI
@@ -452,7 +451,6 @@ def recibo():
     # optional: accept ?numero=... but do not fail if absent
     numero = request.args.get("numero", None)
 
-    # If you later want to fetch a recibo from DB by numero, add logic here.
     # For now return an empty dict so template has 'recibo' defined and url_for can resolve.
     recibo = {}
     if numero:
@@ -460,7 +458,6 @@ def recibo():
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
-            # Example: if you store recibos in a table 'recibos' with column 'numero'
             cursor.execute("SELECT * FROM recibos WHERE numero = %s LIMIT 1", (numero,))
             row = cursor.fetchone()
             cursor.close()
@@ -469,7 +466,6 @@ def recibo():
                 # sanitize single row
                 recibo = {k: ("" if v is None else v) for k, v in row.items()}
         except Exception:
-            # if table doesn't exist or any error, keep recibo as {}
             recibo = {}
 
     empresa_nombre = os.environ.get("EMPRESA_NOMBRE", "Empresa")
@@ -489,14 +485,11 @@ def recibo():
 # Rutas auxiliares que el template espera (evitan BuildError en url_for)
 @app.route("/recibos")
 def recibos_list():
-    # minimal safe implementation: redirige a menu o muestra lista futura
-    # mantiene compatibilidad con templates que llaman url_for('recibos_list')
     return redirect(url_for("menu"))
 
 
 @app.route("/recibo/imprimir/<numero>")
 def imprimir_recibo(numero):
-    # minimal: redirige a la vista recibo con query param numero
     return redirect(url_for("recibo", numero=numero))
 
 
@@ -839,7 +832,7 @@ def guardar_laboral():
     fin = data.get("Fin Laboral en la empresa")
     motivo = data.get("Motivo del retiro")
     jefe = data.get("Nombre del Jefe Imediato")
-    jefnum = data.get ("Numero del Jefe inmediato")
+    jefnum = data.get("Numero del Jefe inmediato")
     nuevo = data.get("nuevo", False)
 
     try:
@@ -895,7 +888,7 @@ def guardar_medica():
     tratamiento = data.get("Nombre del tratamiento")
     alergico = data.get("Es alergico a algun medicamento")
     medico = data.get("Nombre del medico Tratante")
-    numero = data.get ("Numero del medico tratante")
+    numero = data.get("Numero del medico tratante")
     sangre = data.get("Tipo de sangre")
     nuevo = data.get("nuevo", False)
 
@@ -1081,7 +1074,8 @@ def eliminar_foto():
             return jsonify({"ok": False, "message": "No existe foto para ese empleado"}), 200
     except Exception as e:
         return jsonify({"error": f"Error al eliminar foto: {e}"}), 500
-    
+
+
 if __name__ == "__main__":
     # escucha en todas las interfaces en el puerto 7287 (http)
     app.run(host="0.0.0.0", port=7287, debug=True)
