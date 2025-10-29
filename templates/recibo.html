@@ -2,7 +2,7 @@
 {% block title %}Recibo de Pago{% endblock %}
 
 {% block content %}
-<div class="container py-2 receipt-root" id="receipt_main">
+<div class="container py-2 receipt-root">
   <!-- Header card -->
   <div class="card header-card">
     <div class="card-body header-body d-flex justify-content-between align-items-center">
@@ -49,11 +49,11 @@
       <div class="row g-1">
         <div class="col-8">
           <label class="form-label small">Nombre completo</label>
-          <input id="print_nombre" class="form-control" readonly value="{{ recibo.nombre if recibo is defined else '' }}" data-preserve="true">
+          <input id="print_nombre" class="form-control" readonly value="{{ recibo.nombre if recibo is defined else '' }}">
         </div>
         <div class="col-4">
           <label class="form-label small">DPI / Identificación</label>
-          <input id="print_dpi" class="form-control" readonly value="{{ recibo.dpi if recibo is defined else '' }}" data-preserve="true">
+          <input id="print_dpi" class="form-control" readonly value="{{ recibo.dpi if recibo is defined else '' }}">
         </div>
       </div>
     </div>
@@ -68,22 +68,22 @@
         <div class="row g-1 compact-row">
           <div class="col-6">
             <label class="form-label xsmall">Sueldo Base</label>
-            <input id="sueldoBase" class="form-control compact-input" type="text" readonly value="{{ recibo.sueldo if recibo is defined else (recibo.Sueldo if recibo is defined else 'Q 0.00') }}" data-preserve="true">
+            <input id="sueldoBase" class="form-control compact-input" type="text" readonly value="{{ recibo.sueldo if recibo is defined else (recibo.Sueldo if recibo is defined else 'Q 0.00') }}">
           </div>
 
           <div class="col-6">
             <label class="form-label xsmall">Horas extras (monto)</label>
-            <input id="hextrasMonto" class="form-control compact-input" type="text" readonly value="{{ recibo.hextras_monto if recibo is defined else (recibo.hextras if recibo is defined else 'Q 0.00') }}" data-preserve="true">
+            <input id="hextrasMonto" class="form-control compact-input" type="text" readonly value="{{ recibo.hextras_monto if recibo is defined else (recibo.hextras if recibo is defined else 'Q 0.00') }}">
           </div>
 
           <div class="col-6 mt-1">
             <label class="form-label xsmall">Bonificación</label>
-            <input id="bonificacion" class="form-control compact-input" type="text" readonly value="{{ recibo.bono if recibo is defined else 'Q 0.00' }}" data-preserve="true">
+            <input id="bonificacion" class="form-control compact-input" type="text" readonly value="{{ recibo.bono if recibo is defined else 'Q 0.00' }}">
           </div>
 
           <div class="col-6 mt-1">
             <label class="form-label xsmall">Comisiones</label>
-            <input id="comisiones" class="form-control compact-input" type="text" readonly value="{{ recibo.comisiones if recibo is defined else 'Q 0.00' }}" data-preserve="true">
+            <input id="comisiones" class="form-control compact-input" type="text" readonly value="{{ recibo.comisiones if recibo is defined else 'Q 0.00' }}">
           </div>
         </div>
       </div>
@@ -94,17 +94,17 @@
         <div class="row g-1 compact-row">
           <div class="col-6">
             <label class="form-label xsmall">IGSS</label>
-            <input id="igss" class="form-control compact-input" type="text" readonly value="{{ 'Q ' ~ ('%.2f'|format(recibo.igss)) if recibo is defined and recibo.igss is defined else 'Q 0.00' }}" data-preserve="true">
+            <input id="igss" class="form-control compact-input" type="text" readonly value="{{ 'Q ' ~ ('%.2f'|format(recibo.igss)) if recibo is defined and recibo.igss is defined else 'Q 0.00' }}">
           </div>
 
           <div class="col-6">
             <label class="form-label xsmall">ISR</label>
-            <input id="isr" class="form-control compact-input" type="text" readonly value="{{ recibo.isr if recibo is defined else 'Q 0.00' }}" data-preserve="true">
+            <input id="isr" class="form-control compact-input" type="text" readonly value="{{ recibo.isr if recibo is defined else 'Q 0.00' }}">
           </div>
 
           <div class="col-12 mt-1">
             <label class="form-label xsmall">Otras deducciones</label>
-            <input id="otrasDeducciones" class="form-control compact-input" type="text" readonly value="{{ recibo.otras_deducciones if recibo is defined else 'Q 0.00' }}" data-preserve="true">
+            <input id="otrasDeducciones" class="form-control compact-input" type="text" readonly value="{{ recibo.otras_deducciones if recibo is defined else 'Q 0.00' }}">
           </div>
         </div>
       </div>
@@ -115,11 +115,11 @@
       <div class="liquido-total-inner">
         <div class="liquido-block">
           <label class="form-label xsmall">Líquido a recibir</label>
-          <input id="liquidoTotal" class="form-control fw-bold text-end compact-amount" readonly value="Q 0.00" data-preserve="true">
+          <input id="liquidoTotal" class="form-control fw-bold text-end compact-amount" readonly value="Q 0.00">
         </div>
         <div class="letras-block">
           <label class="form-label xsmall">TOTAL EN LETRAS</label>
-          <input id="totalEnLetras" class="form-control compact-input" type="text" readonly value="{{ recibo.total_letras if recibo is defined else '' }}" data-preserve="true">
+          <input id="totalEnLetras" class="form-control compact-input" type="text" readonly value="{{ recibo.total_letras if recibo is defined else '' }}">
         </div>
       </div>
     </div>
@@ -142,8 +142,8 @@
             <label class="form-check-label xsmall" for="pagoTransferencia">TRANSFERENCIA</label>
 
             <div class="transferencia-fields compact-transfer">
-              <input id="transCuenta" class="form-control trans-input compact-input" type="text" aria-label="Número de cuenta (transferencia)" placeholder="No. cuenta" data-preserve="true">
-              <input id="transBanco" class="form-control trans-input compact-input" type="text" aria-label="Banco (transferencia)" placeholder="Banco" data-preserve="true">
+              <input id="transCuenta" class="form-control trans-input compact-input" type="text" aria-label="Número de cuenta (transferencia)" placeholder="No. cuenta">
+              <input id="transBanco" class="form-control trans-input compact-input" type="text" aria-label="Banco (transferencia)" placeholder="Banco">
             </div>
           </div>
 
@@ -152,8 +152,8 @@
             <label class="form-check-label xsmall" for="pagoCheque">CHEQUE</label>
 
             <div class="cheque-fields compact-transfer">
-              <input id="chequeNumero" class="form-control trans-input compact-input" type="text" aria-label="Número de cheque" placeholder="No. cheque" data-preserve="true">
-              <input id="chequeBanco" class="form-control trans-input compact-input" type="text" aria-label="Banco (cheque)" placeholder="Banco" data-preserve="true">
+              <input id="chequeNumero" class="form-control trans-input compact-input" type="text" aria-label="Número de cheque" placeholder="No. cheque">
+              <input id="chequeBanco" class="form-control trans-input compact-input" type="text" aria-label="Banco (cheque)" placeholder="Banco">
             </div>
           </div>
         </div>
@@ -176,13 +176,63 @@
   </div>
 </div>
 
-<!-- placeholder where print duplicate will be inserted (managed by JS) -->
-<div id="print_clone_placeholder" aria-hidden="true" style="display:none;"></div>
-
 <script>
 (function(){
-  // --- helpers y formato ---
-  function fmtQ(n){ return 'Q ' + Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}); }
+  const PLANILLA_STORAGE_KEY = 'empaquetex_planilla_noviembre_v1';
+
+  function fmt(n){ return 'Q ' + Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+  function pickEmployeeKey(e){
+    return String(e && (e.dpi || e.DPI || e.numero || e.numero_identificacion || e.id || e.full_name) || '').trim();
+  }
+
+  function loadEmpleados(){
+    fetch('/api/empleados').then(r => r.json()).then(list => {
+      const sel = document.getElementById('empleadoSelect');
+      if(!Array.isArray(list) || !sel) return;
+      sel.querySelectorAll('option:not([value=""])').forEach(o => o.remove());
+      list.forEach(e => {
+        const opt = document.createElement('option');
+        opt.value = pickEmployeeKey(e);
+        opt.textContent = e.full_name || ((e.Nombre || '') + (e.Apellidos ? (' ' + e.Apellidos) : '')) || pickEmployeeKey(e) || 'Empleado';
+        sel.appendChild(opt);
+      });
+    }).catch(()=>{});
+  }
+
+  function loadPlanillaFromLocal(){
+    try {
+      const raw = localStorage.getItem(PLANILLA_STORAGE_KEY);
+      if(!raw) return null;
+      const obj = JSON.parse(raw);
+      return obj && Array.isArray(obj.rows) ? obj : null;
+    } catch(e){
+      return null;
+    }
+  }
+
+  function findPlanillaRowByDpi(dpi){
+    if(dpi === undefined || dpi === null) return null;
+    const plan = loadPlanillaFromLocal();
+    if(!plan) return null;
+    const rows = plan.rows || [];
+    const needle = String(dpi).trim();
+    for(const r of rows){
+      const candidates = [
+        r && r.dpi, r && r.DPI, r && r.Dpi,
+        r && r.numero, r && r.numero_identificacion, r && r.numeroDPI, r && r.numero_dpi,
+        r && r.id, r && r.ID, r && r.identificacion,
+        r && r.Nombre, r && r.nombre,
+        r && r.full_name, r && r.fullName
+      ];
+      for(const c of candidates){
+        if(c === undefined || c === null) continue;
+        if(String(c).trim() === needle) return r;
+      }
+    }
+    return null;
+  }
+
   function toNumberSafe(v){
     if(v === null || v === undefined) return 0;
     if(typeof v === 'number') return v;
@@ -192,214 +242,287 @@
     const f = parseFloat(s);
     return isFinite(f) ? f : 0;
   }
-  function textOf(el){
-    if(!el) return '';
-    if(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') return String(el.value || '');
-    if(el.tagName === 'SELECT') return (el.options[el.selectedIndex] ? el.options[el.selectedIndex].text : '');
-    return el.textContent || '';
-  }
 
-  // --- sincronización simple de pantalla (mantener) ---
   function syncPrintableComprobante(){
     const fecha = document.getElementById('comprobanteFecha')?.value || '';
     const printFecha = document.getElementById('print_comprobanteFecha');
-    if(printFecha){
+    if(printFecha) {
+      let text = fecha;
       if(fecha){
         try{
           const d = new Date(fecha);
-          if(!isNaN(d.getTime())){
+          if(!isNaN(d)) {
             const dd = String(d.getDate()).padStart(2,'0');
             const mm = String(d.getMonth()+1).padStart(2,'0');
             const yyyy = d.getFullYear();
-            printFecha.textContent = 'Fecha: ' + dd + '/' + mm + '/' + yyyy;
-          } else printFecha.textContent = 'Fecha: ' + fecha;
-        }catch(e){ printFecha.textContent = 'Fecha: ' + fecha; }
-      } else printFecha.textContent = '';
-    }
-  }
-
-  // --- crear clon de impresión garantizando identicidad ---
-  let currentPrintClone = null;
-  function createExactPrintClone(){
-    // si ya existe, sincroniza y sale
-    if(currentPrintClone){
-      syncValuesToClone();
-      return;
-    }
-    const original = document.getElementById('receipt_main');
-    if(!original) return;
-
-    // clon profundo del nodo visible (incluye header, cards, etc.)
-    const clone = original.cloneNode(true);
-
-    // eliminamos ids en el clone para evitar duplicados, pero guardaremos data-clone donde haga falta
-    (function removeIds(node){
-      if(node && node.removeAttribute) node.removeAttribute('id');
-      for(const c of node.children ? Array.from(node.children) : []) removeIds(c);
-    })(clone);
-
-    // Reemplazar controles interactivos por spans con EXACTO texto que se ve en pantalla
-    // Recorremos el original y por cada control buscamos su equivalente por posición en el clone
-    const origControls = original.querySelectorAll('input, textarea, select, button');
-    const cloneControls = clone.querySelectorAll('input, textarea, select, button');
-
-    // Mapeo por índice: en practicas reales aquí es robusto porque clone proviene de original
-    for(let i = 0; i < Math.max(origControls.length, cloneControls.length); i++){
-      const o = origControls[i];
-      const c = cloneControls[i];
-      if(!c) continue;
-      // obtiene el texto visible del original
-      const valueText = textOf(o);
-      // crear nodo estático que preserva el estilo visual (span)
-      const span = document.createElement('span');
-      span.className = 'print-static';
-      span.textContent = valueText;
-      // Si el control original mostraba Q formatted numbers, garantizamos formato
-      if((o.tagName === 'INPUT' || o.tagName === 'TEXTAREA') && /^-?\d+(\.\d+)?$/.test(String(valueText).replace(/,/g,'')) ){
-        // si el value es numérico en el source, formateamos con Q
-        span.textContent = fmtQ(Number(valueText));
-      }
-      // reemplazamos el control del clone por el span
-      c.replaceWith(span);
-    }
-
-    // Además sincronizamos elementos no interactivos (p. ej. inputs readonly que no estaban en lista por alguna razón)
-    const keysToCopy = ['print_nombre','print_dpi','sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones','liquidoTotal','totalEnLetras','transCuenta','transBanco','chequeNumero','chequeBanco'];
-    keysToCopy.forEach(id=>{
-      const orig = document.getElementById(id);
-      if(!orig) return;
-      const value = textOf(orig);
-      // buscamos en clone un span que tenga el mismo label cercano o fallback por posición
-      // mejor estrategia: insertar un marker data-printkey en el original si es crítico; aquí hacemos best-effort por texto
-      const foundInputs = clone.querySelectorAll('[data-clone="'+CSS.escape(id)+'"]');
-      if(foundInputs && foundInputs.length){
-        Array.from(foundInputs).forEach(fi => fi.textContent = value);
-      } else {
-        // si no existe data-clone, buscamos el primer input/elemento con mismo name/placeholder/label en clone
-        const byId = clone.querySelector('#' + CSS.escape(id));
-        if(byId) byId.textContent = value;
-        else {
-          // fallback: buscar cualquier .print-static con texto similar a placeholder y reemplazar (no destructivo)
-          const approx = clone.querySelectorAll('.print-static');
-          if(approx && approx.length){
-            // reemplazar el primer que esté vacío o tenga similar longitud
-            for(const p of approx){
-              if(!p.textContent || p.textContent.length < 2){
-                p.textContent = value;
-                break;
-              }
-            }
+            text = 'Fecha: ' + dd + '/' + mm + '/' + yyyy;
+          } else {
+            text = 'Fecha: ' + fecha;
           }
+        }catch(e){
+          text = 'Fecha: ' + fecha;
         }
       }
-    });
+      printFecha.textContent = fecha ? text : '';
+    }
+  }
 
-    // Finalmente, aseguramos que la fecha impresa se sincronice (mirrored date ya existe en header-print-row)
-    const origDate = document.getElementById('print_comprobanteFecha');
-    if(origDate){
-      // si en el clone existe un lugar equivalente, lo actualizamos
-      const cloneDate = clone.querySelector('.header-print-row') || clone.querySelector('.print-only');
-      if(cloneDate) cloneDate.textContent = origDate.textContent || '';
+  // Previously removed Q for print. To preserve Q in printed output, these functions are no-op.
+  function stripQForPrint(){
+    // intentionally left blank to keep "Q " prefix visible in print
+  }
+
+  function restoreAmountsAfterPrint(){
+    // intentionally left blank (no changes were made in stripQForPrint)
+  }
+
+  // Helper that writes a formatted Q value into an input
+  function writeMoneyInput(id, value){
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.value = fmt(toNumberSafe(value));
+  }
+
+  document.getElementById('empleadoSelect')?.addEventListener('change', function(){
+    const rawVal = this.value || '';
+    if(!rawVal){
+      ['nombre','dpi'].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) el.value = '';
+      });
+      ['sueldoBase','comisiones','bonificacion','hextrasMonto','igss','isr','otrasDeducciones'].forEach(id=>{
+        writeMoneyInput(id, 0);
+      });
+      recalcLiquido();
+      return;
     }
 
-    // Marcamos y anexamos clone al placeholder (el CSS @media print mostrará .print-duplicate)
-    clone.classList.add('print-duplicate','print-clone-exact');
-    clone.setAttribute('aria-hidden','true');
-    const placeholder = document.getElementById('print_clone_placeholder');
-    placeholder.style.display = 'block';
-    placeholder.appendChild(clone);
-    currentPrintClone = clone;
-    // una pasada final para forzar estilos y espacios idénticos
-    syncValuesToClone();
-  }
+    const planRow = findPlanillaRowByDpi(rawVal);
 
-  function syncValuesToClone(){
-    if(!currentPrintClone) return;
-    const original = document.getElementById('receipt_main');
-    if(!original) return;
+    if(planRow){
+      const nombre = planRow.nombre || planRow.Nombre || planRow.full_name || '';
+      const dpiVal = planRow.dpi || planRow.DPI || planRow.numero || planRow.id || rawVal;
 
-    // para cada span.print-static en el clone, intentar encontrar el control correspondiente en el original
-    const cloneSpans = currentPrintClone.querySelectorAll('.print-static');
-    const origControls = original.querySelectorAll('input, textarea, select, .form-check-label, .form-control');
+      const pn = document.getElementById('print_nombre'); if(pn) pn.value = nombre;
+      const pd = document.getElementById('print_dpi'); if(pd) pd.value = dpiVal;
 
-    // copia por índice (método robusto porque clone fue creado a partir del original)
-    for(let i = 0; i < cloneSpans.length && i < origControls.length; i++){
-      const cSpan = cloneSpans[i];
-      const oCtrl = origControls[i];
-      if(!oCtrl) continue;
-      cSpan.textContent = textOf(oCtrl);
+      writeMoneyInput('sueldoBase', planRow.sueldo ?? planRow.Sueldo ?? 0);
+      writeMoneyInput('bonificacion', planRow.bono ?? planRow.bon ?? 0);
+      writeMoneyInput('comisiones', planRow.comisiones ?? planRow.Comisiones ?? 0);
+      writeMoneyInput('hextrasMonto', planRow.hextras ?? planRow.hextras_monto ?? 0);
+
+      const igssVal = toNumberSafe(planRow.igss ?? planRow.IGSS ?? ((planRow.sueldo||planRow.Sueldo||0) * 0.0483));
+      writeMoneyInput('igss', igssVal);
+
+      writeMoneyInput('isr', planRow.isr ?? planRow._isrValue ?? 0);
+      writeMoneyInput('otrasDeducciones', planRow.otras ?? planRow.otras_deducciones ?? 0);
+
+      recalcLiquido();
+      return;
     }
 
-    // copia explícita de campos clave por id
-    const explicit = ['print_nombre','print_dpi','sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones','liquidoTotal','totalEnLetras','print_comprobanteFecha'];
-    explicit.forEach(id=>{
-      const o = document.getElementById(id);
-      if(!o) return;
-      const v = textOf(o);
-      // buscar en clone: por data-clone o por texto exacto
-      let target = currentPrintClone.querySelector('[data-clone="'+CSS.escape(id)+'"]') || currentPrintClone.querySelector('.print-static');
-      if(target) target.textContent = v;
+    fetch('/api/empleado/' + encodeURIComponent(rawVal)).then(r => r.json()).then(data => {
+      const nombre = data.Nombre || data.nombre || data.full_name || '';
+      const dpiVal = data['Numero de DPI'] || data.dpi || data.numero || rawVal;
+
+      const pn = document.getElementById('print_nombre'); if(pn) pn.value = nombre;
+      const pd = document.getElementById('print_dpi'); if(pd) pd.value = dpiVal;
+
+      if(data.Sueldo !== undefined) writeMoneyInput('sueldoBase', data.Sueldo);
+      if(data.bono !== undefined) writeMoneyInput('bonificacion', data.bono);
+      if(data.comisiones !== undefined) writeMoneyInput('comisiones', data.comisiones);
+      if(data.hextras_monto !== undefined) writeMoneyInput('hextrasMonto', data.hextras_monto);
+
+      if(data.igss !== undefined){
+        const ig = toNumberSafe(data.igss);
+        writeMoneyInput('igss', ig);
+      }
+
+      if(data._isrValue !== undefined) writeMoneyInput('isr', data._isrValue);
+      if(data.otras_deducciones !== undefined) writeMoneyInput('otrasDeducciones', data.otras_deducciones);
+
+      recalcLiquido();
+    }).catch(()=>{
+      ['sueldoBase','bonificacion','comisiones','hextrasMonto','igss','isr','otrasDeducciones'].forEach(id=>{
+        writeMoneyInput(id, 0);
+      });
+      recalcLiquido();
     });
+  });
+
+  function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
+
+  function recalcLiquido(){
+    const toNum = id => {
+      const el = document.getElementById(id);
+      if(!el) return 0;
+      const v = String(el.value || '').replace(/^Q\s*/i,'').replace(/,/g,'').trim();
+      const n = Number(v);
+      return isFinite(n) ? n : 0;
+    };
+    const ganancias = toNum('sueldoBase') + toNum('hextrasMonto') + toNum('bonificacion') + toNum('comisiones');
+    const deducciones = toNum('igss') + toNum('isr') + toNum('otrasDeducciones');
+    const liquido = round2(ganancias - deducciones);
+    const liqEl = document.getElementById('liquidoTotal'); if(liqEl) liqEl.value = fmt(liquido);
+    const letraEl = document.getElementById('totalEnLetras'); if(letraEl) letraEl.value = numeroALetrasEnEspañol(liquido);
   }
 
-  function removePrintClone(){
-    if(!currentPrintClone) return;
-    try{ currentPrintClone.remove(); }catch(e){}
-    currentPrintClone = null;
-    const placeholder = document.getElementById('print_clone_placeholder');
-    if(placeholder) placeholder.style.display = 'none';
+  function numeroALetrasEnEspañol(num){
+    if (isNaN(num)) return '';
+    const negativo = num < 0;
+    const absNum = Math.abs(num);
+    const entero = Math.trunc(absNum);
+    const cent = Math.round((absNum - entero) * 100);
+
+    const enteroTexto = entero === 0 ? 'cero' : enteroALetras(entero);
+    let resultado = enteroTexto + (entero === 1 ? ' Quetzal' : ' Quetzales');
+
+    if (cent > 0){
+      const centPalabras = enteroALetras(cent);
+      resultado += ' con ' + centPalabras + ' centavo' + (cent === 1 ? '' : 's');
+    }
+
+    resultado = resultado.charAt(0).toUpperCase() + resultado.slice(1);
+    return (negativo ? 'menos ' : '') + resultado;
   }
 
-  // --- hooks de impresión ---
-  function beforePrintHandler(){
-    syncPrintableComprobante();
-    // crear clon exacto
-    createExactPrintClone();
-    // forzar clase de medio de pago para mostrar su texto en la impresión
-    const val = document.querySelector('input[name="medioPago"]:checked')?.value;
+  function enteroALetras(n){
+    if (n === 0) return 'cero';
+    const unidades = ['','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve'];
+    const especiales = ['diez','once','doce','trece','catorce','quince','dieciseis','diecisiete','dieciocho','diecinueve'];
+    const decenas = ['','','veinte','treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa'];
+    const centenas = ['','ciento','doscientos','trescientos','cuatrocientos','quinientos','seiscientos','setecientos','ochocientos','novecientos'];
+
+    function tresCifrasToText(m){
+      let s = '';
+      const c = Math.floor(m / 100);
+      const r = m % 100;
+      if (m === 100) return 'cien';
+      if (c > 0) s += centenas[c] + (r ? ' ' : '');
+      if (r >= 10 && r <= 19){
+        s += especiales[r - 10];
+      } else if (r >= 20){
+        const d = Math.floor(r / 10);
+        const u = r % 10;
+        if (d === 2 && u > 0){
+          s += 'veinti' + unidades[u];
+        } else {
+          s += decenas[d];
+          if (u > 0) s += ' y ' + unidades[u];
+        }
+      } else if (r > 0){
+        s += unidades[r];
+      }
+      return s;
+    }
+
+    let parts = [];
+    const millones = Math.floor(n / 1000000);
+    const restoMillones = n % 1000000;
+    const miles = Math.floor(restoMillones / 1000);
+    const centenasResto = restoMillones % 1000;
+
+    if (millones > 0){
+      if (millones === 1) parts.push('un millón');
+      else parts.push(tresCifrasToText(millones) + ' millones');
+    }
+    if (miles > 0){
+      if (miles === 1) parts.push('mil');
+      else parts.push(tresCifrasToText(miles) + ' mil');
+    }
+    if (centenasResto > 0){
+      parts.push(tresCifrasToText(centenasResto));
+    }
+
+    return parts.join(' ').replace(/\s+/g,' ').trim();
+  }
+
+  // ---------- Control de medios de pago (pantalla + impresión) ----------
+  function updateMediosOnScreen(){
+    const val = document.querySelector('input[name="medioPago"]:checked')?.value || '';
+
+    document.querySelectorAll('.transferencia-fields').forEach(el => {
+      el.style.display = (val === 'TRANSFERENCIA') ? 'flex' : 'none';
+      el.setAttribute('aria-hidden', (val === 'TRANSFERENCIA') ? 'false' : 'true');
+    });
+    document.querySelectorAll('.cheque-fields').forEach(el => {
+      el.style.display = (val === 'CHEQUE') ? 'flex' : 'none';
+      el.setAttribute('aria-hidden', (val === 'CHEQUE') ? 'false' : 'true');
+    });
+
     document.body.classList.remove('print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
     if(val) document.body.classList.add('print-medio-' + val);
-    document.body.classList.add('printing-multiple');
   }
-  function afterPrintHandler(){
-    document.body.classList.remove('printing-multiple','print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
-    removePrintClone();
+  document.querySelectorAll('input[name="medioPago"]').forEach(radio => {
+    radio.addEventListener('change', updateMediosOnScreen);
+  });
+  updateMediosOnScreen();
+
+  // ---------- Print handlers ----------
+  function beforePrintSetup(){
+    updateMediosOnScreen();
+    syncPrintableComprobante();
+    const p = document.getElementById('print_comprobanteFecha');
+    if(p){
+      p.setAttribute('aria-hidden','false');
+    }
+    stripQForPrint();
+  }
+  function afterPrintCleanup(){
+    document.body.classList.remove('print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
+    restoreAmountsAfterPrint();
+    const p = document.getElementById('print_comprobanteFecha');
+    if(p){
+      p.setAttribute('aria-hidden','true');
+    }
   }
 
-  if(window.matchMedia){
-    const m = window.matchMedia('print');
-    if(m.addEventListener) m.addEventListener('change', (ev)=> { if(ev.matches) beforePrintHandler(); else afterPrintHandler(); });
-    else m.addListener((ev)=> { if(ev.matches) beforePrintHandler(); else afterPrintHandler(); });
+  if (window.matchMedia) {
+    const mql = window.matchMedia('print');
+    if (mql.addEventListener) mql.addEventListener('change', (m) => { if(m.matches) beforePrintSetup(); else afterPrintCleanup(); });
+    else mql.addListener((m) => { if(m.matches) beforePrintSetup(); else afterPrintCleanup(); });
   }
-  window.addEventListener('beforeprint', beforePrintHandler);
-  window.addEventListener('afterprint', afterPrintHandler);
+  window.addEventListener('beforeprint', beforePrintSetup);
+  window.addEventListener('afterprint', afterPrintCleanup);
 
-  // Botón imprimir: abre el flujo y lanza print
-  document.getElementById('imprimirBtn')?.addEventListener('click', function(){
-    beforePrintHandler();
+  const imprimirBtn = document.getElementById('imprimirBtn');
+  if(imprimirBtn) imprimirBtn.addEventListener('click', function(){
+    beforePrintSetup();
     setTimeout(()=> window.print(), 120);
   });
 
-  // Mantener fecha sincronizada en tiempo real
+  // Keep recalc hooked whenever amount inputs change (user edits not expected, but safe)
+  ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('input', recalcLiquido);
+  });
+
+  // keep mirrored date updated live when user changes it
   document.getElementById('comprobanteFecha')?.addEventListener('input', syncPrintableComprobante);
 
-  // En carga inicial sincronizamos formato de montos y liquido
   document.addEventListener('DOMContentLoaded', function(){
-    // formatear campos numéricos si vienen sin Q
+    loadEmpleados();
+    // If template initialized with raw numeric values (without Q), convert them to Q-formatted on load
     ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones'].forEach(id=>{
       const el = document.getElementById(id);
       if(!el) return;
-      const v = String(el.value || '').trim();
-      if(v === '') el.value = fmtQ(0);
-      else if(!/^Q\s*/i.test(v)) el.value = fmtQ(toNumberSafe(v));
+      const v = el.value || '';
+      if(String(v).trim() !== ''){
+        // If already has Q prefix, leave; else format
+        if(!/^Q\s*/i.test(String(v).trim())){
+          el.value = fmt(toNumberSafe(v));
+        }
+      } else {
+        el.value = fmt(0);
+      }
     });
-    // calcular liquido si existe función recalcLiquido en tu template (la mayoría la tiene)
-    try{ if(typeof recalcLiquido === 'function') recalcLiquido(); }catch(e){}
+    // ensure liquido is correct and formatted
+    recalcLiquido();
     syncPrintableComprobante();
+    updateMediosOnScreen();
   });
 })();
 </script>
-
 
 <style>
 :root{
@@ -422,19 +545,19 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
 /* Small padding utility for compact look */
 .small-pad { padding:6px; }
 .compact-row .col-6 { padding-bottom:4px; }
-.xsmall { font-size:0.78rem; font-weight:700; color:var(--muted); }
-.small { font-size:0.86rem; }
+.xsmall { font-size:1.02rem; font-weight:700; color:var(--muted); }
+.small { font-size:1.02rem; }
 
 /* Inputs */
-.form-control { border-radius:6px; border:1px solid rgba(11,19,30,0.06); background:#fff; padding:6px 8px; font-size:0.92rem; }
+.form-control { border-radius:6px; border:1px solid rgba(11,19,30,0.06); background:#fff; padding:6px 8px; font-size:1.05rem; }
 .form-control[readonly] { background:#fbfdff; color:#0b2a36; }
-.compact-input { padding:5px 6px; font-size:0.88rem; }
+.compact-input { padding:5px 6px; font-size:1.04rem; }
 
 /* Transfer inputs default wider on screen */
 .trans-input { min-width:220px; max-width:520px; padding:8px 10px; }
 
 /* Compact amount */
-.compact-amount { width:150px; padding:6px; font-size:0.95rem; }
+.compact-amount { width:150px; padding:6px; font-size:1.10rem; }
 
 /* Small visual card */
 .card { border-radius:8px; background:linear-gradient(180deg,#fff,#fbfcff); border:1px solid rgba(11,19,30,0.04); margin-bottom:6px; box-shadow:0 6px 18px rgba(11,50,80,0.03); }
@@ -455,6 +578,7 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
   width:100%;
   box-sizing:border-box;
 }
+/* Liquido block fixed width, aligned right */
 .liquido-block {
   min-width:150px;
   max-width:220px;
@@ -462,6 +586,7 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
   flex-direction:column;
   align-items:flex-end;
 }
+/* Letras block takes remaining space and keeps input full width */
 .letras-block {
   flex:1;
   display:flex;
@@ -494,45 +619,36 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
 
 /* Print styles */
 @media print {
-  @page { size: A4; margin: 6mm; }
+  @page { size: A4; margin: 4mm; }
 
   body { background:#fff; color:#000; margin:0; padding:0; }
 
-  /* Stack receipts vertically: each receipt occupies full printable width */
-  .receipt-root, .print-duplicate {
-    width:100% !important;
-    max-width:100% !important;
-    float:none !important;
-    margin: 0 0 6mm 0 !important;
-    box-sizing:border-box;
-    page-break-inside: avoid;
-  }
-
-  /* Add extra vertical space only before the cloned second receipt */
-  #print_clone_placeholder .print-duplicate {
-    margin-top: 12mm !important;
-    display:block;
-  }
+  .receipt-root { width:48%; max-width:48%; float:left; margin:3mm 1% 0 1%; box-sizing:border-box; }
 
   .card { box-shadow:none !important; border:1px solid #ffffff !important; background:#fff !important; margin:0 0 4px 0; border-radius:4px !important; }
   .card .card-body { padding:4px !important; }
 
-  /* Hide interactive controls on print */
+  /* Hide interactive controls not needed on print */
   .empleado-selection, select, .btn-imprimir, .header-controls { display:none !important; }
   input[type="date"] { display:none !important; }
 
-  /* Show mirrored printable date */
+  /* Show mirrored printable date and force header-print-row visible */
   .header-print-row { display:block !important; }
-  .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color:#111; font-size:11px; margin-bottom:6px; text-align:right; }
+  .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color:#111; font-size:13px; margin-bottom:6px; text-align:right; }
 
   input.form-control, input.form-control[readonly] {
     background: #fff !important;
     border: 1px solid #111 !important;
     color: #000 !important;
     padding: 4px 6px !important;
-    font-size: 11px !important;
+    font-size: 13px !important;
     box-shadow:none;
   }
+
+  /* Keep líquido y letras on same line in print */
+  .liquido-total-inner { flex-direction:row; gap:8px; align-items:center; }
+  .liquido-block { min-width:120px; max-width:200px; align-items:flex-end; }
+  .letras-block { min-width:120px; }
 
   /* Make transferencia / cheque textboxes wider in print so long values fit */
   body.print-medio-TRANSFERENCIA .transferencia-fields .trans-input,
@@ -540,11 +656,11 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
     min-width:260px !important;
     max-width:380px !important;
     padding:5px 8px !important;
-    font-size:11px !important;
+    font-size:13px !important;
   }
 
   /* Payment methods presentation in print */
-  .printable-option { display:none; font-size:10px; }
+  .printable-option { display:none; font-size:13px; }
   body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:inline-flex; }
   body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:inline-flex; }
   body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:inline-flex; }
@@ -567,15 +683,18 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
   .receipt-root:last-of-type { margin-bottom:6mm; }
 }
 
-/* ensure cloned print-only container is invisible on screen */
-.print-duplicate { display:none; }
+/* Ensure on-screen payment extras controlled by JS appear correctly */
+input[name="medioPago"][value="TRANSFERENCIA"]:checked ~ .transferencia-fields,
+input[name="medioPago"][value="CHEQUE"]:checked ~ .cheque-fields {
+  display:flex;
+  flex-direction:row;
+  gap:6px;
+  align-items:center;
+}
 
 /* micro polish */
-.small.text-muted { color:var(--muted); font-size:0.86rem; }
-.form-check-label { font-weight:700; color:#233642; font-size:0.88rem; }
+.small.text-muted { color:var(--muted); font-size:0.98rem; }
+.form-check-label { font-weight:700; color:#233642; font-size:0.95rem; }
 .compact-transfer .form-control { padding:6px 8px; font-size:0.9rem; }
-
-/* print static span that replaced inputs */
-.print-static { display:inline-block; color: inherit; font-size: inherit; padding:2px 4px; }
 </style>
 {% endblock %}
