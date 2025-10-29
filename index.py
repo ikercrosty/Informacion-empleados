@@ -508,7 +508,7 @@ def login():
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT `Usuarios`, `Nombres`, `Correo Electronico`, `Constraseña`
+                SELECT `Usuarios`, `Nombres`, `Correo Electronico`, `Constraseña`, `rol`
                 FROM Usuarios
                 WHERE `Usuarios` = %s OR `Correo Electronico` = %s
                 LIMIT 1
@@ -528,6 +528,7 @@ def login():
 
             if password == stored_password:
                 session["usuario"] = user_row.get("Usuarios") or user_row.get("Correo Electronico")
+                session["rol"] = (user_row.get("rol") or "editor").strip().lower()
                 session.permanent = False
                 return redirect(url_for("menu"))
             else:
@@ -538,7 +539,6 @@ def login():
             return redirect(url_for("login"))
 
     return render_template("login.html")
-
 
 @app.route("/logout")
 def logout():
