@@ -267,26 +267,13 @@
     }
   }
 
+  // Previously removed Q for print. To preserve Q in printed output, these functions are no-op.
   function stripQForPrint(){
-    const amountIds = ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones','liquidoTotal'];
-    amountIds.forEach(id=>{
-      const el = document.getElementById(id);
-      if(!el) return;
-      el.dataset._orig = el.value;
-      el.value = String(el.value).replace(/^Q\s*/i,'').trim();
-    });
+    // intentionally left blank to keep "Q " prefix visible in print
   }
 
   function restoreAmountsAfterPrint(){
-    const amountIds = ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones','liquidoTotal'];
-    amountIds.forEach(id=>{
-      const el = document.getElementById(id);
-      if(!el) return;
-      if(el.dataset._orig !== undefined){
-        el.value = el.dataset._orig;
-        delete el.dataset._orig;
-      }
-    });
+    // intentionally left blank (no changes were made in stripQForPrint)
   }
 
   // Helper that writes a formatted Q value into an input
@@ -479,10 +466,12 @@
     if(p){
       p.setAttribute('aria-hidden','false');
     }
+    // keep amounts as-is so "Q " stays in print
     stripQForPrint();
   }
   function afterPrintCleanup(){
     document.body.classList.remove('print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
+    // nothing to restore since we didn't strip Q
     restoreAmountsAfterPrint();
     const p = document.getElementById('print_comprobanteFecha');
     if(p){
