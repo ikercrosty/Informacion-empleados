@@ -483,14 +483,10 @@
   }
 
   function disableInteractiveInClone(node){
-    // disable or remove interactive things that shouldn't be active in print copy
     if(!node) return;
-    // remove buttons
     if(node.tagName === 'BUTTON') { node.remove(); return; }
-    // remove selects, inputs' interactive attributes
     if(node.tagName === 'SELECT') { node.remove(); return; }
     if(node.tagName === 'INPUT' || node.tagName === 'TEXTAREA') {
-      // keep visual value but remove interactive attributes
       if(node.tagName === 'INPUT') {
         const val = node.value;
         const span = document.createElement('span');
@@ -502,7 +498,6 @@
       node.remove();
       return;
     }
-    // remove any script tags
     if(node.tagName === 'SCRIPT') { node.remove(); return; }
 
     for(const ch of Array.from(node.children)){
@@ -513,19 +508,14 @@
   let currentPrintClone = null;
 
   function createPrintClone(){
-    // avoid duplicates
     if(currentPrintClone) return;
     const main = document.getElementById('receipt_main');
     if(!main) return;
     const clone = main.cloneNode(true);
-    // remove ids to avoid duplicates in DOM
     removeAllIds(clone);
-    // remove interactive components from clone
     disableInteractiveInClone(clone);
-    // mark clone and hide on screen; will be shown in print via CSS
     clone.classList.add('print-duplicate');
     clone.setAttribute('aria-hidden','true');
-    // append after main into placeholder parent
     const placeholder = document.getElementById('print_clone_placeholder');
     placeholder.style.display = 'block';
     placeholder.appendChild(clone);
@@ -549,7 +539,6 @@
     updateMediosOnScreen();
     syncPrintableComprobante();
     createPrintClone();
-    // ensure both original and clone are flagged so print CSS can style them stacked
     document.body.classList.add('printing-multiple');
     stripQForPrint();
   }
@@ -584,13 +573,11 @@
 
   document.addEventListener('DOMContentLoaded', function(){
     loadEmpleados();
-    // If template initialized with raw numeric values (without Q), convert them to Q-formatted on load
     ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones'].forEach(id=>{
       const el = document.getElementById(id);
       if(!el) return;
       const v = el.value || '';
       if(String(v).trim() !== ''){
-        // If already has Q prefix, leave; else format
         if(!/^Q\s*/i.test(String(v).trim())){
           el.value = fmt(toNumberSafe(v));
         }
@@ -598,7 +585,6 @@
         el.value = fmt(0);
       }
     });
-    // ensure liquido is correct and formatted
     recalcLiquido();
     syncPrintableComprobante();
     updateMediosOnScreen();
@@ -713,6 +699,13 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
     page-break-inside: avoid;
   }
 
+  /* Add extra vertical space only before the cloned second receipt */
+  /* This is the change that moves the second receipt down a bit */
+  #print_clone_placeholder .print-duplicate {
+    margin-top: 12mm !important;
+    display:block;
+  }
+
   .card { box-shadow:none !important; border:1px solid #ffffff !important; background:#fff !important; margin:0 0 4px 0; border-radius:4px !important; }
   .card .card-body { padding:4px !important; }
 
@@ -763,11 +756,7 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
 
   .receipt-root, .card, .section-card, .totals-card, .signatures-row { page-break-inside: avoid; break-inside: avoid; }
 
-  /* the cloned node is appended to placeholder and will be printed like another receipt */
-  #print_clone_placeholder { display:block; }
-  #print_clone_placeholder .print-duplicate { display:block; }
-
-  /* hide placeholder content on screen (already hidden by inline style) */
+  .receipt-root:last-of-type { margin-bottom:6mm; }
 }
 
 /* ensure cloned print-only container is invisible on screen */
