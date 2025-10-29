@@ -696,5 +696,84 @@ input[name="medioPago"][value="CHEQUE"]:checked ~ .cheque-fields {
 .small.text-muted { color:var(--muted); font-size:0.98rem; }
 .form-check-label { font-weight:700; color:#233642; font-size:0.95rem; }
 .compact-transfer .form-control { padding:6px 8px; font-size:1.00rem; }
+
+
+  body { background:#fff; color:#000; margin:0; padding:0; }
+
+  .receipt-root { width:48%; max-width:48%; float:left; margin:3mm 1% 0 1%; box-sizing:border-box; }
+
+  .card { box-shadow:none !important; border:1px solid #ffffff !important; background:#fff !important; margin:0 0 4px 0; border-radius:4px !important; }
+  .card .card-body { padding:4px !important; }
+
+  /* Hide interactive controls not needed on print */
+  .empleado-selection, select, .btn-imprimir, .header-controls { display:none !important; }
+  input[type="date"] { display:none !important; }
+
+  /* Show mirrored printable date and force header-print-row visible */
+  .header-print-row { display:block !important; }
+  .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color:#111; font-size:13px; margin-bottom:6px; text-align:right; }
+
+  input.form-control, input.form-control[readonly] {
+    background: #fff !important;
+    border: 1px solid #111 !important;
+    color: #000 !important;
+    padding: 4px 6px !important;
+    font-size: 13px !important;
+    box-shadow:none;
+  }
+
+  /* Keep líquido y letras on same line in print */
+  .liquido-total-inner { flex-direction:row; gap:8px; align-items:center; }
+  .liquido-block { min-width:120px; max-width:200px; align-items:flex-end; }
+  .letras-block { min-width:120px; }
+
+  /* Make transferencia / cheque textboxes wider in print so long values fit */
+  body.print-medio-TRANSFERENCIA .transferencia-fields .trans-input,
+  body.print-medio-CHEQUE .cheque-fields .trans-input {
+    min-width:260px !important;
+    max-width:380px !important;
+    padding:5px 8px !important;
+    font-size:13px !important;
+  }
+
+  /* Payment methods presentation in print */
+  .printable-option { display:none; font-size:13px; }
+  body.print-medio-EFECTIVO .printable-option[data-option="EFECTIVO"] { display:inline-flex; }
+  body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:inline-flex; }
+  body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:inline-flex; }
+
+  /* Show transfer/cheque fields inline in print when selected */
+  body.print-medio-TRANSFERENCIA .transferencia-fields,
+  body.print-medio-CHEQUE .cheque-fields {
+    display:inline-flex !important;
+    gap:8px;
+    align-items:center;
+    margin-left:6px;
+  }
+
+  /* Compact signatures */
+  .print-signatures .sig-col { flex:1 1 48%; text-align:center; padding:0 4px; }
+  .sig-line { margin-bottom:6px; border-bottom:1px dashed #111; }
+
+  .receipt-root, .card, .section-card, .totals-card, .signatures-row { page-break-inside: avoid; break-inside: avoid; }
+
+  .receipt-root:last-of-type { margin-bottom:6mm; }
+  
+
+/* Ensure on-screen payment extras controlled by JS appear correctly */
+input[name="medioPago"][value="TRANSFERENCIA"]:checked ~ .transferencia-fields,
+input[name="medioPago"][value="CHEQUE"]:checked ~ .cheque-fields {
+  display:flex;
+  flex-direction:row;
+  gap:6px;
+  align-items:center;
+}
+
+/* micro polish */
+.small.text-muted { color:var(--muted); font-size:0.98rem; }
+.form-check-label { font-weight:700; color:#233642; font-size:0.95rem; }
+.compact-transfer .form-control { padding:6px 8px; font-size:1.00rem; }
+
+
 </style>
 {% endblock %}
