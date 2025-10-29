@@ -246,6 +246,7 @@
     return isFinite(f) ? f : 0;
   }
 
+  // Parse YYYY-MM-DD from <input type=date> and return a Date in local timezone
   function parseDateInputAsLocal(dateStr){
     if(!dateStr || typeof dateStr !== 'string') return null;
     const parts = dateStr.split('-');
@@ -281,6 +282,7 @@
     }
   }
 
+  // Helper that writes a formatted Q value into an input
   function writeMoneyInput(id, value){
     const el = document.getElementById(id);
     if(!el) return;
@@ -526,7 +528,6 @@
     origTexts.forEach(id=>{
       const o = document.getElementById(id);
       if(!o) return;
-      // find element in clone by same id or by role; remove id on clone later, so search by attribute data-clone-source if present
       let c = clone.querySelector('#' + CSS.escape(id));
       if(!c){
         c = clone.querySelector('[data-clone="' + id + '"]');
