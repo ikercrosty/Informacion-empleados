@@ -522,7 +522,7 @@
   if(imprimirBtn) imprimirBtn.addEventListener('click', function(){
     // Prevent printing if no fecha
     if(!hasFechaValid()){
-      alert('No se puede imprimir: ingrese la fecha en el comprobante antes de imprimir.');
+      alert('No se puede imprimir. Debe de ingresar primero la fecha de emisión del recibo.');
       return;
     }
     beforePrintSetup();
