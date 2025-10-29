@@ -203,21 +203,6 @@
   })();
 
 
-  function clearSelection() {
-  tabla.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
-}
-
-tabla?.addEventListener('click', (ev) => {
-  const tr = ev.target.closest('tr');
-  if (!tr || tr.parentElement.tagName !== 'TBODY') return;
-  clearSelection();
-  tr.classList.add('selected');
-  // opcional: actualizar panel foto / inputs DPI si ya lo haces
-  const dpi = (tr.cells[0] && tr.cells[0].innerText || '').trim();
-  document.getElementById('inputDpiForUpload').value = dpi || '';
-  document.getElementById('inputDpiForDelete').value = dpi || '';
-});
-
   // UI: comportamiento de botones (nunca deshabilitados por HTML)
   // btnAgregar siempre hace lo mismo
   document.getElementById('btnAgregar')?.addEventListener('click', (ev) => {
@@ -278,7 +263,54 @@ tabla?.addEventListener('click', (ev) => {
     if (inputDpiUpload) inputDpiUpload.value = '';
     if (inputDpiDelete) inputDpiDelete.value = '';
   }
-  
+  const btnEliminar = document.getElementById('btnEliminar');
+if (btnEliminar) {
+  btnEliminar.addEventListener('click', async () => {
+    // seguridad cliente: role inyectado desde plantilla
+    const CURRENT_ROLE = ("{{ rol or '' }}").toLowerCase();
+    if (CURRENT_ROLE !== 'admin') {
+      flash('Permisos insuficientes para eliminar empleados', 'warning');
+      return;
+    }
+
+    // buscar fila seleccionada
+    const tr = tabla.querySelector('tbody tr.selected');
+    if (!tr) {
+      flash('Debes seleccionar una fila antes de eliminar', 'warning');
+      return;
+    }
+
+    const dpi = (tr.cells[0] && tr.cells[0].innerText || '').trim();
+    if (!dpi) {
+      flash('No se pudo obtener el DPI de la fila seleccionada', 'danger');
+      return;
+    }
+
+    if (!confirm(`¿Estás seguro de eliminar al empleado con DPI ${dpi}? Esta acción no se puede deshacer.`)) return;
+
+    try {
+      const res = await fetch('/eliminar_empleado', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dpi })
+      });
+      const j = await res.json().catch(()=>({}));
+
+      if (res.ok) {
+        flash(j.mensaje || 'Empleado eliminado', 'success');
+        tr.remove();
+        // limpia panel foto si usas uno
+        const fotoEmpleado = document.getElementById('fotoEmpleado');
+        if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
+      } else {
+        flash(j.mensaje || j.error || 'Error al eliminar', 'danger');
+      }
+    } catch (err) {
+      flash('Error al eliminar: ' + (err.message || err), 'danger');
+    }
+  });
+}
+
 
   tabla?.addEventListener('click', async (ev) => {
     const tr = ev.target.closest('tr');
