@@ -659,6 +659,29 @@ def guardar_empleado():
         return jsonify({"mensaje": mensaje})
     except Exception as e:
         return jsonify({"mensaje": f"Error: {e}"}), 500
+    
+
+@app.route("/eliminar_empleado", methods=["POST"])
+def eliminar_empleado():
+    if (session.get("rol") or "").strip().lower() != "admin":
+        return jsonify({"mensaje": "Permisos insuficientes"}), 403
+
+    data = request.get_json() or {}
+    dpi = data.get("dpi")
+    if not dpi:
+        return jsonify({"mensaje": "DPI requerido"}), 400
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM empleados_info WHERE `Numero de DPI` = %s", (dpi,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({"mensaje": f"Empleado con DPI {dpi} eliminado correctamente"})
+    except Exception as e:
+        return jsonify({"mensaje": f"Error al eliminar: {e}"}), 500
+
 
 
 @app.route("/guardar_academico", methods=["POST"])
