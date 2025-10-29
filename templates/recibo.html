@@ -2,7 +2,7 @@
 {% block title %}Recibo de Pago{% endblock %}
 
 {% block content %}
-<div class="container py-2 receipt-root">
+<div class="container py-2 receipt-root" id="receipt_main">
   <!-- Header card -->
   <div class="card header-card">
     <div class="card-body header-body d-flex justify-content-between align-items-center">
@@ -175,6 +175,9 @@
     </div>
   </div>
 </div>
+
+<!-- placeholder where print duplicate will be inserted (managed by JS) -->
+<div id="print_clone_placeholder" aria-hidden="true" style="display:none;"></div>
 
 <script>
 (function(){
@@ -470,25 +473,90 @@
   });
   updateMediosOnScreen();
 
+  // ---------- Print duplication logic ----------
+  // create a printable duplicate of #receipt_main immediately before print, then remove it after
+  function removeAllIds(node){
+    if(node.removeAttribute) node.removeAttribute('id');
+    for(const ch of node.children ? Array.from(node.children) : []){
+      removeAllIds(ch);
+    }
+  }
+
+  function disableInteractiveInClone(node){
+    // disable or remove interactive things that shouldn't be active in print copy
+    if(!node) return;
+    // remove buttons
+    if(node.tagName === 'BUTTON') { node.remove(); return; }
+    // remove selects, inputs' interactive attributes
+    if(node.tagName === 'SELECT') { node.remove(); return; }
+    if(node.tagName === 'INPUT' || node.tagName === 'TEXTAREA') {
+      // keep visual value but remove interactive attributes
+      if(node.tagName === 'INPUT') {
+        const val = node.value;
+        const span = document.createElement('span');
+        span.textContent = val;
+        span.className = 'print-static';
+        node.replaceWith(span);
+        return;
+      }
+      node.remove();
+      return;
+    }
+    // remove any script tags
+    if(node.tagName === 'SCRIPT') { node.remove(); return; }
+
+    for(const ch of Array.from(node.children)){
+      disableInteractiveInClone(ch);
+    }
+  }
+
+  let currentPrintClone = null;
+
+  function createPrintClone(){
+    // avoid duplicates
+    if(currentPrintClone) return;
+    const main = document.getElementById('receipt_main');
+    if(!main) return;
+    const clone = main.cloneNode(true);
+    // remove ids to avoid duplicates in DOM
+    removeAllIds(clone);
+    // remove interactive components from clone
+    disableInteractiveInClone(clone);
+    // mark clone and hide on screen; will be shown in print via CSS
+    clone.classList.add('print-duplicate');
+    clone.setAttribute('aria-hidden','true');
+    // append after main into placeholder parent
+    const placeholder = document.getElementById('print_clone_placeholder');
+    placeholder.style.display = 'block';
+    placeholder.appendChild(clone);
+    currentPrintClone = clone;
+  }
+
+  function removePrintClone(){
+    if(!currentPrintClone) return;
+    try {
+      currentPrintClone.remove();
+    } catch(e){}
+    const placeholder = document.getElementById('print_clone_placeholder');
+    if(placeholder) {
+      placeholder.style.display = 'none';
+    }
+    currentPrintClone = null;
+  }
+
   // ---------- Print handlers ----------
   function beforePrintSetup(){
     updateMediosOnScreen();
     syncPrintableComprobante();
-    const p = document.getElementById('print_comprobanteFecha');
-    if(p){
-      p.setAttribute('aria-hidden','false');
-    }
-    // keep amounts as-is so "Q " stays in print
+    createPrintClone();
+    // ensure both original and clone are flagged so print CSS can style them stacked
+    document.body.classList.add('printing-multiple');
     stripQForPrint();
   }
   function afterPrintCleanup(){
-    document.body.classList.remove('print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
-    // nothing to restore since we didn't strip Q
+    document.body.classList.remove('printing-multiple','print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
     restoreAmountsAfterPrint();
-    const p = document.getElementById('print_comprobanteFecha');
-    if(p){
-      p.setAttribute('aria-hidden','true');
-    }
+    removePrintClone();
   }
 
   if (window.matchMedia) {
@@ -631,20 +699,28 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
 
 /* Print styles */
 @media print {
-  @page { size: A4; margin: 4mm; }
+  @page { size: A4; margin: 6mm; }
 
   body { background:#fff; color:#000; margin:0; padding:0; }
 
-  .receipt-root { width:48%; max-width:48%; float:left; margin:3mm 1% 0 1%; box-sizing:border-box; }
+  /* Stack receipts vertically: each receipt occupies full printable width */
+  .receipt-root, .print-duplicate {
+    width:100% !important;
+    max-width:100% !important;
+    float:none !important;
+    margin: 0 0 6mm 0 !important;
+    box-sizing:border-box;
+    page-break-inside: avoid;
+  }
 
   .card { box-shadow:none !important; border:1px solid #ffffff !important; background:#fff !important; margin:0 0 4px 0; border-radius:4px !important; }
   .card .card-body { padding:4px !important; }
 
-  /* Hide interactive controls not needed on print */
+  /* Hide interactive controls on print */
   .empleado-selection, select, .btn-imprimir, .header-controls { display:none !important; }
   input[type="date"] { display:none !important; }
 
-  /* Show mirrored printable date and force header-print-row visible */
+  /* Show mirrored printable date */
   .header-print-row { display:block !important; }
   .print-only { display:block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color:#111; font-size:11px; margin-bottom:6px; text-align:right; }
 
@@ -687,21 +763,22 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
 
   .receipt-root, .card, .section-card, .totals-card, .signatures-row { page-break-inside: avoid; break-inside: avoid; }
 
-  .receipt-root:last-of-type { margin-bottom:6mm; }
+  /* the cloned node is appended to placeholder and will be printed like another receipt */
+  #print_clone_placeholder { display:block; }
+  #print_clone_placeholder .print-duplicate { display:block; }
+
+  /* hide placeholder content on screen (already hidden by inline style) */
 }
 
-/* Ensure on-screen payment extras controlled by JS appear correctly */
-input[name="medioPago"][value="TRANSFERENCIA"]:checked ~ .transferencia-fields,
-input[name="medioPago"][value="CHEQUE"]:checked ~ .cheque-fields {
-  display:flex;
-  flex-direction:row;
-  gap:6px;
-  align-items:center;
-}
+/* ensure cloned print-only container is invisible on screen */
+.print-duplicate { display:none; }
 
 /* micro polish */
 .small.text-muted { color:var(--muted); font-size:0.86rem; }
 .form-check-label { font-weight:700; color:#233642; font-size:0.88rem; }
 .compact-transfer .form-control { padding:6px 8px; font-size:0.9rem; }
+
+/* print static span that replaced inputs */
+.print-static { display:inline-block; color: inherit; font-size: inherit; padding:2px 4px; }
 </style>
 {% endblock %}
