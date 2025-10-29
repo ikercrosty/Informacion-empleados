@@ -1064,4 +1064,3 @@ def eliminar_foto():
 if __name__ == "__main__":
     # escucha en todas las interfaces en el puerto 7287 (http)
     app.run(host="0.0.0.0", port=7287, debug=True)
-
