@@ -49,11 +49,11 @@
       <div class="row g-1">
         <div class="col-8">
           <label class="form-label small">Nombre completo</label>
-          <input id="print_nombre" class="form-control" readonly value="{{ recibo.nombre if recibo is defined else '' }}">
+          <input id="print_nombre" class="form-control" readonly value="{{ recibo.nombre if recibo is defined else '' }}" data-preserve="true">
         </div>
         <div class="col-4">
           <label class="form-label small">DPI / Identificación</label>
-          <input id="print_dpi" class="form-control" readonly value="{{ recibo.dpi if recibo is defined else '' }}">
+          <input id="print_dpi" class="form-control" readonly value="{{ recibo.dpi if recibo is defined else '' }}" data-preserve="true">
         </div>
       </div>
     </div>
@@ -68,22 +68,22 @@
         <div class="row g-1 compact-row">
           <div class="col-6">
             <label class="form-label xsmall">Sueldo Base</label>
-            <input id="sueldoBase" class="form-control compact-input" type="text" readonly value="{{ recibo.sueldo if recibo is defined else (recibo.Sueldo if recibo is defined else 'Q 0.00') }}">
+            <input id="sueldoBase" class="form-control compact-input" type="text" readonly value="{{ recibo.sueldo if recibo is defined else (recibo.Sueldo if recibo is defined else 'Q 0.00') }}" data-preserve="true">
           </div>
 
           <div class="col-6">
             <label class="form-label xsmall">Horas extras (monto)</label>
-            <input id="hextrasMonto" class="form-control compact-input" type="text" readonly value="{{ recibo.hextras_monto if recibo is defined else (recibo.hextras if recibo is defined else 'Q 0.00') }}">
+            <input id="hextrasMonto" class="form-control compact-input" type="text" readonly value="{{ recibo.hextras_monto if recibo is defined else (recibo.hextras if recibo is defined else 'Q 0.00') }}" data-preserve="true">
           </div>
 
           <div class="col-6 mt-1">
             <label class="form-label xsmall">Bonificación</label>
-            <input id="bonificacion" class="form-control compact-input" type="text" readonly value="{{ recibo.bono if recibo is defined else 'Q 0.00' }}">
+            <input id="bonificacion" class="form-control compact-input" type="text" readonly value="{{ recibo.bono if recibo is defined else 'Q 0.00' }}" data-preserve="true">
           </div>
 
           <div class="col-6 mt-1">
             <label class="form-label xsmall">Comisiones</label>
-            <input id="comisiones" class="form-control compact-input" type="text" readonly value="{{ recibo.comisiones if recibo is defined else 'Q 0.00' }}">
+            <input id="comisiones" class="form-control compact-input" type="text" readonly value="{{ recibo.comisiones if recibo is defined else 'Q 0.00' }}" data-preserve="true">
           </div>
         </div>
       </div>
@@ -94,17 +94,17 @@
         <div class="row g-1 compact-row">
           <div class="col-6">
             <label class="form-label xsmall">IGSS</label>
-            <input id="igss" class="form-control compact-input" type="text" readonly value="{{ 'Q ' ~ ('%.2f'|format(recibo.igss)) if recibo is defined and recibo.igss is defined else 'Q 0.00' }}">
+            <input id="igss" class="form-control compact-input" type="text" readonly value="{{ 'Q ' ~ ('%.2f'|format(recibo.igss)) if recibo is defined and recibo.igss is defined else 'Q 0.00' }}" data-preserve="true">
           </div>
 
           <div class="col-6">
             <label class="form-label xsmall">ISR</label>
-            <input id="isr" class="form-control compact-input" type="text" readonly value="{{ recibo.isr if recibo is defined else 'Q 0.00' }}">
+            <input id="isr" class="form-control compact-input" type="text" readonly value="{{ recibo.isr if recibo is defined else 'Q 0.00' }}" data-preserve="true">
           </div>
 
           <div class="col-12 mt-1">
             <label class="form-label xsmall">Otras deducciones</label>
-            <input id="otrasDeducciones" class="form-control compact-input" type="text" readonly value="{{ recibo.otras_deducciones if recibo is defined else 'Q 0.00' }}">
+            <input id="otrasDeducciones" class="form-control compact-input" type="text" readonly value="{{ recibo.otras_deducciones if recibo is defined else 'Q 0.00' }}" data-preserve="true">
           </div>
         </div>
       </div>
@@ -115,11 +115,11 @@
       <div class="liquido-total-inner">
         <div class="liquido-block">
           <label class="form-label xsmall">Líquido a recibir</label>
-          <input id="liquidoTotal" class="form-control fw-bold text-end compact-amount" readonly value="Q 0.00">
+          <input id="liquidoTotal" class="form-control fw-bold text-end compact-amount" readonly value="Q 0.00" data-preserve="true">
         </div>
         <div class="letras-block">
           <label class="form-label xsmall">TOTAL EN LETRAS</label>
-          <input id="totalEnLetras" class="form-control compact-input" type="text" readonly value="{{ recibo.total_letras if recibo is defined else '' }}">
+          <input id="totalEnLetras" class="form-control compact-input" type="text" readonly value="{{ recibo.total_letras if recibo is defined else '' }}" data-preserve="true">
         </div>
       </div>
     </div>
@@ -142,8 +142,8 @@
             <label class="form-check-label xsmall" for="pagoTransferencia">TRANSFERENCIA</label>
 
             <div class="transferencia-fields compact-transfer">
-              <input id="transCuenta" class="form-control trans-input compact-input" type="text" aria-label="Número de cuenta (transferencia)" placeholder="No. cuenta">
-              <input id="transBanco" class="form-control trans-input compact-input" type="text" aria-label="Banco (transferencia)" placeholder="Banco">
+              <input id="transCuenta" class="form-control trans-input compact-input" type="text" aria-label="Número de cuenta (transferencia)" placeholder="No. cuenta" data-preserve="true">
+              <input id="transBanco" class="form-control trans-input compact-input" type="text" aria-label="Banco (transferencia)" placeholder="Banco" data-preserve="true">
             </div>
           </div>
 
@@ -152,8 +152,8 @@
             <label class="form-check-label xsmall" for="pagoCheque">CHEQUE</label>
 
             <div class="cheque-fields compact-transfer">
-              <input id="chequeNumero" class="form-control trans-input compact-input" type="text" aria-label="Número de cheque" placeholder="No. cheque">
-              <input id="chequeBanco" class="form-control trans-input compact-input" type="text" aria-label="Banco (cheque)" placeholder="Banco">
+              <input id="chequeNumero" class="form-control trans-input compact-input" type="text" aria-label="Número de cheque" placeholder="No. cheque" data-preserve="true">
+              <input id="chequeBanco" class="form-control trans-input compact-input" type="text" aria-label="Banco (cheque)" placeholder="Banco" data-preserve="true">
             </div>
           </div>
         </div>
@@ -292,7 +292,7 @@
   document.getElementById('empleadoSelect')?.addEventListener('change', function(){
     const rawVal = this.value || '';
     if(!rawVal){
-      ['nombre','dpi'].forEach(id=>{
+      ['print_nombre','print_dpi'].forEach(id=>{
         const el = document.getElementById(id);
         if(el) el.value = '';
       });
@@ -465,22 +465,49 @@
   updateMediosOnScreen();
 
   // ---------- Print duplication logic (clon sincronizado) ----------
-  function removeAllIds(node){
-    if(node.removeAttribute) node.removeAttribute('id');
+  function removeAllIdsButPreserveDataClone(node){
+    // We'll remove id attributes to avoid duplicates, but keep data-clone markers where needed
+    if(node.hasAttribute && node.hasAttribute('id')){
+      node.removeAttribute('id');
+    }
     for(const ch of node.children ? Array.from(node.children) : []){
-      removeAllIds(ch);
+      removeAllIdsButPreserveDataClone(ch);
     }
   }
 
-  function disableInteractiveInClone(node){
+  function disableInteractiveInCloneKeepMarkers(node, originalRoot){
     if(!node) return;
+    // For clickable controls we replace with spans but keep a data-clone attribute referencing the original id/name
     if(node.tagName === 'BUTTON') { node.remove(); return; }
-    if(node.tagName === 'SELECT') { node.remove(); return; }
-    if(node.tagName === 'INPUT' || node.tagName === 'TEXTAREA') {
-      // replace interactive controls with non-interactive equivalent but keep displayed value
-      const value = node.value || '';
+    if(node.tagName === 'SELECT') {
+      // create a static span and add data-clone pointing to either name or id
+      const selector = node.getAttribute('name') || node.getAttribute('id') || null;
       const span = document.createElement('span');
       span.className = 'print-static';
+      span.setAttribute('data-clone', selector || '');
+      // pick selected option text if possible
+      const selIndex = node.selectedIndex;
+      span.textContent = selIndex >= 0 && node.options[selIndex] ? node.options[selIndex].text : '';
+      node.replaceWith(span);
+      return;
+    }
+    if(node.tagName === 'INPUT' || node.tagName === 'TEXTAREA') {
+      const origId = node.getAttribute('id') || node.getAttribute('name') || '';
+      // create span with data-clone so sync can find it later
+      const span = document.createElement('span');
+      span.className = 'print-static';
+      span.setAttribute('data-clone', origId);
+      // show value or checked text for radios/checkboxes
+      let value = '';
+      if(node.type === 'checkbox' || node.type === 'radio'){
+        if(node.checked){
+          value = node.value || 'X';
+        } else {
+          value = '';
+        }
+      } else {
+        value = node.value || node.placeholder || '';
+      }
       span.textContent = value;
       node.replaceWith(span);
       return;
@@ -488,55 +515,60 @@
     if(node.tagName === 'SCRIPT') { node.remove(); return; }
 
     for(const ch of Array.from(node.children)){
-      disableInteractiveInClone(ch);
+      disableInteractiveInCloneKeepMarkers(ch, originalRoot);
     }
   }
 
   let currentPrintClone = null;
 
   function syncInputValuesToClone(original, clone){
+    // Copy inputs, but clone has spans with data-clone="<origId>" for mapping
+    // 1) copy elements that remain inputs in clone (if any)
     const origInputs = Array.from(original.querySelectorAll('input, textarea, select'));
-    const cloneInputs = Array.from(clone.querySelectorAll('input, textarea, select'));
-
-    // If counts match, copy by index; otherwise try to match by name/id fallback
-    if(origInputs.length === cloneInputs.length){
-      for(let i=0;i<origInputs.length;i++){
-        const o = origInputs[i];
-        const c = cloneInputs[i];
-        try {
-          if(c.tagName === 'INPUT' || c.tagName === 'TEXTAREA') c.value = o.value;
-          if(c.type === 'radio' || c.type === 'checkbox') c.checked = o.checked;
-        } catch(e){}
+    origInputs.forEach(o=>{
+      const id = o.id || o.name;
+      if(!id) return;
+      // try find element in clone by data-clone attr or by id
+      let target = clone.querySelector('[data-clone="'+CSS.escape(id)+'"]');
+      if(!target) target = clone.querySelector('#' + CSS.escape(id));
+      if(!target) {
+        // fallback: find by label text near element (best-effort) - skip for simplicity
+        return;
       }
-    } else {
-      // fallback: copy by matching name then id
-      origInputs.forEach(o=>{
-        let selector = '';
-        if(o.name) selector = '[name="' + CSS.escape(o.name) + '"]';
-        else if(o.id) selector = '#' + CSS.escape(o.id);
-        const c = selector ? clone.querySelector(selector) : null;
-        if(c){
-          try {
-            if(c.tagName === 'INPUT' || c.tagName === 'TEXTAREA') c.value = o.value;
-            if(c.type === 'radio' || c.type === 'checkbox') c.checked = o.checked;
-          } catch(e){}
+      try {
+        if(target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'){
+          target.value = o.value;
+          if(o.type === 'radio' || o.type === 'checkbox') target.checked = o.checked;
+        } else {
+          // span: set textContent
+          if(o.type === 'radio' || o.type === 'checkbox'){
+            target.textContent = o.checked ? (o.value || 'X') : '';
+          } else {
+            target.textContent = o.value || o.placeholder || '';
+          }
         }
-      });
-    }
-    // copy visible text nodes used for totals or labels
-    const origTexts = ['totalEnLetras','liquidoTotal','print_nombre','print_dpi'];
-    origTexts.forEach(id=>{
+      } catch(e){}
+    });
+
+    // 2) copy specific preserved fields by id (those with data-preserve on source)
+    const idsToCopy = ['totalEnLetras','liquidoTotal','print_nombre','print_dpi','transCuenta','transBanco','chequeNumero','chequeBanco','sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones'];
+    idsToCopy.forEach(id=>{
       const o = document.getElementById(id);
       if(!o) return;
-      let c = clone.querySelector('#' + CSS.escape(id));
-      if(!c){
-        c = clone.querySelector('[data-clone="' + id + '"]');
-      }
+      // find in clone by data-clone or by id
+      let c = clone.querySelector('[data-clone="'+CSS.escape(id)+'"]') || clone.querySelector('#' + CSS.escape(id));
       if(c){
         if(c.tagName === 'INPUT' || c.tagName === 'TEXTAREA') c.value = o.value;
         else c.textContent = o.value || o.textContent || '';
       }
     });
+
+    // Also copy checked radio for medioPago into printable-option display control by setting body class on print clone
+    const selectedMedio = document.querySelector('input[name="medioPago"]:checked')?.value || '';
+    if(selectedMedio){
+      clone.classList.remove('print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
+      clone.classList.add('print-medio-' + selectedMedio);
+    }
   }
 
   function createPrintClone(){
@@ -547,16 +579,42 @@
     // deep clone
     const clone = main.cloneNode(true);
 
+    // remove ids to avoid duplicate ids in DOM but we'll keep data-clone placeholders later
+    removeAllIdsButPreserveDataClone(clone);
+
+    // Before disabling interactive controls, mark each interactive element in the clone with data-clone attribute
+    // We'll find corresponding elements in the original by id or name and set data-clone on the replacement spans
+    (function markCloneForSync(origRoot, cloneRoot){
+      const origInteractive = Array.from(origRoot.querySelectorAll('input, textarea, select, button'));
+      const cloneInteractive = Array.from(cloneRoot.querySelectorAll('input, textarea, select, button'));
+      // Try to align by index first; if not, assign data-clone from original id/name to clone nodes
+      for(let i=0;i<origInteractive.length;i++){
+        const o = origInteractive[i];
+        const c = cloneInteractive[i];
+        const key = o.getAttribute('id') || o.getAttribute('name') || '';
+        if(c && key){
+          c.setAttribute('data-clone', key);
+        }
+      }
+      // Additionally ensure fields that had data-preserve on source are mapped: find elements with data-preserve
+      Array.from(origRoot.querySelectorAll('[data-preserve]')).forEach(o=>{
+        const key = o.getAttribute('id') || o.getAttribute('name') || '';
+        if(!key) return;
+        const c = cloneRoot.querySelector('[data-clone="'+CSS.escape(key)+'"]') || cloneRoot.querySelector('#' + CSS.escape(key));
+        if(c) c.setAttribute('data-clone', key);
+      });
+    })(main, clone);
+
+    // disable interactive elements in clone by replacing them with non-interactive spans but keeping displayed text and data-clone markers
+    disableInteractiveInCloneKeepMarkers(clone, main);
+
+    // After replacement, ensure every element that should reflect a value has data-clone set.
+    // For inputs that were replaced, the previous function added data-clone on spans.
+
     // sync dynamic values from original to clone to ensure exact equality
     try {
       syncInputValuesToClone(main, clone);
     } catch(e){}
-
-    // remove ids on clone to avoid duplicate ids in DOM
-    removeAllIds(clone);
-
-    // disable interactive elements in clone by replacing them with non-interactive spans but keeping displayed text
-    disableInteractiveInClone(clone);
 
     // mark clone and hide on screen; will be shown in print via CSS
     clone.classList.add('print-duplicate');
@@ -586,6 +644,10 @@
     updateMediosOnScreen();
     syncPrintableComprobante();
     createPrintClone();
+    // Also propagate medioPago selection as a body-level class for printing
+    const val = document.querySelector('input[name="medioPago"]:checked')?.value;
+    document.body.classList.remove('print-medio-EFECTIVO','print-medio-TRANSFERENCIA','print-medio-CHEQUE');
+    if(val) document.body.classList.add('print-medio-' + val);
     document.body.classList.add('printing-multiple');
   }
   function afterPrintCleanup(){
