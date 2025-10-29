@@ -122,9 +122,10 @@
 <script>
 /*
   Cambios solicitados:
-  - botones siempre habilitados en HTML
-  - JS valida rol antes de ejecutar acciones sensibles y muestra mensajes al usuario
-  - eliminar foto funciona solo para admin (cliente); servidor debe validar también
+  - el botón Eliminar debe poder activarse también mediante doble click en la tabla,
+    preservando que doble click sin Shift inicie edición (igual que editar),
+    y doble click con Shift realice eliminación (solo para admin).
+  Entrega: archivo listo para reemplazar.
 */
 
 (function(){
@@ -147,7 +148,7 @@
     setTimeout(()=> d.remove(), 2200);
   }
 
-  // Intercepta llamadas fetch sensibles y bloquea si rol no tiene permiso (defensa ligera)
+  // minimal fetch guard (client-side defense)
   (function installFetchGuard(){
     const orig = window.fetch;
     window.fetch = async function(input, init){
@@ -155,7 +156,6 @@
         const url = (typeof input === 'string') ? input : (input && input.url) || '';
         const method = (init && init.method) ? init.method.toUpperCase() : 'GET';
 
-        // examina cuerpo (JSON/FormData/URLSearchParams)
         let bodyObj = null;
         if (init && init.body) {
           if (typeof init.body === 'string') {
@@ -169,7 +169,6 @@
           }
         }
 
-        // regla: /guardar_empleado -> si no es admin y no viene nuevo=true => bloquear (cliente)
         if (url.includes('/guardar_empleado')) {
           if (CURRENT_ROLE !== 'admin') {
             const isNew = Boolean(bodyObj && (bodyObj.nuevo === true || bodyObj.nuevo === 'true' || bodyObj.nuevo === '1' || bodyObj.nuevo === 1));
@@ -180,7 +179,6 @@
           }
         }
 
-        // regla: eliminar_foto -> solo admin
         if (url.includes('/eliminar_foto')) {
           if (CURRENT_ROLE !== 'admin') {
             flash('Permisos insuficientes para eliminar foto', 'warning');
@@ -188,7 +186,6 @@
           }
         }
 
-        // regla: PUT /api/empleado/:dpi -> solo admin
         if (method === 'PUT' && url.match(/\/api\/empleado\/[^\/]+$/)) {
           if (CURRENT_ROLE !== 'admin') {
             flash('Permisos insuficientes para modificar empleado (cliente)', 'warning');
@@ -196,29 +193,24 @@
           }
         }
       } catch (e) {
-        // si algo falla en el guard, dejamos pasar la petición al fetch original
+        // ignore
       }
       return orig.apply(this, arguments);
     };
   })();
 
 
-  // UI: comportamiento de botones (nunca deshabilitados por HTML)
-  // btnAgregar siempre hace lo mismo
+  // UI button behaviors
   document.getElementById('btnAgregar')?.addEventListener('click', (ev) => {
-    // delega a tu lógica existente; por ahora mostramos mensaje de UX
-    flash('Agregar: abre formulario (UX) — si tu app tiene modal, se debe abrir', 'info');
-    // si tienes una función global para iniciar creación, la llamas aquí:
+    flash('Agregar: abre formulario (UX)', 'info');
     if (typeof window.iniciarAgregar === 'function') window.iniciarAgregar();
   });
 
-  // btnEditar / btnGuardar: verifican rol antes de ejecutar
   document.getElementById('btnEditar')?.addEventListener('click', (ev) => {
     if (CURRENT_ROLE !== 'admin') {
       flash('Permisos insuficientes para editar registros', 'warning');
       return;
     }
-    // llama a la lógica de edición de tu app (ej. activar edición de fila seleccionada)
     if (typeof window.iniciarEdicion === 'function') window.iniciarEdicion();
     else flash('Editar: acción iniciada', 'info');
   });
@@ -228,13 +220,8 @@
       flash('Permisos insuficientes para guardar cambios', 'warning');
       return;
     }
-    // tu lógica para recolectar datos y enviar a /guardar_empleado
     if (typeof window.guardarCambios === 'function') {
-      try {
-        await window.guardarCambios();
-      } catch (e) {
-        flash('Error al guardar', 'danger');
-      }
+      try { await window.guardarCambios(); } catch (e) { flash('Error al guardar', 'danger'); }
     } else {
       flash('Guardar: acción ejecutada (implementa window.guardarCambios)', 'info');
     }
@@ -245,7 +232,7 @@
     else flash('Cancelar: acción ejecutada', 'info');
   });
 
-  // Foto: selección de fila y muestra de formularios
+  // Photo / selection variables
   const TABLE_ID = 'tablaEmpleados';
   const tabla = document.getElementById(TABLE_ID);
   const fotoEmpleado = document.getElementById('fotoEmpleado');
@@ -263,31 +250,16 @@
     if (inputDpiUpload) inputDpiUpload.value = '';
     if (inputDpiDelete) inputDpiDelete.value = '';
   }
-  const btnEliminar = document.getElementById('btnEliminar');
-if (btnEliminar) {
-  btnEliminar.addEventListener('click', async () => {
-    // seguridad cliente: role inyectado desde plantilla
-    const CURRENT_ROLE = ("{{ rol or '' }}").toLowerCase();
-    if (CURRENT_ROLE !== 'admin') {
-      flash('Permisos insuficientes para eliminar empleados', 'warning');
-      return;
-    }
 
-    // buscar fila seleccionada
-    const tr = tabla.querySelector('tbody tr.selected');
+  // Delete button logic (kept as function to reuse in dblclick)
+  async function eliminarFilaSeleccionada(tr) {
     if (!tr) {
       flash('Debes seleccionar una fila antes de eliminar', 'warning');
       return;
     }
-
     const dpi = (tr.cells[0] && tr.cells[0].innerText || '').trim();
-    if (!dpi) {
-      flash('No se pudo obtener el DPI de la fila seleccionada', 'danger');
-      return;
-    }
-
+    if (!dpi) { flash('No se pudo obtener el DPI de la fila seleccionada', 'danger'); return; }
     if (!confirm(`¿Estás seguro de eliminar al empleado con DPI ${dpi}? Esta acción no se puede deshacer.`)) return;
-
     try {
       const res = await fetch('/eliminar_empleado', {
         method: 'POST',
@@ -295,12 +267,9 @@ if (btnEliminar) {
         body: JSON.stringify({ dpi })
       });
       const j = await res.json().catch(()=>({}));
-
       if (res.ok) {
         flash(j.mensaje || 'Empleado eliminado', 'success');
         tr.remove();
-        // limpia panel foto si usas uno
-        const fotoEmpleado = document.getElementById('fotoEmpleado');
         if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
       } else {
         flash(j.mensaje || j.error || 'Error al eliminar', 'danger');
@@ -308,19 +277,35 @@ if (btnEliminar) {
     } catch (err) {
       flash('Error al eliminar: ' + (err.message || err), 'danger');
     }
-  });
-}
+  }
 
+  // Hook delete button to same logic (requires selected row)
+  const btnEliminar = document.getElementById('btnEliminar');
+  if (btnEliminar) {
+    btnEliminar.addEventListener('click', async () => {
+      if (CURRENT_ROLE !== 'admin') { flash('Permisos insuficientes para eliminar empleados', 'warning'); return; }
+      const tr = tabla.querySelector('tbody tr.selected') || tabla.querySelector('tbody tr'); // fallback
+      await eliminarFilaSeleccionada(tr);
+    });
+  }
 
+  // Ensure row selection adds .selected
+  function clearSelection() {
+    tabla.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
+  }
+
+  // Single click select logic and photo request
   tabla?.addEventListener('click', async (ev) => {
     const tr = ev.target.closest('tr');
     if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+    clearSelection();
+    tr.classList.add('selected');
+
     const dpi = (tr.cells[0] && tr.cells[0].innerText || '').trim();
     if (!dpi) { clearPhotoPanel(); return; }
     if (inputDpiUpload) inputDpiUpload.value = dpi;
     if (inputDpiDelete) inputDpiDelete.value = dpi;
 
-    // request foto
     try {
       const res = await fetch(`/api/foto/${encodeURIComponent(dpi)}`, { cache: 'no-store' });
       if (!res.ok) throw new Error('no-photo');
@@ -338,6 +323,38 @@ if (btnEliminar) {
       if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
       if (formSubir) formSubir.style.display = 'block';
       if (formEliminar) formEliminar.style.display = 'none';
+    }
+  });
+
+  // Double-click behavior:
+  // - dblclick WITHOUT Shift: actúa como "Editar" (exactamente igual que btnEditar)
+  // - dblclick WITH Shift: actúa como "Eliminar" (exactamente igual que btnEliminar), only admin
+  tabla?.addEventListener('dblclick', async (ev) => {
+    const tr = ev.target.closest('tr');
+    if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+
+    // ensure selection reflects the dblclicked row
+    clearSelection();
+    tr.classList.add('selected');
+
+    if (ev.shiftKey) {
+      // Shift + double click -> eliminar (admin only)
+      if (CURRENT_ROLE !== 'admin') {
+        flash('Permisos insuficientes para eliminar empleados', 'warning');
+        return;
+      }
+      await eliminarFilaSeleccionada(tr);
+    } else {
+      // double click -> editar (same behavior as btnEditar)
+      if (CURRENT_ROLE !== 'admin') {
+        flash('Permisos insuficientes para editar registros', 'warning');
+        return;
+      }
+      if (typeof window.iniciarEdicion === 'function') {
+        try { window.iniciarEdicion(tr); } catch (e) { if (typeof window.iniciarEdicion === 'function') window.iniciarEdicion(); }
+      } else {
+        flash('Editar: acción iniciada', 'info');
+      }
     }
   });
 
@@ -398,7 +415,7 @@ if (btnEliminar) {
     }
   });
 
-  // mantener hooks de registrarTabla si existen en tu app
+  // registrarTabla hook if exists
   function tryRegister(retries = 20){
     if (window.registrarTabla && typeof window.registrarTabla === 'function') {
       window.registrarTabla('tablaEmpleados', 20, '/guardar_empleado', [
@@ -408,7 +425,6 @@ if (btnEliminar) {
         "Religión","Correo Electronico","Puesto de trabajo","Tipo de contrato",
         "Jornada laboral","Duración del trabajo","Fecha de inicio laboral","Dias Laborales"
       ], []);
-      // no forzamos estados disabled en botones; la app puede activar vistas/edición por selección
       return;
     }
     if (retries <= 0) return;
@@ -419,7 +435,6 @@ if (btnEliminar) {
   else tryRegister(20);
 
 })();
-
 </script>
 
 {% endblock %}
