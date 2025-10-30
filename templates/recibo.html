@@ -734,5 +734,119 @@ input[name="medioPago"][value="CHEQUE"]:checked ~ .cheque-fields {
 .small.text-muted { color:var(--muted); font-size:0.98rem; }
 .form-check-label { font-weight:700; color:#233642; font-size:0.95rem; }
 .compact-transfer .form-control { padding:6px 8px; font-size:0.9rem; }
+
+/* ------------------ Responsive additions for mobile (new) ------------------ */
+
+/* Make the receipt fit a single column on small devices and improve touch targets */
+@media (max-width: 600px) {
+  :root {
+    --accent-azul: #0b7285;
+  }
+
+  .container {
+    padding: 10px;
+    max-width: 100%;
+    margin: 6px;
+  }
+
+  /* Stack header controls vertically and make the print button full width */
+  .header-body {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .header-controls {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+    justify-content: space-between;
+  }
+  .header-controls > div[style] {
+    flex: initial;
+    width: 48%;
+    min-width: auto;
+  }
+  .btn-imprimir {
+    width: 100%;
+    padding: 0.6rem;
+    border-radius: 8px;
+    font-size: 1rem;
+  }
+
+  /* Make the receipt take full width (one per page vertical layout) */
+  .receipt-root {
+    width: 100% !important;
+    max-width: 100% !important;
+    float: none !important;
+    margin: 6px 0 !important;
+  }
+
+  /* Compact left/right columns to full width */
+  .section-grid {
+    flex-direction: column;
+  }
+  .section-left, .section-right {
+    min-width: 100%;
+    flex: 1 1 100%;
+  }
+
+  /* Inputs: increase tap targets and wrapping for labels */
+  .compact-input, .form-control {
+    font-size: 1rem;
+    padding: 10px;
+  }
+  .compact-amount {
+    width: 100%;
+    max-width: none;
+    text-align: right;
+    padding: 10px;
+  }
+
+  /* Transferencia and cheque fields become stacked and full width */
+  .transferencia-fields, .cheque-fields {
+    display: flex !important;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+  .transferencia-fields .trans-input, .cheque-fields .trans-input {
+    min-width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Liquido + letras switch to vertical layout on small screens */
+  .liquido-total-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .liquido-block {
+    min-width: 100%;
+    max-width: 100%;
+    align-items: flex-end;
+  }
+  .letras-block {
+    min-width: 100%;
+  }
+
+  /* Reduce font sizes slightly for dense areas */
+  .title-large { font-size: 1rem; }
+  .xsmall, .small { font-size: 0.96rem; }
+
+  /* Ensure signature lines are wide but reduced */
+  .sig-line { border-bottom-width: 1px; width: 100%; max-width: 240px; margin: 0 auto 6px auto; }
+  .signatures-row { flex-direction: column; align-items: center; gap: 12px; }
+
+  /* Employee select should stretch */
+  .empleado-selection .form-select { width: 100%; }
+}
+
+/* Extra tiny-device polish */
+@media (max-width: 380px) {
+  .btn-imprimir { font-size: 0.95rem; padding: 8px; }
+  .form-control { font-size: 0.98rem; padding: 8px; }
+  .compact-amount { font-size: 1rem; }
+}
 </style>
 {% endblock %}
