@@ -11,12 +11,12 @@
       </div>
 
       <div class="controls d-flex flex-wrap align-items-center">
-        <div class="me-4">
+        <div class="me-4 control-group">
           <h6 class="mb-1">Ingrese nombre para el documento</h6>
           <input id="planillaName" class="form-control form-control-sm" type="text" value="Planilla " style="min-width:240px" />
         </div>
 
-        <div class="me-4">
+        <div class="me-4 control-group">
           <h6 class="mb-1">Ingrese fecha de emisión del documento</h6>
           <input id="emisionDate" class="form-control form-control-sm" type="date" />
         </div>
@@ -1132,16 +1132,78 @@ document.addEventListener('DOMContentLoaded', () => {
     #planillaTable { min-width: 1400px; }
   }
 
-  @media (max-width: 576px) {
+  /* ---- Responsive improvements added ---- */
+  /* On tablets and phones, reduce fixed min-width and make controls stack and shrink properly */
+  @media (max-width: 768px) {
     :root {
-      --planilla-money-min-width: 140px;
+      --planilla-money-min-width: 160px;
       --planilla-input-min-height: 50px;
-      --planilla-cell-horizontal-padding: 1.0rem;
-      --planilla-name-col-min-width: 200px;
+      --planilla-cell-horizontal-padding: 1rem;
+      --planilla-name-col-min-width: 260px;
       --planilla-cell-vertical-padding: 1rem;
     }
-    #planillaTable { min-width: 1100px; }
+
+    .card .card-body { padding: .75rem; }
+    .controls { gap: 10px; }
+    .controls .me-4 { margin-right: .8rem; display:flex; width:100%; }
+    .control-group { min-width: 0; flex: 1 1 200px; }
+    .action-buttons { gap: 8px; justify-content:flex-end; width:100%; flex-wrap:wrap; margin-left:0; }
+
+    /* Allow table container to show a horizontal scrollbar but make the visible table more compact */
+    .horizontal-scroll { overflow-x:auto; }
+    #planillaTable { min-width: 1000px; font-size: .92rem; }
+
+    /* Make money prefix smaller */
+    .money-prefix { min-width: 40px; height: calc(var(--planilla-input-min-height)); font-weight:700; }
+
+    /* Smaller inputs */
+    #planillaTable input.form-control { padding: .35rem .5rem; font-size: .95rem; min-height: 46px; height: 46px; }
+
+    /* Make header buttons wrap */
+    .action-buttons button { padding: .35rem .5rem; font-size: .85rem; white-space: nowrap; }
+
+    /* Improve touch target */
+    table.table td, table.table th { padding: .9rem .6rem; }
   }
+
+  /* On small phones, collapse more, make table compact and inputs full width inside cells */
+  @media (max-width: 480px) {
+    :root {
+      --planilla-money-min-width: 120px;
+      --planilla-input-min-height: 44px;
+      --planilla-cell-horizontal-padding: .8rem;
+      --planilla-name-col-min-width: 180px;
+      --planilla-cell-vertical-padding: .7rem;
+    }
+
+    h3 { font-size: 1.05rem; }
+    .card .card-body { padding: .6rem; }
+    .controls { flex-direction: column; align-items:stretch; gap:8px; }
+    .controls .me-4 { margin-right: 0; }
+    .action-buttons { justify-content: flex-start; gap:10px; margin-left:0; }
+
+    /* Make the table more compact but usable */
+    #planillaTable { min-width: 900px; font-size: .88rem; }
+
+    /* Ensure input fields inside table take available space */
+    .money-inline .form-control { min-width: var(--planilla-money-min-width); }
+    #planillaTable input.form-control { font-size: .92rem; padding: .35rem .45rem; min-height: 40px; height: 40px; }
+
+    /* Reduce prefix width on tiny screens */
+    .money-prefix { min-width: 36px; font-size: .92rem; padding: 0 .6rem; }
+
+    /* Hide some less-critical columns visually to improve readability (but keep them in export/DOM) */
+    /* We hide columns beyond the most important on very small screens so the essential data fits better. */
+    #planillaTable th:nth-child(n+10),
+    #planillaTable td:nth-child(n+10) {
+      display: none;
+    }
+
+    /* Keep totals footer readable */
+    #planillaTable tfoot tr td { font-size: .92rem; padding: .6rem .5rem; }
+  }
+
+  /* ---- End responsive improvements ---- */
 
 table.table {
   border-collapse: collapse;
