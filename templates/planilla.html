@@ -122,6 +122,7 @@ const ISR_ANNUAL_RATE = 0.05;
 const ISR_MIN_SALARIO = 4000.00;
 
 const STORAGE_KEY = 'empaquetex_planilla_noviembre_v1';
+const SERVER_SYNC_KEY = STORAGE_KEY + '_server_meta';
 
 function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
 function formatNum(n){ return Number(n).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); }
@@ -135,7 +136,7 @@ function computeHorasMontoMensual(sueldo, dias, horas) {
 }
 
 function computeISRMonthlyFromRow(sueldo, bono, comisiones, hextrasMensual) {
-  if ((sueldo * 2) < 4000) return 0;
+  if ((sueldo * 2) < ISR_MIN_SALARIO) return 0;
   const sueldoBaseAnual = (sueldo * 2) * 12;
   const bonoIncentivoAnual = (bono * 2) * 12;
   const hextrasAnual = hextrasMensual * 12;
@@ -569,25 +570,21 @@ document.getElementById('exportExcel').addEventListener('click', () => {
   }, true);
 })();
 
-/* ------------------ NEW: automatic sync with /api/empleados and server-side persistence ------------------ */
+/* ------------------ Sync with server: /api/empleados, /api/planilla, /guardar_planilla ------------------ */
 
 /*
- Behavior:
- - On load:
-   * If localStorage had saved data, use it.
-   * Else try to fetch server-saved planilla from /api/planilla and populate.
-   * If that is empty, fetch /api/empleados to populate employee rows (existing behavior).
- - All user changes still save to localStorage to preserve offline edits.
- - Additionally, every save (add/delete/input) will attempt to POST the serialized planilla to /guardar_planilla
-   so the same data becomes available to other devices.
- - The save-to-server function is resilient: it will retry once on network error and otherwise log the result.
- - Server endpoints expected:
-    GET  /api/planilla         -> returns { rows: [...], meta: {...} }  (optional)
-    POST /guardar_planilla     -> accepts JSON { rows, meta } and stores it server-side
- - Server must still validate and authorize; this client-side logic only attempts the request.
+ Notes for server:
+ - This client expects two optional endpoints:
+    GET  /api/planilla        -> returns { rows: [...], meta: { server_saved_at: ISO, planillaName, emisionDate } } OR 204/empty
+    POST /guardar_planilla    -> accepts { rows, meta } and returns { ok:true, saved_at: ISO }
+ - If your backend doesn't have these, create lightweight handlers that read/write a server-side JSON store or DB.
+ - The client will continue to work offline using localStorage; server sync is best-effort.
 */
 
-const POLL_INTERVAL_MS = 20000; // 20 seconds
+const POLL_INTERVAL_MS = 20000; // 20s
+let pollHandle = null;
+let lastKnownServerSavedAt = null;
+let pendingServerSave = null;
 
 async function fetchEmployeesList() {
   try {
@@ -658,78 +655,20 @@ async function syncEmployeesOnce() {
   }
 }
 
-let pollHandle = null;
 function startEmployeesPolling() {
-  // Run immediately once
   syncEmployeesOnce();
-  // then poll periodically
   if (pollHandle) clearInterval(pollHandle);
   pollHandle = setInterval(syncEmployeesOnce, POLL_INTERVAL_MS);
 }
 
 /* ------------------ LocalStorage helpers + server sync ------------------ */
+
 function saveToLocal() {
   try {
     const data = serializeTable();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (e) {
     console.error('Error saving planilla to localStorage', e);
-  }
-}
-
-function saveToServerOnce(payload) {
-  // small helper to post to /guardar_planilla
-  return fetch('/guardar_planilla', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  }).then(res => {
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    return res.json().catch(() => ({}));
-  });
-}
-
-async function saveToLocalAndServer() {
-  // primary: save locally always
-  try {
-    saveToLocal();
-  } catch (e) {
-    console.error('local save error', e);
-  }
-
-  // secondary: attempt server save but don't block UI
-  const payload = serializeTable();
-  // include a small client tag
-  payload.meta = payload.meta || {};
-  payload.meta.client_saved_at = new Date().toISOString();
-  try {
-    await saveToServerOnce(payload);
-    // optionally, store server sync time
-    localStorage.setItem(STORAGE_KEY + '_last_sync', new Date().toISOString());
-  } catch (err) {
-    // retry once after short delay
-    console.warn('first server save failed, retrying once', err);
-    setTimeout(async () => {
-      try {
-        await saveToServerOnce(payload);
-        localStorage.setItem(STORAGE_KEY + '_last_sync', new Date().toISOString());
-      } catch (e) {
-        console.warn('server save retry failed', e);
-      }
-    }, 1800);
-  }
-}
-
-async function tryLoadServerPlanilla() {
-  try {
-    const res = await fetch('/api/planilla', { cache: 'no-store' });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data && Array.isArray(data.rows) && data.rows.length) return data;
-    return null;
-  } catch (e) {
-    console.warn('Error fetching server planilla', e);
-    return null;
   }
 }
 
@@ -744,6 +683,11 @@ function loadFromLocal() {
         if (obj.meta.planillaName) document.getElementById('planillaName').value = obj.meta.planillaName;
         if (obj.meta.emisionDate) document.getElementById('emisionDate').value = obj.meta.emisionDate;
       }
+      // load last known server meta if present
+      const serverMetaRaw = localStorage.getItem(SERVER_SYNC_KEY);
+      if (serverMetaRaw) {
+        try { const m = JSON.parse(serverMetaRaw); lastKnownServerSavedAt = m.server_saved_at || null; } catch {}
+      }
       return true;
     }
     return false;
@@ -753,25 +697,176 @@ function loadFromLocal() {
   }
 }
 
-/* populate on load only if localStorage empty; then start polling always to pick up future DB adds */
-async function populateFromEmployeesIfEmpty() {
-  const restored = loadFromLocal();
-  if (restored) {
-    // respect saved data, but still start polling to append newcomers
-    startEmployeesPolling();
+function saveServerMeta(meta) {
+  try {
+    localStorage.setItem(SERVER_SYNC_KEY, JSON.stringify(meta || {}));
+    lastKnownServerSavedAt = meta && meta.server_saved_at ? meta.server_saved_at : lastKnownServerSavedAt;
+  } catch (e) { console.warn('saveServerMeta error', e); }
+}
+
+function safeFetchJson(url, opts = {}) {
+  return fetch(url, opts).then(r => {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json().catch(() => ({}));
+  });
+}
+
+function saveToServerOnce(payload) {
+  return safeFetchJson('/guardar_planilla', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+}
+
+async function saveToLocalAndServer() {
+  // always save locally
+  try { saveToLocal(); } catch (e) { console.error('local save error', e); }
+
+  // queue server save (if another save pending, let it finish first)
+  if (pendingServerSave) {
+    // schedule one later to reduce contention
+    setTimeout(saveToLocalAndServer, 800);
     return;
   }
 
-  // try server-stored planilla first
-  const serverPlanilla = await tryLoadServerPlanilla();
+  const payload = serializeTable();
+  payload.meta = payload.meta || {};
+  payload.meta.client_saved_at = new Date().toISOString();
+
+  // optimistic: if local seems unchanged and server newer, skip. But simplest: attempt save.
+  pendingServerSave = payload;
+  try {
+    const res = await saveToServerOnce(payload);
+    if (res && (res.saved_at || res.server_saved_at)) {
+      const meta = { server_saved_at: res.saved_at || res.server_saved_at, planillaName: payload.meta.planillaName || '', emisionDate: payload.meta.emisionDate || '' };
+      saveServerMeta(meta);
+      console.info('Planilla synced to server at', meta.server_saved_at);
+    } else {
+      // server may return ok:true
+      if (res && res.ok) {
+        const now = new Date().toISOString();
+        saveServerMeta({ server_saved_at: now, planillaName: payload.meta.planillaName || '', emisionDate: payload.meta.emisionDate || '' });
+      }
+    }
+  } catch (err) {
+    console.warn('server save failed, will retry once', err);
+    setTimeout(async () => {
+      try {
+        await saveToServerOnce(payload);
+        const now = new Date().toISOString();
+        saveServerMeta({ server_saved_at: now, planillaName: payload.meta.planillaName || '', emisionDate: payload.meta.emisionDate || '' });
+        console.info('Retry server save succeeded');
+      } catch (e) {
+        console.warn('server save retry failed', e);
+      } finally {
+        pendingServerSave = null;
+      }
+    }, 1400);
+    pendingServerSave = null;
+    return;
+  }
+  pendingServerSave = null;
+}
+
+/* ------------------ Server planilla load + polling for remote changes ------------------ */
+
+async function tryLoadServerPlanillaOnce() {
+  try {
+    const res = await fetch('/api/planilla', { cache: 'no-store' });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data && Array.isArray(data.rows) && data.rows.length) return data;
+    return null;
+  } catch (e) {
+    console.warn('Error fetching /api/planilla', e);
+    return null;
+  }
+}
+
+async function pollServerPlanilla() {
+  try {
+    const res = await fetch('/api/planilla', { cache: 'no-store' });
+    if (!res.ok) return;
+    const data = await res.json().catch(()=>null);
+    if (!data || !Array.isArray(data.rows) || !data.rows.length) return;
+    const serverMeta = data.meta || {};
+    const serverSavedAt = serverMeta.server_saved_at || serverMeta.saved_at || null;
+
+    // if we have no local data, always restore server
+    const localRaw = localStorage.getItem(STORAGE_KEY);
+    if (!localRaw) {
+      console.info('No local planilla, restoring server version');
+      restoreTable(data);
+      if (data.meta) {
+        if (data.meta.planillaName) document.getElementById('planillaName').value = data.meta.planillaName;
+        if (data.meta.emisionDate) document.getElementById('emisionDate').value = data.meta.emisionDate;
+      }
+      saveToLocal();
+      saveServerMeta(serverMeta);
+      return;
+    }
+
+    // If server has a newer saved_at than our lastKnownServerSavedAt, consider merging
+    if (serverSavedAt && (!lastKnownServerSavedAt || new Date(serverSavedAt) > new Date(lastKnownServerSavedAt))) {
+      // Simple strategy: if local edits exist since lastKnownServerSavedAt, skip automatic overwrite.
+      const localObj = JSON.parse(localRaw);
+      const localMeta = localObj.meta || {};
+      const localClientSavedAt = localMeta.client_saved_at || localMeta.saved_at || null;
+
+      // If localClientSavedAt exists and is newer than serverSavedAt => prefer local, do nothing.
+      if (localClientSavedAt && new Date(localClientSavedAt) > new Date(serverSavedAt)) {
+        console.info('Server has older data than local edits; keeping local');
+        saveServerMeta(serverMeta); // but update known server time
+        return;
+      }
+
+      // Otherwise server is newer — replace local with server copy
+      console.info('Server planilla newer, restoring from server');
+      restoreTable(data);
+      if (data.meta) {
+        if (data.meta.planillaName) document.getElementById('planillaName').value = data.meta.planillaName;
+        if (data.meta.emisionDate) document.getElementById('emisionDate').value = data.meta.emisionDate;
+      }
+      saveToLocal();
+      saveServerMeta(serverMeta);
+    }
+  } catch (e) {
+    console.warn('Error in pollServerPlanilla', e);
+  }
+}
+
+function startServerPolling() {
+  // poll every POLL_INTERVAL_MS but only one active timer
+  if (pollHandle) clearInterval(pollHandle);
+  // run once immediately
+  pollServerPlanilla();
+  pollHandle = setInterval(pollServerPlanilla, POLL_INTERVAL_MS);
+}
+
+/* ------------------ populate behavior on load ------------------ */
+
+async function populateFromEmployeesIfEmpty() {
+  const restored = loadFromLocal();
+  if (restored) {
+    // if local present, still start polls to append newcomers and check server updates
+    startEmployeesPolling();
+    startServerPolling();
+    return;
+  }
+
+  // try server planilla first
+  const serverPlanilla = await tryLoadServerPlanillaOnce();
   if (serverPlanilla) {
     restoreTable(serverPlanilla);
     if (serverPlanilla.meta) {
       if (serverPlanilla.meta.planillaName) document.getElementById('planillaName').value = serverPlanilla.meta.planillaName;
       if (serverPlanilla.meta.emisionDate) document.getElementById('emisionDate').value = serverPlanilla.meta.emisionDate;
+      saveServerMeta(serverPlanilla.meta);
     }
-    saveToLocal(); // seed localStorage
+    saveToLocal();
     startEmployeesPolling();
+    startServerPolling();
     return;
   }
 
@@ -804,10 +899,12 @@ async function populateFromEmployeesIfEmpty() {
     });
     document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
     recalcTotals();
+    // persist locally and attempt server save
     saveToLocalAndServer();
   }
-  // start polling for later additions
+  // start polling for later additions and server planilla
   startEmployeesPolling();
+  startServerPolling();
 }
 
 /* ------------------ Initialization ------------------ */
@@ -820,7 +917,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
   recalcTotals();
 
-  // Populate from server/local/employees and start polling afterwards
+  // populate and start polling
   populateFromEmployeesIfEmpty();
 
   if (!restored) saveToLocalAndServer();
