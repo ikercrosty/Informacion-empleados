@@ -528,6 +528,7 @@ def login():
 
             if password == stored_password:
                 session["usuario"] = user_row.get("Usuarios") or user_row.get("Correo Electronico")
+                # normalize role to lowercase; default to editor if database value empty
                 session["rol"] = (user_row.get("rol") or "editor").strip().lower()
                 session.permanent = False
                 return redirect(url_for("menu"))
@@ -663,6 +664,7 @@ def guardar_empleado():
 
 @app.route("/eliminar_empleado", methods=["POST"])
 def eliminar_empleado():
+    # deletion remains admin-only on server-side
     if (session.get("rol") or "").strip().lower() != "admin":
         return jsonify({"mensaje": "Permisos insuficientes"}), 403
 
@@ -1097,6 +1099,13 @@ def eliminar_foto():
             return jsonify({"ok": False, "message": "No existe foto para ese empleado"}), 200
     except Exception as e:
         return jsonify({"error": f"Error al eliminar foto: {e}"}), 500
+
+
+# New lightweight endpoint: devuelve el rol actual (útil para frontend)
+@app.route("/whoami")
+def whoami():
+    # retorna el rol actual en sesión; frontend puede usarlo para habilitar/deshabilitar UI
+    return jsonify({"usuario": session.get("usuario"), "rol": (session.get("rol") or "").strip().lower()})
 
 
 if __name__ == "__main__":
