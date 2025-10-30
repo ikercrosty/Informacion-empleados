@@ -33,6 +33,30 @@
   {# rol disponible desde session; normalizado en minúsculas #}
   {% set rol = session.get('rol', '')|string|lower %}
 
+  <!--
+    PANEL DE AYUDA VISIBLE
+    - Este bloque contiene comentarios visibles para guiar al usuario en el uso de la tabla/formulario.
+    - No modifica la lógica: solo ayuda a los operadores a entender el flujo y las restricciones.
+  -->
+  <div class="card mb-3">
+    <div class="card-body small" style="line-height:1.35;">
+      <strong>Guía rápida de uso</strong>
+      <ul class="mb-0 mt-1">
+        <li><strong>DPI:</strong> El <em>DPI</em> aparece como la primera columna y representa la llave única del empleado. 
+            Una vez que un registro con un DPI se guarda/ingresa desde la base de datos, ese DPI no debe editarse manualmente en la tabla (las filas importadas muestran el DPI como celda de texto, no como campo editable).</li>
+        <li><strong>Agregar:</strong> Crea una nueva fila para capturar datos. La fila nueva permite completar Nombre, Apellidos y demás campos. El DPI debe proporcionarse en el proceso de creación si la aplicación lo solicita.</li>
+        <li><strong>Editar:</strong> Habilita la edición de campos de la fila seleccionada. Solo usuarios con rol <em>editor</em> o <em>admin</em> pueden iniciar edición.</li>
+        <li><strong>Guardar:</strong> Guarda los cambios explícitamente en servidor y local; no hay guardado automático. Pulse Guardar cuando termine la edición para persistir cambios.</li>
+        <li><strong>Cancelar:</strong> Descarta cambios no guardados en la edición en curso.</li>
+        <li><strong>Eliminar:</strong> Solo usuarios con rol <em>admin</em> pueden eliminar empleados o eliminar fotos. El botón "Eliminar" aparece solo para admin en la barra superior; además existen protecciones cliente/servidor que bloquearán la operación para roles no autorizados.</li>
+        <li><strong>Fotos:</strong> Seleccione una fila para gestionar su foto. Si no hay foto, el panel muestra el formulario para subir. Solo admin puede eliminar fotos (el cliente bloquea la acción cuando el rol no es admin).</li>
+        <li><strong>Selección:</strong> Haga clic en una fila para seleccionarla (aparece la foto y los formularios de foto según corresponda). Doble clic sin Shift inicia edición (admin/editor). Doble clic + Shift intenta eliminar (solo admin).</li>
+        <li><strong>Permisos:</strong> La interfaz mantiene los botones visibles para usabilidad, pero el JavaScript valida el rol actual antes de permitir acciones críticas; los endpoints del servidor también validan permisos para evitar cambios no autorizados.</li>
+        <li><strong>Sugerencia operativa:</strong> Antes de eliminar una fila importada (una fila con DPI desde servidor), confirme que el DPI sea correcto; la eliminación pide confirmación y es irreversible.</li>
+      </ul>
+    </div>
+  </div>
+
   <div class="card shadow-sm border-0 bg-white">
     <div class="card-body p-3">
       <div class="d-flex justify-content-between align-items-center mb-2">
