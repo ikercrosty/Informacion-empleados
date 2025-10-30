@@ -7,6 +7,8 @@ from datetime import datetime
 from io import BytesIO
 from PIL import Image
 import sys
+import json
+from pathlib import Path
 
 app = Flask(__name__)
 app.secret_key = "clave-secreta"
@@ -20,7 +22,9 @@ try:
         r"/api/*": {"origins": FRONTEND_ORIGINS},
         r"/subir_foto": {"origins": FRONTEND_ORIGINS},
         r"/eliminar_foto": {"origins": FRONTEND_ORIGINS},
-        r"/planilla": {"origins": FRONTEND_ORIGINS}
+        r"/planilla": {"origins": FRONTEND_ORIGINS},
+        r"/guardar_planilla": {"origins": FRONTEND_ORIGINS},
+        r"/api/planilla": {"origins": FRONTEND_ORIGINS}
     })
 except Exception:
     @app.after_request
@@ -42,6 +46,11 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # Extensiones permitidas
 ALLOWED_EXT = {"png", "jpg", "jpeg", "gif", "webp"}
+
+# Archivo servidor para persistir la planilla (JSON)
+PLANILLA_STORE_PATH = os.environ.get("PLANILLA_STORE_PATH",
+                                    os.path.join(app.root_path, "data", "planilla_store.json"))
+Path(os.path.dirname(PLANILLA_STORE_PATH)).mkdir(parents=True, exist_ok=True)
 
 
 def allowed_file(filename):
@@ -90,7 +99,7 @@ def requerir_login():
         "guardar_empleado", "guardar_academico", "guardar_conyugue",
         "guardar_emergencia", "guardar_laboral", "guardar_medica",
         "api_foto", "subir_foto", "eliminar_foto", "api_empleados_list", "api_empleado_get", "api_empleados",
-        "planilla"  # <-- permitimos acceso público a la página de planilla (frontend-friendly)
+        "planilla", "api_planilla", "guardar_planilla", "whoami"
     }
     endpoint = request.endpoint or ""
     base_endpoint = endpoint.split(".")[0] if "." in endpoint else endpoint
@@ -559,9 +568,7 @@ def logout():
 
 @app.route("/planilla")
 def planilla():
-    # ahora esta ruta está incluida en rutas_publicas en before_request para que el frontend pueda
-    # acceder sin necesidad de sesión si así lo requiere tu uso. Si prefieres mantenerla protegida
-    # por login, quita "planilla" de rutas_publicas en requerir_login.
+    # esta ruta puede ser pública para frontend
     return render_template("planilla.html", usuario=session.get("usuario"))
 
 
@@ -1113,6 +1120,69 @@ def eliminar_foto():
 def whoami():
     # retorna el rol actual en sesión; frontend puede usarlo para habilitar/deshabilitar UI
     return jsonify({"usuario": session.get("usuario"), "rol": (session.get("rol") or "").strip().lower()})
+
+
+# ------------------ NUEVOS ENDPOINTS PARA SINCRONIZAR LA PLANILLA ------------------
+
+def read_planilla_store():
+    try:
+        if not os.path.exists(PLANILLA_STORE_PATH):
+            return None
+        with open(PLANILLA_STORE_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+
+def write_planilla_store(obj):
+    try:
+        obj_to_save = obj.copy() if isinstance(obj, dict) else {"rows": [], "meta": {}}
+        obj_to_save["meta"] = obj_to_save.get("meta", {})
+        obj_to_save["meta"]["server_saved_at"] = datetime.utcnow().isoformat()
+        with open(PLANILLA_STORE_PATH, "w", encoding="utf-8") as f:
+            json.dump(obj_to_save, f, ensure_ascii=False, indent=2)
+        return obj_to_save["meta"]["server_saved_at"]
+    except Exception:
+        return None
+
+
+@app.route("/api/planilla", methods=["GET"])
+def api_planilla_get():
+    """
+    Devuelve la última planilla guardada en el servidor (archivo JSON).
+    Si no existe retorna 204/empty JSON {} con código 204.
+    """
+    try:
+        data = read_planilla_store()
+        if not data:
+            return jsonify({}), 204
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/guardar_planilla", methods=["POST"])
+def guardar_planilla():
+    """
+    Recibe payload JSON { rows, meta } y lo persiste en servidor.
+    Retorna { ok: true, saved_at: ISO } en caso exitoso.
+    """
+    try:
+        payload = request.get_json() or {}
+        # validate basic shape
+        rows = payload.get("rows") if isinstance(payload, dict) else None
+        meta = payload.get("meta") if isinstance(payload, dict) else {}
+        if rows is None:
+            # still allow empty rows but enforce object shape
+            rows = []
+        store = {"rows": rows, "meta": meta or {}}
+        saved_at = write_planilla_store(store)
+        if saved_at:
+            return jsonify({"ok": True, "saved_at": saved_at})
+        else:
+            return jsonify({"ok": False, "message": "No se pudo guardar en servidor"}), 500
+    except Exception as e:
+        return jsonify({"ok": False, "message": str(e)}), 500
 
 
 if __name__ == "__main__":
