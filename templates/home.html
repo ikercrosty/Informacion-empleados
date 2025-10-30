@@ -22,8 +22,8 @@
           <button id="btnAgregar" class="btn btn-success btn-sm" data-action="agregar">Agregar</button>
 
           {# siempre visibles; JS decide si la acción procede según rol #}
-          <button id="btnEditar" class="btn btn-primary btn-sm" data-action="editar" data-role-required="admin">Editar</button>
-          <button id="btnGuardar" class="btn btn-success btn-sm" data-action="guardar" data-role-required="admin">Guardar</button>
+          <button id="btnEditar" class="btn btn-primary btn-sm" data-action="editar" data-role-required="editor">Editar</button>
+          <button id="btnGuardar" class="btn btn-success btn-sm" data-action="guardar" data-role-required="editor">Guardar</button>
 
           <button id="btnCancelar" class="btn btn-secondary btn-sm" data-action="cancelar">Cancelar</button>
 
@@ -122,9 +122,8 @@
 <script>
 /*
   Cambios solicitados:
-  - Doble click en tabla:
-      * sin Shift => iniciar edición (igual que btnEditar)
-      * con Shift => eliminar fila (solo admin)
+  - El rol editor puede usar Agregar, Editar, Guardar y Cancelar
+  - Solo admin puede eliminar (fotos y empleados)
   - Mantener botones visibles; JS valida permisos y muestra mensajes
   - Archivo listo para reemplazar
 */
@@ -170,8 +169,9 @@
           }
         }
 
+        // Permitir editar/guardar a admin y editor (cliente)
         if (url.includes('/guardar_empleado')) {
-          if (CURRENT_ROLE !== 'admin') {
+          if (!['admin','editor'].includes(CURRENT_ROLE)) {
             const isNew = Boolean(bodyObj && (bodyObj.nuevo === true || bodyObj.nuevo === 'true' || bodyObj.nuevo === '1' || bodyObj.nuevo === 1));
             if (!isNew) {
               flash('Permisos insuficientes para editar registros', 'warning');
@@ -208,7 +208,7 @@
   });
 
   document.getElementById('btnEditar')?.addEventListener('click', (ev) => {
-    if (CURRENT_ROLE !== 'admin') {
+    if (!['admin','editor'].includes(CURRENT_ROLE)) {
       flash('Permisos insuficientes para editar registros', 'warning');
       return;
     }
@@ -217,7 +217,7 @@
   });
 
   document.getElementById('btnGuardar')?.addEventListener('click', async (ev) => {
-    if (CURRENT_ROLE !== 'admin') {
+    if (!['admin','editor'].includes(CURRENT_ROLE)) {
       flash('Permisos insuficientes para guardar cambios', 'warning');
       return;
     }
@@ -328,8 +328,8 @@
   });
 
   // Double-click behavior:
-  // - dblclick WITHOUT Shift: actúa como "Editar" (exactamente igual que btnEditar)
-  // - dblclick WITH Shift: actúa como "Eliminar" (exactamente igual que btnEliminar), only admin
+  // - dblclick WITHOUT Shift: actúa como "Editar" (admin or editor)
+  // - dblclick WITH Shift: actúa como "Eliminar" (only admin)
   tabla?.addEventListener('dblclick', async (ev) => {
     const tr = ev.target.closest('tr');
     if (!tr || tr.parentElement.tagName !== 'TBODY') return;
@@ -346,8 +346,8 @@
       }
       await eliminarFilaSeleccionada(tr);
     } else {
-      // double click -> editar (same behavior as btnEditar)
-      if (CURRENT_ROLE !== 'admin') {
+      // double click -> editar (admin or editor)
+      if (!['admin','editor'].includes(CURRENT_ROLE)) {
         flash('Permisos insuficientes para editar registros', 'warning');
         return;
       }
