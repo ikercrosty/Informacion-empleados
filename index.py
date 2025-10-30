@@ -16,7 +16,12 @@ app.config["SESSION_PERMANENT"] = False
 FRONTEND_ORIGINS = os.environ.get("FRONTEND_ORIGINS", "http://localhost:5173")
 try:
     from flask_cors import CORS
-    CORS(app, resources={r"/api/*": {"origins": FRONTEND_ORIGINS}, r"/subir_foto": {"origins": FRONTEND_ORIGINS}, r"/eliminar_foto": {"origins": FRONTEND_ORIGINS}})
+    CORS(app, resources={
+        r"/api/*": {"origins": FRONTEND_ORIGINS},
+        r"/subir_foto": {"origins": FRONTEND_ORIGINS},
+        r"/eliminar_foto": {"origins": FRONTEND_ORIGINS},
+        r"/planilla": {"origins": FRONTEND_ORIGINS}
+    })
 except Exception:
     @app.after_request
     def _simple_cors(response):
@@ -84,7 +89,8 @@ def requerir_login():
         "login", "static", "db_test", "db-test",
         "guardar_empleado", "guardar_academico", "guardar_conyugue",
         "guardar_emergencia", "guardar_laboral", "guardar_medica",
-        "api_foto", "subir_foto", "eliminar_foto", "api_empleados_list", "api_empleado_get", "api_empleados"
+        "api_foto", "subir_foto", "eliminar_foto", "api_empleados_list", "api_empleado_get", "api_empleados",
+        "planilla"  # <-- permitimos acceso público a la página de planilla (frontend-friendly)
     }
     endpoint = request.endpoint or ""
     base_endpoint = endpoint.split(".")[0] if "." in endpoint else endpoint
@@ -553,8 +559,9 @@ def logout():
 
 @app.route("/planilla")
 def planilla():
-    if "usuario" not in session:
-        return redirect(url_for("login"))
+    # ahora esta ruta está incluida en rutas_publicas en before_request para que el frontend pueda
+    # acceder sin necesidad de sesión si así lo requiere tu uso. Si prefieres mantenerla protegida
+    # por login, quita "planilla" de rutas_publicas en requerir_login.
     return render_template("planilla.html", usuario=session.get("usuario"))
 
 
