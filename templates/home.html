@@ -1,945 +1,470 @@
 {% extends "layout.html" %}
-{% block title %}Planilla - Noviembre 2025{% endblock %}
+{% block title %}Datos Personales{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-  <div class="card shadow-sm mb-4 border-0">
-    <div class="card-body d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-      <div>
-        <h3 class="mb-0" style="letter-spacing:.2px">Planilla - Empaquetex </h3>
-        <div class="text-muted small mt-1">Empresa: EMPAQUES Y TEXTURAS DE GUATEMALA, SOCIEDAD ANÓNIMA</div>
+<div class="container-fluid py-4">
+  <!-- Jumbotron mejorado: sólo este bloque fue modificado -->
+  <div class="jumbotron-welcome rounded-3 mb-3">
+    <div class="d-flex flex-column flex-md-row align-items-center gap-3">
+      <div class="flex-grow-1">
+        <h1 class="h3 mb-1" style="letter-spacing: .2px; font-weight:700; color:#0b486b;">
+          Datos personales
+        </h1>
+        <p class="text-muted mb-2" style="font-size:0.95rem;">
+          Lista de empleados y foto del empleado seleccionado
+        </p>
+
+        <div class="d-flex flex-wrap gap-2 align-items-center mt-2">
+          <small class="text-muted me-3" style="min-width:220px;">
+            Acciones rápidas — selecciona una fila para ver o editar la foto
+          </small>
+
+          <div class="d-flex gap-2">
+            <a class="btn btn-naranja btn-sm" id="jbtn-nuevo" role="button" onclick="document.getElementById('btnAgregar')?.click()">
+              Nuevo empleado
+            </a>
+
+            <a class="btn btn-outline-warning btn-sm" id="jbtn-planilla" role="button" onclick="document.getElementById('btnGuardar')?.click()">
+              Guardar cambios
+            </a>
+          </div>
+        </div>
       </div>
 
-      <div class="controls d-flex flex-wrap align-items-center">
-        <div class="me-4">
-          <h6 class="mb-1">Ingrese nombre para el documento</h6>
-          <input id="planillaName" class="form-control form-control-sm" type="text" value="Planilla " style="min-width:240px" />
+      <div class="d-none d-md-flex align-items-center" style="min-width:220px; justify-content:flex-end;">
+        <div style="text-align:right;">
+          <div style="font-size:.82rem; color:#6b7280;">Empresa</div>
+          <div style="font-weight:700; color:#0b486b;">EMPAQUES Y TEXTURAS DE GUATEMALA, S.A.</div>
+          <div class="text-muted" style="font-size:.82rem; margin-top:6px;">Panel de administración</div>
         </div>
-
-        <div class="me-4">
-          <h6 class="mb-1">Ingrese fecha de emisión del documento</h6>
-          <input id="emisionDate" class="form-control form-control-sm" type="date" />
-        </div>
-
-        <div class="action-buttons d-flex align-items-center" style="gap:24px; justify-content:flex-end; margin-left:auto;">
-          <button id="exportExcel" class="btn btn-primary btn-sm d-flex align-items-center" title="Exportar a Excel">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-file-earmark-excel me-2" viewBox="0 0 16 16"><path d="M5.884 6.68 4.52 9.5l1.364 2.82H3.54L2 9.5l1.54-2.82h1.344z"/><path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zM10.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5.5H10.5A1.5 1.5 0 0 1 9 4V3.5z"/></svg>
-            Exportar a Excel
-          </button>
-
-          <button id="deleteRow" class="btn btn-outline-danger btn-sm" title="Eliminar fila">Eliminar fila</button>
-
-          <!-- NOTA: Botones "Agregar fila" y "Guardar" han sido eliminados intencionalmente -->
-        </div>
-
-        <small id="exportHint" class="text-danger ms-3" style="display:none;">Ingrese fecha de emisión para exportar</small>
       </div>
     </div>
   </div>
 
-  <div class="card shadow-sm border-0">
-    <div class="card-body p-3">
-      <div class="table-responsive horizontal-scroll">
-        <table id="planillaTable" class="table table-hover table-sm align-middle mb-0" style="min-width:1600px">
-          <colgroup>
-            <col style="width:3%">
-            <col style="width:30%">
-            <col style="width:9%">
-            <col style="width:7%">
-            <col style="width:6%">
-            <col style="width:8%">
-            <col style="width:6%">
-            <col style="width:8%">
-            <col style="width:8%">
-            <col style="width:8%">
-            <col style="width:8%">
-            <col style="width:8%">
-            <col style="width:8%">
-            <col style="width:8%">
-            <col style="width:12%">
-          </colgroup>
+  {# rol disponible desde session; normalizado en minúsculas #}
+  {% set rol = session.get('rol', '')|string|lower %}
 
-          <thead class="table-header-custom text-white">
+  <div class="card shadow-sm border-0 bg-white">
+    <div class="card-body p-3">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="btn-group">
+          <button id="btnAgregar" class="btn btn-success btn-sm" data-action="agregar">Agregar</button>
+
+          {# siempre visibles; JS decide si la acción procede según rol #}
+          <button id="btnEditar" class="btn btn-primary btn-sm" data-action="editar" data-role-required="editor">Editar</button>
+          <button id="btnGuardar" class="btn btn-success btn-sm" data-action="guardar" data-role-required="editor">Guardar</button>
+
+          <button id="btnCancelar" class="btn btn-secondary btn-sm" data-action="cancelar">Cancelar</button>
+
+          {# Mostrar Eliminar por servidor cuando rol == admin para accesibilidad progresiva #}
+          {% if rol == 'admin' %}
+            <button id="btnEliminar" class="btn btn-danger btn-sm" data-action="eliminar" data-role-required="admin">Eliminar</button>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table id="tablaEmpleados" class="table table-sm table-hover table-bordered w-100 mb-0">
+          <thead class="small" style="background-color:#000000; color:#ffffff;">
             <tr>
-              <th>No.</th>
-              <th>Apellido(s), Nombre(s)</th>
-              <th>Sueldo Base</th>
-              <th>Bonificación</th>
-              <th>Días Laborados</th>
-              <th>Comisiones</th>
-              <th>Horas extra</th>
-              <th>Horas Extras (monto)</th>
-              <th>Total Devengado</th>
-              <th>Calculo del IGSS</th>
-              <th>Calculo del ISR</th>
-              <th>Otras deducciones</th>
-              <th>Total Deducciones</th>
-              <th>Líquido a recibir</th>
-              <th>Medio de pago (Banco) / Firma</th>
-              <th>Observaciones</th>
+              <th>DPI</th><th>Nombre</th><th>Apellidos</th><th>Apellidos de casada</th><th>Estado Civil</th>
+              <th>Nacionalidad</th><th>Departamento</th><th>Fecha de nacimiento</th><th>Lugar de nacimiento</th>
+              <th>Numero IGSS</th><th>Dirección</th><th>Telefono</th><th>Religión</th><th>Correo</th><th>Puesto</th>
+              <th>Tipo de contrato</th><th>Jornada laboral</th><th>Duración del trabajo</th><th>Fecha de inicio laboral</th><th>Dias Laborales</th>
             </tr>
           </thead>
-
-
-          <tbody>
-          
+          <tbody class="small">
+            {% if empleados %}
+              {% for e in empleados %}
+              <tr>
+                <td>{{ e['Numero de DPI'] }}</td>
+                <td>{{ e.get('Nombre') }}</td>
+                <td>{{ e.get('Apellidos') }}</td>
+                <td>{{ e.get('Apellidos de casada') }}</td>
+                <td>{{ e.get('Estado Civil') }}</td>
+                <td>{{ e.get('Nacionalidad') }}</td>
+                <td>{{ e.get('Departamento') }}</td>
+                <td>{{ e.get('Fecha de nacimiento') }}</td>
+                <td>{{ e.get('Lugar de nacimiento') }}</td>
+                <td>{{ e.get('Numero de Afiliación del IGGS') }}</td>
+                <td>{{ e.get('Dirección del Domicilio') }}</td>
+                <td>{{ e.get('Numero de Telefono') }}</td>
+                <td>{{ e.get('Religión') }}</td>
+                <td>{{ e.get('Correo Electronico') }}</td>
+                <td>{{ e.get('Puesto de trabajo') }}</td>
+                <td>{{ e.get('Tipo de contrato') }}</td>
+                <td>{{ e.get('Jornada laboral') }}</td>
+                <td>{{ e.get('Duración del trabajo') }}</td>
+                <td>{{ e.get('Fecha de inicio laboral') }}</td>
+                <td>{{ e.get('Dias Laborales') }}</td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="20" class="text-center text-muted">No hay empleados. Usa "Agregar" para crear la primera fila.</td>
+              </tr>
+            {% endif %}
           </tbody>
-
-          <tfoot>
-            <tr class="table-header-custom" style="font-weight:700">
-              <td></td>
-              <td class="text-end">TOTALES</td>
-              <td id="total-sueldo" class="text-end">Q 0.00</td>
-              <td id="total-bono" class="text-end">Q 0.00</td>
-              <td id="total-dias" class="text-end"></td>
-              <td id="total-comisiones" class="text-end">Q 0.00</td>
-              <td id="total-horas" class="text-end">0</td>
-              <td id="total-hextras" class="text-end">Q 0.00</td>
-              <td id="total-devengado" class="text-end">Q 0.00</td>
-              <td id="total-igss" class="text-end">Q 0.00</td>
-              <td id="total-isr" class="text-end">Q 0.00</td>
-              <td id="total-otras" class="text-end">Q 0.00</td>
-              <td id="total-deducciones" class="text-end">Q 0.00</td>
-              <td id="total-liquido" class="text-end">Q 0.00</td>
-              <td></td>
-              <td></td>
-            </tr>
-          </tfoot>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel de foto -->
+  <div class="mt-4 d-flex justify-content-center">
+    <div class="w-100" style="max-width:320px;">
+      <div class="card shadow-sm border-0">
+        <div class="card-body d-flex flex-column align-items-center">
+          <h5 class="mb-3">Foto del empleado</h5>
+
+          <div class="mb-3 d-flex justify-content-center w-100">
+            <img id="fotoEmpleado"
+                 src="{{ url_for('static', filename='imagenes/default.jpg') }}"
+                 alt="Foto empleado"
+                 class="rounded"
+                 style="width:220px;height:220px;object-fit:cover;border:1px solid #ddd;background:#f5f5f5;">
+          </div>
+
+          <form id="formSubirFoto" method="post" enctype="multipart/form-data" action="{{ url_for('subir_foto') }}" class="w-100" style="max-width:260px; display:none;">
+            <input type="hidden" name="dpi" id="inputDpiForUpload" value="">
+            <div class="form-group mb-2">
+              <input id="fileFoto" name="foto" type="file" accept="image/*" class="form-control form-control-sm">
+            </div>
+            <button id="btnSubirFoto" type="button" class="btn btn-primary btn-sm w-100" data-action="subir">Subir foto</button>
+          </form>
+
+          <form id="formEliminarFoto" method="post" action="{{ url_for('eliminar_foto') }}" class="w-100" style="max-width:260px; display:none; margin-top:12px;">
+            <input type="hidden" name="dpi" id="inputDpiForDelete" value="">
+            {# botón siempre visible pero solo realiza acción si rol == admin #}
+            <button id="btnEliminarFoto" type="button" class="btn btn-outline-danger btn-sm w-100" data-action="eliminar" data-role-required="admin">Eliminar foto</button>
+          </form>
+
+          <small id="fotoHint" class="text-muted mt-3 text-center">
+            Selecciona una fila de la tabla para gestionar la foto del empleado.
+          </small>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- SheetJS -->
-<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-
 <script>
-/* ------------------ Fiscal constants and helpers (unchanged) ------------------ */
-const IGSS_RATE = 0.0483;
-const GASTOS_PERSONALES_ANUAL = 48000;
-const ISR_ANNUAL_RATE = 0.05;
-const ISR_MIN_SALARIO = 4000.00;
-
-const STORAGE_KEY = 'empaquetex_planilla_noviembre_v1';
-const SERVER_SYNC_KEY = STORAGE_KEY + '_server_meta';
-
-function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
-function formatNum(n){ return Number(n).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); }
-function withQ(n){ return 'Q ' + formatNum(n); }
-
-function computeHorasMontoMensual(sueldo, dias, horas) {
-  if (!dias || dias <= 0) return 0;
-  const valorHora = sueldo / dias / 8;
-  const monto = valorHora * 1.5 * horas;
-  return round2(monto);
-}
-
-function computeISRMonthlyFromRow(sueldo, bono, comisiones, hextrasMensual) {
-  if ((sueldo * 2) < ISR_MIN_SALARIO) return 0;
-  const sueldoBaseAnual = (sueldo * 2) * 12;
-  const bonoIncentivoAnual = (bono * 2) * 12;
-  const hextrasAnual = hextrasMensual * 12;
-  const comisionesAnual = comisiones * 12;
-  const sumaGananciasAnual = round2(sueldoBaseAnual + bonoIncentivoAnual + hextrasAnual + comisionesAnual);
-  const igssLaboralAnual = round2(sumaGananciasAnual * IGSS_RATE);
-  const baseCalculo = round2(sumaGananciasAnual - (GASTOS_PERSONALES_ANUAL + igssLaboralAnual));
-  if (baseCalculo <= 0) return 0;
-  const isrAnual = round2(baseCalculo * ISR_ANNUAL_RATE);
-  const isrMensual = round2(isrAnual / 12);
-  return isrMensual;
-}
-
-/* ------------------ Row calculations (unchanged) ------------------ */
-function recalcRow(tr) {
-  if (!tr) return;
-  const sueldo = parseFloat(tr.querySelector('input.sueldo')?.value) || 0;
-  const bono = parseFloat(tr.querySelector('input.bono')?.value) || 0;
-  const comisiones = parseFloat(tr.querySelector('input.comisiones')?.value) || 0;
-  const dias = parseInt(tr.querySelector('input.dias')?.value) || 0;
-  const horas = parseInt(tr.querySelector('input.horas')?.value) || 0;
-  const otras = parseFloat(tr.querySelector('input.otras')?.value) || 0;
-
-  const hextrasMonto = computeHorasMontoMensual(sueldo, dias, horas);
-  const totalDevengado = round2(sueldo + bono + comisiones + hextrasMonto);
-  const igss = round2(sueldo * IGSS_RATE);
-
-  const isrMensual = computeISRMonthlyFromRow(sueldo, bono, comisiones, hextrasMonto);
-
-  const totalDeducciones = round2(igss + isrMensual + otras);
-  const liquido = round2(totalDevengado - totalDeducciones);
-
-  const hextrasCell = tr.querySelector('.hextras'); if (hextrasCell) hextrasCell.textContent = withQ(hextrasMonto);
-  const devCell = tr.querySelector('.total-devengado'); if (devCell) devCell.textContent = withQ(totalDevengado);
-  const igssCell = tr.querySelector('.igss'); if (igssCell) igssCell.textContent = withQ(igss);
-
-  const isrCell = tr.querySelector('.isr-cell');
-  if (isrCell) {
-    if (isrMensual > 0) isrCell.textContent = withQ(isrMensual);
-    else isrCell.textContent = '';
-  }
-
-  tr.dataset._isrValue = isrMensual;
-  tr.dataset._hextras = hextrasMonto;
-
-  const totDedCell = tr.querySelector('.total-deducciones'); if (totDedCell) totDedCell.textContent = withQ(totalDeducciones);
-  const liquiCell = tr.querySelector('.liquido'); if (liquiCell) liquiCell.textContent = withQ(liquido);
-}
-
-function recalcTotals() {
-  const rows = document.querySelectorAll('#planillaTable tbody tr');
-  let totals = {sueldo:0, bono:0, comisiones:0, horas:0, hextras:0, devengado:0, igss:0, isr:0, otras:0, deducciones:0, liquido:0};
-  rows.forEach(tr => {
-    const sueldo = parseFloat(tr.querySelector('input.sueldo')?.value) || 0;
-    const bono = parseFloat(tr.querySelector('input.bono')?.value) || 0;
-    const comisiones = parseFloat(tr.querySelector('input.comisiones')?.value) || 0;
-    const horas = parseInt(tr.querySelector('input.horas')?.value) || 0;
-    const otras = parseFloat(tr.querySelector('input.otras')?.value) || 0;
-
-    const dias = parseInt(tr.querySelector('input.dias')?.value) || 0;
-    const hextrasMonto = parseFloat(tr.dataset._hextras) || computeHorasMontoMensual(sueldo, dias, horas);
-    const totalDevengado = round2(sueldo + bono + comisiones + hextrasMonto);
-    const igss = round2(sueldo * IGSS_RATE);
-    const isrMensual = parseFloat(tr.dataset._isrValue) || 0;
-    const totalDeducciones = round2(igss + isrMensual + otras);
-    const liquido = round2(totalDevengado - totalDeducciones);
-
-    totals.sueldo += sueldo;
-    totals.bono += bono;
-    totals.comisiones += comisiones;
-    totals.horas += horas;
-    totals.hextras += hextrasMonto;
-    totals.devengado += totalDevengado;
-    totals.igss += igss;
-    totals.isr += isrMensual;
-    totals.otras += otras;
-    totals.deducciones += totalDeducciones;
-    totals.liquido += liquido;
-  });
-
-  if (document.getElementById('total-sueldo')) document.getElementById('total-sueldo').textContent = withQ(totals.sueldo);
-  if (document.getElementById('total-bono')) document.getElementById('total-bono').textContent = withQ(totals.bono);
-  if (document.getElementById('total-dias')) document.getElementById('total-dias').textContent = '';
-  if (document.getElementById('total-comisiones')) document.getElementById('total-comisiones').textContent = withQ(totals.comisiones);
-  if (document.getElementById('total-horas')) document.getElementById('total-horas').textContent = totals.horas.toString();
-  if (document.getElementById('total-hextras')) document.getElementById('total-hextras').textContent = withQ(totals.hextras);
-  if (document.getElementById('total-devengado')) document.getElementById('total-devengado').textContent = withQ(totals.devengado);
-  if (document.getElementById('total-igss')) document.getElementById('total-igss').textContent = withQ(totals.igss);
-  if (document.getElementById('total-isr')) document.getElementById('total-isr').textContent = withQ(totals.isr);
-  if (document.getElementById('total-otras')) document.getElementById('total-otras').textContent = withQ(totals.otras);
-  if (document.getElementById('total-deducciones')) document.getElementById('total-deducciones').textContent = withQ(totals.deducciones);
-  if (document.getElementById('total-liquido')) document.getElementById('total-liquido').textContent = withQ(totals.liquido);
-}
-
-/* ------------------ Serialization (unchanged) ------------------ */
-function serializeTable() {
-  const rows = [];
-  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
-    const nombre = (tr.querySelector('input.nombre')?.value ?? tr.cells[1].textContent ?? '').trim();
-    const sueldo = parseFloat(tr.querySelector('input.sueldo')?.value ?? 0) || 0;
-    const bono = parseFloat(tr.querySelector('input.bono')?.value ?? 0) || 0;
-    const dias = parseInt(tr.querySelector('input.dias')?.value ?? 0) || 0;
-    const comisiones = parseFloat(tr.querySelector('input.comisiones')?.value ?? 0) || 0;
-    const horas = parseInt(tr.querySelector('input.horas')?.value ?? 0) || 0;
-    const otras = parseFloat(tr.querySelector('input.otras')?.value ?? 0) || 0;
-    const medioPago = tr.querySelector('input.medio-pago')?.value ?? '';
-    const observ = tr.querySelector('input.observaciones')?.value ?? '';
-    const hextras = parseFloat(tr.dataset._hextras) || 0;
-    const isr = parseFloat(tr.dataset._isrValue) || 0;
-    const dpi = tr.dataset.dpi || '';
-    rows.push({ nombre, sueldo, bono, dias, comisiones, horas, otras, medioPago, observ, hextras, isr, dpi });
-  });
-  const meta = { saved_at: new Date().toISOString(), planillaName: document.getElementById('planillaName')?.value ?? '', emisionDate: document.getElementById('emisionDate')?.value ?? '' };
-  return { rows, meta };
-}
-
-function restoreTable(data) {
-  if (!data || !Array.isArray(data.rows)) return;
-  const tbody = document.querySelector('#planillaTable tbody');
-  if (!tbody) return;
-  tbody.innerHTML = '';
-  data.rows.forEach((r, i) => {
-    const idx = i + 1;
-    const tr = document.createElement('tr');
-    tr.dataset.row = idx;
-    if (r.dpi) tr.dataset.dpi = r.dpi;
-    tr.innerHTML = `
-      <td>${idx}</td>
-      <td class="align-middle"><input class="form-control form-control-sm nombre" type="text" value="${escapeHtml(r.nombre || '')}"></td>
-      <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell sueldo" type="number" step="0.01" value="${Number(r.sueldo||0).toFixed(2)}"></div></td>
-      <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control bono" type="number" step="0.01" value="${Number(r.bono||125).toFixed(2)}" readonly></div></td>
-      <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="${Number(r.dias||15)}"></td>
-      <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="${Number(r.comisiones||0).toFixed(2)}"></div></td>
-      <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="${Number(r.horas||0)}"></td>
-      <td class="text-end hextras">Q ${Number(r.hextras||0).toFixed(2)}</td>
-      <td class="text-end total-devengado">Q 0.00</td>
-      <td class="text-end igss">Q 0.00</td>
-      <td class="text-end isr-cell">${r.isr && r.isr>0 ? 'Q ' + Number(r.isr).toFixed(2) : ''}</td>
-      <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="${Number(r.otras||0).toFixed(2)}"></div></td>
-      <td class="text-end total-deducciones">Q 0.00</td>
-      <td class="text-end liquido">Q 0.00</td>
-      <td><input class="form-control medio-pago" type="text" value="${escapeHtml(r.medioPago||'')}"></td>
-      <td><input class="form-control observaciones" type="text" value="${escapeHtml(r.observ||'')}"></td>
-    `;
-    tr.dataset._hextras = Number(r.hextras||0);
-    tr.dataset._isrValue = Number(r.isr||0);
-    tbody.appendChild(tr);
-  });
-  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
-  recalcTotals();
-}
-
-/* ------------------ Utilities and UI handlers (unchanged behavior) ------------------ */
-function escapeHtml(str) {
-  return String(str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-document.addEventListener('input', (e) => {
-  if (!e.target.classList) return;
-  if (e.target.classList.contains('num-cell') || e.target.classList.contains('nombre') || e.target.classList.contains('medio-pago') || e.target.classList.contains('observaciones')) {
-    const tr = e.target.closest('tr');
-    if (tr) recalcRow(tr);
-    recalcTotals();
-    // note: autosave removed; saving only via explicit server/local actions (Guardar removed per request)
-  }
-});
-
-function initBonosYDias() {
-  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
-    const bonoInp = tr.querySelector('input.bono');
-    if (bonoInp) {
-      bonoInp.value = 125.00;
-      bonoInp.setAttribute('readonly', 'readonly');
-      bonoInp.classList.remove('num-cell');
-    }
-    const diasInp = tr.querySelector('input.dias');
-    if (diasInp) {
-      const val = parseInt(diasInp.value);
-      if (!isFinite(val) || val <= 0) diasInp.value = 15;
-    }
-    recalcRow(tr);
-  });
-  recalcTotals();
-}
-
-function createRowHtml(index) {
-  return `
-    <td>${index}</td>
-    <td class="align-middle"><input class="form-control form-control-sm nombre" type="text" value=""></td>
-    <td>
-      <div class="money-inline">
-        <span class="money-prefix">Q</span>
-        <input class="form-control num-cell sueldo" type="number" step="0.01" value="0.00">
-      </div>
-    </td>
-    <td>
-      <div class="money-inline">
-        <span class="money-prefix">Q</span>
-        <input class="form-control bono" type="number" step="0.01" value="125.00" readonly>
-      </div>
-    </td>
-    <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="15"></td>
-    <td>
-      <div class="money-inline">
-        <span class="money-prefix">Q</span>
-        <input class="form-control num-cell comisiones" type="number" step="0.01" value="0.00">
-      </div>
-    </td>
-    <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
-    <td class="text-end hextras">Q 0.00</td>
-    <td class="text-end total-devengado">Q 0.00</td>
-    <td class="text-end igss">Q 0.00</td>
-    <td class="text-end isr-cell"></td>
-    <td>
-      <div class="money-inline">
-        <span class="money-prefix">Q</span>
-        <input class="form-control num-cell otras" type="number" step="0.01" value="0.00">
-      </div>
-    </td>
-    <td class="text-end total-deducciones">Q 0.00</td>
-    <td class="text-end liquido">Q 0.00</td>
-    <td><input class="form-control medio-pago" type="text" value=""></td>
-    <td><input class="form-control observaciones" type="text" value=""></td>
-  `;
-}
-
-document.addEventListener('blur', (e) => {
-  if (!e.target.classList) return;
-  if (e.target.classList.contains('nombre')) {
-    const val = (e.target.value || '').trim();
-    if (val !== '') {
-      e.target.setAttribute('readonly', 'readonly');
-    }
-  }
-}, true);
-
-function enforceFixedFieldsOnAllRows() {
-  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
-    const bonoInp = tr.querySelector('input.bono');
-    if (bonoInp) {
-      bonoInp.value = 125.00;
-      bonoInp.setAttribute('readonly', 'readonly');
-    }
-    const diasInp = tr.querySelector('input.dias');
-    if (diasInp) diasInp.value = 15;
-  });
-}
-
-/* Row add/delete handlers with accidental-deletion protection
-   NOTE: Add row button was removed; delete remains for last row with confirmation where needed.
+/*
+  Cambios solicitados:
+  - El rol editor puede usar Agregar, Editar, Guardar y Cancelar
+  - Solo admin puede eliminar (fotos y empleados)
+  - Mantener botones visibles; JS valida permisos y muestra mensajes
+  - Archivo listo para reemplazar
 */
-document.getElementById('deleteRow').addEventListener('click', async () => {
-  const tbody = document.querySelector('#planillaTable tbody');
-  const rows = Array.from(tbody.querySelectorAll('tr'));
-  if (rows.length === 0) return;
 
-  const last = rows[rows.length - 1];
+(function(){
+  // rol inyectado desde servidor (session['rol'])
+  const CURRENT_ROLE = ("{{ rol or '' }}").toLowerCase();
 
-  // If the row was imported from server (has data-dpi) or name is readonly, require admin + confirmation
-  const isServerRow = !!last.dataset.dpi;
-  const nameInput = last.querySelector('input.nombre');
-  const nameReadonly = nameInput && nameInput.hasAttribute('readonly');
+  // helper de notificación pequeña
+  function flash(msg, type='info') {
+    const id = '__home_flash';
+    const prev = document.getElementById(id);
+    if (prev) prev.remove();
+    const d = document.createElement('div');
+    d.id = id;
+    d.className = `alert alert-${type} py-1 px-2 small position-fixed`;
+    d.style.top = '12px';
+    d.style.right = '12px';
+    d.style.zIndex = 9999;
+    d.innerText = msg;
+    document.body.appendChild(d);
+    setTimeout(()=> d.remove(), 2200);
+  }
 
-  if (isServerRow || nameReadonly) {
+  // minimal fetch guard (client-side defense)
+  (function installFetchGuard(){
+    const orig = window.fetch;
+    window.fetch = async function(input, init){
+      try {
+        const url = (typeof input === 'string') ? input : (input && input.url) || '';
+        const method = (init && init.method) ? init.method.toUpperCase() : 'GET';
+
+        let bodyObj = null;
+        if (init && init.body) {
+          if (typeof init.body === 'string') {
+            try { bodyObj = JSON.parse(init.body); } catch(e){}
+          } else if (init.body instanceof FormData) {
+            bodyObj = {};
+            for (const [k,v] of init.body.entries()) bodyObj[k]=v;
+          } else if (init.body instanceof URLSearchParams) {
+            bodyObj = {};
+            for (const [k,v] of init.body.entries()) bodyObj[k]=v;
+          }
+        }
+
+        // Permitir editar/guardar a admin y editor (cliente)
+        if (url.includes('/guardar_empleado')) {
+          if (!['admin','editor'].includes(CURRENT_ROLE)) {
+            const isNew = Boolean(bodyObj && (bodyObj.nuevo === true || bodyObj.nuevo === 'true' || bodyObj.nuevo === '1' || bodyObj.nuevo === 1));
+            if (!isNew) {
+              flash('Permisos insuficientes para editar registros', 'warning');
+              return new Response(JSON.stringify({ mensaje: 'Permisos insuficientes (cliente)' }), { status: 403, headers: { 'Content-Type': 'application/json' }});
+            }
+          }
+        }
+
+        if (url.includes('/eliminar_foto')) {
+          if (CURRENT_ROLE !== 'admin') {
+            flash('Permisos insuficientes para eliminar foto', 'warning');
+            return new Response(JSON.stringify({ error: 'Permisos insuficientes (cliente)' }), { status: 403, headers: { 'Content-Type': 'application/json' }});
+          }
+        }
+
+        if (method === 'PUT' && url.match(/\/api\/empleado\/[^\/]+$/)) {
+          if (CURRENT_ROLE !== 'admin') {
+            flash('Permisos insuficientes para modificar empleado (cliente)', 'warning');
+            return new Response(JSON.stringify({ mensaje: 'Permisos insuficientes (cliente)' }), { status: 403, headers: { 'Content-Type': 'application/json' }});
+          }
+        }
+      } catch (e) {
+        // ignore errors in the guard
+      }
+      return orig.apply(this, arguments);
+    };
+  })();
+
+
+  // UI button behaviors
+  document.getElementById('btnAgregar')?.addEventListener('click', (ev) => {
+    flash('Agregar: abre formulario (UX)', 'info');
+    if (typeof window.iniciarAgregar === 'function') window.iniciarAgregar();
+  });
+
+  document.getElementById('btnEditar')?.addEventListener('click', (ev) => {
+    if (!['admin','editor'].includes(CURRENT_ROLE)) {
+      flash('Permisos insuficientes para editar registros', 'warning');
+      return;
+    }
+    if (typeof window.iniciarEdicion === 'function') window.iniciarEdicion();
+    else flash('Editar: acción iniciada', 'info');
+  });
+
+  document.getElementById('btnGuardar')?.addEventListener('click', async (ev) => {
+    if (!['admin','editor'].includes(CURRENT_ROLE)) {
+      flash('Permisos insuficientes para guardar cambios', 'warning');
+      return;
+    }
+    if (typeof window.guardarCambios === 'function') {
+      try { await window.guardarCambios(); } catch (e) { flash('Error al guardar', 'danger'); }
+    } else {
+      flash('Guardar: acción ejecutada (implementa window.guardarCambios)', 'info');
+    }
+  });
+
+  document.getElementById('btnCancelar')?.addEventListener('click', (ev) => {
+    if (typeof window.cancelarEdicion === 'function') window.cancelarEdicion();
+    else flash('Cancelar: acción ejecutada', 'info');
+  });
+
+  // Photo / selection variables
+  const TABLE_ID = 'tablaEmpleados';
+  const tabla = document.getElementById(TABLE_ID);
+  const fotoEmpleado = document.getElementById('fotoEmpleado');
+  const formSubir = document.getElementById('formSubirFoto');
+  const formEliminar = document.getElementById('formEliminarFoto');
+  const inputDpiUpload = document.getElementById('inputDpiForUpload');
+  const inputDpiDelete = document.getElementById('inputDpiForDelete');
+  const fileFoto = document.getElementById('fileFoto');
+
+  function clearPhotoPanel() {
+    if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
+    if (formSubir) formSubir.style.display = 'none';
+    if (formEliminar) formEliminar.style.display = 'none';
+    if (fileFoto) fileFoto.value = '';
+    if (inputDpiUpload) inputDpiUpload.value = '';
+    if (inputDpiDelete) inputDpiDelete.value = '';
+  }
+
+  // Delete button logic (kept as function to reuse in dblclick)
+  async function eliminarFilaSeleccionada(tr) {
+    if (!tr) {
+      flash('Debes seleccionar una fila antes de eliminar', 'warning');
+      return;
+    }
+    const dpi = (tr.cells[0] && tr.cells[0].innerText || '').trim();
+    if (!dpi) { flash('No se pudo obtener el DPI de la fila seleccionada', 'danger'); return; }
+    if (!confirm(`¿Estás seguro de eliminar al empleado con DPI ${dpi}? Esta acción no se puede deshacer.`)) return;
     try {
-      const r = await fetch('/whoami', {cache:'no-store'});
-      if (!r.ok) throw new Error('whoami error');
-      const j = await r.json();
-      const role = (j && j.rol) ? String(j.rol).toLowerCase() : '';
-      if (role !== 'admin') {
-        alert('Permisos insuficientes para eliminar filas importadas. Solo administradores pueden eliminarlas.');
-        return;
+      const res = await fetch('/eliminar_empleado', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dpi })
+      });
+      const j = await res.json().catch(()=>({}));
+      if (res.ok) {
+        flash(j.mensaje || 'Empleado eliminado', 'success');
+        tr.remove();
+        if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
+      } else {
+        flash(j.mensaje || j.error || 'Error al eliminar', 'danger');
+      }
+    } catch (err) {
+      flash('Error al eliminar: ' + (err.message || err), 'danger');
+    }
+  }
+
+  // Hook delete button to same logic (requires selected row)
+  const btnEliminar = document.getElementById('btnEliminar');
+  if (btnEliminar) {
+    btnEliminar.addEventListener('click', async () => {
+      if (CURRENT_ROLE !== 'admin') { flash('Permisos insuficientes para eliminar empleados', 'warning'); return; }
+      const tr = tabla.querySelector('tbody tr.selected') || tabla.querySelector('tbody tr'); // fallback to first
+      await eliminarFilaSeleccionada(tr);
+    });
+  }
+
+  // Ensure row selection adds .selected
+  function clearSelection() {
+    tabla.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
+  }
+
+  // Single click select logic and photo request
+  tabla?.addEventListener('click', async (ev) => {
+    const tr = ev.target.closest('tr');
+    if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+    clearSelection();
+    tr.classList.add('selected');
+
+    const dpi = (tr.cells[0] && tr.cells[0].innerText || '').trim();
+    if (!dpi) { clearPhotoPanel(); return; }
+    if (inputDpiUpload) inputDpiUpload.value = dpi;
+    if (inputDpiDelete) inputDpiDelete.value = dpi;
+
+    try {
+      const res = await fetch(`/api/foto/${encodeURIComponent(dpi)}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error('no-photo');
+      const j = await res.json();
+      if (j && j.url) {
+        if (fotoEmpleado) fotoEmpleado.src = `${j.url}?t=${Date.now()}`;
+        if (formSubir) formSubir.style.display = 'none';
+        if (formEliminar) formEliminar.style.display = 'block';
+      } else {
+        if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
+        if (formSubir) formSubir.style.display = 'block';
+        if (formEliminar) formEliminar.style.display = 'none';
       }
     } catch (e) {
-      console.warn('whoami error', e);
-      alert('No se pudo verificar permisos. Operación cancelada.');
+      if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
+      if (formSubir) formSubir.style.display = 'block';
+      if (formEliminar) formEliminar.style.display = 'none';
+    }
+  });
+
+  // Double-click behavior:
+  // - dblclick WITHOUT Shift: actúa como "Editar" (admin or editor)
+  // - dblclick WITH Shift: actúa como "Eliminar" (only admin)
+  tabla?.addEventListener('dblclick', async (ev) => {
+    const tr = ev.target.closest('tr');
+    if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+
+    // ensure selection reflects the dblclicked row
+    clearSelection();
+    tr.classList.add('selected');
+
+    if (ev.shiftKey) {
+      // Shift + double click -> eliminar (admin only)
+      if (CURRENT_ROLE !== 'admin') {
+        flash('Permisos insuficientes para eliminar empleados', 'warning');
+        return;
+      }
+      await eliminarFilaSeleccionada(tr);
+    } else {
+      // double click -> editar (admin or editor)
+      if (!['admin','editor'].includes(CURRENT_ROLE)) {
+        flash('Permisos insuficientes para editar registros', 'warning');
+        return;
+      }
+      if (typeof window.iniciarEdicion === 'function') {
+        try { window.iniciarEdicion(tr); } catch (e) { if (typeof window.iniciarEdicion === 'function') window.iniciarEdicion(); }
+      } else {
+        flash('Editar: acción iniciada', 'info');
+      }
+    }
+  });
+
+  // subir foto (permitido para ambos roles)
+  document.getElementById('btnSubirFoto')?.addEventListener('click', async () => {
+    const dpi = inputDpiUpload && inputDpiUpload.value && inputDpiUpload.value.trim();
+    if (!dpi) return flash('Selecciona una fila con DPI antes de subir foto', 'danger');
+    if (!fileFoto || !fileFoto.files || !fileFoto.files[0]) return flash('Selecciona un archivo de imagen', 'danger');
+
+    const fd = new FormData();
+    fd.append('dpi', dpi);
+    fd.append('foto', fileFoto.files[0]);
+
+    try {
+      const res = await fetch(formSubir.action || '/subir_foto', { method: 'POST', body: fd });
+      if (!res.ok) {
+        const t = await res.text().catch(()=>null);
+        throw new Error(`${res.status} ${t||res.statusText}`);
+      }
+      const j = await res.json();
+      if (j && j.url) {
+        if (fotoEmpleado) fotoEmpleado.src = `${j.url}?t=${Date.now()}`;
+        if (formSubir) formSubir.style.display = 'none';
+        if (formEliminar) formEliminar.style.display = 'block';
+        flash('Foto subida', 'success');
+      } else throw new Error('Respuesta inesperada');
+    } catch (err) {
+      flash('Error al subir foto: ' + (err.message||err), 'danger');
+    }
+  });
+
+  // eliminar foto (SOLO admin puede proceder; cliente bloquea y muestra mensaje)
+  document.getElementById('btnEliminarFoto')?.addEventListener('click', async () => {
+    const dpi = inputDpiDelete && inputDpiDelete.value && inputDpiDelete.value.trim();
+    if (!dpi) return flash('No hay DPI seleccionado', 'danger');
+
+    if (CURRENT_ROLE !== 'admin') {
+      flash('Permisos insuficientes para eliminar foto', 'warning');
       return;
     }
 
-    const dpi = last.dataset.dpi || '';
-    const confirmMsg = dpi ? `Confirma eliminar la fila importada con DPI ${dpi}?` : 'Confirma eliminar la última fila importada?';
-    if (!confirm(confirmMsg)) return;
-  } else {
-    if (!confirm('¿Eliminar la última fila añadida?')) return;
-  }
-
-  tbody.removeChild(last);
-  recalcTotals();
-  // no autosave to server/local because "Guardar" removed per request
-});
-
-/* Export to Excel (unchanged) */
-document.getElementById('exportExcel').addEventListener('click', () => {
-  const dateInput = document.getElementById('emisionDate').value;
-  const planillaName = document.getElementById('planillaName').value.trim() || 'Planilla';
-  const exportHint = document.getElementById('exportHint');
-  if (!dateInput) {
-    if (exportHint) exportHint.style.display = 'inline';
-    return;
-  }
-  if (exportHint) exportHint.style.display = 'none';
-
-  const table = document.getElementById('planillaTable');
-  const clone = table.cloneNode(true);
-  clone.querySelectorAll('input').forEach(inp => {
-    const parent = inp.parentElement || inp;
-    parent.replaceChild(document.createTextNode(inp.value), inp);
-  });
-
-  clone.querySelectorAll('td, th').forEach(cell => {
-    let txt = (cell.textContent || '').replace(/\u00A0/g, ' ').trim();
-    if (txt === '') return;
-    const removed = txt.replace(/^Q\s*/i, '').replace(/,/g, '');
-    const n = Number(removed);
-    if (removed !== '' && isFinite(n)) cell.textContent = n;
-    else cell.textContent = txt;
-  });
-
-  const ws = XLSX.utils.table_to_sheet(clone, {raw:true});
-  ws['!cols'] = [
-    { wch: 6 }, { wch: 40 }, { wch: 20 }, { wch: 14 }, { wch: 12 }, { wch: 14 },
-    { wch: 10 }, { wch: 18 }, { wch: 18 }, { wch: 16 }, { wch: 16 }, { wch: 16 },
-    { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 24 }
-  ];
-
-  const range = XLSX.utils.decode_range(ws['!ref']);
-  const headerRowIndex = range.s.r;
-  const maxCol = range.e.c;
-
-  for (let c = range.s.c; c <= maxCol; c++) {
-    const cellAddr = XLSX.utils.encode_cell({ c: c, r: headerRowIndex });
-    if (!ws[cellAddr]) continue;
-    ws[cellAddr].s = ws[cellAddr].s || {};
-    ws[cellAddr].s.fill = { patternType: "solid", fgColor: { rgb: "0EA5A4" } };
-    ws[cellAddr].s.font = { name: "Calibri", sz: 11, bold: true, color: { rgb: "FFFFFF" } };
-    ws[cellAddr].s.alignment = { vertical: "center", horizontal: "center" };
-    ws[cellAddr].s.border = {
-      top: { style: "thin", color: { rgb: "BFDCE3" } },
-      bottom: { style: "thin", color: { rgb: "BFDCE3" } },
-      left: { style: "thin", color: { rgb: "BFDCE3" } },
-      right: { style: "thin", color: { rgb: "BFDCE3" } }
-    };
-  }
-
-  let totalsRow = null;
-  for (let r = headerRowIndex + 1; r <= range.e.r; r++) {
-    const cellB = XLSX.utils.encode_cell({r, c: 1});
-    if (ws[cellB] && String(ws[cellB].v).toUpperCase().includes('TOTALES')) {
-      totalsRow = r;
-      break;
-    }
-  }
-  if (totalsRow === null) totalsRow = range.e.r;
-
-  for (let c = range.s.c; c <= maxCol; c++) {
-    const addr = XLSX.utils.encode_cell({r: totalsRow, c});
-    if (!ws[addr]) continue;
-    ws[addr].s = ws[addr].s || {};
-    ws[addr].s.fill = { patternType: "solid", fgColor: { rgb: "035E59" } };
-    ws[addr].s.font = { name: "Calibri", sz: 11, bold: true, color: { rgb: "FFFFFF" } };
-    ws[addr].s.alignment = { vertical: "center", horizontal: (c < 2 ? "left" : "right") };
-    ws[addr].s.border = {
-      top: { style: "medium", color: { rgb: "0B7285" } },
-      bottom: { style: "medium", color: { rgb: "0B7285" } },
-      left: { style: "thin", color: { rgb: "BFDCE3" } },
-      right: { style: "thin", color: { rgb: "BFDCE3" } }
-    };
-  }
-
-  for (let R = headerRowIndex; R <= range.e.r; ++R) {
-    for (let C = range.s.c; C <= maxCol; ++C) {
-      const addr = XLSX.utils.encode_cell({r:R,c:C});
-      if (!ws[addr]) continue;
-      ws[addr].s = ws[addr].s || {};
-      ws[addr].s.border = ws[addr].s.border || {
-        top: { style: "thin", color: { rgb: "E6EEF6" } },
-        bottom: { style: "thin", color: { rgb: "E6EEF6" } },
-        left: { style: "thin", color: { rgb: "E6EEF6" } },
-        right: { style: "thin", color: { rgb: "E6EEF6" } }
-      };
-    }
-  }
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Planilla");
-  wb.Workbook = wb.Workbook || {};
-  wb.Workbook.Views = wb.Workbook.Views || [{ RTL: false }];
-
-  const safeName = planillaName.replace(/[^a-z0-9_\- ]/gi,'').replace(/\s+/g,'_');
-  const filename = `${safeName}_${dateInput}.xlsx`;
-  XLSX.writeFile(wb, filename);
-});
-
-/* ------------------ Auto half-sueldo behavior (unchanged) ------------------ */
-(function(){
-  function parseNumberSafe(v){
-    if (v == null) return 0;
     try {
-      const s = String(v).replace(/\s+/g,'').replace(/,/g,'').trim();
-      const n = Number(s);
-      return isFinite(n) ? n : 0;
-    } catch {
-      return 0;
-    }
-  }
-
-  function applyHalfToSueldoInput(inp){
-    if (!inp) return;
-    const raw = inp.value;
-    const n = parseNumberSafe(raw);
-    if (n === 0) {
-      inp.value = n.toFixed(2);
-    } else {
-      const half = Math.round((n / 2 + Number.EPSILON) * 100) / 100;
-      if (inp.type === 'number') inp.value = half;
-      else inp.value = half.toFixed(2);
-    }
-    try {
-      const tr = inp.closest('tr');
-      if (typeof recalcRow === 'function' && tr) recalcRow(tr);
-      if (typeof recalcTotals === 'function') recalcTotals();
-      if (typeof saveToLocal === 'function') saveToLocal();
-    } catch (e) { console.error('Error aplicando mitad al sueldo:', e); }
-  }
-
-  document.addEventListener('paste', function(e){
-    const t = e.target;
-    if (!t || !t.classList) return;
-    if (t.classList.contains('sueldo')) {
-      setTimeout(() => applyHalfToSueldoInput(t), 20);
+      const res = await fetch(formEliminar.action || '/eliminar_foto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dpi })
+      });
+      if (!res.ok) {
+        const t = await res.text().catch(()=>null);
+        throw new Error(`${res.status} ${t||res.statusText}`);
+      }
+      if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
+      if (formSubir) formSubir.style.display = 'block';
+      if (formEliminar) formEliminar.style.display = 'none';
+      flash('Foto eliminada', 'success');
+    } catch (err) {
+      flash('Error al eliminar foto', 'danger');
     }
   });
 
-  document.addEventListener('blur', function(e){
-    const t = e.target;
-    if (!t || !t.classList) return;
-    if (t.classList.contains('sueldo')) {
-      applyHalfToSueldoInput(t);
+  // registrarTabla hook if exists
+  function tryRegister(retries = 20){
+    if (window.registrarTabla && typeof window.registrarTabla === 'function') {
+      window.registrarTabla('tablaEmpleados', 20, '/guardar_empleado', [
+        "Numero de DPI","Nombre","Apellidos","Apellidos de casada","Estado Civil",
+        "Nacionalidad","Departamento","Fecha de nacimiento","Lugar de nacimiento",
+        "Numero de Afiliación del IGGS","Dirección del Domicilio","Numero de Telefono",
+        "Religión","Correo Electronico","Puesto de trabajo","Tipo de contrato",
+        "Jornada laboral","Duración del trabajo","Fecha de inicio laboral","Dias Laborales"
+      ], []);
+      return;
     }
-  }, true);
+    if (retries <= 0) return;
+    setTimeout(()=> tryRegister(retries-1), 100);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ()=>tryRegister(20));
+  else tryRegister(20);
+
 })();
-
-/* ------------------ Initialization ------------------ */
-document.addEventListener('DOMContentLoaded', () => {
-  const restored = loadFromLocal();
-
-  initBonosYDias();
-  enforceFixedFieldsOnAllRows();
-
-  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
-  recalcTotals();
-
-  populateFromEmployeesIfEmpty();
-
-  // do not auto-save on load; explicit save button was removed per request
-});
-
-/* ------------------ LocalStorage helpers used by init/save flows ------------------ */
-function saveToLocal() {
-  try {
-    const data = serializeTable();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (e) {
-    console.error('Error saving planilla to localStorage', e);
-  }
-}
-
-function loadFromLocal() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return false;
-    const obj = JSON.parse(raw);
-    if (obj && Array.isArray(obj.rows) && obj.rows.length) {
-      restoreTable(obj);
-      if (obj.meta) {
-        if (obj.meta.planillaName) document.getElementById('planillaName').value = obj.meta.planillaName;
-        if (obj.meta.emisionDate) document.getElementById('emisionDate').value = obj.meta.emisionDate;
-      }
-      return true;
-    }
-    return false;
-  } catch (e) {
-    console.error('Error loading planilla from localStorage', e);
-    return false;
-  }
-}
-
-/* populateFromEmployeesIfEmpty implementation (keeps original behavior of filling table from server/employees) */
-async function fetchEmployeesList() {
-  try {
-    const res = await fetch('/api/empleados');
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
-  } catch (e) {
-    console.warn('Error fetching /api/empleados:', e);
-    return [];
-  }
-}
-
-function addEmployeeRowIfMissing(emp) {
-  if (!emp) return false;
-  const dpi = String(emp.dpi || '').trim();
-  const full = (emp.full_name || emp.fullName || emp.fullname || emp.Nombre || '').trim();
-  if (!dpi || !full) return false;
-
-  const tbody = document.querySelector('#planillaTable tbody');
-  if (!tbody) return false;
-
-  // If a row with same dpi exists, skip
-  const existing = tbody.querySelector(`tr[data-dpi="${dpi}"]`);
-  if (existing) return false;
-
-  // Also check names to avoid duplicate when DPI missing
-  const nameExists = Array.from(tbody.querySelectorAll('input.nombre')).some(inp => (inp.value||'').trim() === full);
-  if (nameExists) return false;
-
-  const idx = tbody.querySelectorAll('tr').length + 1;
-  const tr = document.createElement('tr');
-  tr.dataset.row = idx;
-  tr.dataset.dpi = dpi; // mark row with dpi
-  tr.innerHTML = createRowHtml(idx);
-
-  // fill name (readonly) and default sueldo 0
-  const nameInput = tr.querySelector('input.nombre');
-  if (nameInput) {
-    nameInput.value = full;
-    nameInput.setAttribute('readonly', 'readonly');
-  }
-  const sueldoInput = tr.querySelector('input.sueldo');
-  if (sueldoInput) sueldoInput.value = (0).toFixed(2);
-
-  // ensure fixed fields
-  const bonoInp = tr.querySelector('input.bono');
-  if (bonoInp) { bonoInp.value = 125.00; bonoInp.setAttribute('readonly','readonly'); }
-  const diasInp = tr.querySelector('input.dias');
-  if (diasInp) diasInp.value = 15;
-
-  tbody.appendChild(tr);
-  recalcRow(tr);
-  recalcTotals();
-  return true;
-}
-
-async function populateFromEmployeesIfEmpty() {
-  const restored = loadFromLocal();
-  if (restored) {
-    startEmployeesPolling();
-    return;
-  }
-
-  try {
-    const res = await fetch('/api/planilla', { cache: 'no-store' });
-    if (res.ok) {
-      const data = await res.json().catch(()=>null);
-      if (data && Array.isArray(data.rows) && data.rows.length) {
-        restoreTable(data);
-        if (data.meta) {
-          if (data.meta.planillaName) document.getElementById('planillaName').value = data.meta.planillaName;
-          if (data.meta.emisionDate) document.getElementById('emisionDate').value = data.meta.emisionDate;
-        }
-        saveToLocal();
-        startEmployeesPolling();
-        return;
-      }
-    }
-  } catch (e) {
-    console.warn('Error fetching /api/planilla', e);
-  }
-
-  const employees = await fetchEmployeesList();
-  if (employees && employees.length) {
-    const tbody = document.querySelector('#planillaTable tbody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    employees.forEach((emp, i) => {
-      const dpi = String(emp.dpi || '').trim();
-      const full = (emp.full_name || emp.fullName || emp.fullname || emp.Nombre || '').trim();
-      const idx = i + 1;
-      const tr = document.createElement('tr');
-      tr.dataset.row = idx;
-      if (dpi) tr.dataset.dpi = dpi;
-      tr.innerHTML = createRowHtml(idx);
-      const nameInput = tr.querySelector('input.nombre');
-      if (nameInput) {
-        nameInput.value = full;
-        nameInput.setAttribute('readonly', 'readonly');
-      }
-      const sueldoInput = tr.querySelector('input.sueldo');
-      if (sueldoInput) sueldoInput.value = (0).toFixed(2);
-      const bonoInp = tr.querySelector('input.bono');
-      if (bonoInp) { bonoInp.value = 125.00; bonoInp.setAttribute('readonly','readonly'); }
-      const diasInp = tr.querySelector('input.dias');
-      if (diasInp) diasInp.value = 15;
-      tbody.appendChild(tr);
-    });
-    document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
-    recalcTotals();
-    saveToLocalAndServer();
-  }
-  startEmployeesPolling();
-}
-
-/* saveToLocalAndServer used here to seed server when new table created */
-async function saveToServerOnce(payload) {
-  return fetch('/guardar_planilla', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  }).then(res => {
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    return res.json().catch(()=>({}));
-  });
-}
-
-async function saveToLocalAndServer() {
-  try { saveToLocal(); } catch (e) { console.error('local save error', e); }
-
-  const payload = serializeTable();
-  payload.meta = payload.meta || {};
-  payload.meta.client_saved_at = new Date().toISOString();
-  try {
-    await saveToServerOnce(payload);
-    localStorage.setItem(STORAGE_KEY + '_last_sync', new Date().toISOString());
-  } catch (err) {
-    console.warn('first server save failed, retrying once', err);
-    setTimeout(async () => {
-      try {
-        await saveToServerOnce(payload);
-        localStorage.setItem(STORAGE_KEY + '_last_sync', new Date().toISOString());
-      } catch (e) {
-        console.warn('server save retry failed', e);
-      }
-    }, 1800);
-  }
-}
 </script>
-
-<style>
-  :root{
-    --bg-grad-start: #f3f6ff;
-    --bg-grad-end: #fafbff;
-    --muted: #6c757d;
-    --accent1: #0ea5a4;
-    --accent2: #0b7285;
-    --panel: #f8f9fa;
-    --planilla-cell-vertical-padding: 1.6rem;
-    --planilla-cell-horizontal-padding: 1.5rem;
-    --planilla-input-min-height: 60px;
-    --planilla-input-font-size: 1.03rem;
-    --planilla-money-min-width: 260px;
-    --planilla-name-col-min-width: 360px;
-  }
-
-  body { background: linear-gradient(180deg,var(--bg-grad-start) 0%, var(--bg-grad-end) 100%); }
-  .card { border-radius: .6rem; }
-  .card .card-body { padding: 1rem 1.1rem; }
-  h3 { font-weight:600; color:var(--accent2); }
-
-  .form-control { border-radius:.45rem; font-size: var(--planilla-input-font-size); }
-
-  .btn-primary { background: linear-gradient(90deg,var(--accent1),var(--accent2)); border: none; box-shadow: 0 6px 20px rgba(11,114,133,0.08); }
-  .btn-outline-secondary { border-radius:.45rem; }
-  .btn-outline-danger { border-radius:.45rem; }
-  .table-header-custom { background: linear-gradient(90deg,#0ea5a4,#036b6a); }
-  .table-header-custom th { color:#fff; border:0; font-weight:700; padding:.9rem 1rem; }
-
-  .controls .me-4 { margin-right: 1.4rem; }
-
-  table.table { border-collapse: separate; border-spacing:0; border-radius:.6rem; overflow:hidden; box-shadow: 0 1px 2px rgba(15,23,42,0.04); width:100%; }
-  table.table td, table.table th {
-    vertical-align: middle;
-    padding: var(--planilla-cell-vertical-padding) var(--planilla-cell-horizontal-padding);
-  }
-
-  .horizontal-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-  .text-end { text-align:right; }
-  .fw-bold { font-weight:700; }
-
-  .money-inline {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    white-space: nowrap;
-    flex-wrap: nowrap;
-    vertical-align: middle;
-  }
-  .money-prefix {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 auto;
-    margin-right: 0;
-    min-width: 46px;
-    height: var(--planilla-input-min-height);
-    padding: 0 .8rem;
-    border-radius: .45rem;
-    background: linear-gradient(180deg,#fff 0%, #f3f6fb 100%);
-    border:1px solid rgba(0,0,0,0.06);
-    font-weight:600;
-    color:#333;
-    box-sizing: border-box;
-  }
-
-  .money-inline .form-control {
-    min-width: var(--planilla-money-min-width);
-    min-height: var(--planilla-input-min-height);
-    height: var(--planilla-input-min-height);
-    padding-top: .50rem;
-    padding-bottom: .50rem;
-    box-sizing: border-box;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  #planillaTable input.form-control {
-    font-size: var(--planilla-input-font-size);
-    min-height: var(--planilla-input-min-height);
-    height: var(--planilla-input-min-height);
-    box-sizing: border-box;
-    padding: .45rem .6rem;
-    white-space: nowrap;
-  }
-
-  #planillaTable td.total-devengado,
-  #planillaTable td.igss,
-  #planillaTable td.total-deducciones,
-  #planillaTable td.liquido,
-  #planillaTable td.isr-cell {
-    white-space: nowrap;
-  }
-
-  #planillaTable col:nth-child(2),
-  #planillaTable td:nth-child(2),
-  #planillaTable th:nth-child(2) {
-    min-width: var(--planilla-name-col-min-width);
-    white-space: normal;
-    word-break: break-word;
-  }
-
-  #planillaTable td input.horas {
-    text-align:center;
-    padding-top: .35rem;
-    padding-bottom: .35rem;
-    height: calc(var(--planilla-input-min-height) - .8rem);
-  }
-
-  table.table tbody tr { background: #fff; }
-  table.table tbody tr:nth-child(odd) { background: #fbfeff; }
-
-  @media (max-width: 1000px) {
-    :root {
-      --planilla-money-min-width: 200px;
-      --planilla-input-min-height: 56px;
-      --planilla-cell-horizontal-padding: 1.2rem;
-      --planilla-name-col-min-width: 300px;
-      --planilla-cell-vertical-padding: 1.2rem;
-    }
-    #planillaTable { min-width: 1400px; }
-  }
-
-  @media (max-width: 576px) {
-    :root {
-      --planilla-money-min-width: 140px;
-      --planilla-input-min-height: 50px;
-      --planilla-cell-horizontal-padding: 1.0rem;
-      --planilla-name-col-min-width: 200px;
-      --planilla-cell-vertical-padding: 1rem;
-    }
-    #planillaTable { min-width: 1100px; }
-  }
-
-table.table {
-  border-collapse: collapse;
-}
-table.table th,
-table.table td {
-  border-right: 1px solid #e6eef6;
-  border-bottom: 1px solid #e9f0f7;
-}
-table.table th:last-child,
-table.table td:last-child {
-  border-right: none;
-}
-.table-header-custom th {
-  border-bottom: 2px solid rgba(15,23,42,0.06);
-}
-table.table th:first-child,
-table.table td:first-child {
-  border-left: 1px solid #e6eef6;
-}
-table.table tbody tr:first-child td {
-  border-top: 1px solid #eef6fb;
-}
-.table-responsive { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-#planillaTable tfoot tr td {
-  border-top: 2px solid var(--tfoot-top-border);
-  border-right: 1px solid #e6eef6;
-}
-#planillaTable tfoot tr td:last-child {
-  border-right: none;
-}
-</style>
 
 {% endblock %}
