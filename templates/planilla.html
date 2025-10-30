@@ -385,12 +385,13 @@ function enforceFixedFieldsOnAllRows() {
   });
 }
 
-/* Row add/delete handlers (unchanged) */
+/* Row add/delete handlers with accidental-deletion protection */
 document.getElementById('addRow').addEventListener('click', () => {
   const tbody = document.querySelector('#planillaTable tbody');
   const newIndex = tbody.querySelectorAll('tr').length + 1;
   const tr = document.createElement('tr');
   tr.dataset.row = newIndex;
+  tr.dataset.new = "true"; // mark as user-created
   tr.innerHTML = createRowHtml(newIndex);
   tbody.appendChild(tr);
 
@@ -410,11 +411,46 @@ document.getElementById('addRow').addEventListener('click', () => {
   saveToLocalAndServer();
 });
 
-document.getElementById('deleteRow').addEventListener('click', () => {
+async function canCurrentUserDelete() {
+  try {
+    const r = await fetch('/whoami', {cache:'no-store'});
+    if (!r.ok) return false;
+    const j = await r.json();
+    const role = (j && j.rol) ? String(j.rol).toLowerCase() : '';
+    return role === 'admin';
+  } catch (e) {
+    console.warn('whoami error', e);
+    return false;
+  }
+}
+
+document.getElementById('deleteRow').addEventListener('click', async () => {
   const tbody = document.querySelector('#planillaTable tbody');
-  const rows = tbody.querySelectorAll('tr');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
   if (rows.length === 0) return;
-  tbody.removeChild(rows[rows.length - 1]);
+
+  const last = rows[rows.length - 1];
+
+  // If the row was imported from server (has data-dpi) or name is readonly, require admin + confirmation
+  const isServerRow = !!last.dataset.dpi;
+  const nameInput = last.querySelector('input.nombre');
+  const nameReadonly = nameInput && nameInput.hasAttribute('readonly');
+
+  if (isServerRow || nameReadonly) {
+    const ok = await canCurrentUserDelete();
+    if (!ok) {
+      alert('Permisos insuficientes para eliminar filas importadas. Solo administradores pueden eliminarlas.');
+      return;
+    }
+    const dpi = last.dataset.dpi || '';
+    const confirmMsg = dpi ? `Confirma eliminar la fila importada con DPI ${dpi}?` : 'Confirma eliminar la última fila importada?';
+    if (!confirm(confirmMsg)) return;
+  } else {
+    // For user-created rows ask light confirmation
+    if (!confirm('¿Eliminar la última fila añadida?')) return;
+  }
+
+  tbody.removeChild(last);
   recalcTotals();
   saveToLocalAndServer();
 });
@@ -661,7 +697,7 @@ function startEmployeesPolling() {
   pollHandle = setInterval(syncEmployeesOnce, POLL_INTERVAL_MS);
 }
 
-/* ------------------ LocalStorage helpers + server sync ------------------ */
+/* ------------------ LocalStorage helpers + server sync (unchanged) ------------------ */
 
 function saveToLocal() {
   try {
@@ -734,7 +770,6 @@ async function saveToLocalAndServer() {
   payload.meta = payload.meta || {};
   payload.meta.client_saved_at = new Date().toISOString();
 
-  // optimistic: if local seems unchanged and server newer, skip. But simplest: attempt save.
   pendingServerSave = payload;
   try {
     const res = await saveToServerOnce(payload);
@@ -743,7 +778,6 @@ async function saveToLocalAndServer() {
       saveServerMeta(meta);
       console.info('Planilla synced to server at', meta.server_saved_at);
     } else {
-      // server may return ok:true
       if (res && res.ok) {
         const now = new Date().toISOString();
         saveServerMeta({ server_saved_at: now, planillaName: payload.meta.planillaName || '', emisionDate: payload.meta.emisionDate || '' });
@@ -793,7 +827,6 @@ async function pollServerPlanilla() {
     const serverMeta = data.meta || {};
     const serverSavedAt = serverMeta.server_saved_at || serverMeta.saved_at || null;
 
-    // if we have no local data, always restore server
     const localRaw = localStorage.getItem(STORAGE_KEY);
     if (!localRaw) {
       console.info('No local planilla, restoring server version');
@@ -807,21 +840,17 @@ async function pollServerPlanilla() {
       return;
     }
 
-    // If server has a newer saved_at than our lastKnownServerSavedAt, consider merging
     if (serverSavedAt && (!lastKnownServerSavedAt || new Date(serverSavedAt) > new Date(lastKnownServerSavedAt))) {
-      // Simple strategy: if local edits exist since lastKnownServerSavedAt, skip automatic overwrite.
       const localObj = JSON.parse(localRaw);
       const localMeta = localObj.meta || {};
       const localClientSavedAt = localMeta.client_saved_at || localMeta.saved_at || null;
 
-      // If localClientSavedAt exists and is newer than serverSavedAt => prefer local, do nothing.
       if (localClientSavedAt && new Date(localClientSavedAt) > new Date(serverSavedAt)) {
         console.info('Server has older data than local edits; keeping local');
-        saveServerMeta(serverMeta); // but update known server time
+        saveServerMeta(serverMeta);
         return;
       }
 
-      // Otherwise server is newer — replace local with server copy
       console.info('Server planilla newer, restoring from server');
       restoreTable(data);
       if (data.meta) {
@@ -837,9 +866,7 @@ async function pollServerPlanilla() {
 }
 
 function startServerPolling() {
-  // poll every POLL_INTERVAL_MS but only one active timer
   if (pollHandle) clearInterval(pollHandle);
-  // run once immediately
   pollServerPlanilla();
   pollHandle = setInterval(pollServerPlanilla, POLL_INTERVAL_MS);
 }
@@ -849,13 +876,11 @@ function startServerPolling() {
 async function populateFromEmployeesIfEmpty() {
   const restored = loadFromLocal();
   if (restored) {
-    // if local present, still start polls to append newcomers and check server updates
     startEmployeesPolling();
     startServerPolling();
     return;
   }
 
-  // try server planilla first
   const serverPlanilla = await tryLoadServerPlanillaOnce();
   if (serverPlanilla) {
     restoreTable(serverPlanilla);
@@ -870,7 +895,6 @@ async function populateFromEmployeesIfEmpty() {
     return;
   }
 
-  // fallback to empleado list if server planilla empty
   const employees = await fetchEmployeesList();
   if (employees && employees.length) {
     const tbody = document.querySelector('#planillaTable tbody');
@@ -899,10 +923,8 @@ async function populateFromEmployeesIfEmpty() {
     });
     document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
     recalcTotals();
-    // persist locally and attempt server save
     saveToLocalAndServer();
   }
-  // start polling for later additions and server planilla
   startEmployeesPolling();
   startServerPolling();
 }
@@ -917,7 +939,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
   recalcTotals();
 
-  // populate and start polling
   populateFromEmployeesIfEmpty();
 
   if (!restored) saveToLocalAndServer();
