@@ -79,7 +79,7 @@
               <th>Observaciones</th>
             </tr>
           </thead>
-          
+
 
           <tbody>
            
@@ -299,7 +299,7 @@ document.addEventListener('input', (e) => {
     const tr = e.target.closest('tr');
     if (tr) recalcRow(tr);
     recalcTotals();
-    saveToLocal();
+    saveToLocalAndServer();
   }
 });
 
@@ -406,7 +406,7 @@ document.getElementById('addRow').addEventListener('click', () => {
 
   recalcRow(tr);
   recalcTotals();
-  saveToLocal();
+  saveToLocalAndServer();
 });
 
 document.getElementById('deleteRow').addEventListener('click', () => {
@@ -415,7 +415,7 @@ document.getElementById('deleteRow').addEventListener('click', () => {
   if (rows.length === 0) return;
   tbody.removeChild(rows[rows.length - 1]);
   recalcTotals();
-  saveToLocal();
+  saveToLocalAndServer();
 });
 
 /* Export to Excel (unchanged) */
@@ -569,14 +569,22 @@ document.getElementById('exportExcel').addEventListener('click', () => {
   }, true);
 })();
 
-/* ------------------ NEW: automatic sync with /api/empleados ------------------ */
+/* ------------------ NEW: automatic sync with /api/empleados and server-side persistence ------------------ */
 
 /*
  Behavior:
- - On load: if localStorage had saved data, respect it; otherwise fetch /api/empleados and populate table.
- - Once loaded, poll /api/empleados every POLL_INTERVAL_MS to detect new employees and append new rows automatically.
- - Do not remove existing rows or overwrite manual edits.
- - Each appended row gets tr.dataset.dpi set to the employee's dpi to avoid duplicates.
+ - On load:
+   * If localStorage had saved data, use it.
+   * Else try to fetch server-saved planilla from /api/planilla and populate.
+   * If that is empty, fetch /api/empleados to populate employee rows (existing behavior).
+ - All user changes still save to localStorage to preserve offline edits.
+ - Additionally, every save (add/delete/input) will attempt to POST the serialized planilla to /guardar_planilla
+   so the same data becomes available to other devices.
+ - The save-to-server function is resilient: it will retry once on network error and otherwise log the result.
+ - Server endpoints expected:
+    GET  /api/planilla         -> returns { rows: [...], meta: {...} }  (optional)
+    POST /guardar_planilla     -> accepts JSON { rows, meta } and stores it server-side
+ - Server must still validate and authorize; this client-side logic only attempts the request.
 */
 
 const POLL_INTERVAL_MS = 20000; // 20 seconds
@@ -646,7 +654,7 @@ async function syncEmployeesOnce() {
     if (ok) added++;
   }
   if (added > 0) {
-    saveToLocal();
+    saveToLocalAndServer();
   }
 }
 
@@ -659,6 +667,92 @@ function startEmployeesPolling() {
   pollHandle = setInterval(syncEmployeesOnce, POLL_INTERVAL_MS);
 }
 
+/* ------------------ LocalStorage helpers + server sync ------------------ */
+function saveToLocal() {
+  try {
+    const data = serializeTable();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.error('Error saving planilla to localStorage', e);
+  }
+}
+
+function saveToServerOnce(payload) {
+  // small helper to post to /guardar_planilla
+  return fetch('/guardar_planilla', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).then(res => {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json().catch(() => ({}));
+  });
+}
+
+async function saveToLocalAndServer() {
+  // primary: save locally always
+  try {
+    saveToLocal();
+  } catch (e) {
+    console.error('local save error', e);
+  }
+
+  // secondary: attempt server save but don't block UI
+  const payload = serializeTable();
+  // include a small client tag
+  payload.meta = payload.meta || {};
+  payload.meta.client_saved_at = new Date().toISOString();
+  try {
+    await saveToServerOnce(payload);
+    // optionally, store server sync time
+    localStorage.setItem(STORAGE_KEY + '_last_sync', new Date().toISOString());
+  } catch (err) {
+    // retry once after short delay
+    console.warn('first server save failed, retrying once', err);
+    setTimeout(async () => {
+      try {
+        await saveToServerOnce(payload);
+        localStorage.setItem(STORAGE_KEY + '_last_sync', new Date().toISOString());
+      } catch (e) {
+        console.warn('server save retry failed', e);
+      }
+    }, 1800);
+  }
+}
+
+async function tryLoadServerPlanilla() {
+  try {
+    const res = await fetch('/api/planilla', { cache: 'no-store' });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data && Array.isArray(data.rows) && data.rows.length) return data;
+    return null;
+  } catch (e) {
+    console.warn('Error fetching server planilla', e);
+    return null;
+  }
+}
+
+function loadFromLocal() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const obj = JSON.parse(raw);
+    if (obj && Array.isArray(obj.rows) && obj.rows.length) {
+      restoreTable(obj);
+      if (obj.meta) {
+        if (obj.meta.planillaName) document.getElementById('planillaName').value = obj.meta.planillaName;
+        if (obj.meta.emisionDate) document.getElementById('emisionDate').value = obj.meta.emisionDate;
+      }
+      return true;
+    }
+    return false;
+  } catch (e) {
+    console.error('Error loading planilla from localStorage', e);
+    return false;
+  }
+}
+
 /* populate on load only if localStorage empty; then start polling always to pick up future DB adds */
 async function populateFromEmployeesIfEmpty() {
   const restored = loadFromLocal();
@@ -667,9 +761,23 @@ async function populateFromEmployeesIfEmpty() {
     startEmployeesPolling();
     return;
   }
+
+  // try server-stored planilla first
+  const serverPlanilla = await tryLoadServerPlanilla();
+  if (serverPlanilla) {
+    restoreTable(serverPlanilla);
+    if (serverPlanilla.meta) {
+      if (serverPlanilla.meta.planillaName) document.getElementById('planillaName').value = serverPlanilla.meta.planillaName;
+      if (serverPlanilla.meta.emisionDate) document.getElementById('emisionDate').value = serverPlanilla.meta.emisionDate;
+    }
+    saveToLocal(); // seed localStorage
+    startEmployeesPolling();
+    return;
+  }
+
+  // fallback to empleado list if server planilla empty
   const employees = await fetchEmployeesList();
   if (employees && employees.length) {
-    // clear current minimal row(s) and populate from employees
     const tbody = document.querySelector('#planillaTable tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
@@ -696,40 +804,10 @@ async function populateFromEmployeesIfEmpty() {
     });
     document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
     recalcTotals();
-    saveToLocal();
+    saveToLocalAndServer();
   }
   // start polling for later additions
   startEmployeesPolling();
-}
-
-/* ------------------ LocalStorage helpers ------------------ */
-function saveToLocal() {
-  try {
-    const data = serializeTable();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (e) {
-    console.error('Error saving planilla to localStorage', e);
-  }
-}
-
-function loadFromLocal() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return false;
-    const obj = JSON.parse(raw);
-    if (obj && Array.isArray(obj.rows) && obj.rows.length) {
-      restoreTable(obj);
-      if (obj.meta) {
-        if (obj.meta.planillaName) document.getElementById('planillaName').value = obj.meta.planillaName;
-        if (obj.meta.emisionDate) document.getElementById('emisionDate').value = obj.meta.emisionDate;
-      }
-      return true;
-    }
-    return false;
-  } catch (e) {
-    console.error('Error loading planilla from localStorage', e);
-    return false;
-  }
 }
 
 /* ------------------ Initialization ------------------ */
@@ -742,10 +820,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
   recalcTotals();
 
-  // Populate from employees if no local saved data; always start polling afterwards
+  // Populate from server/local/employees and start polling afterwards
   populateFromEmployeesIfEmpty();
 
-  if (!restored) saveToLocal();
+  if (!restored) saveToLocalAndServer();
 });
 </script>
 
