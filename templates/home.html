@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="container-fluid py-4">
-  <!-- Header -->
+  <!-- Jumbotron -->
   <div class="jumbotron-welcome rounded-3 mb-3">
     <div class="d-flex flex-column flex-md-row align-items-center gap-3">
       <div class="flex-grow-1">
@@ -16,7 +16,6 @@
 
         <div class="d-flex flex-wrap gap-2 align-items-center mt-2">
           <div class="d-flex gap-2">
-          
           </div>
         </div>
       </div>
@@ -32,24 +31,6 @@
 
   {% set rol = session.get('rol', '')|string|lower %}
 
-  <!-- Guía breve -->
-  <div class="card mb-3">
-    <div class="card-body small" style="line-height:1.35;">
-      <strong>Guía rápida</strong>
-      <ul class="mb-0 mt-1">
-        <li><strong>DPI:</strong> identificador único del empleado; si aparece como texto significa que viene de la base de datos y no debe editarse en la tabla.</li>
-        <li><strong>Agregar:</strong> crea una fila nueva para introducir datos; el DPI se pide al crear si la aplicación lo solicita.</li>
-        <li><strong>Editar:</strong> inicia la edición de la fila seleccionada; sólo <em>editor</em> y <em>admin</em> pueden hacerlo.</li>
-        <li><strong>Guardar:</strong> pulsa para enviar los cambios al servidor y guardar localmente; no hay guardado automático.</li>
-        <li><strong>Cancelar:</strong> descarta los cambios no guardados durante la edición.</li>
-        <li><strong>Eliminar:</strong> sólo <em>admin</em>; requiere confirmación y el servidor comprobará permisos.</li>
-        <li><strong>Fotos:</strong> seleccionar una fila muestra controls para subir o eliminar foto; eliminar sólo lo puede hacer admin.</li>
-        <li><strong>Selección:</strong> clic selecciona fila; doble clic inicia edición; Shift + doble clic intenta eliminar.</li>
-        <li><strong>Permisos:</strong> los botones están visibles para usabilidad, pero JavaScript y el servidor validan las acciones críticas.</li>
-      </ul>
-    </div>
-  </div>
-
   <div class="card shadow-sm border-0 bg-white">
     <div class="card-body p-3">
       <div class="d-flex justify-content-between align-items-center mb-2">
@@ -62,7 +43,7 @@
 
           <button id="btnCancelar" class="btn btn-secondary btn-sm" data-action="cancelar">Cancelar</button>
 
-          <!-- Mostrar Eliminar por servidor cuando rol == admin -->
+          <!-- Mostrar Eliminar por servidor cuando rol == admin para accesibilidad progresiva -->
           {% if rol == 'admin' %}
             <button id="btnEliminar" class="btn btn-danger btn-sm" data-action="eliminar" data-role-required="admin">Eliminar</button>
           {% endif %}
@@ -157,11 +138,10 @@
 <script>
 /*
   Cambios solicitados:
-  - editor: Agregar, Editar, Guardar, Cancelar
-  - admin: elimina fotos/empleados
-  - botones siempre visibles; JS valida y muestra mensajes
+  - El rol editor puede usar Agregar, Editar, Guardar y Cancelar
+  - Solo admin puede eliminar (fotos y empleados)
+  - Mantener botones visibles; JS valida permisos y muestra mensajes
 */
-
 (function(){
   const CURRENT_ROLE = ("{{ rol or '' }}").toLowerCase();
 
@@ -224,11 +204,11 @@
           }
         }
       } catch (e) {
+        // ignore guard errors
       }
       return orig.apply(this, arguments);
     };
   })();
-
 
   document.getElementById('btnAgregar')?.addEventListener('click', (ev) => {
     flash('Agregar: abre formulario (UX)', 'info');
@@ -310,7 +290,7 @@
   if (btnEliminar) {
     btnEliminar.addEventListener('click', async () => {
       if (CURRENT_ROLE !== 'admin') { flash('Permisos insuficientes para eliminar empleados', 'warning'); return; }
-      const tr = tabla.querySelector('tbody tr.selected') || tabla.querySelector('tbody tr'); // fallback to first
+      const tr = tabla.querySelector('tbody tr.selected') || tabla.querySelector('tbody tr');
       await eliminarFilaSeleccionada(tr);
     });
   }
