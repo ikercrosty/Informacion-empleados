@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="container-fluid py-4">
-  <!-- Jumbotron mejorado: sólo este bloque fue modificado -->
+  <!-- Header -->
   <div class="jumbotron-welcome rounded-3 mb-3">
     <div class="d-flex flex-column flex-md-row align-items-center gap-3">
       <div class="flex-grow-1">
@@ -30,29 +30,22 @@
     </div>
   </div>
 
-  {# rol disponible desde session; normalizado en minúsculas #}
   {% set rol = session.get('rol', '')|string|lower %}
 
-  <!--
-    PANEL DE AYUDA VISIBLE
-    - Este bloque contiene comentarios visibles para guiar al usuario en el uso de la tabla/formulario.
-    - No modifica la lógica: solo ayuda a los operadores a entender el flujo y las restricciones.
-  -->
+  <!-- Guía breve -->
   <div class="card mb-3">
     <div class="card-body small" style="line-height:1.35;">
-      <strong>Guía rápida de uso</strong>
+      <strong>Guía rápida</strong>
       <ul class="mb-0 mt-1">
-        <li><strong>DPI:</strong> El <em>DPI</em> aparece como la primera columna y representa la llave única del empleado. 
-            Una vez que un registro con un DPI se guarda/ingresa desde la base de datos, ese DPI no debe editarse manualmente en la tabla (las filas importadas muestran el DPI como celda de texto, no como campo editable).</li>
-        <li><strong>Agregar:</strong> Crea una nueva fila para capturar datos. La fila nueva permite completar Nombre, Apellidos y demás campos. El DPI debe proporcionarse en el proceso de creación si la aplicación lo solicita.</li>
-        <li><strong>Editar:</strong> Habilita la edición de campos de la fila seleccionada. Solo usuarios con rol <em>editor</em> o <em>admin</em> pueden iniciar edición.</li>
-        <li><strong>Guardar:</strong> Guarda los cambios explícitamente en servidor y local; no hay guardado automático. Pulse Guardar cuando termine la edición para persistir cambios.</li>
-        <li><strong>Cancelar:</strong> Descarta cambios no guardados en la edición en curso.</li>
-        <li><strong>Eliminar:</strong> Solo usuarios con rol <em>admin</em> pueden eliminar empleados o eliminar fotos. El botón "Eliminar" aparece solo para admin en la barra superior; además existen protecciones cliente/servidor que bloquearán la operación para roles no autorizados.</li>
-        <li><strong>Fotos:</strong> Seleccione una fila para gestionar su foto. Si no hay foto, el panel muestra el formulario para subir. Solo admin puede eliminar fotos (el cliente bloquea la acción cuando el rol no es admin).</li>
-        <li><strong>Selección:</strong> Haga clic en una fila para seleccionarla (aparece la foto y los formularios de foto según corresponda). Doble clic sin Shift inicia edición (admin/editor). Doble clic + Shift intenta eliminar (solo admin).</li>
-        <li><strong>Permisos:</strong> La interfaz mantiene los botones visibles para usabilidad, pero el JavaScript valida el rol actual antes de permitir acciones críticas; los endpoints del servidor también validan permisos para evitar cambios no autorizados.</li>
-        <li><strong>Sugerencia operativa:</strong> Antes de eliminar una fila importada (una fila con DPI desde servidor), confirme que el DPI sea correcto; la eliminación pide confirmación y es irreversible.</li>
+        <li><strong>DPI:</strong> llave única; filas importadas muestran DPI como texto (no editable).</li>
+        <li><strong>Agregar:</strong> crea fila nueva; DPI puede pedirse al crear.</li>
+        <li><strong>Editar:</strong> sólo <em>editor</em> y <em>admin</em> pueden iniciar.</li>
+        <li><strong>Guardar:</strong> guardar explícito en servidor y local; no hay auto-save.</li>
+        <li><strong>Cancelar:</strong> descarta cambios no guardados.</li>
+        <li><strong>Eliminar:</strong> sólo <em>admin</em>; botón aparece para admin; servidor valida.</li>
+        <li><strong>Fotos:</strong> seleccionar fila muestra subida/eliminación; eliminar sólo admin.</li>
+        <li><strong>Selección:</strong> clic selecciona; doble clic inicia edición; Shift+dblclick intenta eliminar.</li>
+        <li><strong>Permisos:</strong> botones visibles para usabilidad; JS y servidor validan acciones críticas.</li>
       </ul>
     </div>
   </div>
@@ -63,13 +56,13 @@
         <div class="btn-group">
           <button id="btnAgregar" class="btn btn-success btn-sm" data-action="agregar">Agregar</button>
 
-          {# siempre visibles; JS decide si la acción procede según rol #}
+          <!-- visibles; JS decide si procede -->
           <button id="btnEditar" class="btn btn-primary btn-sm" data-action="editar" data-role-required="editor">Editar</button>
           <button id="btnGuardar" class="btn btn-success btn-sm" data-action="guardar" data-role-required="editor">Guardar</button>
 
           <button id="btnCancelar" class="btn btn-secondary btn-sm" data-action="cancelar">Cancelar</button>
 
-          {# Mostrar Eliminar por servidor cuando rol == admin para accesibilidad progresiva #}
+          <!-- Mostrar Eliminar por servidor cuando rol == admin -->
           {% if rol == 'admin' %}
             <button id="btnEliminar" class="btn btn-danger btn-sm" data-action="eliminar" data-role-required="admin">Eliminar</button>
           {% endif %}
@@ -148,7 +141,7 @@
 
           <form id="formEliminarFoto" method="post" action="{{ url_for('eliminar_foto') }}" class="w-100" style="max-width:260px; display:none; margin-top:12px;">
             <input type="hidden" name="dpi" id="inputDpiForDelete" value="">
-            {# botón siempre visible pero solo realiza acción si rol == admin #}
+            <!-- botón visible pero cliente bloquea según rol -->
             <button id="btnEliminarFoto" type="button" class="btn btn-outline-danger btn-sm w-100" data-action="eliminar" data-role-required="admin">Eliminar foto</button>
           </form>
 
@@ -164,17 +157,14 @@
 <script>
 /*
   Cambios solicitados:
-  - El rol editor puede usar Agregar, Editar, Guardar y Cancelar
-  - Solo admin puede eliminar (fotos y empleados)
-  - Mantener botones visibles; JS valida permisos y muestra mensajes
-  - Archivo listo para reemplazar
+  - editor: Agregar, Editar, Guardar, Cancelar
+  - admin: elimina fotos/empleados
+  - botones siempre visibles; JS valida y muestra mensajes
 */
 
 (function(){
-  // rol inyectado desde servidor (session['rol'])
   const CURRENT_ROLE = ("{{ rol or '' }}").toLowerCase();
 
-  // helper de notificación pequeña
   function flash(msg, type='info') {
     const id = '__home_flash';
     const prev = document.getElementById(id);
@@ -190,7 +180,6 @@
     setTimeout(()=> d.remove(), 2200);
   }
 
-  // minimal fetch guard (client-side defense)
   (function installFetchGuard(){
     const orig = window.fetch;
     window.fetch = async function(input, init){
@@ -211,7 +200,6 @@
           }
         }
 
-        // Permitir editar/guardar a admin y editor (cliente)
         if (url.includes('/guardar_empleado')) {
           if (!['admin','editor'].includes(CURRENT_ROLE)) {
             const isNew = Boolean(bodyObj && (bodyObj.nuevo === true || bodyObj.nuevo === 'true' || bodyObj.nuevo === '1' || bodyObj.nuevo === 1));
@@ -236,14 +224,12 @@
           }
         }
       } catch (e) {
-        // ignore errors in the guard
       }
       return orig.apply(this, arguments);
     };
   })();
 
 
-  // UI button behaviors
   document.getElementById('btnAgregar')?.addEventListener('click', (ev) => {
     flash('Agregar: abre formulario (UX)', 'info');
     if (typeof window.iniciarAgregar === 'function') window.iniciarAgregar();
@@ -275,7 +261,6 @@
     else flash('Cancelar: acción ejecutada', 'info');
   });
 
-  // Photo / selection variables
   const TABLE_ID = 'tablaEmpleados';
   const tabla = document.getElementById(TABLE_ID);
   const fotoEmpleado = document.getElementById('fotoEmpleado');
@@ -294,7 +279,6 @@
     if (inputDpiDelete) inputDpiDelete.value = '';
   }
 
-  // Delete button logic (kept as function to reuse in dblclick)
   async function eliminarFilaSeleccionada(tr) {
     if (!tr) {
       flash('Debes seleccionar una fila antes de eliminar', 'warning');
@@ -322,7 +306,6 @@
     }
   }
 
-  // Hook delete button to same logic (requires selected row)
   const btnEliminar = document.getElementById('btnEliminar');
   if (btnEliminar) {
     btnEliminar.addEventListener('click', async () => {
@@ -332,12 +315,10 @@
     });
   }
 
-  // Ensure row selection adds .selected
   function clearSelection() {
     tabla.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
   }
 
-  // Single click select logic and photo request
   tabla?.addEventListener('click', async (ev) => {
     const tr = ev.target.closest('tr');
     if (!tr || tr.parentElement.tagName !== 'TBODY') return;
@@ -369,26 +350,20 @@
     }
   });
 
-  // Double-click behavior:
-  // - dblclick WITHOUT Shift: actúa como "Editar" (admin or editor)
-  // - dblclick WITH Shift: actúa como "Eliminar" (only admin)
   tabla?.addEventListener('dblclick', async (ev) => {
     const tr = ev.target.closest('tr');
     if (!tr || tr.parentElement.tagName !== 'TBODY') return;
 
-    // ensure selection reflects the dblclicked row
     clearSelection();
     tr.classList.add('selected');
 
     if (ev.shiftKey) {
-      // Shift + double click -> eliminar (admin only)
       if (CURRENT_ROLE !== 'admin') {
         flash('Permisos insuficientes para eliminar empleados', 'warning');
         return;
       }
       await eliminarFilaSeleccionada(tr);
     } else {
-      // double click -> editar (admin or editor)
       if (!['admin','editor'].includes(CURRENT_ROLE)) {
         flash('Permisos insuficientes para editar registros', 'warning');
         return;
@@ -401,7 +376,6 @@
     }
   });
 
-  // subir foto (permitido para ambos roles)
   document.getElementById('btnSubirFoto')?.addEventListener('click', async () => {
     const dpi = inputDpiUpload && inputDpiUpload.value && inputDpiUpload.value.trim();
     if (!dpi) return flash('Selecciona una fila con DPI antes de subir foto', 'danger');
@@ -429,7 +403,6 @@
     }
   });
 
-  // eliminar foto (SOLO admin puede proceder; cliente bloquea y muestra mensaje)
   document.getElementById('btnEliminarFoto')?.addEventListener('click', async () => {
     const dpi = inputDpiDelete && inputDpiDelete.value && inputDpiDelete.value.trim();
     if (!dpi) return flash('No hay DPI seleccionado', 'danger');
@@ -458,7 +431,6 @@
     }
   });
 
-  // registrarTabla hook if exists
   function tryRegister(retries = 20){
     if (window.registrarTabla && typeof window.registrarTabla === 'function') {
       window.registrarTabla('tablaEmpleados', 20, '/guardar_empleado', [
