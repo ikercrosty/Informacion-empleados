@@ -30,6 +30,9 @@
           <button id="addRow" class="btn btn-outline-secondary btn-sm" title="Agregar fila">Agregar fila</button>
 
           <button id="deleteRow" class="btn btn-outline-danger btn-sm" title="Eliminar fila">Eliminar fila</button>
+
+          <!-- NUEVO: Botón Guardar: ejecuta saveToLocalAndServer existente -->
+          <button id="btnGuardarPlanilla" class="btn btn-success btn-sm" title="Guardar planilla">Guardar</button>
         </div>
 
         <small id="exportHint" class="text-danger ms-3" style="display:none;">Ingrese fecha de emisión para exportar</small>
@@ -928,6 +931,28 @@ async function populateFromEmployeesIfEmpty() {
   startEmployeesPolling();
   startServerPolling();
 }
+
+/* ------------------ NEW: Guardar button hookup ------------------ */
+/*
+  Implementación solicitada: el botón "Guardar" (id="btnGuardarPlanilla")
+  dispara la misma lógica que saveToLocalAndServer() ya definida en este archivo.
+  No se cambió nada más.
+*/
+document.getElementById('btnGuardarPlanilla')?.addEventListener('click', async () => {
+  try {
+    // Ejecuta la rutina existente que guarda localmente y sincroniza con servidor
+    await saveToLocalAndServer();
+    // confirmación visual mínima
+    const el = document.getElementById('btnGuardarPlanilla');
+    if (el) {
+      el.classList.add('btn-success');
+      setTimeout(() => { el.classList.remove('btn-success'); }, 800);
+    }
+  } catch (e) {
+    console.warn('Error al ejecutar guardar manual:', e);
+    alert('Ocurrió un error al guardar. Revisa la consola para más detalles.');
+  }
+});
 
 /* ------------------ Initialization ------------------ */
 document.addEventListener('DOMContentLoaded', () => {
