@@ -244,12 +244,107 @@ body {
 #formEliminarFoto {
   margin-top: 12px;
 }
-/* Jumbotron mejorado */
 .jumbotron-welcome {
-  background: linear-gradient(180deg, #f7fbff 0%, #ffffff 60%);
-  border-bottom: 1px solid rgba(20,40,60,0.04);
-  padding: 3rem 1rem;
-  box-shadow: 0 6px 18px rgba(9,30,66,0.03);
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  padding: 3.25rem 1.25rem;
+  background: linear-gradient(180deg, #f6fbff 0%, #ffffff 55%);
+  border: 1px solid rgba(11,30,50,0.06);
+  box-shadow: 0 12px 36px rgba(9,30,66,0.06), inset 0 -1px 0 rgba(11,30,50,0.02);
+}
+
+/* decorativo: sutil patrón diagonal en esquina superior derecha */
+.jumbotron-welcome::before {
+  content: "";
+  position: absolute;
+  top: -18%;
+  right: -18%;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle at 30% 30%, rgba(21,101,192,0.06) 0%, transparent 40%),
+              repeating-linear-gradient(135deg, rgba(245,98,23,0.03) 0 6px, transparent 6px 12px);
+  transform: rotate(8deg);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* decorativo: baja opacidad de una forma orgánica en la esquina inferior izquierda */
+.jumbotron-welcome::after {
+  content: "";
+  position: absolute;
+  bottom: -10%;
+  left: -6%;
+  width: 420px;
+  height: 180px;
+  background: linear-gradient(90deg, rgba(245,98,23,0.04), rgba(11,114,133,0.03));
+  filter: blur(18px);
+  transform: rotate(-6deg);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* contenido encima de los decorativos */
+.jumbotron-welcome > * { position: relative; z-index: 1; }
+
+/* título más elegante */
+.jumbotron-welcome .planilla-title {
+  font-size: 2.15rem;
+  color: #083244;
+  margin-bottom: 6px;
+  letter-spacing: 0.2px;
+  font-weight: 700;
+}
+
+/* subtítulo / descripción */
+.jumbotron-welcome .lead {
+  color: #495f6b;
+  font-size: 1rem;
+  margin-bottom: 1.15rem;
+  max-width: 820px;
+}
+
+/* llamada a la acción dentro del jumbotron (si existe) */
+.jumbotron-welcome .cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: linear-gradient(90deg,#f56217,#d94e12);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  box-shadow: 0 8px 22px rgba(245,98,23,0.12);
+  text-decoration: none;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+
+.jumbotron-welcome .cta:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 36px rgba(217,78,18,0.14);
+}
+
+/* pequeño badge de metadato a la derecha */
+.jumbotron-welcome .meta {
+  display: inline-block;
+  background: rgba(6,95,70,0.06);
+  color: #065f46;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: .85rem;
+  font-weight: 600;
+  margin-left: 0.6rem;
+}
+
+/* responsive: compactear espacio y tamaño */
+@media (max-width: 768px) {
+  .jumbotron-welcome {
+    padding: 2rem 0.9rem;
+    border-radius: 12px;
+  }
+  .jumbotron-welcome .planilla-title { font-size: 1.55rem; }
+  .jumbotron-welcome .lead { font-size: .95rem; max-width: 100%; }
 }
 
 /* Área de botones centrada bajo el jumbotron */
