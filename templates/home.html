@@ -26,11 +26,11 @@
           <button id="btnGuardar" class="btn btn-success btn-sm" data-action="guardar" data-role-required="admin">Guardar</button>
 
           <button id="btnCancelar" class="btn btn-secondary btn-sm" data-action="cancelar">Cancelar</button>
-{% if rol == 'admin' %}
-  <button id="btnEliminar" class="btn btn-danger btn-sm" data-action="eliminar" data-role-required="admin">Eliminar</button>
-{% endif %}
 
-      </div>
+          {# Mostrar Eliminar por servidor cuando rol == admin para accesibilidad progresiva #}
+          {% if rol == 'admin' %}
+            <button id="btnEliminar" class="btn btn-danger btn-sm" data-action="eliminar" data-role-required="admin">Eliminar</button>
+          {% endif %}
         </div>
       </div>
 
@@ -122,10 +122,11 @@
 <script>
 /*
   Cambios solicitados:
-  - el botón Eliminar debe poder activarse también mediante doble click en la tabla,
-    preservando que doble click sin Shift inicie edición (igual que editar),
-    y doble click con Shift realice eliminación (solo para admin).
-  Entrega: archivo listo para reemplazar.
+  - Doble click en tabla:
+      * sin Shift => iniciar edición (igual que btnEditar)
+      * con Shift => eliminar fila (solo admin)
+  - Mantener botones visibles; JS valida permisos y muestra mensajes
+  - Archivo listo para reemplazar
 */
 
 (function(){
@@ -193,7 +194,7 @@
           }
         }
       } catch (e) {
-        // ignore
+        // ignore errors in the guard
       }
       return orig.apply(this, arguments);
     };
@@ -284,7 +285,7 @@
   if (btnEliminar) {
     btnEliminar.addEventListener('click', async () => {
       if (CURRENT_ROLE !== 'admin') { flash('Permisos insuficientes para eliminar empleados', 'warning'); return; }
-      const tr = tabla.querySelector('tbody tr.selected') || tabla.querySelector('tbody tr'); // fallback
+      const tr = tabla.querySelector('tbody tr.selected') || tabla.querySelector('tbody tr'); // fallback to first
       await eliminarFilaSeleccionada(tr);
     });
   }
