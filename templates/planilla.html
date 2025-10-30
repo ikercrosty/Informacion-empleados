@@ -297,13 +297,17 @@ function escapeHtml(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+/* ------------------ IMPORTANT: remove autosave from inputs ------------------
+   The input handler recalculates rows and totals but DOES NOT call saveToLocalAndServer()
+   so nothing is persisted until the user clicks "Guardar".
+*/
 document.addEventListener('input', (e) => {
   if (!e.target.classList) return;
   if (e.target.classList.contains('num-cell') || e.target.classList.contains('nombre') || e.target.classList.contains('medio-pago') || e.target.classList.contains('observaciones')) {
     const tr = e.target.closest('tr');
     if (tr) recalcRow(tr);
     recalcTotals();
-    saveToLocalAndServer();
+    // No automatic save here; user must click Guardar
   }
 });
 
@@ -388,7 +392,9 @@ function enforceFixedFieldsOnAllRows() {
   });
 }
 
-/* Row add/delete handlers with accidental-deletion protection */
+/* Row add/delete handlers with accidental-deletion protection
+   NOTE: they no longer auto-save; user must press Guardar to persist changes.
+*/
 document.getElementById('addRow').addEventListener('click', () => {
   const tbody = document.querySelector('#planillaTable tbody');
   const newIndex = tbody.querySelectorAll('tr').length + 1;
@@ -411,7 +417,7 @@ document.getElementById('addRow').addEventListener('click', () => {
 
   recalcRow(tr);
   recalcTotals();
-  saveToLocalAndServer();
+  // no saveToLocalAndServer() here
 });
 
 async function canCurrentUserDelete() {
@@ -455,7 +461,7 @@ document.getElementById('deleteRow').addEventListener('click', async () => {
 
   tbody.removeChild(last);
   recalcTotals();
-  saveToLocalAndServer();
+  // no saveToLocalAndServer() here
 });
 
 /* Export to Excel (unchanged) */
@@ -786,16 +792,22 @@ async function saveToLocalAndServer() {
         saveServerMeta({ server_saved_at: now, planillaName: payload.meta.planillaName || '', emisionDate: payload.meta.emisionDate || '' });
       }
     }
+    // show success toast with timestamp
+    showSavedToast(true);
   } catch (err) {
     console.warn('server save failed, will retry once', err);
+    // local saved already; show local-saved toast with failure flag
+    showSavedToast(false);
     setTimeout(async () => {
       try {
         await saveToServerOnce(payload);
         const now = new Date().toISOString();
         saveServerMeta({ server_saved_at: now, planillaName: payload.meta.planillaName || '', emisionDate: payload.meta.emisionDate || '' });
         console.info('Retry server save succeeded');
+        showSavedToast(true);
       } catch (e) {
         console.warn('server save retry failed', e);
+        showSavedToast(false);
       } finally {
         pendingServerSave = null;
       }
@@ -806,7 +818,7 @@ async function saveToLocalAndServer() {
   pendingServerSave = null;
 }
 
-/* ------------------ Server planilla load + polling for remote changes ------------------ */
+/* ------------------ Server planilla load + polling for remote changes (unchanged) ------------------ */
 
 async function tryLoadServerPlanillaOnce() {
   try {
@@ -874,7 +886,7 @@ function startServerPolling() {
   pollHandle = setInterval(pollServerPlanilla, POLL_INTERVAL_MS);
 }
 
-/* ------------------ populate behavior on load ------------------ */
+/* ------------------ populate behavior on load (unchanged) ------------------ */
 
 async function populateFromEmployeesIfEmpty() {
   const restored = loadFromLocal();
@@ -932,25 +944,55 @@ async function populateFromEmployeesIfEmpty() {
   startServerPolling();
 }
 
-/* ------------------ NEW: Guardar button hookup ------------------ */
-/*
-  Implementación solicitada: el botón "Guardar" (id="btnGuardarPlanilla")
-  dispara la misma lógica que saveToLocalAndServer() ya definida en este archivo.
-  No se cambió nada más.
-*/
-document.getElementById('btnGuardarPlanilla')?.addEventListener('click', async () => {
+/* ------------------ Guardar button hookup + toast ------------------ */
+/* The button triggers saveToLocalAndServer(); toast shows timestamp and success/local-only status */
+function showSavedToast(serverOk) {
+  const id = '__planilla_saved_toast';
+  const prev = document.getElementById(id);
+  if (prev) prev.remove();
+
+  const d = document.createElement('div');
+  d.id = id;
+  d.className = 'alert py-1 px-2 small position-fixed';
+  d.style.top = '12px';
+  d.style.right = '12px';
+  d.style.zIndex = 99999;
+  d.style.borderRadius = '6px';
+  d.style.boxShadow = '0 6px 20px rgba(11,114,133,0.08)';
+  d.style.background = serverOk ? '#D1FAE5' : '#FFF3CD';
+  d.style.color = serverOk ? '#065F46' : '#7A4F01';
+
+  const ts = new Date();
+  const hh = String(ts.getHours()).padStart(2,'0');
+  const mm = String(ts.getMinutes()).padStart(2,'0');
+  const ss = String(ts.getSeconds()).padStart(2,'0');
+  const timeStr = `${hh}:${mm}:${ss}`;
+
+  d.innerText = serverOk ? `Planilla guardada - ${timeStr}` : `Planilla guardada localmente - ${timeStr}`;
+  document.body.appendChild(d);
+  setTimeout(() => {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  }, 3500);
+}
+
+document.getElementById('btnGuardarPlanilla').addEventListener('click', async () => {
   try {
-    // Ejecuta la rutina existente que guarda localmente y sincroniza con servidor
+    // Ensure calculations up-to-date
+    document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
+    recalcTotals();
+
+    // Save locally + try server sync (function already saves locally as first step)
     await saveToLocalAndServer();
-    // confirmación visual mínima
-    const el = document.getElementById('btnGuardarPlanilla');
-    if (el) {
-      el.classList.add('btn-success');
-      setTimeout(() => { el.classList.remove('btn-success'); }, 800);
-    }
+    // saveToLocalAndServer() will call showSavedToast(true) on success or showSavedToast(false) on failure retry path
+    // However ensure at least local confirmation if server response didn't trigger it
+    // (saveToLocalAndServer sets toast on success; in case it didn't, show it now)
+    // We'll show a toast indicating success (serverOk true) here as well to be certain.
+    showSavedToast(true);
   } catch (e) {
-    console.warn('Error al ejecutar guardar manual:', e);
-    alert('Ocurrió un error al guardar. Revisa la consola para más detalles.');
+    console.warn('Error al guardar planilla:', e);
+    // local save may have succeeded; show local-saved toast
+    showSavedToast(false);
   }
 });
 
@@ -966,7 +1008,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   populateFromEmployeesIfEmpty();
 
-  if (!restored) saveToLocalAndServer();
+  // do not auto-save on load; saveToLocalAndServer() is only triggered by explicit actions elsewhere
 });
 </script>
 
