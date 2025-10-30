@@ -297,9 +297,8 @@ function escapeHtml(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-/* ------------------ IMPORTANT: remove autosave from inputs ------------------
-   The input handler recalculates rows and totals but DOES NOT call saveToLocalAndServer()
-   so nothing is persisted until the user clicks "Guardar".
+/* ------------------ IMPORTANT: autosave enabled so edits sync to server for all devices
+   Input handler recalculates rows and totals and calls saveToLocalAndServer() so changes persist to server.
 */
 document.addEventListener('input', (e) => {
   if (!e.target.classList) return;
@@ -307,7 +306,8 @@ document.addEventListener('input', (e) => {
     const tr = e.target.closest('tr');
     if (tr) recalcRow(tr);
     recalcTotals();
-    // No automatic save here; user must click Guardar
+    // Autosave on every edit so other devices receive it via server
+    try { saveToLocalAndServer(); } catch (err) { console.warn('save error', err); }
   }
 });
 
@@ -393,7 +393,7 @@ function enforceFixedFieldsOnAllRows() {
 }
 
 /* Row add/delete handlers with accidental-deletion protection
-   NOTE: they no longer auto-save; user must press Guardar to persist changes.
+   Now they autosave (so changes propagate to server), but still ask confirmations for imported rows.
 */
 document.getElementById('addRow').addEventListener('click', () => {
   const tbody = document.querySelector('#planillaTable tbody');
@@ -417,7 +417,8 @@ document.getElementById('addRow').addEventListener('click', () => {
 
   recalcRow(tr);
   recalcTotals();
-  // no saveToLocalAndServer() here
+  // autosave for everyone
+  saveToLocalAndServer();
 });
 
 async function canCurrentUserDelete() {
@@ -461,7 +462,8 @@ document.getElementById('deleteRow').addEventListener('click', async () => {
 
   tbody.removeChild(last);
   recalcTotals();
-  // no saveToLocalAndServer() here
+  // autosave after delete
+  saveToLocalAndServer();
 });
 
 /* Export to Excel (unchanged) */
@@ -619,11 +621,10 @@ document.getElementById('exportExcel').addEventListener('click', () => {
 
 /*
  Notes for server:
- - This client expects two optional endpoints:
+ - This client expects these endpoints (your Flask provides them):
     GET  /api/planilla        -> returns { rows: [...], meta: { server_saved_at: ISO, planillaName, emisionDate } } OR 204/empty
     POST /guardar_planilla    -> accepts { rows, meta } and returns { ok:true, saved_at: ISO }
- - If your backend doesn't have these, create lightweight handlers that read/write a server-side JSON store or DB.
- - The client will continue to work offline using localStorage; server sync is best-effort.
+ - Client now autosaves on edit/add/delete so changes propagate to server and are visible on other machines.
 */
 
 const POLL_INTERVAL_MS = 20000; // 20s
@@ -818,7 +819,7 @@ async function saveToLocalAndServer() {
   pendingServerSave = null;
 }
 
-/* ------------------ Server planilla load + polling for remote changes (unchanged) ------------------ */
+/* ------------------ Server planilla load + polling for remote changes ------------------ */
 
 async function tryLoadServerPlanillaOnce() {
   try {
@@ -944,8 +945,8 @@ async function populateFromEmployeesIfEmpty() {
   startServerPolling();
 }
 
-/* ------------------ Guardar button hookup + toast ------------------ */
-/* The button triggers saveToLocalAndServer(); toast shows timestamp and success/local-only status */
+/* ------------------ Guardar button hookup + toast ------------------
+   The button triggers saveToLocalAndServer(); toast shows timestamp and success/local-only status */
 function showSavedToast(serverOk) {
   const id = '__planilla_saved_toast';
   const prev = document.getElementById(id);
@@ -984,14 +985,9 @@ document.getElementById('btnGuardarPlanilla').addEventListener('click', async ()
 
     // Save locally + try server sync (function already saves locally as first step)
     await saveToLocalAndServer();
-    // saveToLocalAndServer() will call showSavedToast(true) on success or showSavedToast(false) on failure retry path
-    // However ensure at least local confirmation if server response didn't trigger it
-    // (saveToLocalAndServer sets toast on success; in case it didn't, show it now)
-    // We'll show a toast indicating success (serverOk true) here as well to be certain.
     showSavedToast(true);
   } catch (e) {
     console.warn('Error al guardar planilla:', e);
-    // local save may have succeeded; show local-saved toast
     showSavedToast(false);
   }
 });
@@ -1008,7 +1004,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   populateFromEmployeesIfEmpty();
 
-  // do not auto-save on load; saveToLocalAndServer() is only triggered by explicit actions elsewhere
+  // do not force extra save here; autosave runs on edits/add/delete
 });
 </script>
 
