@@ -428,7 +428,7 @@ def laboral():
     conn.close()
 
     empleados = sanitize_rows(empleados)
-    return render_template("laboral.html", empregados=empleados, usuario=session.get("usuario"))
+    return render_template("laboral.html", empleados=empleados, usuario=session.get("usuario"))
 
 
 @app.route("/medica")
