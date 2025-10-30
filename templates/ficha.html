@@ -651,6 +651,7 @@
   --firma-line-color: #000; /* línea de firma negra */
   --firma-line-height: 2px;
   --firma-line-width: 220px; /* ancho fijo para consistencia */
+  --ficha-gap: 12px;
 }
 
 /* --- Pantalla (sin cambios funcionales importantes) --- */
@@ -717,17 +718,59 @@ label.form-label { display:block; font-weight:700; color:#0b2733; margin-bottom:
 
 /* Responsive firmas: si la pantalla es pequeña, las apila manteniendo el ancho y centrado */
 @media (max-width:575.98px){
-  .firmas-row { flex-direction: column; gap: 1.25rem; }
-  .firma-item { min-width: 100%; align-items: flex-start; }
+  .firmas-row { flex-direction: column; gap: 1.25rem; align-items: center; }
+  .firma-item { min-width: 100%; align-items: center; }
   .firma-line { width: 60%; }
+  .firma-caption { font-size: .92rem; }
 }
 
 /* Responsive */
-@media (max-width:575.98px){
-  .header-body { padding:12px; flex-direction:column; gap:12px; align-items:flex-start; }
-  .photo-frame { width:110px; height:140px; }
-  #fotoEmpleado, .fotoEmpleado { width:96px; height:120px; }
+@media (max-width:1024px){
+  .select-main { min-width: 220px; }
+  .card-body.p-4 { padding:18px; }
+  h3.mb-0 { font-size:1.3rem; }
+}
+
+@media (max-width:767.98px){
+  .header-body { padding:14px; flex-direction:column; gap:12px; align-items:flex-start; }
+  .photo-frame { width:120px; height:150px; }
+  #fotoEmpleado, .fotoEmpleado { width:106px; height:140px; }
   .col-md-3, .col-md-4, .col-md-6 { flex:0 0 100%; max-width:100%; }
+  .select-main { min-width: auto; width: 100%; }
+  .header-actions { width: 100%; display:flex; justify-content:space-between; align-items:center; gap: 8px; }
+  .action-buttons { margin-left: auto; }
+  .title-row { width: 100%; }
+  h5.mb-3 { font-size: 0.98rem; }
+  .form-control[readonly] { font-size: 0.95rem; padding: 0.5rem 0.6rem; }
+}
+
+/* Small phones: stack header elements, enlarge hit targets and increase vertical spacing */
+@media (max-width:575.98px){
+  :root{
+    --firma-line-width: 180px;
+  }
+
+  .header-body { padding:12px; flex-direction:column; gap:10px; align-items:flex-start; }
+  .title-row { flex-direction: column; gap:8px; align-items:flex-start; width:100%; }
+  .select-main { width:100%; min-width:0; }
+  .header-right { align-self:flex-start; flex-direction:row; gap:12px; align-items:center; }
+  .photo-frame { width:96px; height:120px; }
+  #fotoEmpleado, .fotoEmpleado { width:86px; height:110px; }
+
+  /* Improve spacing of rows for mobile readability */
+  .row.g-3 { gap: 10px; }
+  .col-md-3, .col-md-4, .col-md-6 { padding: 0; margin-bottom: 8px; }
+
+  /* Inputs: enlarge touch targets and wrap long labels */
+  .form-control[readonly] { padding:0.65rem 0.7rem; min-height:44px; font-size:0.95rem; }
+  label.form-label { font-size:0.92rem; }
+
+  /* Make signature lines full width when stacked */
+  .firmas-row { margin-top: 18px; justify-content:center; gap: 18px; }
+  .firma-line { width: 60%; }
+
+  /* Ensure header actions are easily tappable */
+  .btn-print, .btn-clear { padding:0.6rem 0.9rem; font-size:0.95rem; }
 }
 
 /* --- Impresión específica: encabezado con título + foto en PRIMERA página, fondo blanco --- */
