@@ -681,11 +681,12 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
   .liquido-block { min-width:120px; max-width:200px; align-items:flex-end; }
   .letras-block { min-width:120px; }
 
-  /* Make transferencia / cheque textboxes wider in print so long values fit */
+  /* Make transferencia / cheque textboxes slightly smaller in print so three fit */
   body.print-medio-TRANSFERENCIA .transferencia-fields .trans-input,
   body.print-medio-CHEQUE .cheque-fields .trans-input {
-    min-width:260px !important;
-    max-width:380px !important;
+    /* reduced sizes so three inputs fit in page print */
+    min-width:200px !important;
+    max-width:300px !important;
     padding:5px 8px !important;
     font-size:13px !important;
   }
@@ -713,8 +714,8 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
   body.print-medio-TRANSFERENCIA .transferencia-fields .trans-input,
   body.print-medio-CHEQUE .cheque-fields .trans-input {
     flex: 0 0 auto !important;
-    min-width: 120px !important;
-    max-width: 380px !important;
+    min-width: 140px !important;
+    max-width: 300px !important;
   }
 
   /* Compact signatures */
