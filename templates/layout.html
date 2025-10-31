@@ -242,6 +242,106 @@
     });
   </script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+(function(){
+  const loader = document.getElementById('globalPageLoader');
+  if(!loader) return;
+
+  // helper to actually hide and remove loader (idempotente)
+  let hidden = false;
+  function doHide(reason){
+    if(hidden) return;
+    hidden = true;
+    try {
+      loader.setAttribute('aria-hidden','true');
+      document.documentElement.classList.remove('loading-disabled');
+    } catch(e){}
+    // allow CSS transition then remove element
+    setTimeout(()=> {
+      try { loader.remove(); } catch(e){}
+    }, 350);
+    // optional console trace to help debugging
+    if (window.__GLOBAL_LOADER_LOG__) console.info('[Loader] hidden by', reason);
+  }
+
+  // public API: your app can call window.hideGlobalLoader() when ready
+  window.hideGlobalLoader = function(){
+    doHide('manual-call');
+  };
+
+  // fallback timers and minimum visible
+  const MIN_VISIBLE_MS = 300;
+  const MAX_WAIT_MS = 8000;
+  const start = Date.now();
+
+  // hide when window load fires
+  function onLoadHandler(){
+    const elapsed = Date.now() - start;
+    const wait = Math.max(0, MIN_VISIBLE_MS - elapsed);
+    setTimeout(()=> doHide('window.load'), wait);
+  }
+
+  // If load already happened
+  if (document.readyState === 'complete') {
+    onLoadHandler();
+  } else {
+    window.addEventListener('load', onLoadHandler, {once:true});
+  }
+
+  // Also hide on DOMContentLoaded as a fallback (faster in many apps)
+  function onDomReady(){
+    const elapsed = Date.now() - start;
+    const wait = Math.max(0, MIN_VISIBLE_MS - elapsed);
+    setTimeout(()=> {
+      // only hide here if there is visible content (detect basic layout)
+      const mainCandidates = document.querySelector('main, #app, #receipt_main, .container, .page-root');
+      if (mainCandidates && mainCandidates.children.length > 0) {
+        doHide('domcontentloaded');
+      }
+    }, wait);
+  }
+  if (document.readyState === 'interactive' || document.readyState === 'complete') {
+    onDomReady();
+  } else {
+    document.addEventListener('DOMContentLoaded', onDomReady, {once:true});
+  }
+
+  // MutationObserver: detect when body receives meaningful children/content (SPA support)
+  const mo = new MutationObserver((mutations) => {
+    // if DOM structure shows content beyond loader, hide
+    const body = document.body;
+    if (!body) return;
+    // heuristics: more than 1 child or main content has visible size
+    const visibleNodes = Array.from(body.children).filter(n => {
+      if (!n || n === loader) return false;
+      const style = window.getComputedStyle(n);
+      return style && style.display !== 'none' && style.visibility !== 'hidden' && n.clientHeight > 0 && n.clientWidth > 0;
+    });
+    if (visibleNodes.length > 0) {
+      doHide('mutation-observer');
+    }
+  });
+  mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
+
+  // Safety: max wait then hide to avoid permanent block
+  const maxTimer = setTimeout(()=> {
+    doHide('max-timeout');
+    try { mo.disconnect(); } catch(e){}
+  }, MAX_WAIT_MS);
+
+  // Clean up observer once hidden
+  const origDoHide = doHide;
+  doHide = function(reason){
+    if (hidden) return;
+    try { mo.disconnect(); } catch(e){}
+    clearTimeout(maxTimer);
+    origDoHide(reason);
+  };
+
+  // expose debug toggle if needed
+  window.__GLOBAL_LOADER_LOG__ = false;
+})();
+</script>
 </body>
 </html>
 
