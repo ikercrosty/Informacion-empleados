@@ -441,6 +441,88 @@
     return false;
   }
 
+  // New helper: convert a variety of date strings to dd/mm/yyyy
+  function formatToDDMMYYYY(raw) {
+    if (!raw && raw !== 0) return '';
+    let s = String(raw).trim();
+    if (!s) return '';
+
+    // If already in dd/mm/yyyy (digits and slashes), return normalized
+    const regexDDMMYYYY = /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/;
+    const m1 = s.match(regexDDMMYYYY);
+    if (m1) {
+      const dd = m1[1].padStart(2,'0');
+      const mm = m1[2].padStart(2,'0');
+      const yy = m1[3].length === 2 ? ('20' + m1[3]) : m1[3];
+      return `${dd}/${mm}/${yy}`;
+    }
+
+    // ISO date YYYY-MM-DD or with time
+    const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (isoMatch) {
+      return `${isoMatch[3]}/${isoMatch[2]}/${isoMatch[1]}`;
+    }
+
+    // Try common separators: YYYY/MM/DD
+    const partsSlash = s.split('/');
+    if (partsSlash.length === 3) {
+      // could be YYYY/MM/DD or DD/MM/YYYY, detect
+      if (partsSlash[0].length === 4) {
+        const y = partsSlash[0]; const m = partsSlash[1].padStart(2,'0'); const d = partsSlash[2].padStart(2,'0');
+        return `${d}/${m}/${y}`;
+      } else {
+        const d = partsSlash[0].padStart(2,'0'); const m = partsSlash[1].padStart(2,'0'); const y = partsSlash[2].length===2?('20'+partsSlash[2]):partsSlash[2];
+        return `${d}/${m}/${y}`;
+      }
+    }
+
+    // Try tokens with month names (English / Spanish)
+    const months = {
+      'jan':'01','feb':'02','mar':'03','apr':'04','may':'05','jun':'06','jul':'07','aug':'08','sep':'09','oct':'10','nov':'11','dec':'12',
+      'enero':'01','febrero':'02','marzo':'03','abril':'04','mayo':'05','junio':'06','julio':'07','agosto':'08','septiembre':'09','octubre':'10','noviembre':'11','diciembre':'12'
+    };
+    const cleaned = s.replace(',', ' ').replace(/\s+/g,' ').trim();
+    const tokens = cleaned.split(' ');
+    let day=null, mon=null, year=null;
+    for (const t of tokens) {
+      const tn = t.toLowerCase();
+      if (!day && /^\d{1,2}$/.test(tn)) {
+        const n = parseInt(tn,10);
+        if (n>=1 && n<=31) day = String(n).padStart(2,'0');
+      } else if (!mon) {
+        const t3 = tn.slice(0,3);
+        if (months[t3]) mon = months[t3];
+        else if (months[tn]) mon = months[tn];
+      } else if (!year && /^\d{4}$/.test(tn)) {
+        year = tn;
+      }
+    }
+    if (day && mon && year) return `${day}/${mon}/${year}`;
+
+    // As a last attempt, try Date parsing (may be locale-dependent)
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) {
+      const dd = String(d.getDate()).padStart(2,'0');
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      const yyyy = d.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
+    }
+
+    // If nothing matched, return original string
+    return s;
+  }
+
+  function normalizeDateInputsById(ids){
+    ids.forEach(id=>{
+      const el = document.getElementById(id);
+      if (!el) return;
+      const raw = String(el.value || '').trim();
+      if (!raw) return;
+      const formatted = formatToDDMMYYYY(raw);
+      if (formatted) el.value = formatted;
+    });
+  }
+
   function fillFields(emp){
     if (!emp || typeof emp !== 'object') return;
 
@@ -524,6 +606,20 @@
       if (d.length === 3) setIfExists('fecha_nacimiento', `${d[2]}/${d[1]}/${d[0]}`);
       else setIfExists('fecha_nacimiento', rawFn);
     } else setIfExists('fecha_nacimiento', rawFn || '');
+
+    // Normalize date-formatted inputs to dd/mm/yyyy
+    // Fields to normalize (if present): fecha_nacimiento, fecha_inicio, ref_inicio_empresa, ref_fin_empresa
+    // plus any element with id containing 'fecha'
+    normalizeDateInputsById(['fecha_nacimiento','fecha_inicio','ref_inicio_empresa','ref_fin_empresa']);
+
+    // Also normalize any input ids that include the word 'fecha' (generic)
+    Array.from(document.querySelectorAll('input[id]')).forEach(inp=>{
+      const id = inp.id || '';
+      if (id.toLowerCase().includes('fecha') && !['fecha_nacimiento','fecha_inicio'].includes(id)) {
+        const v = String(inp.value || '').trim();
+        if (v) inp.value = formatToDDMMYYYY(v);
+      }
+    });
   }
 
   function getFirstNonEmpty(obj, keys){
@@ -606,6 +702,9 @@
     } catch (err) {
       if (fotoEl) fotoEl.src = placeholder || fotoEl.getAttribute('data-original') || fotoEl.src;
     }
+
+    // Ensure any date-like raw values loaded into DOM are normalized (extra safety)
+    normalizeDateInputsById(['fecha_nacimiento','fecha_inicio','ref_inicio_empresa','ref_fin_empresa']);
   }
 
   if (selectEl) {
