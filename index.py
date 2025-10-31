@@ -544,7 +544,7 @@ def login():
             if password == stored_password:
                 session["usuario"] = user_row.get("Usuarios") or user_row.get("Correo Electronico")
                 # normalize role to lowercase; default to editor if database value empty
-                session["rol"] = (user_row.get("rol") or "editor").strip().lower()
+                session["rol"] = (user_row.get("rol") or "colaborador").strip().lower()
                 session.permanent = False
                 return redirect(url_for("menu"))
             else:
