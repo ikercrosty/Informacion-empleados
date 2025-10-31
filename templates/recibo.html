@@ -8,7 +8,7 @@
     <div class="card-body header-body d-flex justify-content-between align-items-center">
       <div>
         <h3 class="mb-0 title-large">Recibo de pago de sueldos</h3>
-        <div class="small text-muted">Empresa: {{ empresa_nombre|default('Empaques y texturas de Guatemala S.A') }}</div>
+        <div class="small text-muted">Empresa: Empaques y Texturas de Guatemala S.A</div>
       </div>
 
       <div class="d-flex gap-2 align-items-end justify-content-end header-controls">
@@ -141,7 +141,7 @@
             <input class="form-check-input medio-radio" type="radio" name="medioPago" id="pagoTransferencia" value="TRANSFERENCIA">
             <label class="form-check-label xsmall" for="pagoTransferencia">TRANSFERENCIA</label>
 
-            <div class="transferencia-fields compact-transfer">
+            <div class="transferencia-fields compact-transfer" aria-hidden="true">
               <input id="transCuenta" class="form-control trans-input compact-input" type="text" aria-label="Número de cuenta (transferencia)" placeholder="No. cuenta">
               <input id="transBanco" class="form-control trans-input compact-input" type="text" aria-label="Banco (transferencia)" placeholder="Banco">
               <!-- Nuevo campo: Número de Autorización -->
@@ -153,7 +153,7 @@
             <input class="form-check-input medio-radio" type="radio" name="medioPago" id="pagoCheque" value="CHEQUE">
             <label class="form-check-label xsmall" for="pagoCheque">CHEQUE</label>
 
-            <div class="cheque-fields compact-transfer">
+            <div class="cheque-fields compact-transfer" aria-hidden="true">
               <input id="chequeNumero" class="form-control trans-input compact-input" type="text" aria-label="Número de cheque" placeholder="No. cheque">
               <input id="chequeBanco" class="form-control trans-input compact-input" type="text" aria-label="Banco (cheque)" placeholder="Banco">
             </div>
@@ -299,13 +299,8 @@
   document.getElementById('empleadoSelect')?.addEventListener('change', function(){
     const rawVal = this.value || '';
     if(!rawVal){
-      ['nombre','dpi'].forEach(id=>{
-        const el = document.getElementById(id);
-        if(el) el.value = '';
-      });
-      ['sueldoBase','comisiones','bonificacion','hextrasMonto','igss','isr','otrasDeducciones'].forEach(id=>{
-        writeMoneyInput(id, 0);
-      });
+      ['nombre','dpi'].forEach(id=>{ const el = document.getElementById(id); if(el) el.value = ''; });
+      ['sueldoBase','comisiones','bonificacion','hextrasMonto','igss','isr','otrasDeducciones'].forEach(id=> writeMoneyInput(id, 0));
       recalcLiquido();
       return;
     }
@@ -356,9 +351,7 @@
 
       recalcLiquido();
     }).catch(()=>{
-      ['sueldoBase','bonificacion','comisiones','hextrasMonto','igss','isr','otrasDeducciones'].forEach(id=>{
-        writeMoneyInput(id, 0);
-      });
+      ['sueldoBase','bonificacion','comisiones','hextrasMonto','igss','isr','otrasDeducciones'].forEach(id=> writeMoneyInput(id, 0));
       recalcLiquido();
     });
   });
@@ -500,7 +493,6 @@
     const mql = window.matchMedia('print');
     if (mql.addEventListener) mql.addEventListener('change', (m) => { if(m.matches) {
         if(!hasFechaValid()){
-          // Cancel print if media query triggered without fecha (best-effort)
           alert('Por favor ingrese una fecha antes de imprimir.');
         } else {
           beforePrintSetup();
@@ -519,13 +511,12 @@
 
   const imprimirBtn = document.getElementById('imprimirBtn');
   if(imprimirBtn) imprimirBtn.addEventListener('click', function(){
-    // Prevent printing if no fecha
     if(!hasFechaValid()){
       alert('No se puede imprimir. Debe de ingresar primero la fecha de emisión del recibo.');
       return;
     }
     beforePrintSetup();
-    setTimeout(() => window.print(), 120);
+    setTimeout(()=> window.print(), 120);
   });
 
   // Keep recalc hooked whenever amount inputs change (user edits not expected, but safe)
@@ -545,7 +536,6 @@
       if(!el) return;
       const v = el.value || '';
       if(String(v).trim() !== ''){
-        // If already has Q prefix, leave; else format
         if(!/^Q\s*/i.test(String(v).trim())){
           el.value = fmt(toNumberSafe(v));
         }
@@ -553,7 +543,6 @@
         el.value = fmt(0);
       }
     });
-    // ensure liquido is correct and formatted
     recalcLiquido();
     syncPrintableComprobante();
     updateMediosOnScreen();
@@ -591,7 +580,14 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
 .compact-input { padding:5px 6px; font-size:1.04rem; }
 
 /* Transfer inputs default wider on screen */
-.trans-input { min-width:220px; max-width:520px; padding:8px 10px; }
+.trans-input { min-width:220px; max-width:520px; padding:8px 10px; box-sizing:border-box; }
+
+/* Make transfer inputs able to shrink inside flex containers */
+.transferencia-fields .trans-input,
+.cheque-fields .trans-input {
+  min-width: 0;
+  flex: 1 1 auto;
+}
 
 /* Compact amount */
 .compact-amount { width:150px; padding:6px; font-size:1.10rem; }
@@ -734,14 +730,10 @@ input[name="medioPago"][value="CHEQUE"]:checked ~ .cheque-fields {
 .form-check-label { font-weight:700; color:#233642; font-size:0.95rem; }
 .compact-transfer .form-control { padding:6px 8px; font-size:0.9rem; }
 
-/* ------------------ Responsive additions for mobile (new) ------------------ */
+/* ------------------ Responsive additions for mobile (improvements) ------------------ */
 
 /* Make the receipt fit a single column on small devices and improve touch targets */
 @media (max-width: 600px) {
-  :root {
-    --accent-azul: #0b7285;
-  }
-
   .container {
     padding: 10px;
     max-width: 100%;
@@ -790,7 +782,7 @@ input[name="medioPago"][value="CHEQUE"]:checked ~ .cheque-fields {
     flex: 1 1 100%;
   }
 
-  /* Inputs: increase tap targets and wrapping for labels */
+  /* Increase tap targets */
   .compact-input, .form-control {
     font-size: 1rem;
     padding: 10px;
@@ -846,6 +838,23 @@ input[name="medioPago"][value="CHEQUE"]:checked ~ .cheque-fields {
   .btn-imprimir { font-size: 0.95rem; padding: 8px; }
   .form-control { font-size: 0.98rem; padding: 8px; }
   .compact-amount { font-size: 1rem; }
+}
+
+/* Final safety: ensure payment-row wraps to avoid horizontal overflow on medium narrow screens */
+.payment-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Make transferencia/cheque fields wrap and avoid forcing the container wider than viewport */
+.transferencia-fields, .cheque-fields {
+  max-width: 100%;
+  box-sizing: border-box;
+  flex-wrap: wrap;
 }
 </style>
 {% endblock %}
