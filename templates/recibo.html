@@ -611,7 +611,6 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
   width:100%;
   box-sizing:border-box;
 }
-/* Liquido block fixed width, aligned right */
 .liquido-block {
   min-width:150px;
   max-width:220px;
@@ -619,7 +618,6 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
   flex-direction:column;
   align-items:flex-end;
 }
-/* Letras block takes remaining space and keeps input full width */
 .letras-block {
   flex:1;
   display:flex;
@@ -698,13 +696,25 @@ body { background: var(--bg-1); color:#0f1724; margin:0; padding:0; }
   body.print-medio-TRANSFERENCIA .printable-option[data-option="TRANSFERENCIA"] { display:inline-flex; }
   body.print-medio-CHEQUE .printable-option[data-option="CHEQUE"] { display:inline-flex; }
 
-  /* Show transfer/cheque fields inline in print when selected */
+  /* Show transfer/cheque fields inline in print when selected
+     IMPORTANT CHANGE: force a single horizontal row (no stacking) by using inline-flex,
+     row direction and nowrap, and ensure inputs don't expand to full width */
   body.print-medio-TRANSFERENCIA .transferencia-fields,
   body.print-medio-CHEQUE .cheque-fields {
     display:inline-flex !important;
     gap:8px;
     align-items:center;
     margin-left:6px;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    white-space: nowrap !important;
+  }
+
+  body.print-medio-TRANSFERENCIA .transferencia-fields .trans-input,
+  body.print-medio-CHEQUE .cheque-fields .trans-input {
+    flex: 0 0 auto !important;
+    min-width: 120px !important;
+    max-width: 380px !important;
   }
 
   /* Compact signatures */
