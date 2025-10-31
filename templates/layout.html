@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <!-- favicon / icono de pestaña -->
+<link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='imagenes/logo.png') }}">
+<link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='imagenes/logo.png') }}">
+<link rel="shortcut icon" href="{{ url_for('static', filename='imagenes/logo.png') }}">
+
+<!-- icono para iOS / Android (opcional, mejora PWA/añadir a pantalla) -->
+<link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='imagenes/logo.png') }}">
+<meta name="apple-mobile-web-app-title" content="Empaquetex">
+<meta name="application-name" content="Empaquetex">
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
