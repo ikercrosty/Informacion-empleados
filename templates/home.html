@@ -23,7 +23,7 @@
         'Hacer doble click en una fila para poder "Editar".'
         </p>
         <p class="text-muted mb-1" style="font-size:0.65rem;">
-        'Siempre presionar el botón guardar para conservar los cambios.''
+        'Siempre presionar el botón guardar para conservar los cambios.'' 
         </p>
 
         <div class="d-flex flex-wrap gap-2 align-items-center mt-2">
@@ -153,6 +153,7 @@
   - El rol editor puede usar Agregar, Editar, Guardar y Cancelar
   - Solo admin puede eliminar (fotos y empleados)
   - Mantener botones visibles; JS valida permisos y muestra mensajes
+  - Añadida validación de caracteres en inputs (DPI, IGSS, Telefono, y campos de texto)
 */
 (function(){
   const CURRENT_ROLE = ("{{ rol or '' }}").toLowerCase();
@@ -440,6 +441,167 @@
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ()=>tryRegister(20));
   else tryRegister(20);
+
+  /*
+    VALIDACIÓN DE CAMPOS (requisito pedido):
+    - DPI, Numero IGSS, Telefono: solo números y espacios
+    - Nombre, Apellidos, Apellidos de casada, Estado Civil, Nacionalidad, Departamento,
+      Lugar de nacimiento, Dirección, Religion, Correo, Puesto, Tipo de contrato:
+      solo letras, caracteres especiales permitidos y espacios (no admitir dígitos)
+    Implementación: escucha global 'input' y 'paste' y filtra caracteres no permitidos
+    determinando la columna mediante el índice de la celda TD contigua al INPUT.
+  */
+
+  // Índices de columna (0-based) según la cabecera del tabla
+  const COL_INDEX = {
+    DPI: 0,
+    NOMBRE: 1,
+    APELLIDOS: 2,
+    APELLIDOS_CASADA: 3,
+    ESTADO_CIVIL: 4,
+    NACIONALIDAD: 5,
+    DEPARTAMENTO: 6,
+    FECHA_NAC: 7,
+    LUGAR_NAC: 8,
+    NUMERO_IGSS: 9,
+    DIRECCION: 10,
+    TELEFONO: 11,
+    RELIGION: 12,
+    CORREO: 13,
+    PUESTO: 14,
+    TIPO_CONTRATO: 15
+  };
+
+  // RegExp para permitir solo dígitos y espacios
+  const reDigitsSpaces = /[^0-9\s]/g;
+
+  // RegExp para permitir letras (incluye acentos), caracteres especiales comunes y espacios,
+  // y prohibir números. Se permite: letras, tildes, ñ, Ñ, guiones, puntos, comas, paréntesis, /, &, @, :, ;, ' " ¿ ? ¡ ! # % + = _ * ¿ º ª
+  // Eliminar cualquier dígito
+  const reDisallowDigits = /[0-9]/g;
+
+  // RegExp para permitir en correo: letras, números, @ . - _ + y no permitir otros símbolos raros ni espacios al inicio final.
+  // Dado que pediste que "Correo" no admita números: sin embargo normalmente el correo puede tener números.
+  // Tú pediste "solo deben de aceptar letras caracteres especiales y espacios pero no debe de admitir numeros". 
+  // Aplicamos esa regla estricta también al campo Correo (tal como pediste).
+  // (Nota: esto hará que correos con números no se permitan en edición in-line.)
+  const reDisallowDigitsStrict = /[0-9]/g;
+
+  // Reglas: dado un input, determina la columna índice (si es posible)
+  function getInputColumnIndex(inp) {
+    if (!inp) return null;
+    // Si input está dentro de un td, usar el índice de ese td
+    const td = inp.closest('td');
+    if (td) {
+      const tr = td.parentElement;
+      if (tr && tr.tagName === 'TR') {
+        // compute index among visible TDs
+        const tds = Array.from(tr.children).filter(c => c.tagName === 'TD' || c.tagName === 'TH');
+        const idx = tds.indexOf(td);
+        if (idx >= 0) return idx;
+      }
+    }
+    // Si el input está en una celda no tradicional, intentar usar data-col si existe
+    if (inp.dataset && inp.dataset.col) {
+      const n = Number(inp.dataset.col);
+      if (!isNaN(n)) return n;
+    }
+    return null;
+  }
+
+  // Handler para filtrar valor en live (input)
+  function filterInputValue(inp) {
+    if (!inp) return;
+    const col = getInputColumnIndex(inp);
+    if (col === null) return;
+
+    const orig = inp.value;
+    let fixed = orig;
+
+    // DPI, Numero IGSS, Telefono: solo números y espacios
+    if (col === COL_INDEX.DPI || col === COL_INDEX.NUMERO_IGSS || col === COL_INDEX.TELEFONO) {
+      fixed = fixed.replace(reDigitsSpaces, '');
+    } else if (
+      col === COL_INDEX.NOMBRE || col === COL_INDEX.APELLIDOS || col === COL_INDEX.APELLIDOS_CASADA ||
+      col === COL_INDEX.ESTADO_CIVIL || col === COL_INDEX.NACIONALIDAD || col === COL_INDEX.DEPARTAMENTO ||
+      col === COL_INDEX.LUGAR_NAC || col === COL_INDEX.DIRECCION || col === COL_INDEX.RELIGION ||
+      col === COL_INDEX.CORREO || col === COL_INDEX.PUESTO || col === COL_INDEX.TIPO_CONTRATO
+    ) {
+      // quitar dígitos
+      fixed = fixed.replace(reDisallowDigits, '');
+      // además normalizar múltiples espacios
+      fixed = fixed.replace(/\s{2,}/g, ' ');
+      // opcional: recortar espacios extremos
+      // pero no hacemos trim automático para no sorprender al usuario; sí normalizamos internamente
+      // dejamos la decisión de trim al guardar
+    } else {
+      // otros campos no se tocan
+      return;
+    }
+
+    if (fixed !== orig) {
+      const pos = inp.selectionStart || 0;
+      inp.value = fixed;
+      try {
+        // intentar reubicar el caret en una posición razonable
+        inp.setSelectionRange(pos - 1 >= 0 ? pos - 1 : 0, pos - 1 >= 0 ? pos - 1 : 0);
+      } catch (e) {}
+    }
+  }
+
+  // Intercept paste to sanitize pasted content before it lands
+  document.addEventListener('paste', function(e) {
+    const t = e.target;
+    if (!t || !t.tagName) return;
+    if (t.tagName.toLowerCase() !== 'input' && t.tagName.toLowerCase() !== 'textarea') return;
+
+    const col = getInputColumnIndex(t);
+    if (col === null) return;
+
+    // get pasted text
+    const clipboard = (e.clipboardData || window.clipboardData);
+    const pasted = clipboard ? (clipboard.getData('text') || '') : '';
+    if (!pasted) return;
+
+    // Create sanitized version according to rules
+    let sanitized = pasted;
+    if (col === COL_INDEX.DPI || col === COL_INDEX.NUMERO_IGSS || col === COL_INDEX.TELEFONO) {
+      sanitized = sanitized.replace(reDigitsSpaces, '');
+    } else if (
+      col === COL_INDEX.NOMBRE || col === COL_INDEX.APELLIDOS || col === COL_INDEX.APELLIDOS_CASADA ||
+      col === COL_INDEX.ESTADO_CIVIL || col === COL_INDEX.NACIONALIDAD || col === COL_INDEX.DEPARTAMENTO ||
+      col === COL_INDEX.LUGAR_NAC || col === COL_INDEX.DIRECCION || col === COL_INDEX.RELIGION ||
+      col === COL_INDEX.CORREO || col === COL_INDEX.PUESTO || col === COL_INDEX.TIPO_CONTRATO
+    ) {
+      sanitized = sanitized.replace(reDisallowDigits, '');
+    } else {
+      return;
+    }
+
+    // If sanitized equals pasted, allow default paste; otherwise prevent default and insert sanitized
+    if (sanitized !== pasted) {
+      e.preventDefault();
+      // insert sanitized text at caret position
+      const start = t.selectionStart || 0;
+      const end = t.selectionEnd || 0;
+      const before = t.value.slice(0, start);
+      const after = t.value.slice(end);
+      const newVal = before + sanitized + after;
+      t.value = newVal;
+      const newPos = before.length + sanitized.length;
+      try { t.setSelectionRange(newPos, newPos); } catch (err) {}
+      // trigger input event to update other logic (if any)
+      t.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  });
+
+  // Global input listener (applies filter while typing)
+  document.addEventListener('input', function(e) {
+    const t = e.target;
+    if (!t || !t.tagName) return;
+    if (t.tagName.toLowerCase() !== 'input' && t.tagName.toLowerCase() !== 'textarea') return;
+    filterInputValue(t);
+  }, true);
 
 })();
 </script>
