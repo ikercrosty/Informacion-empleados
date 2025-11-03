@@ -21,7 +21,7 @@
         'Hacer doble click en una fila para poder "Editar".'
         </p>
         <p class="text-muted mb-1" style="font-size:0.65rem;">
-        'Siempre presionar el botón guardar para conservar los cambios.''
+        'Siempre presionar el botón guardar para conservar los cambios.'
         </p>
 
 
@@ -126,11 +126,12 @@
       if (btnGuardar) btnGuardar.disabled = false;
       if (btnCancelar) btnCancelar.disabled = false;
 
-      // fallback attachments: call window.__MAIN_TABLA functions if main.js didn't attach handlers
-     
-      const editFn = window.__MAIN_TABLA && window.__MAIN_TABLA.editarFila ? window.__MAIN_TABLA.editarFila : null;
-      const saveFn = window.__MAIN_TABLA && window.__MAIN_TABLA.guardarFila ? window.__MAIN_TABLA.guardarFila : null;
-      const cancelFn = window.__MAIN_TABLA && window.__MAIN_TABLA.cancelar ? window.__MAIN_TABLA.cancelar : null;
+      // fallback attachments: use the public API exported by main.js safely
+      const mainApi = window.__MAIN_TABLA || {};
+      const addFn = mainApi.agregarFila || mainApi.addRow || mainApi.nuevo || null;
+      const editFn = mainApi.editarFila || null;
+      const saveFn = mainApi.guardarFila || null;
+      const cancelFn = mainApi.cancelar || null;
 
       function safeAttach(id, fn) {
         const el = document.getElementById(id);
@@ -140,6 +141,7 @@
         el.dataset.mainAttached = '1';
       }
 
+      // Attach only if functions are present. This avoids ReferenceError or attaching undefined.
       safeAttach('btnAgregar', addFn);
       safeAttach('btnEditar', editFn);
       safeAttach('btnGuardar', saveFn);
