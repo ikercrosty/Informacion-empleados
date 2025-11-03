@@ -85,8 +85,9 @@
   const TABLE_ID = 'tablaAcademico';
   const ENDPOINT = '/guardar_academico';
   const COLUMNS = 7;
-  const BLOQUEADAS = [0,1,2]; // DPI, Nombre, Apellidos
+  const BLOQUEADAS = [0,1,2]; // DPI, Nombre, Apellidos (si quieres bloquearlos cuando correspondan)
 
+  // Simple flash (pequeño toast)
   function flash(msg, type='info') {
     const id = 'aboutFlash';
     const prev = document.getElementById(id);
@@ -99,80 +100,245 @@
     d.style.zIndex = 3000;
     d.innerText = msg;
     document.body.appendChild(d);
-    setTimeout(()=> d.remove(), 1800);
+    setTimeout(()=> d.remove(), 2000);
   }
 
+  // Helpers
+  function getTable() { return document.getElementById(TABLE_ID); }
+  function getTbody() { const t = getTable(); return t && t.tBodies && t.tBodies[0]; }
+
+  // Selección de fila, estado de botones
+  let selectedRow = null;
+  function clearSelection() {
+    if (!getTable()) return;
+    Array.from(getTbody().rows).forEach(r=> r.classList.remove('table-active'));
+    selectedRow = null;
+    const be = document.getElementById('btnEditar'); if (be) be.disabled = true;
+  }
+  function selectRow(tr) {
+    if (!tr) return;
+    clearSelection();
+    tr.classList.add('table-active');
+    selectedRow = tr;
+    const be = document.getElementById('btnEditar'); if (be) be.disabled = false;
+  }
+
+  // Crear nueva fila editable
+  function createEmptyRow() {
+    const tbody = getTbody();
+    if (!tbody) return null;
+    const tr = document.createElement('tr');
+    for (let i=0;i<COLUMNS;i++) {
+      const td = document.createElement('td');
+      td.innerText = '';
+      td.contentEditable = true;
+      td.style.background = '#fffbe6';
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+    return tr;
+  }
+
+  // Habilitar edición en fila existente
+  function enableRowEditing(tr) {
+    if (!tr) return;
+    Array.from(tr.cells).forEach((td, idx) => {
+      // permitir edición en todas las celdas; si quieres bloquear alguna use BLOQUEADAS
+      if (BLOQUEADAS.includes(idx)) {
+        // mantener pero permitimos edición para el caso en que el usuario requiera (puedes cambiar)
+        td.contentEditable = true;
+      } else {
+        td.contentEditable = true;
+      }
+      td.style.background = '#fffbe6';
+    });
+    selectRow(tr);
+    const bg = document.getElementById('btnGuardar'); if (bg) bg.disabled = false;
+    const bc = document.getElementById('btnCancelar'); if (bc) bc.disabled = false;
+  }
+
+  // Deshabilitar edición (bloquear) y normalizar estilo
+  function disableRowEditing(tr) {
+    if (!tr) return;
+    Array.from(tr.cells).forEach(td => {
+      td.contentEditable = false;
+      td.style.background = '';
+    });
+    const bg = document.getElementById('btnGuardar'); if (bg) bg.disabled = false;
+    const bc = document.getElementById('btnCancelar'); if (bc) bc.disabled = false;
+  }
+
+  // Serializar una fila hacia el formato esperado por /guardar_academico
+  function serializeRowToAcad(tr) {
+    if (!tr) return null;
+    // Mapeo: columnas mostradas <-> keys que el endpoint espera
+    const keys = [
+      "Numero de DPI","Nombre","Apellidos",
+      "Nivel de estudios","Profesi\u00F3n u Oficio",
+      "Colegio o establecimiento","Cursos o titulos adicionales"
+    ];
+    const obj = {};
+    Array.from(tr.cells).forEach((td, i) => {
+      const val = (td.innerText || '').trim();
+      obj[keys[i]] = val;
+    });
+    return obj;
+  }
+
+  // Guardar fila (envía JSON al endpoint /guardar_academico)
+  async function guardarFilaSelected() {
+    const tr = selectedRow;
+    if (!tr) { flash('No hay fila seleccionada para guardar', 'warning'); return; }
+    const payload = serializeRowToAcad(tr);
+    if (!payload) { flash('Fila inválida', 'danger'); return; }
+    if (!payload["Numero de DPI"] || payload["Numero de DPI"].trim().length===0) {
+      flash('El campo Numero de DPI es obligatorio', 'danger');
+      return;
+    }
+
+    // Añadir indicador 'nuevo' opcional: si la fila vino sin DPI en base de datos, el servidor decide
+    try {
+      const res = await fetch(ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json().catch(()=> ({}));
+      if (!res.ok) {
+        const msg = json && (json.mensaje || json.error) ? (json.mensaje || json.error) : `Error ${res.status}`;
+        flash(`Error al guardar: ${msg}`, 'danger');
+        return;
+      }
+      // Éxito: actualizar UI, bloquear edición
+      disableRowEditing(tr);
+      flash(json.mensaje || 'Registro guardado correctamente', 'success');
+    } catch (err) {
+      console.error('guardarFilaSelected error', err);
+      flash('Error de red al guardar', 'danger');
+    }
+  }
+
+  // Cancelar: si la fila es nueva y vacía la elimino; si tenía contenido previo lo dejamos como está (simplificación)
+  function cancelarEdicionSelected() {
+    const tr = selectedRow;
+    if (!tr) {
+      // si no hay selección, nada que cancelar
+      return;
+    }
+    // Si todas las celdas están vacías => remover fila nueva
+    const allEmpty = Array.from(tr.cells).every(td => (td.innerText||'').trim() === '');
+    if (allEmpty) {
+      tr.remove();
+      clearSelection();
+      flash('Edición cancelada (fila nueva eliminada)', 'info');
+      return;
+    }
+    // Si no está vacía: simplemente bloquear edición y eliminar estilos
+    disableRowEditing(tr);
+    flash('Edición cancelada', 'info');
+  }
+
+  // Fallback registrar tabla: si existe función global registrarTabla la invocamos; si no, dejamos preparado el control local
   function tryRegister(retries = 20) {
     if (window.registrarTabla && typeof window.registrarTabla === 'function') {
-      window.registrarTabla(
-        TABLE_ID,
-        COLUMNS,
-        ENDPOINT,
-        [
-          "Numero de DPI","Nombre","Apellidos",
-          "Nivel de estudios","Profesión u Oficio",
-          "Colegio o establecimiento","Cursos o titulos adicionales"
-        ],
-        BLOQUEADAS
-      );
-
-      // requested button states
-      const btnAgregar = document.getElementById('btnAgregar');
-      const btnEditar  = document.getElementById('btnEditar');
-      const btnGuardar = document.getElementById('btnGuardar');
-      const btnCancelar= document.getElementById('btnCancelar');
-      if (btnAgregar) btnAgregar.disabled = false;
-      if (btnEditar)  btnEditar.disabled = true;
-      if (btnGuardar) btnGuardar.disabled = false;
-      if (btnCancelar) btnCancelar.disabled = false;
-
-      // fallback attachments: call window.__MAIN_TABLA functions if main.js didn't attach handlers
-     
-      const editFn = window.__MAIN_TABLA && window.__MAIN_TABLA.editarFila ? window.__MAIN_TABLA.editarFila : null;
-      const saveFn = window.__MAIN_TABLA && window.__MAIN_TABLA.guardarFila ? window.__MAIN_TABLA.guardarFila : null;
-      const cancelFn = window.__MAIN_TABLA && window.__MAIN_TABLA.cancelar ? window.__MAIN_TABLA.cancelar : null;
-
-      function safeAttach(id, fn) {
-        const el = document.getElementById(id);
-        if (!el || !fn) return;
-        if (el.dataset.mainAttached) return;
-        el.addEventListener('click', (e) => { e.stopPropagation(); fn(); });
-        el.dataset.mainAttached = '1';
+      try {
+        window.registrarTabla(
+          TABLE_ID,
+          COLUMNS,
+          ENDPOINT,
+          [
+            "Numero de DPI","Nombre","Apellidos",
+            "Nivel de estudios","Profesión u Oficio",
+            "Colegio o establecimiento","Cursos o titulos adicionales"
+          ],
+          BLOQUEADAS
+        );
+      } catch (e) {
+        console.warn('registrarTabla invocation failed, continuing with local handlers', e);
       }
-      // --- FIX: ensure addFn is defined safely before use ---
-const addFn = (window.__MAIN_TABLA && (window.__MAIN_TABLA.agregarFila || window.__MAIN_TABLA.nuevo || window.__MAIN_TABLA.addRow))
-  ? (window.__MAIN_TABLA.agregarFila || window.__MAIN_TABLA.nuevo || window.__MAIN_TABLA.addRow)
-  : null;
-// -----------------------------------------------------
-
-
-      safeAttach('btnAgregar', addFn);
-      safeAttach('btnEditar', editFn);
-      safeAttach('btnGuardar', saveFn);
-      safeAttach('btnCancelar', cancelFn);
-
-      // ensure dblclick enables Edit (defensive)
-      const tabla = document.getElementById(TABLE_ID);
-      if (tabla) {
-        tabla.addEventListener('dblclick', (e) => {
-          const tr = e.target.closest('tr');
-          if (!tr || tr.parentElement.tagName !== 'TBODY') return;
-          const be = document.getElementById('btnEditar');
-          if (be) be.disabled = false;
-        });
-      }
-
-      return;
     }
 
-    if (retries <= 0) {
-      console.error('registrarTabla no disponible después de esperar main.js');
-      flash('Error inicializando la tabla', 'danger');
-      return;
+    // Attach UI button handlers (idempotente)
+    const btnAgregar = document.getElementById('btnAgregar');
+    const btnEditar  = document.getElementById('btnEditar');
+    const btnGuardar = document.getElementById('btnGuardar');
+    const btnCancelar= document.getElementById('btnCancelar');
+
+    if (btnAgregar) {
+      btnAgregar.disabled = false;
+      btnAgregar.removeEventListener('click', _onAgregar);
+      btnAgregar.addEventListener('click', _onAgregar);
     }
-    setTimeout(() => tryRegister(retries - 1), 100);
+    if (btnEditar) {
+      // se habilita cuando se selecciona fila
+      btnEditar.removeEventListener('click', _onEditar);
+      btnEditar.addEventListener('click', _onEditar);
+    }
+    if (btnGuardar) {
+      btnGuardar.removeEventListener('click', _onGuardar);
+      btnGuardar.addEventListener('click', _onGuardar);
+      // Por defecto no bloqueamos (si quieres bloquearlo activar)...
+    }
+    if (btnCancelar) {
+      btnCancelar.removeEventListener('click', _onCancelar);
+      btnCancelar.addEventListener('click', _onCancelar);
+    }
+
+    // Attach row click / dblclick handlers
+    const tabla = getTable();
+    if (tabla) {
+      tabla.removeEventListener('click', _onTableClick);
+      tabla.addEventListener('click', _onTableClick);
+      tabla.removeEventListener('dblclick', _onTableDblClick);
+      tabla.addEventListener('dblclick', _onTableDblClick);
+    }
   }
 
+  // Handlers (separados para remover/adjuntar)
+  function _onAgregar(e) {
+    const newRow = createEmptyRow();
+    if (newRow) {
+      selectRow(newRow);
+      // focus en la primera celda editable
+      const first = newRow.cells[0];
+      if (first) {
+        first.focus();
+      }
+    }
+  }
+
+  function _onEditar(e) {
+    if (!selectedRow) {
+      flash('Selecciona una fila para editar (doble click también habilita)', 'warning');
+      return;
+    }
+    enableRowEditing(selectedRow);
+    // focus en la primer celda editable
+    const first = selectedRow.cells[0];
+    if (first) first.focus();
+  }
+
+  function _onGuardar(e) {
+    guardarFilaSelected();
+  }
+
+  function _onCancelar(e) {
+    cancelarEdicionSelected();
+  }
+
+  function _onTableClick(e) {
+    const tr = e.target.closest('tr');
+    if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+    selectRow(tr);
+  }
+
+  function _onTableDblClick(e) {
+    const tr = e.target.closest('tr');
+    if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+    enableRowEditing(tr);
+  }
+
+  // Inicia registro una vez DOM listo (espera main.js si existe)
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => tryRegister(20));
   } else {
