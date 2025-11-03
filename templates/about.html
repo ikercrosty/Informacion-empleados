@@ -132,6 +132,12 @@
       const saveFn = window.__MAIN_TABLA && window.__MAIN_TABLA.guardarFila ? window.__MAIN_TABLA.guardarFila : null;
       const cancelFn = window.__MAIN_TABLA && window.__MAIN_TABLA.cancelar ? window.__MAIN_TABLA.cancelar : null;
 
+      // --- FIX: ensure addFn is defined safely before use ---
+      const addFn = (window.__MAIN_TABLA && (window.__MAIN_TABLA.agregarFila || window.__MAIN_TABLA.nuevo || window.__MAIN_TABLA.addRow))
+        ? (window.__MAIN_TABLA.agregarFila || window.__MAIN_TABLA.nuevo || window.__MAIN_TABLA.addRow)
+        : null;
+      // -----------------------------------------------------
+
       function safeAttach(id, fn) {
         const el = document.getElementById(id);
         if (!el || !fn) return;
