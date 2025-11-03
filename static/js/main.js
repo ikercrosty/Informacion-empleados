@@ -130,86 +130,93 @@
     if (bc) bc.disabled = false;
   }
 
-  async function guardarFila(){
-    // Primero: si no hay activeRow intentar elegir una fila razonable en la tabla registrada
-    if (!activeRow || !activeTable) {
-      const regEntry = Object.values(registry).find(r => r.tabla && r.tabla.offsetParent !== null);
-      if (regEntry && regEntry.tabla) {
-        const tbody = regEntry.tabla.querySelector('tbody');
-        if (tbody) {
-          // preferir fila activa, luego fila en edición/nueva, luego primera fila
-          let tr = tbody.querySelector('tr.table-active');
-          if (!tr) tr = tbody.querySelector('tr[data-editing="1"], tr[data-new="1"]') || tbody.querySelector('tr');
-          if (tr) {
-            activeTable = regEntry.tabla;
-            activeRow = tr;
-          }
+ async function guardarFila(){
+  // Intentar usar activeRow; si no existe, buscar una fila razonable en la primera tabla visible registrada
+  let row = activeRow;
+  let table = activeTable;
+
+  if (!row || !table) {
+    const regEntry = Object.values(registry).find(r => r.tabla && r.tabla.offsetParent !== null);
+    if (regEntry && regEntry.tabla) {
+      const tbody = regEntry.tabla.querySelector('tbody');
+      if (tbody) {
+        // preferir fila activa, luego fila en edición/nueva, luego primera fila
+        let tr = tbody.querySelector('tr.table-active');
+        if (!tr) tr = tbody.querySelector('tr[data-editing="1"], tr[data-new="1"]') || tbody.querySelector('tr');
+        if (tr) {
+          table = regEntry.tabla;
+          row = tr;
         }
       }
     }
-
-    // Si aún no hay fila válida, avisar y salir (evita TypeError)
-    if (!activeRow || !activeTable) {
-      flash("No hay fila seleccionada", "danger");
-      return;
-    }
-
-    // Validar que la fila tiene celdas antes de acceder a ellas
-    if (!activeRow.cells || activeRow.cells.length === 0) {
-      flash("La fila seleccionada no contiene celdas válidas", "danger");
-      return;
-    }
-
-    const info = Object.values(registry).find(r=> r.tabla === activeTable) || {};
-    const campos = info.campos || [];
-    const endpoint = info.endpoint || '';
-    const values = Array.from(activeRow.cells).map(td=> td.innerText == null ? "" : td.innerText.trim());
-
-    // Construir payload
-    const payload = {};
-    for (let i=0;i<campos.length;i++){
-      payload[campos[i]] = values[i] !== undefined ? values[i] : "";
-    }
-
-    // Validación mínima: DPI obligatorio
-    if ((payload['Numero de DPI']||"").trim() === "") {
-      flash("El campo Numero de DPI es obligatorio", "danger");
-      return;
-    }
-
-    payload.nuevo = activeRow.dataset.new === '1' ? true : false;
-    const url = endpoint || '/guardar_academico';
-
-    try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) {
-        const t = await res.text().catch(()=>res.statusText);
-        throw new Error(`${res.status} ${t}`);
-      }
-
-      // Bloquear edición y restaurar UI
-      Array.from(activeRow.cells).forEach(td=> { td.contentEditable = false; td.style.backgroundColor = ""; });
-      activeRow.classList.remove('table-active');
-      delete activeRow.dataset.editing;
-      delete activeRow.dataset.new;
-      activeRow = null;
-      activeTable = null;
-      const be = document.getElementById('btnEditar');
-      const bg = document.getElementById('btnGuardar');
-      const bc = document.getElementById('btnCancelar');
-      if (be) be.disabled = true;
-      if (bg) bg.disabled = true;
-      if (bc) bc.disabled = true;
-      flash("Guardado correctamente", "success");
-    } catch (err) {
-      // Log the error for debugging but do not show a flash to the user
-      console.error("guardarFila error", err);
-    }
   }
+
+  // Si no hay fila válida, avisar y salir (evita TypeError)
+  if (!row || !table) {
+    flash("No hay fila seleccionada", "danger");
+    return;
+  }
+
+  // Validar que la fila tiene celdas antes de acceder a ellas
+  if (!row.cells || row.cells.length === 0) {
+    flash("La fila seleccionada no contiene celdas válidas", "danger");
+    return;
+  }
+
+  const info = Object.values(registry).find(r=> r.tabla === table) || {};
+  const campos = info.campos || [];
+  const endpoint = info.endpoint || '';
+  const values = Array.from(row.cells).map(td=> td.innerText == null ? "" : td.innerText.trim());
+
+  // Construir payload
+  const payload = {};
+  for (let i=0;i<campos.length;i++){
+    payload[campos[i]] = values[i] !== undefined ? values[i] : "";
+  }
+
+  // Validación mínima: DPI obligatorio
+  if ((payload['Numero de DPI']||"").trim() === "") {
+    flash("El campo Numero de DPI es obligatorio", "danger");
+    return;
+  }
+
+  // decidir nuevo según dataset de la fila usada
+  payload.nuevo = row.dataset && row.dataset.new === '1' ? true : false;
+  const url = endpoint || '/guardar_academico';
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const t = await res.text().catch(()=>res.statusText);
+      throw new Error(`${res.status} ${t}`);
+    }
+
+    // Bloquear edición y restaurar UI sobre la fila local 'row'
+    Array.from(row.cells).forEach(td=> { td.contentEditable = false; td.style.backgroundColor = ""; });
+    row.classList.remove('table-active');
+    delete row.dataset.editing;
+    delete row.dataset.new;
+
+    // Solo limpiar las variables globales si apuntan a la misma fila que usamos
+    if (activeRow === row) activeRow = null;
+    if (activeTable === table) activeTable = null;
+
+    const be = document.getElementById('btnEditar');
+    const bg = document.getElementById('btnGuardar');
+    const bc = document.getElementById('btnCancelar');
+    if (be) be.disabled = true;
+    if (bg) bg.disabled = true;
+    if (bc) bc.disabled = true;
+    flash("Guardado correctamente", "success");
+  } catch (err) {
+    console.error("guardarFila error", err);
+  }
+}
+
 
   function cancelar(){
     if (!activeRow) return;
