@@ -102,70 +102,70 @@
     setTimeout(()=> d.remove(), 1800);
   }
 
-function tryRegister(retries = 20) {
-  if (window.registrarTabla && typeof window.registrarTabla === 'function') {
-    window.registrarTabla(
-      TABLE_ID,
-      COLUMNS,
-      ENDPOINT,
-      [
-        "Numero de DPI","Nombre","Apellidos",
-        "Nivel de estudios","Profesión u Oficio",
-        "Colegio o establecimiento","Cursos o titulos adicionales"
-      ],
-      BLOQUEADAS
-    );
+  function tryRegister(retries = 20) {
+    if (window.registrarTabla && typeof window.registrarTabla === 'function') {
+      window.registrarTabla(
+        TABLE_ID,
+        COLUMNS,
+        ENDPOINT,
+        [
+          "Numero de DPI","Nombre","Apellidos",
+          "Nivel de estudios","Profesión u Oficio",
+          "Colegio o establecimiento","Cursos o titulos adicionales"
+        ],
+        BLOQUEADAS
+      );
 
-    // requested button states
-    const btnAgregar = document.getElementById('btnAgregar');
-    const btnEditar  = document.getElementById('btnEditar');
-    const btnGuardar = document.getElementById('btnGuardar');
-    const btnCancelar= document.getElementById('btnCancelar');
-    if (btnAgregar) btnAgregar.disabled = false;
-    if (btnEditar)  btnEditar.disabled = true;
-    if (btnGuardar) btnGuardar.disabled = false;
-    if (btnCancelar) btnCancelar.disabled = false;
+      // requested button states
+      const btnAgregar = document.getElementById('btnAgregar');
+      const btnEditar  = document.getElementById('btnEditar');
+      const btnGuardar = document.getElementById('btnGuardar');
+      const btnCancelar= document.getElementById('btnCancelar');
+      if (btnAgregar) btnAgregar.disabled = false;
+      if (btnEditar)  btnEditar.disabled = true;
+      if (btnGuardar) btnGuardar.disabled = false;
+      if (btnCancelar) btnCancelar.disabled = false;
 
-    // fallback attachments: call window.__MAIN_TABLA functions if main.js didn't attach handlers
-    const editFn = window.__MAIN_TABLA && window.__MAIN_TABLA.editarFila ? window.__MAIN_TABLA.editarFila : null;
-    const saveFn = window.__MAIN_TABLA && window.__MAIN_TABLA.guardarFila ? window.__MAIN_TABLA.guardarFila : null;
-    const cancelFn = window.__MAIN_TABLA && window.__MAIN_TABLA.cancelar ? window.__MAIN_TABLA.cancelar : null;
+      // fallback attachments: call window.__MAIN_TABLA functions if main.js didn't attach handlers
+     
+      const editFn = window.__MAIN_TABLA && window.__MAIN_TABLA.editarFila ? window.__MAIN_TABLA.editarFila : null;
+      const saveFn = window.__MAIN_TABLA && window.__MAIN_TABLA.guardarFila ? window.__MAIN_TABLA.guardarFila : null;
+      const cancelFn = window.__MAIN_TABLA && window.__MAIN_TABLA.cancelar ? window.__MAIN_TABLA.cancelar : null;
 
-    function safeAttach(id, fn) {
-      const el = document.getElementById(id);
-      if (!el || !fn) return;
-      if (el.dataset.mainAttached) return;
-      el.addEventListener('click', (e) => { e.stopPropagation(); fn(); });
-      el.dataset.mainAttached = '1';
+      function safeAttach(id, fn) {
+        const el = document.getElementById(id);
+        if (!el || !fn) return;
+        if (el.dataset.mainAttached) return;
+        el.addEventListener('click', (e) => { e.stopPropagation(); fn(); });
+        el.dataset.mainAttached = '1';
+      }
+
+      safeAttach('btnAgregar', addFn);
+      safeAttach('btnEditar', editFn);
+      safeAttach('btnGuardar', saveFn);
+      safeAttach('btnCancelar', cancelFn);
+
+      // ensure dblclick enables Edit (defensive)
+      const tabla = document.getElementById(TABLE_ID);
+      if (tabla) {
+        tabla.addEventListener('dblclick', (e) => {
+          const tr = e.target.closest('tr');
+          if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+          const be = document.getElementById('btnEditar');
+          if (be) be.disabled = false;
+        });
+      }
+
+      return;
     }
 
-    // Attach agregar safely: try common exported names from main.js (agregarFila / addRow / nuevo)
-    safeAttach('btnAgregar', (window.__MAIN_TABLA && (window.__MAIN_TABLA.agregarFila || window.__MAIN_TABLA.addRow || window.__MAIN_TABLA.nuevo)) || null);
-    safeAttach('btnEditar', editFn);
-    safeAttach('btnGuardar', saveFn);
-    safeAttach('btnCancelar', cancelFn);
-
-    // ensure dblclick enables Edit (defensive)
-    const tabla = document.getElementById(TABLE_ID);
-    if (tabla) {
-      tabla.addEventListener('dblclick', (e) => {
-        const tr = e.target.closest('tr');
-        if (!tr || tr.parentElement.tagName !== 'TBODY') return;
-        const be = document.getElementById('btnEditar');
-        if (be) be.disabled = false;
-      });
+    if (retries <= 0) {
+      console.error('registrarTabla no disponible después de esperar main.js');
+      flash('Error inicializando la tabla', 'danger');
+      return;
     }
-
-    return;
+    setTimeout(() => tryRegister(retries - 1), 100);
   }
-
-  if (retries <= 0) {
-    console.error('registrarTabla no disponible después de esperar main.js');
-    flash('Error inicializando la tabla', 'danger');
-    return;
-  }
-  setTimeout(() => tryRegister(retries - 1), 100);
-}
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => tryRegister(20));
