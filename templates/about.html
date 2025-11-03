@@ -21,7 +21,7 @@
         'Hacer doble click en una fila para poder "Editar".'
         </p>
         <p class="text-muted mb-1" style="font-size:0.65rem;">
-        'Siempre presionar el botón guardar para conservar los cambios.'
+        'Siempre presionar el botón guardar para conservar los cambios.''
         </p>
 
 
@@ -139,12 +139,6 @@
         el.addEventListener('click', (e) => { e.stopPropagation(); fn(); });
         el.dataset.mainAttached = '1';
       }
-      // --- FIX: ensure addFn is defined safely before use ---
-const addFn = (window.__MAIN_TABLA && (window.__MAIN_TABLA.agregarFila || window.__MAIN_TABLA.nuevo || window.__MAIN_TABLA.addRow))
-  ? (window.__MAIN_TABLA.agregarFila || window.__MAIN_TABLA.nuevo || window.__MAIN_TABLA.addRow)
-  : null;
-// -----------------------------------------------------
-
 
       safeAttach('btnAgregar', addFn);
       safeAttach('btnEditar', editFn);
