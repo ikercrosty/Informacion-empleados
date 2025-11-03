@@ -130,67 +130,61 @@
     if (bc) bc.disabled = false;
   }
 
-async function guardarEdicion() {
-  // Protección: asegurar que haya una fila seleccionada antes de acceder a .cells
-  if (!selectedRow) {
-    flash('Selecciona una fila antes de guardar', 'warning');
-    return;
-  }
+  async function guardarFila(){
+    // Defensive checks: ensure we have a valid selected row with cells before accessing them
+    if (!activeRow || !activeTable) {
+      flash("No hay fila seleccionada", "danger");
+      return;
+    }
+    if (!activeRow.cells || activeRow.cells.length === 0) {
+      flash("La fila seleccionada no contiene celdas válidas", "danger");
+      return;
+    }
 
-  const tds = Array.from(selectedRow.querySelectorAll("td"));
-  const values = tds.map(td => safeTrim(td.innerText));
-  const payload = {};
-  for (let i = 0; i < COLUMNS.length; i++) {
-    payload[COLUMNS[i]] = values[i] !== undefined ? values[i] : "";
-  }
-
-  const dpi = payload["Numero de DPI"] || "";
-  if (!dpi || dpi.trim() === "") {
-    flash("El campo Numero de DPI es obligatorio", "danger");
-    return;
-  }
-
-  try {
-    let exists = false;
+    const info = Object.values(registry).find(r=> r.tabla === activeTable) || {};
+    const campos = info.campos || [];
+    const endpoint = info.endpoint || '';
+    const values = Array.from(activeRow.cells).map(td=> td.innerText === null ? "" : td.innerText.trim());
+    // build payload mapping campos -> values (leave empty strings if empty)
+    const payload = {};
+    for (let i=0;i<campos.length;i++){
+      payload[campos[i]] = values[i] !== undefined ? values[i] : "";
+    }
+    // ensure DPI exists
+    if ((payload['Numero de DPI']||"").trim() === "") { flash("El campo Numero de DPI es obligatorio", "danger"); return; }
+    // decide nuevo based on presence of data-new flag
+    payload.nuevo = activeRow.dataset.new === '1' ? true : false;
+    // fallback endpoint if none provided
+    const url = endpoint || '/guardar_academico' ;
     try {
-      const r = await fetch(API_EMPLEADO_BASE + encodeURIComponent(dpi), { cache: 'no-store' });
-      exists = r.ok;
-    } catch (e) {
-      exists = false;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const t = await res.text().catch(()=>res.statusText);
+        throw new Error(`${res.status} ${t}`);
+      }
+      // lock cells and reset UI
+      Array.from(activeRow.cells).forEach(td=> { td.contentEditable = false; td.style.backgroundColor = ""; });
+      activeRow.classList.remove('table-active');
+      delete activeRow.dataset.editing;
+      delete activeRow.dataset.new;
+      activeRow = null;
+      activeTable = null;
+      const be = document.getElementById('btnEditar');
+      const bg = document.getElementById('btnGuardar');
+      const bc = document.getElementById('btnCancelar');
+      if (be) be.disabled = true;
+      if (bg) bg.disabled = true;
+      if (bc) bc.disabled = true;
+      flash("Guardado correctamente", "success");
+    } catch (err) {
+      console.error("guardarFila error", err);
+      flash("Error al guardar: " + (err.message||err), "danger");
     }
-    payload["nuevo"] = !exists;
-
-    const res = await fetch("/guardar_empleado", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(`HTTP ${res.status} ${text || res.statusText}`);
-    }
-
-    // Bloquear edición y limpiar estilo
-    tds.forEach(td => { td.contentEditable = false; td.style.backgroundColor = ""; });
-    selectedRow.classList.remove("table-active");
-    selectedRow = null;
-    originalCells = null;
-    editing = false;
-    isNewRow = false;
-    const btnEditar = document.getElementById("btnEditar");
-    const btnGuardar = document.getElementById("btnGuardar");
-    const btnCancelar = document.getElementById("btnCancelar");
-    if (btnEditar) btnEditar.disabled = true;
-    if (btnGuardar) btnGuardar.disabled = true;
-    if (btnCancelar) btnCancelar.disabled = true;
-    flash("Guardado correctamente", "success");
-  } catch (err) {
-    console.error("guardarEdicion error", err);
-    flash("Error al guardar: " + (err.message || err), "danger");
   }
-}
-
 
   function cancelar(){
     if (!activeRow) return;
@@ -224,7 +218,7 @@ async function guardarEdicion() {
     attachOnce('btnAgregar', agregarFila);
     attachOnce('btnEditar', editarFila);
     attachOnce('btnGuardar', guardarFila);
-    attachOnce('btnCancelar', cancelar);
+    attachOnce('btnCancelar', cancel);
 
     // NEW: click outside registered tables -> clear selection if not editing
     if (!document.body.dataset.mainOutsideHandler) {
@@ -258,7 +252,7 @@ async function guardarEdicion() {
   window.__MAIN_TABLA.agregarFila = agregarFila;
   window.__MAIN_TABLA.editarFila = editarFila;
   window.__MAIN_TABLA.guardarFila = guardarFila;
-  window.__MAIN_TABLA.cancelar = cancelar;
+  window.__MAIN_TABLA.cancelar = cancel;
 
 })();
 // --- START: KEY_FALLBACKS + getFirstMatching (safe, non-intrusive) ---
