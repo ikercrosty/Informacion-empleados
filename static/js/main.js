@@ -206,8 +206,8 @@
       if (bc) bc.disabled = true;
       flash("Guardado correctamente", "success");
     } catch (err) {
+      // Log the error for debugging but do not show a flash to the user
       console.error("guardarFila error", err);
-      flash("Error al guardar: " + (err.message||err), "danger");
     }
   }
 
@@ -239,23 +239,10 @@
     el.dataset.attached = '1';
   }
 
-  document.addEventListener('DOMContentLoaded', ()=> {
+  document.addEventListener('DOMContentLoaded', () => {
     attachOnce('btnAgregar', agregarFila);
     attachOnce('btnEditar', editarFila);
-
-    // REEMPLAZO SEGURO: wrapper que evita llamar guardarFila cuando no hay fila seleccionada
-    attachOnce('btnGuardar', function wrappedGuardar() {
-      if (!activeRow || !activeTable) {
-        flash("Selecciona una fila para guardar", "warning");
-        return;
-      }
-      if (typeof guardarFila === 'function') {
-        guardarFila();
-      } else {
-        flash("Función de guardado no disponible", "danger");
-      }
-    });
-
+    attachOnce('btnGuardar', guardarFila);
     attachOnce('btnCancelar', cancelar);
 
     // NEW: click outside registered tables -> clear selection if not editing
