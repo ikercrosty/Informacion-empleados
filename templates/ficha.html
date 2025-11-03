@@ -469,7 +469,6 @@
     // Try common separators: YYYY/MM/DD
     const partsSlash = s.split('/');
     if (partsSlash.length === 3) {
-      // could be YYYY/MM/DD or DD/MM/YYYY, detect
       if (partsSlash[0].length === 4) {
         const y = partsSlash[0]; const m = partsSlash[1].padStart(2,'0'); const d = partsSlash[2].padStart(2,'0');
         return `${d}/${m}/${y}`;
@@ -611,8 +610,6 @@
     } else setIfExists('fecha_nacimiento', rawFn || '');
 
     // Normalize date-formatted inputs to dd/mm/yyyy
-    // Fields to normalize (if present): fecha_nacimiento, fecha_inicio, ref_inicio_empresa, ref_fin_empresa
-    // plus any element with id containing 'fecha'
     normalizeDateInputsById(['fecha_nacimiento','fecha_inicio','ref_inicio_empresa','ref_fin_empresa']);
 
     // Also normalize any input ids that include the word 'fecha' (generic)
@@ -643,7 +640,9 @@
       if (el) el.innerText = '';
     });
     if (fotoEl) fotoEl.src = placeholder || fotoEl.getAttribute('data-original') || fotoEl.src;
-    if (selectEl) selectEl.value = '';
+    if (selectEl) {
+      // keep the select value itself; caller decides whether to reset it
+    }
   }
 
   async function loadEmpleadoList(){
@@ -712,8 +711,11 @@
 
   if (selectEl) {
     selectEl.addEventListener('change', function(){
+      // Immediately clear all fields when user changes selection so they don't see stale data
+      clearAll();
+
       const dpi = (this.value || '').trim();
-      if (!dpi) { clearAll(); return; }
+      if (!dpi) { return; }
       loadEmpleado(dpi);
     });
   }
