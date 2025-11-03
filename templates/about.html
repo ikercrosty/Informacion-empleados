@@ -139,12 +139,12 @@
         el.addEventListener('click', (e) => { e.stopPropagation(); fn(); });
         el.dataset.mainAttached = '1';
       }
-
       // --- FIX: ensure addFn is defined safely before use ---
-      const addFn = (window.__MAIN_TABLA && (window.__MAIN_TABLA.agregarFila || window.__MAIN_TABLA.nuevo || window.__MAIN_TABLA.addRow))
-        ? (window.__MAIN_TABLA.agregarFila || window.__MAIN_TABLA.nuevo || window.__MAIN_TABLA.addRow)
-        : null;
-      // -----------------------------------------------------
+const addFn = (window.__MAIN_TABLA && (window.__MAIN_TABLA.agregarFila || window.__MAIN_TABLA.nuevo || window.__MAIN_TABLA.addRow))
+  ? (window.__MAIN_TABLA.agregarFila || window.__MAIN_TABLA.nuevo || window.__MAIN_TABLA.addRow)
+  : null;
+// -----------------------------------------------------
+
 
       safeAttach('btnAgregar', addFn);
       safeAttach('btnEditar', editFn);

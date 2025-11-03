@@ -131,16 +131,7 @@
   }
 
   async function guardarFila(){
-    // Defensive checks: ensure we have a valid selected row with cells before accessing them
-    if (!activeRow || !activeTable) {
-      flash("No hay fila seleccionada", "danger");
-      return;
-    }
-    if (!activeRow.cells || activeRow.cells.length === 0) {
-      flash("La fila seleccionada no contiene celdas válidas", "danger");
-      return;
-    }
-
+    if (!activeRow || !activeTable) { flash("No hay fila seleccionada", "danger"); return; }
     const info = Object.values(registry).find(r=> r.tabla === activeTable) || {};
     const campos = info.campos || [];
     const endpoint = info.endpoint || '';
@@ -218,7 +209,7 @@
     attachOnce('btnAgregar', agregarFila);
     attachOnce('btnEditar', editarFila);
     attachOnce('btnGuardar', guardarFila);
-    attachOnce('btnCancelar', cancel);
+    attachOnce('btnCancelar', cancelar);
 
     // NEW: click outside registered tables -> clear selection if not editing
     if (!document.body.dataset.mainOutsideHandler) {
@@ -252,7 +243,7 @@
   window.__MAIN_TABLA.agregarFila = agregarFila;
   window.__MAIN_TABLA.editarFila = editarFila;
   window.__MAIN_TABLA.guardarFila = guardarFila;
-  window.__MAIN_TABLA.cancelar = cancel;
+  window.__MAIN_TABLA.cancelar = cancelar;
 
 })();
 // --- START: KEY_FALLBACKS + getFirstMatching (safe, non-intrusive) ---
