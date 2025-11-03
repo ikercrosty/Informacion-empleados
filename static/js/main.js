@@ -238,14 +238,30 @@ function agregarFila(){
     if (bc) bc.disabled = true;
   }
 
-  // attach safe single handlers to global buttons (idempotent)
-  function attachOnce(id, fn){
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (el.dataset.attached) return;
-    el.addEventListener('click', (e)=>{ e.stopPropagation(); fn(); });
-    el.dataset.attached = '1';
+function attachOnce(id, fn){
+  const el = document.getElementById(id);
+  if (!el) return;
+  // marca como "adjunto" incluso si estamos sobreescribiendo para evitar duplicados
+  el.dataset.attached = '1';
+  // sobrescribe cualquier onclick previo (elimina handlers previos que usen onclick)
+  el.onclick = function(e){
+    try { e.stopPropagation(); } catch(_) {}
+    try { fn(); } catch(err) { console.error('attachOnce wrapper error for', id, err); }
+  };
+  // también eliminar otros listeners añadidos por addEventListener (defensivo)
+  // clonamos el nodo para asegurarnos de que no existan listeners añadidos por addEventListener
+  // pero solo si el navegador soporta cloneNode de forma segura
+  try {
+    const clone = el.cloneNode(true);
+    // conservar dataset.attached y onclick
+    clone.dataset.attached = el.dataset.attached;
+    clone.onclick = el.onclick;
+    el.parentNode.replaceChild(clone, el);
+  } catch(_) {
+    // si falla la clonación, ya al menos se sobrescribió onclick
   }
+}
+
 
   document.addEventListener('DOMContentLoaded', () => {
     attachOnce('btnAgregar', agregarFila);
