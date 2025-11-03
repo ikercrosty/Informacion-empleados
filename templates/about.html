@@ -102,43 +102,8 @@
     setTimeout(()=> d.remove(), 1800);
   }
 
-  // Safe helper: attach only if element exists and fn is a function
-  function safeAttach(id, fn) {
-    try {
-      const el = document.getElementById(id);
-      if (!el || typeof fn !== 'function') return;
-      if (el.dataset.mainAttached) return;
-      el.addEventListener('click', (e) => { e.stopPropagation(); fn(); });
-      el.dataset.mainAttached = '1';
-    } catch (e) {
-      console.warn('safeAttach failed', id, e);
-    }
-  }
-
-  // Try to register the table only when both DOM element and registrarTabla exist.
   function tryRegister(retries = 20) {
-    const tablaEl = document.getElementById(TABLE_ID);
-    if (!tablaEl) {
-      // If the table element does not exist yet, wait a bit and retry
-      if (retries <= 0) {
-        console.error('Tabla no encontrada en el DOM:', TABLE_ID);
-        flash('Tabla no encontrada', 'danger');
-        return;
-      }
-      return setTimeout(() => tryRegister(retries - 1), 100);
-    }
-
-    if (!(window.registrarTabla && typeof window.registrarTabla === 'function')) {
-      if (retries <= 0) {
-        console.error('registrarTabla no disponible después de esperar main.js');
-        flash('Error inicializando la tabla', 'danger');
-        return;
-      }
-      return setTimeout(() => tryRegister(retries - 1), 100);
-    }
-
-    // At this point both the DOM table and registrarTabla exist — safe to register
-    try {
+    if (window.registrarTabla && typeof window.registrarTabla === 'function') {
       window.registrarTabla(
         TABLE_ID,
         COLUMNS,
@@ -150,61 +115,64 @@
         ],
         BLOQUEADAS
       );
-    } catch (e) {
-      console.error('Error al llamar registrarTabla', e);
-      flash('Error registrando la tabla', 'danger');
-      return;
-    }
 
-    // Enable/disable initial button states defensively
-    const btnAgregar = document.getElementById('btnAgregar');
-    const btnEditar  = document.getElementById('btnEditar');
-    const btnGuardar = document.getElementById('btnGuardar');
-    const btnCancelar= document.getElementById('btnCancelar');
-    if (btnAgregar) btnAgregar.disabled = false;
-    if (btnEditar)  btnEditar.disabled = true;
-    if (btnGuardar) btnGuardar.disabled = true;
-    if (btnCancelar) btnCancelar.disabled = true;
+      // requested button states
+      const btnAgregar = document.getElementById('btnAgregar');
+      const btnEditar  = document.getElementById('btnEditar');
+      const btnGuardar = document.getElementById('btnGuardar');
+      const btnCancelar= document.getElementById('btnCancelar');
+      if (btnAgregar) btnAgregar.disabled = false;
+      if (btnEditar)  btnEditar.disabled = true;
+      if (btnGuardar) btnGuardar.disabled = false;
+      if (btnCancelar) btnCancelar.disabled = false;
 
-    // Acquire public API from main.js in a defensive way
-    const mainApi = (window.__MAIN_TABLA && typeof window.__MAIN_TABLA === 'object') ? window.__MAIN_TABLA : {};
-    const addFn = mainApi.agregarFila || mainApi.addRow || mainApi.nuevo || null;
-    const editFn = mainApi.editarFila || null;
-    const saveFn = mainApi.guardarFila || null;
-    const cancelFn = mainApi.cancelar || null;
+      // fallback attachments: use the public API exported by main.js safely
+      const mainApi = window.__MAIN_TABLA || {};
+      const addFn = mainApi.agregarFila || mainApi.addRow || mainApi.nuevo || null;
+      const editFn = mainApi.editarFila || null;
+      const saveFn = mainApi.guardarFila || null;
+      const cancelFn = mainApi.cancelar || null;
 
-    // Attach handlers only if functions exist (avoids ReferenceError / TypeError)
-    safeAttach('btnAgregar', addFn);
-    safeAttach('btnEditar', editFn);
-    safeAttach('btnGuardar', saveFn);
-    safeAttach('btnCancelar', cancelFn);
+      function safeAttach(id, fn) {
+        const el = document.getElementById(id);
+        if (!el || !fn) return;
+        if (el.dataset.mainAttached) return;
+        el.addEventListener('click', (e) => { e.stopPropagation(); fn(); });
+        el.dataset.mainAttached = '1';
+      }
 
-    // Defensive dblclick: attach only if the table element exists
-    const tabla = document.getElementById(TABLE_ID);
-    if (tabla && !tabla.dataset.aboutDblAttached) {
-      try {
+      // Attach only if functions are present. This avoids ReferenceError or attaching undefined.
+      safeAttach('btnAgregar', addFn);
+      safeAttach('btnEditar', editFn);
+      safeAttach('btnGuardar', saveFn);
+      safeAttach('btnCancelar', cancelFn);
+
+      // ensure dblclick enables Edit (defensive)
+      const tabla = document.getElementById(TABLE_ID);
+      if (tabla) {
         tabla.addEventListener('dblclick', (e) => {
           const tr = e.target.closest('tr');
           if (!tr || tr.parentElement.tagName !== 'TBODY') return;
           const be = document.getElementById('btnEditar');
           if (be) be.disabled = false;
-          // ensure the Save button reflects editing availability
-          const bg = document.getElementById('btnGuardar');
-          if (bg) bg.disabled = true; // remain disabled until edit mode is toggled by main.js registrar behavior
         });
-        tabla.dataset.aboutDblAttached = '1';
-      } catch (ex) {
-        console.warn('No se pudo añadir dblclick a la tabla', ex);
       }
+
+      return;
     }
+
+    if (retries <= 0) {
+      console.error('registrarTabla no disponible después de esperar main.js');
+      flash('Error inicializando la tabla', 'danger');
+      return;
+    }
+    setTimeout(() => tryRegister(retries - 1), 100);
   }
 
-  // Run registration after DOM ready. This avoids calling addEventListener on null.
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => tryRegister(50));
+    document.addEventListener('DOMContentLoaded', () => tryRegister(20));
   } else {
-    // If DOM is already ready, attempt registration
-    tryRegister(50);
+    tryRegister(20);
   }
 })();
 </script>
