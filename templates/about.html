@@ -79,6 +79,7 @@
     </tbody>
   </table>
 </div>
+
 <script>
 (function () {
   const TABLE_ID = 'tablaAcademico';
@@ -159,66 +160,6 @@
           const be = document.getElementById('btnEditar');
           if (be) be.disabled = false;
         });
-      }
-
-      // --- OVERRIDE / SAFEGUARD: ensure server save uses our known endpoint '/guardar_academico'
-      try {
-        if (!window.__MAIN_TABLA) window.__MAIN_TABLA = {};
-        const nativeSave = typeof window.__MAIN_TABLA.guardarFila === 'function' ? window.__MAIN_TABLA.guardarFila : null;
-
-        function gatherSelectedRowData() {
-          const tbl = document.getElementById(TABLE_ID);
-          if (!tbl) return null;
-          const tr = tbl.querySelector('tbody tr.table-active') || tbl.querySelector('tbody tr');
-          if (!tr) return null;
-          const cells = Array.from(tr.children).slice(0,7).map(td => (td && td.textContent || '').trim());
-          return {
-            "Numero de DPI": cells[0] || '',
-            "Nivel de estudios": cells[3] || '',
-            "Profesi\u00F3n u Oficio": cells[4] || '',
-            "Colegio o establecimiento": cells[5] || '',
-            "Cursos o titulos adicionales": cells[6] || '',
-            "Nombre": cells[1] || '',
-            "Apellidos": cells[2] || ''
-          };
-        }
-
-        window.__MAIN_TABLA.guardarFila = async function () {
-          const payload = gatherSelectedRowData();
-          if (!payload || !payload["Numero de DPI"] || payload["Numero de DPI"].trim() === '') {
-            flash('No hay fila seleccionada o falta Numero de DPI', 'warning');
-            return;
-          }
-          if (nativeSave) {
-            try {
-              const r = nativeSave();
-              if (r && typeof r.then === 'function') {
-                await r;
-                flash('Guardado (método nativo)', 'success');
-                return;
-              }
-            } catch (e) {}
-          }
-
-          try {
-            const res = await fetch(ENDPOINT, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
-            });
-            if (!res.ok) {
-              const txt = await res.text().catch(()=>null);
-              throw new Error(`HTTP ${res.status} ${txt || res.statusText}`);
-            }
-            const j = await res.json().catch(()=>({}));
-            flash(j && (j.mensaje || j.message) ? (j.mensaje || j.message) : 'Guardado correctamente', 'success');
-          } catch (err) {
-            console.warn('save wrapper failed', err);
-            flash('Error guardando en servidor', 'danger');
-          }
-        };
-      } catch (e) {
-        console.warn('Could not attach safe guardarFila wrapper', e);
       }
 
       return;
