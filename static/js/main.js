@@ -70,43 +70,44 @@
   }
 
   // expose functions for templates and fallback handlers
-  function agregarFila(){
-    if (!activeTable) {
-      // try to pick a visible registered table
-      const first = Object.values(registry).find(r=> r.tabla && r.tabla.offsetParent !== null);
-      if (!first) { flash("No hay tabla registrada para agregar", "danger"); return; }
-      activeTable = first.tabla;
-    }
-    const tbody = activeTable.querySelector('tbody');
-    if (!tbody) { flash("tbody no encontrado", "danger"); return; }
-    const info = Object.values(registry).find(r=> r.tabla === activeTable) || {};
-    const cols = info.columnas || 0;
-    const tr = document.createElement('tr');
-    for (let i=0;i<cols;i++){
-      const td = document.createElement('td');
-      td.innerText = "";
-      if (!((info.bloqueadas||[]).includes(i))) {
-        td.contentEditable = true;
-        td.style.backgroundColor = '#fff3cd';
-      } else {
-        td.contentEditable = false;
-      }
-      tr.appendChild(td);
-    }
-    tbody.insertBefore(tr, tbody.firstChild);
-    if (activeRow) activeRow.classList.remove('table-active');
-    activeRow = tr;
-    activeRow.classList.add('table-active');
-    activeRow.dataset.new = '1';
-    activeRow.dataset.editing = '1';
-    // enable Save/Cancel, disable Edit
-    const be = document.getElementById('btnEditar');
-    const bg = document.getElementById('btnGuardar');
-    const bc = document.getElementById('btnCancelar');
-    if (be) be.disabled = true;
-    if (bg) bg.disabled = false;
-    if (bc) bc.disabled = false;
+function agregarFila(){
+  if (!activeTable) {
+    // try to pick a visible registered table
+    const first = Object.values(registry).find(r=> r.tabla && r.tabla.offsetParent !== null);
+    if (!first) { flash("No hay tabla registrada para agregar", "danger"); return; }
+    activeTable = first.tabla;
   }
+  const tbody = activeTable.querySelector('tbody');
+  if (!tbody) { flash("tbody no encontrado", "danger"); return; }
+  const info = Object.values(registry).find(r=> r.tabla === activeTable) || {};
+  const cols = info.columnas || 0;
+  const tr = document.createElement('tr');
+  for (let i=0;i<cols;i++){
+    const td = document.createElement('td');
+    td.innerText = "";
+    if (!((info.bloqueadas||[]).includes(i))) {
+      td.contentEditable = true;
+      td.style.backgroundColor = '#fff3cd';
+    } else {
+      td.contentEditable = false;
+    }
+    tr.appendChild(td);
+  }
+  tbody.insertBefore(tr, tbody.firstChild);
+  if (activeRow) activeRow.classList.remove('table-active');
+  activeRow = tr;
+  activeRow.classList.add('table-active');
+  activeRow.dataset.new = '1';
+  activeRow.dataset.editing = '1';
+  // enable Save/Cancel, disable Edit
+  const be = document.getElementById('btnEditar');
+  const bg = document.getElementById('btnGuardar');
+  const bc = document.getElementById('btnCancelar');
+  if (be) be.disabled = true;
+  if (bg) bg.disabled = false;
+  if (bc) bc.disabled = false;
+}
+
 
   function editarFila(){
     if (!activeRow) { flash("Selecciona una fila primero", "danger"); return; }
