@@ -424,11 +424,12 @@ document.addEventListener('input', (e) => {
   }
 });
 
-// When sueldo input loses focus, apply half-sueldo behavior (existing) and if value > 0, lock the cell (non-admin cannot re-edit)
+// When sueldo input loses focus, apply half-sueldo behavior once and if value > 0, lock the cell (non-admin cannot re-edit)
 document.addEventListener('blur', (e) => {
   if (!e.target.classList) return;
   if (e.target.classList.contains('sueldo')) {
-    applyHalfToSueldoInput(e.target); // existing behavior, defined later
+    // apply half exactly once per blur via the centralized function below
+    applyHalfToSueldoInput(e.target);
     const tr = e.target.closest('tr');
     const n = parseFloat(e.target.value) || 0;
     // store previous value for potential revert when non-admin tries to edit
@@ -708,7 +709,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
   XLSX.writeFile(wb, filename);
 });
 
-/* ------------------ Auto half-sueldo behavior (unchanged) ------------------ */
+/* ------------------ Auto half-sueldo behavior (fixed: ensure applied only once) ------------------ */
 (function(){
   function parseNumberSafe(v){
     if (v == null) return 0;
@@ -721,6 +722,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     }
   }
 
+  // Expose applyHalfToSueldoInput globally and ensure it's called exactly once per blur/paste action.
   window.applyHalfToSueldoInput = function(inp){
     if (!inp) return;
     const raw = inp.value;
@@ -740,6 +742,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     } catch (e) { console.error('Error aplicando mitad al sueldo:', e); }
   }
 
+  // Keep paste handler so pasted numbers are normalized and halved once
   document.addEventListener('paste', function(e){
     const t = e.target;
     if (!t || !t.classList) return;
@@ -748,13 +751,8 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     }
   });
 
-  document.addEventListener('blur', function(e){
-    const t = e.target;
-    if (!t || !t.classList) return;
-    if (t.classList.contains('sueldo')) {
-      applyHalfToSueldoInput(t);
-    }
-  }, true);
+  // Important: only one blur listener calls applyHalfToSueldoInput (the central one above).
+  // No additional blur listeners here to avoid double division.
 })();
 
 /* ------------------ Sync with server: /api/empleados, /api/planilla, /guardar_planilla ------------------ */
