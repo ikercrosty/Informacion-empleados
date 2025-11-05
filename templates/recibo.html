@@ -296,12 +296,22 @@
     el.value = fmt(toNumberSafe(value));
   }
 
+  // Helper that clears a money input (leave visually empty)
+  function clearMoneyInput(id){
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.value = '';
+  }
+
   document.getElementById('empleadoSelect')?.addEventListener('change', function(){
     const rawVal = this.value || '';
     if(!rawVal){
       ['nombre','dpi'].forEach(id=>{ const el = document.getElementById(id); if(el) el.value = ''; });
-      ['sueldoBase','comisiones','bonificacion','hextrasMonto','igss','isr','otrasDeducciones'].forEach(id=> writeMoneyInput(id, 0));
-      recalcLiquido();
+      // Clear money fields so they show empty when no employee selected
+      ['sueldoBase','comisiones','bonificacion','hextrasMonto','igss','isr','otrasDeducciones'].forEach(id=> clearMoneyInput(id));
+      // Also clear computed outputs
+      const liqEl = document.getElementById('liquidoTotal'); if(liqEl) liqEl.value = '';
+      const letraEl = document.getElementById('totalEnLetras'); if(letraEl) letraEl.value = '';
       return;
     }
 
@@ -351,7 +361,10 @@
 
       recalcLiquido();
     }).catch(()=>{
-      ['sueldoBase','bonificacion','comisiones','hextrasMonto','igss','isr','otrasDeducciones'].forEach(id=> writeMoneyInput(id, 0));
+      // On fetch error leave fields empty (do not show Q 0.00)
+      ['sueldoBase','bonificacion','comisiones','hextrasMonto','igss','isr','otrasDeducciones'].forEach(id=> clearMoneyInput(id));
+      const liqEl = document.getElementById('liquidoTotal'); if(liqEl) liqEl.value = '';
+      const letraEl = document.getElementById('totalEnLetras'); if(letraEl) letraEl.value = '';
       recalcLiquido();
     });
   });
@@ -362,10 +375,25 @@
     const toNum = id => {
       const el = document.getElementById(id);
       if(!el) return 0;
-      const v = String(el.value || '').replace(/^Q\s*/i,'').replace(/,/g,'').trim();
+      const raw = String(el.value || '').trim();
+      if(raw === '') return 0; // treat empty as 0 for arithmetic, but we will decide output emptiness below
+      const v = raw.replace(/^Q\s*/i,'').replace(/,/g,'').trim();
       const n = Number(v);
       return isFinite(n) ? n : 0;
     };
+
+    // If all source fields are empty, leave outputs empty
+    const sourceIds = ['sueldoBase','hextrasMonto','bonificacion','comisiones','igss','isr','otrasDeducciones'];
+    const allEmpty = sourceIds.every(id => {
+      const el = document.getElementById(id);
+      return !el || String(el.value || '').trim() === '';
+    });
+    if(allEmpty){
+      const liqEl = document.getElementById('liquidoTotal'); if(liqEl) liqEl.value = '';
+      const letraEl = document.getElementById('totalEnLetras'); if(letraEl) letraEl.value = '';
+      return;
+    }
+
     const ganancias = toNum('sueldoBase') + toNum('hextrasMonto') + toNum('bonificacion') + toNum('comisiones');
     const deducciones = toNum('igss') + toNum('isr') + toNum('otrasDeducciones');
     const liquido = round2(ganancias - deducciones);
@@ -540,7 +568,8 @@
           el.value = fmt(toNumberSafe(v));
         }
       } else {
-        el.value = fmt(0);
+        // Leave empty when there's no initial value so the fields appear blank until an employee is selected
+        el.value = '';
       }
     });
     recalcLiquido();
