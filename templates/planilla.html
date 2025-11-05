@@ -10,32 +10,40 @@
         <div class="text-muted small mt-1">Empresa: EMPAQUES Y TEXTURAS DE GUATEMALA, SOCIEDAD ANÓNIMA</div>
       </div>
 
-      <div class="controls d-flex flex-wrap align-items-center">
-        <div class="me-4 control-group">
-          <h6 class="mb-1">Ingrese nombre para el documento</h6>
-          <input id="planillaName" class="form-control form-control-sm" type="text" value="Planilla " style="min-width:240px" />
+      <!-- Header controls: reorganizados y estilizados -->
+      <div class="controls d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-3 w-100">
+        <!-- Left: document name + date grouped -->
+        <div class="control-group d-flex gap-2 align-items-center flex-wrap">
+          <div class="field">
+            <h6 class="mb-1 control-label">Ingrese nombre para el documento</h6>
+            <input id="planillaName" class="form-control form-control-sm" type="text" value="Planilla " />
+          </div>
+
+          <div class="field ms-2">
+            <h6 class="mb-1 control-label">Fecha de emisión</h6>
+            <div class="input-with-icon">
+              <input id="emisionDate" class="form-control form-control-sm" type="date" />
+              <span class="calendar-icon" aria-hidden="true"></span>
+            </div>
+          </div>
         </div>
 
-        <div class="me-4 control-group">
-          <h6 class="mb-1">Ingrese fecha de emisión del documento</h6>
-          <input id="emisionDate" class="form-control form-control-sm" type="date" />
-        </div>
+        <!-- Right: action buttons grouped in a clean toolbar -->
+        <div class="action-toolbar ms-auto d-flex align-items-center gap-2">
+          <div class="btn-group-main d-flex gap-2">
+            <button id="exportExcel" class="btn btn-export btn-sm" title="Exportar a Excel">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-file-earmark-excel me-2" viewBox="0 0 16 16"><path d="M5.884 6.68 4.52 9.5l1.364 2.82H3.54L2 9.5l1.54-2.82h1.344z"/><path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zM10.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5.5H10.5A1.5 1.5 0 0 1 9 4V3.5z"/></svg>
+              Exportar
+            </button>
 
-        <div class="action-buttons d-flex align-items-center" style="gap:24px; justify-content:flex-end; margin-left:auto;">
-          <button id="exportExcel" class="btn btn-primary btn-sm d-flex align-items-center" title="Exportar a Excel">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-file-earmark-excel me-2" viewBox="0 0 16 16"><path d="M5.884 6.68 4.52 9.5l1.364 2.82H3.54L2 9.5l1.54-2.82h1.344z"/><path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zM10.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5.5H10.5A1.5 1.5 0 0 1 9 4V3.5z"/></svg>
-            Exportar a Excel
-          </button>
+            <button id="btnGuardarPlanilla" class="btn btn-save btn-sm" title="Guardar planilla">Guardar</button>
 
-          <button id="addRow" class="btn btn-outline-secondary btn-sm" title="Agregar fila">Agregar fila</button>
+            <button id="addRow" class="btn btn-secondary btn-sm" title="Agregar fila">Agregar</button>
 
-          <button id="deleteRow" class="btn btn-outline-danger btn-sm" title="Eliminar fila">Eliminar fila</button>
+            <button id="deleteRow" class="btn btn-danger-outline btn-sm" title="Eliminar fila">Eliminar</button>
 
-          <!-- NUEVO: Botón Guardar: ejecuta saveToLocalAndServer existente -->
-          <button id="btnGuardarPlanilla" class="btn btn-success btn-sm" title="Guardar planilla">Guardar</button>
-
-          <!-- NUEVO: Botón Editar Sueldos (solo admin) -->
-          <button id="btnEditarSueldo" class="btn btn-warning btn-sm" title="Editar sueldos" style="display:none;">Editar sueldos</button>
+            <button id="btnEditarSueldo" class="btn btn-warning-outline btn-sm" title="Editar sueldos" style="display:none;">Editar sueldos</button>
+          </div>
         </div>
 
         <small id="exportHint" class="text-danger ms-3" style="display:none;">Ingrese fecha de emisión para exportar</small>
@@ -1168,22 +1176,91 @@ document.addEventListener('DOMContentLoaded', async () => {
     --planilla-input-font-size: 1.03rem;
     --planilla-money-min-width: 260px;
     --planilla-name-col-min-width: 360px;
+
+    /* Header specific */
+    --header-bg: #ffffff;
+    --toolbar-bg: linear-gradient(90deg,var(--accent1),var(--accent2));
+    --btn-export-bg: linear-gradient(90deg,#18b2aa,#0b7285);
+    --btn-save-bg: linear-gradient(90deg,#10b981,#059669);
+    --btn-secondary-bg: #6c757d;
+    --btn-danger-outline-border: #ef4444;
+    --btn-warning-outline-border: #f59e0b;
   }
 
   body { background: linear-gradient(180deg,var(--bg-grad-start) 0%, var(--bg-grad-end) 100%); }
   .card { border-radius: .6rem; }
-  .card .card-body { padding: 1rem 1.1rem; }
+  .card .card-body { padding: 1rem 1.1rem; background: var(--header-bg); }
   h3 { font-weight:600; color:var(--accent2); }
 
+  .controls .control-label { font-size: .8rem; color: var(--muted); margin:0; }
+
+  .field input.form-control { min-width: 220px; max-width: 320px; }
+
+  .input-with-icon { display:flex; align-items:center; gap:8px; }
+  .calendar-icon {
+    display:inline-block;
+    width:28px;
+    height:28px;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="%230b7285" viewBox="0 0 16 16"><path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h.5A1.5 1.5 0 0 1 15 2.5v11A1.5 1.5 0 0 1 13.5 15h-11A1.5 1.5 0 0 1 1 13.5v-11A1.5 1.5 0 0 1 2.5 1H3V.5A.5.5 0 0 1 3.5 0zM2.5 3A.5.5 0 0 0 2 3.5V4h12v-.5a.5.5 0 0 0-.5-.5H13v.5a.5.5 0 0 1-1 0V3H4v.5a.5.5 0 0 1-1 0V3H2.5z"/></svg>') no-repeat center center;
+    background-size: 18px;
+    opacity: .85;
+  }
+
+  .action-toolbar { min-width: 360px; }
+
+  /* toolbar buttons: consistent sizing and spacing */
+  .btn-group-main { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+
+  .btn {
+    border-radius: .45rem;
+    padding: .38rem .6rem;
+    font-size: .88rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    cursor: pointer;
+    border: none;
+  }
+
+  .btn-export {
+    background: var(--btn-export-bg);
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(11,114,133,0.08);
+  }
+
+  .btn-save {
+    background: var(--btn-save-bg);
+    color: #fff;
+    box-shadow: 0 6px 12px rgba(16,185,129,0.06);
+  }
+
+  .btn-secondary {
+    background: #e9ecef;
+    color: #212529;
+    border: 1px solid #d1d5db;
+  }
+
+  .btn-danger-outline {
+    background: transparent;
+    color: #ef4444;
+    border: 1px solid var(--btn-danger-outline-border);
+  }
+
+  .btn-warning-outline {
+    background: transparent;
+    color: #b45309;
+    border: 1px solid var(--btn-warning-outline-border);
+  }
+
+  .btn-export svg { margin-right: 6px; }
+
+  .text-danger { color:#dc2626; }
+
+  /* keep existing table styles mostly unchanged */
   .form-control { border-radius:.45rem; font-size: var(--planilla-input-font-size); }
 
-  .btn-primary { background: linear-gradient(90deg,var(--accent1),var(--accent2)); border: none; box-shadow: 0 6px 20px rgba(11,114,133,0.08); }
-  .btn-outline-secondary { border-radius:.45rem; }
-  .btn-outline-danger { border-radius:.45rem; }
   .table-header-custom { background: linear-gradient(90deg,#0ea5a4,#036b6a); }
   .table-header-custom th { color:#fff; border:0; font-weight:700; padding:.9rem 1rem; }
-
-  .controls .me-4 { margin-right: 1.4rem; }
 
   table.table { border-collapse: separate; border-spacing:0; border-radius:.6rem; overflow:hidden; box-shadow: 0 1px 2px rgba(15,23,42,0.04); width:100%; }
   table.table td, table.table th {
@@ -1284,75 +1361,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     #planillaTable { min-width: 1400px; }
   }
 
-  /* ---- Responsive improvements added ---- */
-  /* On tablets and phones, reduce fixed min-width and make controls stack and shrink properly */
+  /* ---- Responsive improvements added for header ---- */
   @media (max-width: 768px) {
-    :root {
-      --planilla-money-min-width: 160px;
-      --planilla-input-min-height: 50px;
-      --planilla-cell-horizontal-padding: 1rem;
-      --planilla-name-col-min-width: 260px;
-      --planilla-cell-vertical-padding: 1rem;
-    }
-
     .card .card-body { padding: .75rem; }
-    .controls { gap: 10px; }
-    .controls .me-4 { margin-right: .8rem; display:flex; width:100%; }
-    .control-group { min-width: 0; flex: 1 1 200px; }
-    .action-buttons { gap: 8px; justify-content:flex-end; width:100%; flex-wrap:wrap; margin-left:0; }
-
-    /* Allow table container to show a horizontal scrollbar but make the visible table more compact */
-    .horizontal-scroll { overflow-x:auto; }
-    #planillaTable { min-width: 1000px; font-size: .92rem; }
-
-    /* Make money prefix smaller */
-    .money-prefix { min-width: 40px; height: calc(var(--planilla-input-min-height)); font-weight:700; }
-
-    /* Smaller inputs */
-    #planillaTable input.form-control { padding: .35rem .5rem; font-size: .95rem; min-height: 46px; height: 46px; }
-
-    /* Make header buttons wrap */
-    .action-buttons button { padding: .35rem .5rem; font-size: .85rem; white-space: nowrap; }
-
-    /* Improve touch target */
-    table.table td, table.table th { padding: .9rem .6rem; }
+    .controls { gap: 8px; }
+    .control-group { flex: 1 1 220px; }
+    .action-toolbar { margin-top: 6px; }
+    .btn-group-main { justify-content: flex-start; }
+    .field input.form-control { min-width: 140px; max-width: 260px; }
   }
 
-  /* On small phones, collapse more, make table compact and inputs full width inside cells */
   @media (max-width: 480px) {
-    :root {
-      --planilla-money-min-width: 120px;
-      --planilla-input-min-height: 44px;
-      --planilla-cell-horizontal-padding: .8rem;
-      --planilla-name-col-min-width: 180px;
-      --planilla-cell-vertical-padding: .7rem;
-    }
-
-    h3 { font-size: 1.05rem; }
-    .card .card-body { padding: .6rem; }
-    .controls { flex-direction: column; align-items:stretch; gap:8px; }
-    .controls .me-4 { margin-right: 0; }
-    .action-buttons { justify-content: flex-start; gap:10px; margin-left:0; }
-
-    /* Make the table more compact but usable */
-    #planillaTable { min-width: 900px; font-size: .88rem; }
-
-    /* Ensure input fields inside table take available space */
-    .money-inline .form-control { min-width: var(--planilla-money-min-width); }
-    #planillaTable input.form-control { font-size: .92rem; padding: .35rem .45rem; min-height: 40px; height: 40px; }
-
-    /* Reduce prefix width on tiny screens */
-    .money-prefix { min-width: 36px; font-size: .92rem; padding: 0 .6rem; }
-
-    /* Hide some less-critical columns visually to improve readability (but keep them in export/DOM) */
-    /* We hide columns beyond the most important on very small screens so the essential data fits better. */
-    #planillaTable th:nth-child(n+10),
-    #planillaTable td:nth-child(n+10) {
-      display: none;
-    }
-
-    /* Keep totals footer readable */
-    #planillaTable tfoot tr td { font-size: .92rem; padding: .6rem .5rem; }
+    .controls { flex-direction: column; align-items:stretch; gap:10px; }
+    .action-toolbar { width:100%; display:flex; justify-content: flex-start; }
+    .btn-group-main { width:100%; gap:8px; flex-wrap:wrap; }
+    .btn { flex: 1 1 auto; justify-content:center; }
+    .field input.form-control { width:100%; }
   }
 
   /* ---- End responsive improvements ---- */
