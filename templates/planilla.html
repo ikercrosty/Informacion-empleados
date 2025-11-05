@@ -33,6 +33,9 @@
 
           <!-- NUEVO: Botón Guardar: ejecuta saveToLocalAndServer existente -->
           <button id="btnGuardarPlanilla" class="btn btn-success btn-sm" title="Guardar planilla">Guardar</button>
+
+          <!-- NUEVO: Botón Editar Sueldos (solo admin) -->
+          <button id="btnEditarSueldo" class="btn btn-warning btn-sm" title="Editar sueldos" style="display:none;">Editar sueldos</button>
         </div>
 
         <small id="exportHint" class="text-danger ms-3" style="display:none;">Ingrese fecha de emisión para exportar</small>
@@ -82,7 +85,6 @@
               <th>Observaciones</th>
             </tr>
           </thead>
-
 
           <tbody>
            
@@ -284,6 +286,18 @@ function restoreTable(data) {
       <td><input class="form-control medio-pago" type="text" value="${escapeHtml(r.medioPago||'')}"></td>
       <td><input class="form-control observaciones" type="text" value="${escapeHtml(r.observ||'')}"></td>
     `;
+    // If sueldo > 0, lock it (require admin to unlock)
+    const sueldoInput = tr.querySelector('input.sueldo');
+    if (sueldoInput) {
+      if (Number(r.sueldo || 0) > 0) {
+        sueldoInput.setAttribute('readonly','readonly');
+        tr.dataset.sueldoLocked = '1';
+        sueldoInput.setAttribute('data-prev', Number(r.sueldo || 0).toFixed(2));
+      } else {
+        tr.dataset.sueldoLocked = '0';
+        sueldoInput.setAttribute('data-prev', Number(r.sueldo || 0).toFixed(2));
+      }
+    }
     tr.dataset._hextras = Number(r.hextras||0);
     tr.dataset._isrValue = Number(r.isr||0);
     tbody.appendChild(tr);
@@ -297,11 +311,110 @@ function escapeHtml(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+/* ------------------ SUELDO locking rules and admin-edit control ------------------ */
+/*
+  Behavior implemented:
+  - When a sueldo input receives a non-zero (or non-empty) value and loses focus, it becomes readonly and is flagged data.sueldoLocked=1.
+  - Only users with role 'admin' can enable "Editar sueldos" button. When admin clicks it, sueldo fields flagged as locked become editable for the admin session.
+  - After admin edits and blurs, the sueldo cells will re-lock (same logic).
+  - Non-admin users never see the Edit button and cannot change locked sueldo cells.
+*/
+
+async function whoamiRole() {
+  try {
+    const r = await fetch('/whoami', {cache:'no-store'});
+    if (!r.ok) return '';
+    const j = await r.json();
+    return (j && j.rol) ? String(j.rol).toLowerCase() : '';
+  } catch (e) {
+    return '';
+  }
+}
+
+async function initSueldoEditControl() {
+  const role = await whoamiRole();
+  const btn = document.getElementById('btnEditarSueldo');
+  if (!btn) return;
+  if (role === 'admin') {
+    btn.style.display = '';
+    btn.dataset.admin = '1';
+  } else {
+    btn.style.display = 'none';
+    btn.dataset.admin = '0';
+  }
+
+  // Admin toggles "edit mode" for locked sueldo fields
+  btn.addEventListener('click', async () => {
+    // double-check role server-side
+    const roleNow = await whoamiRole();
+    if (roleNow !== 'admin') {
+      alert('Permisos insuficientes. Solo administradores pueden editar sueldos.');
+      return;
+    }
+    const editing = btn.dataset.editing === '1';
+    if (!editing) {
+      // enable locked sueldo inputs for admin to edit
+      document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
+        if (tr.dataset.sueldoLocked === '1') {
+          const inp = tr.querySelector('input.sueldo');
+          if (inp) {
+            inp.removeAttribute('readonly');
+            inp.classList.add('sueldo-admin-edit');
+          }
+        }
+      });
+      btn.textContent = 'Finalizar edición sueldos';
+      btn.dataset.editing = '1';
+      // visually indicate we are in admin-edit mode
+      btn.classList.remove('btn-warning');
+      btn.classList.add('btn-danger');
+    } else {
+      // end admin editing mode: remove admin-edit markers; inputs will re-lock on blur or we force-lock now
+      document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
+        const inp = tr.querySelector('input.sueldo');
+        if (inp && inp.classList.contains('sueldo-admin-edit')) {
+          inp.classList.remove('sueldo-admin-edit');
+          // If value is set, re-lock; else keep unlocked
+          const n = parseFloat(inp.value) || 0;
+          if (n > 0) {
+            inp.setAttribute('readonly','readonly');
+            tr.dataset.sueldoLocked = '1';
+            inp.setAttribute('data-prev', Number(n).toFixed(2));
+          } else {
+            tr.dataset.sueldoLocked = '0';
+            inp.setAttribute('data-prev', Number(n).toFixed(2));
+          }
+        }
+      });
+      btn.textContent = 'Editar sueldos';
+      btn.dataset.editing = '0';
+      btn.classList.remove('btn-danger');
+      btn.classList.add('btn-warning');
+      recalcTotals();
+      saveToLocalAndServer();
+    }
+  });
+}
+
 /* ------------------ IMPORTANT: autosave enabled so edits sync to server for all devices
    Input handler recalculates rows and totals and calls saveToLocalAndServer() so changes persist to server.
 */
 document.addEventListener('input', (e) => {
   if (!e.target.classList) return;
+
+  // Prevent non-admin edits to sueldo when locked
+  if (e.target.classList.contains('sueldo')) {
+    const tr = e.target.closest('tr');
+    const locked = tr && tr.dataset.sueldoLocked === '1';
+    // allow if user is admin editing (we mark with sueldo-admin-edit), otherwise revert
+    if (locked && !e.target.classList.contains('sueldo-admin-edit')) {
+      // revert the change (reload previously stored value)
+      const prev = e.target.getAttribute('data-prev');
+      e.target.value = Number(prev !== null ? prev : e.target.value || 0).toFixed(2);
+      return;
+    }
+  }
+
   if (e.target.classList.contains('num-cell') || e.target.classList.contains('nombre') || e.target.classList.contains('medio-pago') || e.target.classList.contains('observaciones')) {
     const tr = e.target.closest('tr');
     if (tr) recalcRow(tr);
@@ -310,6 +423,30 @@ document.addEventListener('input', (e) => {
     try { saveToLocalAndServer(); } catch (err) { console.warn('save error', err); }
   }
 });
+
+// When sueldo input loses focus, apply half-sueldo behavior (existing) and if value > 0, lock the cell (non-admin cannot re-edit)
+document.addEventListener('blur', (e) => {
+  if (!e.target.classList) return;
+  if (e.target.classList.contains('sueldo')) {
+    applyHalfToSueldoInput(e.target); // existing behavior, defined later
+    const tr = e.target.closest('tr');
+    const n = parseFloat(e.target.value) || 0;
+    // store previous value for potential revert when non-admin tries to edit
+    e.target.setAttribute('data-prev', Number(n).toFixed(2));
+    if (n > 0) {
+      // lock for non-admins
+      e.target.setAttribute('readonly','readonly');
+      if (tr) tr.dataset.sueldoLocked = '1';
+      // remove admin-edit marker if present
+      e.target.classList.remove('sueldo-admin-edit');
+    } else {
+      if (tr) tr.dataset.sueldoLocked = '0';
+    }
+    if (tr) recalcRow(tr);
+    recalcTotals();
+    try { saveToLocalAndServer(); } catch (err) { console.warn('save error', err); }
+  }
+}, true);
 
 function initBonosYDias() {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
@@ -414,6 +551,9 @@ document.getElementById('addRow').addEventListener('click', () => {
   }
   const diasInp = tr.querySelector('input.dias');
   if (diasInp) diasInp.value = 15;
+
+  // New rows: sueldo default 0 and unlocked
+  tr.dataset.sueldoLocked = '0';
 
   recalcRow(tr);
   recalcTotals();
@@ -581,7 +721,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     }
   }
 
-  function applyHalfToSueldoInput(inp){
+  window.applyHalfToSueldoInput = function(inp){
     if (!inp) return;
     const raw = inp.value;
     const n = parseNumberSafe(raw);
@@ -681,6 +821,9 @@ function addEmployeeRowIfMissing(emp) {
   if (bonoInp) { bonoInp.value = 125.00; bonoInp.setAttribute('readonly','readonly'); }
   const diasInp = tr.querySelector('input.dias');
   if (diasInp) diasInp.value = 15;
+
+  // mark sueldo unlocked initially for imported rows with 0
+  tr.dataset.sueldoLocked = '0';
 
   tbody.appendChild(tr);
   recalcRow(tr);
@@ -935,6 +1078,8 @@ async function populateFromEmployeesIfEmpty() {
       if (bonoInp) { bonoInp.value = 125.00; bonoInp.setAttribute('readonly','readonly'); }
       const diasInp = tr.querySelector('input.dias');
       if (diasInp) diasInp.value = 15;
+      // mark sueldo unlocked initially for imported employees
+      tr.dataset.sueldoLocked = '0';
       tbody.appendChild(tr);
     });
     document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
@@ -993,11 +1138,14 @@ document.getElementById('btnGuardarPlanilla').addEventListener('click', async ()
 });
 
 /* ------------------ Initialization ------------------ */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const restored = loadFromLocal();
 
   initBonosYDias();
   enforceFixedFieldsOnAllRows();
+
+  // Initialize sueldo locking UI and button based on user role
+  await initSueldoEditControl();
 
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
   recalcTotals();
@@ -1093,6 +1241,12 @@ document.addEventListener('DOMContentLoaded', () => {
     box-sizing: border-box;
     padding: .45rem .6rem;
     white-space: nowrap;
+  }
+
+  /* visual hint for admin-editable sueldo fields */
+  input.sueldo.sueldo-admin-edit {
+    outline: 2px dashed #f59e0b;
+    background: #fff7ed;
   }
 
   #planillaTable td.total-devengado,
