@@ -267,84 +267,10 @@ def api_categories_compat():
 # NUEVO ENDPOINT: /api/usuarios
 # Devuelve lista de usuarios para la UI del FAB: username, email, role, active
 # -----------------------------
-@app.route("/api/usuarios", methods=["GET"])
-def api_usuarios_list():
-    """
-    Devuelve la lista de usuarios en forma compatible con el frontend.
-    Comprueba si la columna 'activo' existe y adapta la consulta para evitar errores.
-    """
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # Verificar existencia de la columna 'activo' en la tabla Usuarios
-        try:
-            cursor.execute("""
-                SELECT COUNT(*) AS cnt
-                FROM information_schema.COLUMNS
-                WHERE TABLE_SCHEMA = DATABASE()
-                  AND TABLE_NAME = 'Usuarios'
-                  AND COLUMN_NAME = 'activo'
-            """)
-            col_info = cursor.fetchone()
-            has_activo = bool(col_info and col_info.get("cnt"))
-        except Exception:
-            # En entornos donde information_schema no esté accesible, fallback a intentar la consulta directa
-            has_activo = False
-
-        # Ejecutar la consulta adecuada según la existencia de la columna
-        if has_activo:
-            cursor.execute("""
-                SELECT `Usuarios` AS username,
-                       `Correo Electronico` AS email,
-                       COALESCE(`rol`, '') AS role,
-                       `activo` AS active
-                FROM `Usuarios`
-                ORDER BY `Usuarios` ASC
-            """)
-            rows = cursor.fetchall()
-        else:
-            cursor.execute("""
-                SELECT `Usuarios` AS username,
-                       `Correo Electronico` AS email,
-                       COALESCE(`rol`, '') AS role
-                FROM `Usuarios`
-                ORDER BY `Usuarios` ASC
-            """)
-            rows = cursor.fetchall()
-            # Añadir campo 'active' por compatibilidad (frontend espera algo)
-            for r in rows:
-                r['active'] = True
-
-        cursor.close()
-        conn.close()
-
-        # Sanitizar y normalizar cada fila
-        def sanitize_row(r):
-            out = {}
-            out['username'] = (r.get('username') or r.get('Usuarios') or '') if isinstance(r, dict) else ''
-            out['email'] = (r.get('email') or r.get('Correo Electronico') or '') if isinstance(r, dict) else ''
-            out['role'] = (r.get('role') or r.get('rol') or '') if isinstance(r, dict) else ''
-            a = r.get('active', r.get('activo', True))
-            if isinstance(a, (int, float)):
-                active_bool = bool(a)
-            elif isinstance(a, str):
-                active_bool = a.strip().lower() not in ('0', 'false', 'no', 'n', 'f', '')
-            else:
-                active_bool = bool(a)
-            out['active'] = True if active_bool else False
-            return out
-
-        sanitized = [sanitize_row(row) for row in rows]
-        return jsonify(sanitized)
-    except Exception as e:
-        app.logger.exception("Error en /api/usuarios")
-        return jsonify({"error": str(e)}), 500
-
-
 @app.route('/api/usuarios/rol', methods=['PATCH'])
 def api_usuarios_rol():
-    if (session.get('rol') or '').strip().lower() not in ('admin', 'superadmin'):
+    current = (session.get('rol') or '').strip().lower()
+    if current not in ('admin', 'superadmin'):
         return jsonify({'mensaje': 'Permisos insuficientes'}), 403
 
     data = request.get_json() or {}
@@ -354,15 +280,13 @@ def api_usuarios_rol():
     if not usuario or not nuevo_rol:
         return jsonify({'mensaje': 'usuario y rol son obligatorios'}), 400
 
-    # validar roles permitidos en servidor (coincidir con frontend)
-    ALLOWED_ROLES = ('admin', 'colaborador', 'superadmin')
+    ALLOWED_ROLES = ('admin', 'colaborador')
     if nuevo_rol not in ALLOWED_ROLES:
         return jsonify({'mensaje': 'Rol no permitido'}), 400
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        # ajustar columna/nombre de tabla si tu esquema es distinto
         cursor.execute("UPDATE Usuarios SET rol = %s WHERE Usuarios = %s OR `Correo Electronico` = %s", (nuevo_rol, usuario, usuario))
         if cursor.rowcount == 0:
             cursor.close()
