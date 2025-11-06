@@ -8,6 +8,7 @@
     <h1 class="display-4">Bienvenido a Empaquetex</h1>
     <p class="lead">Panel de control centralizado. Accede rápidamente a planillas o a la información de empleados.</p>
   </div>
+  <!-- Curva decorativa inferior -->
   <svg class="wave" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120">
     <path fill="#ffffff" d="M0,64L48,80C96,96,192,128,288,128C384,128,480,96,576,74.7C672,53,768,43,864,64C960,85,1056,139,1152,160C1248,181,1344,171,1392,165.3L1440,160L1440,0L0,0Z"></path>
   </svg>
@@ -46,13 +47,12 @@
   </div>
 </section>
 
-<!-- FAB: aparece sólo para los 2 administradores fijos -->
-<button id="fabUsuarios" class="fab d-none" title="Consultar Usuarios" aria-label="Consultar Usuarios"
-        aria-haspopup="dialog" aria-controls="modalUsuarios" aria-expanded="false">
+<!-- BOTON DE ACCION FLOTANTE: Consultar tabla Usuarios -->
+<button id="fabUsuarios" class="fab d-none" title="Consultar Usuarios" aria-label="Consultar Usuarios" aria-haspopup="dialog" aria-controls="modalUsuarios" aria-expanded="false">
   <i class="fas fa-user-cog" aria-hidden="true"></i>
 </button>
 
-<!-- Modal para mostrar lista de Usuarios (sin columnas # ni Activo) -->
+<!-- Modal para mostrar lista de Usuarios (se abre con el FAB) -->
 <div class="modal fade" id="modalUsuarios" tabindex="-1" role="dialog" aria-labelledby="modalUsuariosLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
     <div class="modal-content" role="document">
@@ -62,14 +62,12 @@
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-
       <div class="modal-body" id="modalUsuariosBody">
         <div id="usuariosLoading" class="text-center py-3" aria-live="polite">
           <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
           <span class="sr-only">Cargando usuarios...</span>
           <div class="mt-2">Cargando usuarios...</div>
         </div>
-
         <div id="usuariosError" class="alert alert-danger d-none" role="alert" aria-live="assertive"></div>
 
         <div class="table-responsive d-none" id="usuariosTableWrap" role="region" aria-label="Tabla de usuarios">
@@ -89,7 +87,6 @@
           <p class="text-muted">No se encontraron usuarios.</p>
         </div>
       </div>
-
       <div class="modal-footer">
         <button id="usuariosRetry" type="button" class="btn btn-outline-primary d-none">Reintentar</button>
         <button type="button" class="btn btn-secondary" data-dismiss="modal" id="btnCerrarModal">Cerrar</button>
@@ -98,28 +95,118 @@
   </div>
 </div>
 
+<!-- ESTILOS -->
 <style>
-.jumbotron-welcome { position: relative; background-color: #f5f7fa; padding: 3rem 1rem 4rem; margin-bottom: 0; border-radius: 0 0 30px 30px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); overflow: hidden; }
-.actions-inner .action-card { padding: 20px; border-radius: 12px; background: #fff; }
-.fab { position: fixed; right: 22px; bottom: 22px; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(180deg,#1e88e5,#1565d8); color: #fff; border: none; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(21,101,192,0.18); cursor: pointer; z-index: 1050; transition: transform .15s ease, box-shadow .15s ease; }
+/* Jumbotron */
+.jumbotron-welcome {
+  position: relative;
+  background-color: #f5f7fa;
+  padding: 3rem 1rem 4rem;
+  margin-bottom: 0;
+  border-radius: 0 0 30px 30px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  overflow: hidden;
+}
+.jumbotron-welcome h1,
+.jumbotron-welcome p {
+  color: #212529;
+}
+.jumbotron-welcome .wave {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: auto;
+}
+
+/* Reducir espacio entre jumbotron y tarjetas */
+.welcome-actions {
+  padding-top: 1rem;
+  padding-bottom: 2rem;
+}
+
+/* Animaciones */
+.fade-in { animation: fadeIn 1s ease-in-out; }
+.slide-up { animation: slideUp 1s ease forwards; opacity: 0; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Iconos */
+.icon-clipboard {
+  background: #ff9800;
+  color: #fff;
+  border-radius: 50%;
+  width: 70px;
+  height: 70px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin: 0 auto;
+}
+.icon-id {
+  background: #1e88e5;
+  color: #fff;
+  border-radius: 50%;
+  width: 70px;
+  height: 70px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin: 0 auto;
+}
+
+/* Floating action button (FAB) */
+.fab {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(180deg,#1e88e5,#1565d8);
+  color: #fff;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(21,101,192,0.18);
+  cursor: pointer;
+  z-index: 1050;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
 .fab:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(21,101,192,0.22); }
+.fab:active { transform: translateY(-1px); }
+.fab:focus { outline: 3px solid rgba(21,101,192,0.18); }
+
+/* Modal table styling minor adjustments */
+#usuariosTable th, #usuariosTable td { vertical-align: middle; font-size: .95rem; }
+
+/* Small responsive tweak to avoid cover by mobile UI */
+@media (max-width: 480px) {
+  .fab { right: 14px; bottom: 14px; width: 52px; height: 52px; }
+}
+
+/* Spinner center */
+#usuariosLoading { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+/* Hide table wrap when empty */
+#usuariosTableWrap { max-height: 50vh; overflow: auto; }
+
+/* Visually hide element but keep for screen readers */
 .sr-only { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
-.rol-select { min-width: 140px; padding: .25rem .4rem; border-radius: .25rem; border: 1px solid rgba(0,0,0,0.08); }
+
+/* Small select styling inside table */
+.rol-select {
+  min-width: 140px;
+  padding: .25rem .4rem;
+  border-radius: .25rem;
+  border: 1px solid rgba(0,0,0,0.08);
+}
 </style>
 
+<!-- SCRIPTS: comportamiento del FAB - consulta tabla Usuarios y edición de rol -->
 <script>
-/*
-  Reglas implementadas en este archivo:
-  - El FAB aparece únicamente para los dos administradores fijos listados en FIXED_ADMIN_USERS.
-  - El listado de usuarios NO incluye el usuario con el que se inició sesión.
-  - El select de roles NO incluye "viewer".
-  - Sólo los administradores fijos pueden cambiar roles; los administradores fijos no pueden cambiar su propio rol ni el de otros administradores fijos.
-  - El cambio de rol se envía a PATCH /api/usuarios/rol con payload { usuario, correo, rol }.
-  - Este archivo es cliente (menu.html completo). Asegura que el servidor implemente /whoami y /api/usuarios y /api/usuarios/rol como se espera.
-*/
-
-(function () {
-  const FIXED_ADMIN_USERS = ['admin', 'admin2']; // <- reemplaza por los dos usuarios administradores fijos de tu sistema (exacto username)
+document.addEventListener('DOMContentLoaded', function () {
   const fab = document.getElementById('fabUsuarios');
   const modalEl = document.getElementById('modalUsuarios');
   const usuariosLoading = document.getElementById('usuariosLoading');
@@ -131,37 +218,30 @@
   const modalCloseBtn = document.getElementById('modalCloseBtn');
   const btnCerrarModal = document.getElementById('btnCerrarModal');
 
-  let currentUser = null; // { usuario, rol }
   let loading = false;
   let abortController = null;
+  let currentUser = null; // { usuario, rol }
 
-  // Obtiene información del usuario actual (necesario para ocultarlo del listado y mostrar FAB)
-  async function fetchWhoami() {
+  // fetch whoami and show FAB only for administrative roles (adjustable)
+  async function initFabVisibility() {
     try {
-      const res = await fetch('/whoami', { cache: 'no-store' });
-      if (!res.ok) return null;
-      const j = await res.json();
-      return { usuario: j.usuario || j.Usuarios || '', rol: (j.rol || '').toLowerCase() };
+      const r = await fetch('/whoami', { cache: 'no-store' });
+      if (!r.ok) return;
+      const j = await r.json();
+      currentUser = { usuario: j.usuario || '', rol: (j.rol || '').toLowerCase() };
+      const allowedRoles = ['admin','superadmin']; // only these roles see FAB
+      if (allowedRoles.includes(currentUser.rol)) {
+        fab.classList.remove('d-none');
+      } else {
+        fab.classList.add('d-none');
+      }
     } catch (e) {
-      return null;
-    }
-  }
-
-  // Decide visibilidad del FAB: sólo para los administradores fijos
-  async function initFab() {
-    currentUser = await fetchWhoami();
-    if (!currentUser) {
-      fab.classList.add('d-none');
-      return;
-    }
-    const uname = String(currentUser.usuario || '').toLowerCase();
-    if (FIXED_ADMIN_USERS.map(x => x.toLowerCase()).includes(uname)) {
-      fab.classList.remove('d-none');
-    } else {
+      // silent; keep FAB hidden by default
       fab.classList.add('d-none');
     }
   }
 
+  // Helper: show modal (works with Bootstrap if available; fallback to aria-hidden)
   function showModal() {
     if (typeof $ === 'function' && typeof $.fn.modal === 'function') {
       $('#modalUsuarios').modal({ backdrop: 'static', keyboard: false });
@@ -169,8 +249,11 @@
       modalEl.classList.add('show');
       modalEl.style.display = 'block';
       modalEl.setAttribute('aria-hidden', 'false');
-      setTimeout(() => { const close = modalEl.querySelector('#modalCloseBtn'); if (close) close.focus(); }, 60);
-      document.addEventListener('keydown', fallbackEsc);
+      setTimeout(() => {
+        const close = modalEl.querySelector('#modalCloseBtn') || modalEl.querySelector('[data-dismiss="modal"]');
+        if (close) close.focus();
+      }, 60);
+      document.addEventListener('keydown', fallbackEscKey);
     }
   }
 
@@ -181,11 +264,13 @@
       modalEl.classList.remove('show');
       modalEl.style.display = 'none';
       modalEl.setAttribute('aria-hidden', 'true');
-      document.removeEventListener('keydown', fallbackEsc);
+      document.removeEventListener('keydown', fallbackEscKey);
     }
   }
 
-  function fallbackEsc(e) { if (e.key === 'Escape') hideModal(); }
+  function fallbackEscKey(e) {
+    if (e.key === 'Escape') hideModal();
+  }
 
   if (modalCloseBtn) modalCloseBtn.addEventListener('click', hideModal);
   if (btnCerrarModal) btnCerrarModal.addEventListener('click', hideModal);
@@ -197,7 +282,9 @@
   });
 
   if (typeof $ === 'function' && typeof $.fn.modal === 'function') {
-    $('#modalUsuarios').on('hidden.bs.modal', function () { fab && fab.setAttribute('aria-expanded', 'false'); });
+    $('#modalUsuarios').on('hidden.bs.modal', function () {
+      fab && fab.setAttribute('aria-expanded', 'false');
+    });
   }
 
   usuariosRetry && usuariosRetry.addEventListener('click', function () {
@@ -205,7 +292,6 @@
     loadUsuarios();
   });
 
-  // Carga la lista de usuarios, filtra el usuario en sesión y construye filas con select de rol
   async function loadUsuarios() {
     if (loading) return;
     loading = true;
@@ -219,8 +305,9 @@
     abortController && abortController.abort();
     abortController = new AbortController();
     const signal = abortController.signal;
+
     const TIMEOUT_MS = 7000;
-    const timeoutId = setTimeout(() => abortController && abortController.abort(), TIMEOUT_MS);
+    const timeoutId = setTimeout(() => { abortController && abortController.abort(); }, TIMEOUT_MS);
 
     try {
       const res = await fetch('/api/usuarios', { cache: 'no-store', signal });
@@ -237,98 +324,61 @@
         return;
       }
 
-      // filtrar para quitar el usuario con sesión actual (si existe)
-      const sessionUser = (currentUser && currentUser.usuario) ? String(currentUser.usuario) : null;
-      const list = data.filter(u => {
-        const uname = String(u.Usuarios || u.usuario || u.username || u.user || '').trim();
-        if (sessionUser && uname && uname === String(sessionUser)) return false;
-        return true;
-      });
-
-      if (list.length === 0) {
-        usuariosLoading.classList.add('d-none');
-        usuariosEmpty.classList.remove('d-none');
-        usuariosRetry.classList.remove('d-none');
-        loading = false;
-        return;
-      }
-
-      list.forEach((u) => {
+      data.forEach((u) => {
         const tr = document.createElement('tr');
 
-        const username = (u.Usuarios || u.usuario || u.username || u.user || '').toString();
-        const correo = (u['Correo Electronico'] || u.email || u.correo || '').toString();
-        const rolActual = ((u.rol || u.role || u.privilegio || '') || '').toString().toLowerCase();
+        const username = u.username || u.usuario || u.name || u.user || '';
+        const email = u.email || u.correo || '';
+        const role = u.role || u.rol || u.privilegio || '';
 
-        // columna Usuario
-        const tdUser = document.createElement('td');
-        tdUser.textContent = username;
-        tr.appendChild(tdUser);
-
-        // columna Correo
-        const tdCorreo = document.createElement('td');
-        tdCorreo.textContent = correo;
-        tr.appendChild(tdCorreo);
-
-        // columna Rol: select (sin 'viewer')
-        const tdRol = document.createElement('td');
-        const select = document.createElement('select');
-        select.className = 'rol-select form-control form-control-sm';
-        // roles permitidos (viewer eliminado)
-        const ROLES = ['admin', 'colaborador'];
-        ROLES.forEach(r => {
+        // create role select so admin (current user) can change roles inline
+        const roleSelect = document.createElement('select');
+        roleSelect.className = 'rol-select form-control form-control-sm';
+        const roles = ['admin','colaborador','viewer']; // adjust allowed roles
+        roles.forEach(r => {
           const opt = document.createElement('option');
           opt.value = r;
           opt.text = r.charAt(0).toUpperCase() + r.slice(1);
-          if (r === rolActual) opt.selected = true;
-          select.appendChild(opt);
+          if (r === String(role).toLowerCase()) opt.selected = true;
+          roleSelect.appendChild(opt);
         });
 
-        // Decidir si habilitar el select:
-        // - Sólo los administradores fijos pueden cambiar roles (FIXED_ADMIN_USERS).
-        // - No permitir cambiar rol de usuarios que también sean administradores fijos.
-        const isCurrentFixedAdmin = currentUser && FIXED_ADMIN_USERS.map(x => x.toLowerCase()).includes(String(currentUser.usuario || '').toLowerCase());
-        const isTargetFixedAdmin = FIXED_ADMIN_USERS.map(x => x.toLowerCase()).includes(String(username || '').toLowerCase());
-
-        if (!isCurrentFixedAdmin) {
-          // usuario actual no es uno de los dos admins fijos: deshabilitar select para todos
-          select.setAttribute('disabled', 'disabled');
+        // only enable select if current user is admin (we kept FAB visible for admins, but check again)
+        if (!(currentUser && (currentUser.rol === 'admin' || currentUser.rol === 'superadmin'))) {
+          roleSelect.setAttribute('disabled', 'disabled');
         } else {
-          // usuario actual es admin fijo: permitir cambio salvo si objetivo es admin fijo
-          if (isTargetFixedAdmin) {
-            select.setAttribute('disabled', 'disabled');
-          } else {
-            // attach handler para PATCH /api/usuarios/rol
-            select.addEventListener('change', async function () {
-              const newRole = this.value;
-              const oldRole = rolActual;
-              // optimista en UI: si falla revertir
-              try {
-                const payload = { usuario: username, correo: correo, rol: newRole };
-                const patch = await fetch('/api/usuarios/rol', {
-                  method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(payload),
-                  cache: 'no-store'
-                });
-                if (!patch.ok) {
-                  const text = await patch.text().catch(()=>null);
-                  throw new Error('HTTP ' + patch.status + (text ? (' - ' + text) : ''));
-                }
-                // si servert devuelve ok, actualizar localmente la variable rolActual no estrictamente necesaria aquí
-              } catch (err) {
-                // revertir UI y notificar
-                this.value = oldRole;
-                alert('No se pudo cambiar el rol: ' + (err && err.message ? err.message : 'desconocido'));
-                console.error('Error cambiando rol', err);
+          roleSelect.addEventListener('change', async function () {
+            const newRole = this.value;
+            // optimistic UI; keep old in case of error
+            const prev = role;
+            // attempt server update
+            try {
+              const payload = { usuario: username, rol: newRole };
+              const r = await fetch('/api/usuarios/rol', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                cache: 'no-store'
+              });
+              if (!r.ok) {
+                throw new Error('HTTP ' + r.status);
               }
-            });
-          }
+              // success — nothing else required
+            } catch (err) {
+              // revert select and notify
+              this.value = prev || '';
+              alert('Error actualizando rol: ' + (err && err.message ? err.message : 'desconocido'));
+              console.error('Error actualizando rol', err);
+            }
+          });
         }
 
-        tdRol.appendChild(select);
-        tr.appendChild(tdRol);
-
+        tr.innerHTML = `
+          <td>${escapeHtml(username)}</td>
+          <td>${escapeHtml(email)}</td>
+          <td></td>
+        `;
+        tr.cells[2].appendChild(roleSelect);
         usuariosTableBody.appendChild(tr);
       });
 
@@ -351,50 +401,30 @@
     }
   }
 
-  // escape básico para prevenir inserción de HTML
   function escapeHtml(str) {
     if (str === null || str === undefined) return '';
-    return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
   }
 
-  // Inicialización al cargar la plantilla
-  document.addEventListener('DOMContentLoaded', async function () {
-    // inicializar info de sesión y FAB
-    currentUser = await fetchWhoami();
-    await initFab();
-
-    // Si el FAB está visible pre-cargado, el usuario es admin fijo; así permitimos abrir el modal
-    // nada adicional a hacer hasta que se haga click en FAB
-  });
-
-  // Exponer fetchWhoami para uso interno
-  async function fetchWhoami() {
-    try {
-      const r = await fetch('/whoami', { cache: 'no-store' });
-      if (!r.ok) return null;
-      const j = await r.json();
-      return { usuario: j.usuario || j.Usuarios || '', rol: (j.rol || '').toLowerCase() };
-    } catch (e) {
-      return null;
-    }
+  if (! (typeof $ === 'function' && typeof $.fn.modal === 'function')) {
+    modalEl && modalEl.addEventListener('keydown', function(e){
+      if (e.key !== 'Tab') return;
+      const focusable = modalEl.querySelectorAll('a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (!focusable || focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length -1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
   }
 
-  // initFab reutilizable (separa para poder llamarlo después si cambian sesión)
-  async function initFab() {
-    currentUser = currentUser || await fetchWhoami();
-    if (!currentUser || !currentUser.usuario) {
-      fab.classList.add('d-none');
-      return;
-    }
-    const uname = String(currentUser.usuario || '').toLowerCase();
-    if (FIXED_ADMIN_USERS.map(x => x.toLowerCase()).includes(uname)) {
-      fab.classList.remove('d-none');
-    } else {
-      fab.classList.add('d-none');
-    }
-  }
-
-})();
+  // init: decide FAB visibility
+  initFabVisibility();
+});
 </script>
 
 {% endblock %}
