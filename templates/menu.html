@@ -48,7 +48,7 @@
 </section>
 
 <!-- BOTON DE ACCION FLOTANTE: Consultar tabla Usuarios -->
-<button id="fabUsuarios" class="fab" title="Consultar Usuarios" aria-label="Consultar Usuarios" aria-haspopup="dialog" aria-controls="modalUsuarios" aria-expanded="false">
+<button id="fabUsuarios" class="fab d-none" title="Consultar Usuarios" aria-label="Consultar Usuarios" aria-haspopup="dialog" aria-controls="modalUsuarios" aria-expanded="false">
   <i class="fas fa-user-cog" aria-hidden="true"></i>
 </button>
 
@@ -74,11 +74,9 @@
           <table class="table table-sm table-hover" id="usuariosTable">
             <thead class="thead-light">
               <tr>
-                <th scope="col">#</th>
                 <th scope="col">Usuario</th>
                 <th scope="col">Correo</th>
                 <th scope="col">Rol</th>
-                <th scope="col">Activo</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -130,14 +128,8 @@
 /* Animaciones */
 .fade-in { animation: fadeIn 1s ease-in-out; }
 .slide-up { animation: slideUp 1s ease forwards; opacity: 0; }
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(40px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
 
 /* Iconos */
 .icon-clipboard {
@@ -202,9 +194,17 @@
 
 /* Visually hide element but keep for screen readers */
 .sr-only { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
+
+/* Small select styling inside table */
+.rol-select {
+  min-width: 140px;
+  padding: .25rem .4rem;
+  border-radius: .25rem;
+  border: 1px solid rgba(0,0,0,0.08);
+}
 </style>
 
-<!-- SCRIPTS: comportamiento del FAB - consulta tabla Usuarios -->
+<!-- SCRIPTS: comportamiento del FAB - consulta tabla Usuarios y edición de rol -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   const fab = document.getElementById('fabUsuarios');
@@ -220,13 +220,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
   let loading = false;
   let abortController = null;
+  let currentUser = null; // { usuario, rol }
 
-  // Accessibility: focus trap basics (restore focus after close)
-  let lastFabFocus = null;
+  // fetch whoami and show FAB only for administrative roles (adjustable)
+  async function initFabVisibility() {
+    try {
+      const r = await fetch('/whoami', { cache: 'no-store' });
+      if (!r.ok) return;
+      const j = await r.json();
+      currentUser = { usuario: j.usuario || '', rol: (j.rol || '').toLowerCase() };
+      const allowedRoles = ['admin','superadmin']; // only these roles see FAB
+      if (allowedRoles.includes(currentUser.rol)) {
+        fab.classList.remove('d-none');
+      } else {
+        fab.classList.add('d-none');
+      }
+    } catch (e) {
+      // silent; keep FAB hidden by default
+      fab.classList.add('d-none');
+    }
+  }
 
   // Helper: show modal (works with Bootstrap if available; fallback to aria-hidden)
   function showModal() {
-    lastFabFocus = document.activeElement;
     if (typeof $ === 'function' && typeof $.fn.modal === 'function') {
       $('#modalUsuarios').modal({ backdrop: 'static', keyboard: false });
     } else {
@@ -250,7 +266,6 @@ document.addEventListener('DOMContentLoaded', function () {
       modalEl.setAttribute('aria-hidden', 'true');
       document.removeEventListener('keydown', fallbackEscKey);
     }
-    if (lastFabFocus) lastFabFocus.focus();
   }
 
   function fallbackEscKey(e) {
@@ -269,7 +284,6 @@ document.addEventListener('DOMContentLoaded', function () {
   if (typeof $ === 'function' && typeof $.fn.modal === 'function') {
     $('#modalUsuarios').on('hidden.bs.modal', function () {
       fab && fab.setAttribute('aria-expanded', 'false');
-      if (lastFabFocus) lastFabFocus.focus();
     });
   }
 
@@ -310,22 +324,61 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
 
-      data.forEach((u, i) => {
+      data.forEach((u) => {
         const tr = document.createElement('tr');
 
         const username = u.username || u.usuario || u.name || u.user || '';
         const email = u.email || u.correo || '';
         const role = u.role || u.rol || u.privilegio || '';
-        const activeRaw = (u.active === false || u.activo === false) ? false : true;
-        const active = activeRaw ? 'Sí' : 'No';
+
+        // create role select so admin (current user) can change roles inline
+        const roleSelect = document.createElement('select');
+        roleSelect.className = 'rol-select form-control form-control-sm';
+        const roles = ['admin','colaborador','viewer']; // adjust allowed roles
+        roles.forEach(r => {
+          const opt = document.createElement('option');
+          opt.value = r;
+          opt.text = r.charAt(0).toUpperCase() + r.slice(1);
+          if (r === String(role).toLowerCase()) opt.selected = true;
+          roleSelect.appendChild(opt);
+        });
+
+        // only enable select if current user is admin (we kept FAB visible for admins, but check again)
+        if (!(currentUser && (currentUser.rol === 'admin' || currentUser.rol === 'superadmin'))) {
+          roleSelect.setAttribute('disabled', 'disabled');
+        } else {
+          roleSelect.addEventListener('change', async function () {
+            const newRole = this.value;
+            // optimistic UI; keep old in case of error
+            const prev = role;
+            // attempt server update
+            try {
+              const payload = { usuario: username, rol: newRole };
+              const r = await fetch('/api/usuarios/rol', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                cache: 'no-store'
+              });
+              if (!r.ok) {
+                throw new Error('HTTP ' + r.status);
+              }
+              // success — nothing else required
+            } catch (err) {
+              // revert select and notify
+              this.value = prev || '';
+              alert('Error actualizando rol: ' + (err && err.message ? err.message : 'desconocido'));
+              console.error('Error actualizando rol', err);
+            }
+          });
+        }
 
         tr.innerHTML = `
-          <td>${i + 1}</td>
           <td>${escapeHtml(username)}</td>
           <td>${escapeHtml(email)}</td>
-          <td>${escapeHtml(role)}</td>
-          <td>${escapeHtml(active)}</td>
+          <td></td>
         `;
+        tr.cells[2].appendChild(roleSelect);
         usuariosTableBody.appendChild(tr);
       });
 
@@ -369,11 +422,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  if (typeof $ === 'function' && typeof $.fn.modal === 'function') {
-    $('#modalUsuarios').on('hide.bs.modal', function () {
-      fab && fab.setAttribute('aria-expanded', 'false');
-    });
-  }
+  // init: decide FAB visibility
+  initFabVisibility();
 });
 </script>
 
