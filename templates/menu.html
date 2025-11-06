@@ -20,12 +20,12 @@
     <div class="row justify-content-center">
       <div class="col-12 col-md-5">
         <div class="action-card shadow-sm text-center">
-          <div class="icon-wrap mb-3 icon-clipboard">
-            <i class="fas fa-clipboard-list fa-2x" aria-hidden="true"></i>
+          <div class="icon-wrap mb-3 icon-clipboard" aria-hidden="true">
+            <i class="fas fa-clipboard-list fa-2x"></i>
           </div>
           <h5 class="mb-2">Planillas</h5>
           <p class="text-muted mb-3">Abrir y administrar planillas de pago; generar reportes y descargar comprobantes.</p>
-          <a href="{{ url_for('planilla') }}" class="btn btn-outline-warning btn-block btn-lg action-btn">
+          <a href="{{ url_for('planilla') }}" class="btn btn-outline-warning btn-block btn-lg action-btn" role="button">
             <i class="fas fa-file-alt mr-2" aria-hidden="true"></i> Ir a Planillas
           </a>
         </div>
@@ -33,12 +33,12 @@
 
       <div class="col-12 col-md-5">
         <div class="action-card shadow-sm text-center">
-          <div class="icon-wrap mb-3 icon-id">
-            <i class="fas fa-id-badge fa-2x" aria-hidden="true"></i>
+          <div class="icon-wrap mb-3 icon-id" aria-hidden="true">
+            <i class="fas fa-id-badge fa-2x"></i>
           </div>
           <h5 class="mb-2">Información de empleados</h5>
           <p class="text-muted mb-3">Ver y editar fichas, subir fotografías y consultar el historial completo por empleado.</p>
-          <a href="{{ url_for('empleados') }}" id="btnAbrirInfo" class="btn btn-primary btn-block btn-lg action-btn action-btn-blue">
+          <a href="{{ url_for('empleados') }}" id="btnAbrirInfo" class="btn btn-primary btn-block btn-lg action-btn action-btn-blue" role="button">
             <i class="fas fa-users mr-2" aria-hidden="true"></i> Abrir información empleados
           </a>
         </div>
@@ -48,41 +48,50 @@
 </section>
 
 <!-- BOTON DE ACCION FLOTANTE: Consultar tabla Usuarios -->
-<!-- Este bloque se agregó sin modificar nada del resto del código -->
-<button id="fabUsuarios" class="fab" title="Consultar Usuarios" aria-label="Consultar Usuarios">
-  <i class="fas fa-user-cog"></i>
+<button id="fabUsuarios" class="fab" title="Consultar Usuarios" aria-label="Consultar Usuarios" aria-haspopup="dialog" aria-controls="modalUsuarios" aria-expanded="false">
+  <i class="fas fa-user-cog" aria-hidden="true"></i>
 </button>
 
 <!-- Modal para mostrar lista de Usuarios (se abre con el FAB) -->
 <div class="modal fade" id="modalUsuarios" tabindex="-1" role="dialog" aria-labelledby="modalUsuariosLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
-    <div class="modal-content">
+    <div class="modal-content" role="document">
       <div class="modal-header">
         <h5 class="modal-title" id="modalUsuariosLabel">Usuarios (tabla Usuarios)</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar" id="modalCloseBtn">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <div class="modal-body">
-        <div id="usuariosLoading" class="text-center py-3">Cargando usuarios...</div>
-        <div id="usuariosError" class="alert alert-danger d-none" role="alert"></div>
-        <div class="table-responsive d-none" id="usuariosTableWrap">
+      <div class="modal-body" id="modalUsuariosBody">
+        <div id="usuariosLoading" class="text-center py-3" aria-live="polite">
+          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          <span class="sr-only">Cargando usuarios...</span>
+          <div class="mt-2">Cargando usuarios...</div>
+        </div>
+        <div id="usuariosError" class="alert alert-danger d-none" role="alert" aria-live="assertive"></div>
+
+        <div class="table-responsive d-none" id="usuariosTableWrap" role="region" aria-label="Tabla de usuarios">
           <table class="table table-sm table-hover" id="usuariosTable">
             <thead class="thead-light">
               <tr>
-                <th>#</th>
-                <th>Usuario</th>
-                <th>Correo</th>
-                <th>Rol</th>
-                <th>Activo</th>
+                <th scope="col">#</th>
+                <th scope="col">Usuario</th>
+                <th scope="col">Correo</th>
+                <th scope="col">Rol</th>
+                <th scope="col">Activo</th>
               </tr>
             </thead>
             <tbody></tbody>
           </table>
         </div>
+
+        <div class="text-center d-none" id="usuariosEmptyMessage" aria-live="polite">
+          <p class="text-muted">No se encontraron usuarios.</p>
+        </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+        <button id="usuariosRetry" type="button" class="btn btn-outline-primary d-none">Reintentar</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal" id="btnCerrarModal">Cerrar</button>
       </div>
     </div>
   </div>
@@ -94,7 +103,7 @@
 .jumbotron-welcome {
   position: relative;
   background-color: #f5f7fa;
-  padding: 3rem 1rem 4rem; /* menos padding abajo */
+  padding: 3rem 1rem 4rem;
   margin-bottom: 0;
   border-radius: 0 0 30px 30px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.15);
@@ -114,7 +123,7 @@
 
 /* Reducir espacio entre jumbotron y tarjetas */
 .welcome-actions {
-  padding-top: 1rem; /* antes era más grande */
+  padding-top: 1rem;
   padding-bottom: 2rem;
 }
 
@@ -180,6 +189,7 @@
 }
 .fab:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(21,101,192,0.22); }
 .fab:active { transform: translateY(-1px); }
+.fab:focus { outline: 3px solid rgba(21,101,192,0.18); }
 
 /* Modal table styling minor adjustments */
 #usuariosTable th, #usuariosTable td { vertical-align: middle; font-size: .95rem; }
@@ -188,9 +198,18 @@
 @media (max-width: 480px) {
   .fab { right: 14px; bottom: 14px; width: 52px; height: 52px; }
 }
+
+/* Spinner center */
+#usuariosLoading { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+/* Hide table wrap when empty */
+#usuariosTableWrap { max-height: 50vh; overflow: auto; }
+
+/* Visually hide element but keep for screen readers */
+.sr-only { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
 </style>
 
-<!-- SCRIPTS: comportamiento del FAB -> consulta tabla Usuarios (no modifica el resto) -->
+<!-- SCRIPTS: comportamiento del FAB -> consulta tabla Usuarios -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   const fab = document.getElementById('fabUsuarios');
@@ -199,45 +218,129 @@ document.addEventListener('DOMContentLoaded', function () {
   const usuariosError = document.getElementById('usuariosError');
   const usuariosTableWrap = document.getElementById('usuariosTableWrap');
   const usuariosTableBody = document.querySelector('#usuariosTable tbody');
+  const usuariosEmpty = document.getElementById('usuariosEmptyMessage');
+  const usuariosRetry = document.getElementById('usuariosRetry');
+  const modalCloseBtn = document.getElementById('modalCloseBtn');
+  const btnCerrarModal = document.getElementById('btnCerrarModal');
 
-  // Abrir modal y cargar datos
-  fab && fab.addEventListener('click', function () {
-    // usar Bootstrap modal si está disponible
+  let loading = false;
+  let abortController = null;
+
+  // Accessibility: focus trap basics (restore focus after close)
+  let lastFabFocus = null;
+
+  // Helper: show modal (works with Bootstrap if available; fallback to aria-hidden)
+  function showModal() {
+    lastFabFocus = document.activeElement;
     if (typeof $ === 'function' && typeof $.fn.modal === 'function') {
-      $('#modalUsuarios').modal('show');
-      loadUsuarios();
+      $('#modalUsuarios').modal({ backdrop: 'static', keyboard: false });
+      // Bootstrap will manage focus
     } else {
-      // si no está jQuery/Bootstrap JS enlazado, indicar diálogo simple
-      loadUsuarios(true);
+      modalEl.classList.add('show');
+      modalEl.style.display = 'block';
+      modalEl.setAttribute('aria-hidden', 'false');
+      // focus the close button
+      setTimeout(() => {
+        const close = modalEl.querySelector('#modalCloseBtn') || modalEl.querySelector('[data-dismiss="modal"]');
+        if (close) close.focus();
+      }, 60);
+      // close on ESC in fallback
+      document.addEventListener('keydown', fallbackEscKey);
     }
+  }
+
+  function hideModal() {
+    if (typeof $ === 'function' && typeof $.fn.modal === 'function') {
+      $('#modalUsuarios').modal('hide');
+    } else {
+      modalEl.classList.remove('show');
+      modalEl.style.display = 'none';
+      modalEl.setAttribute('aria-hidden', 'true');
+      document.removeEventListener('keydown', fallbackEscKey);
+    }
+    if (lastFabFocus) lastFabFocus.focus();
+  }
+
+  function fallbackEscKey(e) {
+    if (e.key === 'Escape') hideModal();
+  }
+
+  // Close buttons hookup for fallback
+  if (modalCloseBtn) modalCloseBtn.addEventListener('click', hideModal);
+  if (btnCerrarModal) btnCerrarModal.addEventListener('click', hideModal);
+
+  // FAB click: open modal and load datos
+  fab && fab.addEventListener('click', function () {
+    // update aria-expanded
+    fab.setAttribute('aria-expanded', 'true');
+    showModal();
+    loadUsuarios();
   });
 
-  async function loadUsuarios(useAlertFallback = false) {
-    usuariosLoading.classList.remove('d-none');
+  // When modal hidden via Bootstrap, update aria-expanded
+  if (typeof $ === 'function' && typeof $.fn.modal === 'function') {
+    $('#modalUsuarios').on('hidden.bs.modal', function () {
+      fab && fab.setAttribute('aria-expanded', 'false');
+      if (lastFabFocus) lastFabFocus.focus();
+    });
+  }
+
+  // Retry button
+  usuariosRetry && usuariosRetry.addEventListener('click', function () {
+    usuariosRetry.classList.add('d-none');
+    loadUsuarios();
+  });
+
+  // Main loader with timeout, simple backoff and safe DOM updates
+  async function loadUsuarios() {
+    if (loading) return; // prevent concurrent loads
+    loading = true;
+
+    // reset UI
     usuariosError.classList.add('d-none');
     usuariosTableWrap.classList.add('d-none');
+    usuariosEmpty.classList.add('d-none');
+    usuariosLoading.classList.remove('d-none');
     usuariosTableBody.innerHTML = '';
 
+    // Prepare abort controller for timeout
+    abortController && abortController.abort();
+    abortController = new AbortController();
+    const signal = abortController.signal;
+
+    // implement timeout
+    const TIMEOUT_MS = 7000;
+    const timeoutId = setTimeout(() => {
+      abortController && abortController.abort();
+    }, TIMEOUT_MS);
+
     try {
-      const res = await fetch('/api/usuarios', { cache: 'no-store' });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const res = await fetch('/api/usuarios', { cache: 'no-store', signal });
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        throw new Error('HTTP ' + res.status);
+      }
       const data = await res.json();
 
-      // data esperado: array de usuarios { username, email, role, active } (ajustable según API)
       if (!Array.isArray(data) || data.length === 0) {
         usuariosLoading.classList.add('d-none');
-        usuariosError.textContent = 'No se encontraron usuarios en la tabla Usuarios.';
-        usuariosError.classList.remove('d-none');
-        if (useAlertFallback) alert('No se encontraron usuarios en la tabla Usuarios.');
+        usuariosEmpty.classList.remove('d-none');
+        usuariosRetry.classList.remove('d-none');
+        loading = false;
         return;
       }
 
+      // populate table safely
       data.forEach((u, i) => {
         const tr = document.createElement('tr');
+
         const username = u.username || u.usuario || u.name || u.user || '';
         const email = u.email || u.correo || '';
         const role = u.role || u.rol || u.privilegio || '';
-        const active = (u.active === false || u.activo === false) ? 'No' : 'Sí';
+        const activeRaw = (u.active === false || u.activo === false) ? false : true;
+        const active = activeRaw ? 'Sí' : 'No';
+
         tr.innerHTML = `
           <td>${i + 1}</td>
           <td>${escapeHtml(username)}</td>
@@ -250,12 +353,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
       usuariosLoading.classList.add('d-none');
       usuariosTableWrap.classList.remove('d-none');
+      usuariosRetry.classList.add('d-none');
     } catch (err) {
+      clearTimeout(timeoutId);
       usuariosLoading.classList.add('d-none');
-      usuariosError.textContent = 'Error al cargar usuarios: ' + (err && err.message ? err.message : 'desconocido');
+      usuariosTableWrap.classList.add('d-none');
+
+      // Differentiate abort/timeout from other errors
+      const isAbort = err && (err.name === 'AbortError' || err.message === 'The user aborted a request.');
+      usuariosError.textContent = isAbort ? 'La solicitud tardó demasiado. Verifique la conexión y vuelva a intentar.' : 'Error al cargar usuarios: ' + (err && err.message ? err.message : 'desconocido');
       usuariosError.classList.remove('d-none');
-      if (useAlertFallback) alert('Error al cargar usuarios. Consulte la consola para más detalles.');
+      usuariosRetry.classList.remove('d-none');
       console.error('Error cargando /api/usuarios', err);
+    } finally {
+      loading = false;
+      abortController = null;
     }
   }
 
@@ -267,6 +379,31 @@ document.addEventListener('DOMContentLoaded', function () {
       .replace(/"/g, '&quot;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
+  }
+
+  // Accessibility: trap focus inside modal when opened (fallback only)
+  if (! (typeof $ === 'function' && typeof $.fn.modal === 'function')) {
+    modalEl && modalEl.addEventListener('keydown', function(e){
+      if (e.key !== 'Tab') return;
+      const focusable = modalEl.querySelectorAll('a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (!focusable || focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length -1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    });
+  }
+
+  // If modal is closed by backdrop (Bootstrap) ensure fab aria state updated
+  if (typeof $ === 'function' && typeof $.fn.modal === 'function') {
+    $('#modalUsuarios').on('hide.bs.modal', function () {
+      fab && fab.setAttribute('aria-expanded', 'false');
+    });
   }
 });
 </script>
