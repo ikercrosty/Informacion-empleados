@@ -269,38 +269,72 @@ def api_categories_compat():
 # -----------------------------
 @app.route("/api/usuarios", methods=["GET"])
 def api_usuarios_list():
+    """
+    Devuelve la lista de usuarios en forma compatible con el frontend.
+    Intenta una consulta "completa" y, si falla por columnas faltantes
+    (por ejemplo 'activo'), reintenta con un subconjunto seguro.
+    """
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        # Selecciona campos usados por la UI; adapta nombres según tu tabla Usuarios
-        cursor.execute("""
-            SELECT
-                `Usuarios` AS username,
-                `Nombres` AS nombres,
-                `Correo Electronico` AS email,
-                `rol` AS role,
-                IFNULL(`activo`, 1) AS activo
-            FROM Usuarios
-            ORDER BY `Usuarios` ASC
-        """)
-        rows = cursor.fetchall()
-        cursor.close()
-        conn.close()
+        # Primera intención: obtener campos habituales (si la BD los tiene)
+        try:
+            cursor.execute("""
+                SELECT `Usuarios` AS username,
+                       `Correo Electronico` AS email,
+                       COALESCE(`rol`, '') AS role,
+                       `activo` AS active
+                FROM `Usuarios`
+                ORDER BY `Usuarios` ASC
+            """)
+            rows = cursor.fetchall()
+        except Exception as first_err:
+            # Si la primera consulta falla (p.ej. columna 'activo' no existe),
+            # reintentamos con un conjunto mínimo de columnas.
+            app.logger.warning("Consulta /api/usuarios falló (intentando fallback): %s", first_err)
+            try:
+                cursor.execute("""
+                    SELECT `Usuarios` AS username,
+                           `Correo Electronico` AS email,
+                           COALESCE(`rol`, '') AS role
+                    FROM `Usuarios`
+                    ORDER BY `Usuarios` ASC
+                """)
+                rows = cursor.fetchall()
+                # Añadir campo 'active' por compatibilidad (frontend espera algo)
+                for r in rows:
+                    r['active'] = True  # asumimos activo si no hay columna
+            except Exception as second_err:
+                # Si falla también, relanzamos para manejar en el outer try
+                app.logger.exception("Fallback /api/usuarios también falló")
+                raise second_err
+        finally:
+            cursor.close()
+            conn.close()
 
-        # sanitize and map to expected frontend shape
-        rows = sanitize_rows(rows)
-        out = []
-        for r in rows:
-            out.append({
-                "username": r.get("username") or r.get("nombres") or "",
-                "email": r.get("email") or "",
-                "role": (r.get("role") or "").strip(),
-                "active": True if str(r.get("activo")).strip() not in ("0", "false", "False", "") else False
-            })
-        return jsonify(out)
+        # Sanitizar: convertir None->'' y normalizar tipos
+        def sanitize_row(r):
+            out = {}
+            out['username'] = (r.get('username') or r.get('Usuarios') or '') if isinstance(r, dict) else ''
+            out['email'] = (r.get('email') or r.get('Correo Electronico') or '') if isinstance(r, dict) else ''
+            out['role'] = (r.get('role') or r.get('rol') or '') if isinstance(r, dict) else ''
+            # active puede venir como 0/1, True/False, '1','0', 'si', etc.
+            a = r.get('active', r.get('activo', True))
+            if isinstance(a, (int, float)):
+                active_bool = bool(a)
+            elif isinstance(a, str):
+                active_bool = a.strip().lower() not in ('0', 'false', 'no', 'n', 'f', '')
+            else:
+                active_bool = bool(a)
+            out['active'] = True if active_bool else False
+            return out
+
+        sanitized = [sanitize_row(row) for row in rows]
+        return jsonify(sanitized)
     except Exception as e:
         app.logger.exception("Error en /api/usuarios")
         return jsonify({"error": str(e)}), 500
+
 
 
 # Devuelve todos los campos relevantes de un empleado por DPI
