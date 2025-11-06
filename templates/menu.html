@@ -2,375 +2,419 @@
 {% block title %}Menu{% endblock %}
 
 {% block content %}
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+<nav class="navbar navbar-light bg-white shadow-sm">
   <div class="container">
-    <a class="navbar-brand font-weight-bold" href="{{ url_for('index') }}">Empaquetex</a>
+    <a class="navbar-brand font-weight-bold" href="#">Empaquetex</a>
     <div class="d-flex align-items-center">
-      <span class="mr-3 small text-muted">Bienvenido</span>
+      <span id="topUsername" class="text-muted mr-3"></span>
       <a href="{{ url_for('logout') }}" class="btn btn-outline-secondary btn-sm">Cerrar sesión</a>
     </div>
   </div>
 </nav>
 
 <div class="container py-4">
-  <!-- existing page content placeholder (no logic moved) -->
-  {% block main_content %}
-  <!-- Your page content goes here -->
-  {% endblock %}
+  <div class="jumbotron jumbotron-welcome text-center mb-0">
+    <div class="container fade-in">
+      <h1 class="display-4">Bienvenido a Empaquetex</h1>
+      <p class="lead">Panel de control centralizado. Accede rápidamente a planillas o a la información de empleados.</p>
+    </div>
+    <svg class="wave" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120">
+      <path fill="#ffffff" d="M0,64L48,80C96,96,192,128,288,128C384,128,480,96,576,74.7C672,53,768,43,864,64C960,85,1056,139,1152,160C1248,181,1344,171,1392,165.3L1440,160L1440,0L0,0Z"></path>
+    </svg>
+  </div>
+
+  <section class="welcome-actions d-flex align-items-center">
+    <div class="actions-inner container slide-up">
+      <div class="row justify-content-center">
+        <div class="col-12 col-md-5">
+          <div class="action-card shadow-sm text-center">
+            <div class="icon-wrap mb-3 icon-clipboard">
+              <i class="fas fa-clipboard-list fa-2x" aria-hidden="true"></i>
+            </div>
+            <h5 class="mb-2">Planillas</h5>
+            <p class="text-muted mb-3">Abrir y administrar planillas de pago; generar reportes y descargar comprobantes.</p>
+            <a href="{{ url_for('planilla') }}" class="btn btn-outline-warning btn-block btn-lg action-btn">
+              <i class="fas fa-file-alt mr-2" aria-hidden="true"></i> Ir a Planillas
+            </a>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-5">
+          <div class="action-card shadow-sm text-center">
+            <div class="icon-wrap mb-3 icon-id">
+              <i class="fas fa-id-badge fa-2x" aria-hidden="true"></i>
+            </div>
+            <h5 class="mb-2">Información de empleados</h5>
+            <p class="text-muted mb-3">Ver y editar fichas, subir fotografías y consultar el historial completo por empleado.</p>
+            <a href="{{ url_for('empleados') }}" id="btnAbrirInfo" class="btn btn-primary btn-block btn-lg action-btn action-btn-blue">
+              <i class="fas fa-users mr-2" aria-hidden="true"></i> Abrir información empleados
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>
 
-<!-- Floating Action Button + Mini Panel -->
-<!--
-  Reemplaza este archivo completo en VS Code. Esta implementación:
-  - Muestra un FAB en la esquina inferior derecha.
-  - Al hacer click abre un mini panel con la lista de usuarios (nombre + rol).
-  - Permite alternar rol colaborador <-> administrador.
-  - La opción para cambiar roles solo se muestra si el endpoint /whoami devuelve
-    un objeto donde `principal === true` (el administrador "principal").
-  - Las llamadas de actualización usan PATCH /api/usuario/<id>/rol (ajustar endpoint si su API difiere).
-  - No altera la lógica existente del resto de la app.
--->
+<!-- Floating action button + users panel -->
+<div id="fabUsers" class="fab" title="Usuarios">
+  <button id="fabToggle" class="fab-btn" aria-label="Usuarios">
+    <i class="fas fa-users"></i>
+  </button>
+</div>
 
-<!-- FAB -->
-<button id="fabUsuarios" class="fab btn btn-primary" title="Usuarios">
-  <i class="fas fa-user-friends"></i>
-</button>
-
-<!-- Mini panel -->
-<div id="panelUsuarios" class="panel-usuarios shadow-sm" aria-hidden="true" role="dialog" aria-label="Panel de usuarios">
-  <div class="panel-header d-flex align-items-center justify-content-between">
+<div id="usersPanel" class="users-panel" aria-hidden="true">
+  <div class="users-panel-header d-flex align-items-center justify-content-between">
     <strong>Usuarios registrados</strong>
-    <button id="closePanel" class="btn btn-sm btn-light" aria-label="Cerrar panel">&times;</button>
+    <button id="usersPanelClose" class="close-panel" aria-label="Cerrar">&times;</button>
   </div>
 
-  <div id="usuariosLoading" class="p-3 text-center text-muted small">Cargando...</div>
-
-  <div id="usuariosList" class="usuarios-list p-2" style="display:none;">
-    <!-- Lista poblada por JS -->
+  <div id="usersPanelBody" class="users-panel-body">
+    <div id="usersLoading" class="text-center text-muted py-3">Cargando usuarios...</div>
+    <ul id="usersList" class="list-group d-none"></ul>
+    <div id="usersError" class="text-danger small d-none p-2"></div>
   </div>
 
-  <div class="panel-footer p-2 text-center small text-muted">
-    <span id="panelNotice">Solo el administrador principal puede cambiar roles desde aquí.</span>
+  <div class="users-panel-footer small text-muted">
+    Solo el administrador principal puede cambiar roles desde aquí.
   </div>
 </div>
 
 <style>
-/* FAB style */
+/* Reuso de estilos mínimos (no tocar tu layout principal) */
+.jumbotron-welcome { position: relative; background-color: #f5f7fa; padding: 3rem 1rem 4rem; margin-bottom: 0; border-radius: 0 0 30px 30px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); overflow: hidden; }
+.fade-in { animation: fadeIn 1s ease-in-out; }
+.slide-up { animation: slideUp 1s ease forwards; opacity: 0; }
+
 .fab {
   position: fixed;
-  right: 18px;
-  bottom: 18px;
+  right: 20px;
+  bottom: 20px;
+  z-index: 1100;
+}
+.fab-btn {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1050;
-  box-shadow: 0 8px 20px rgba(11,114,133,0.18);
-  font-size: 18px;
+  background: linear-gradient(90deg,#ff9800,#ff7a18);
+  color: #fff;
+  border: none;
+  box-shadow: 0 10px 30px rgba(15,23,42,0.18);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  font-size:18px;
 }
-
-/* Panel style */
-.panel-usuarios {
+.users-panel {
   position: fixed;
-  right: 18px;
-  bottom: 86px;
-  width: 320px;
-  max-height: 60vh;
-  overflow: auto;
+  right: 20px;
+  bottom: 90px;
+  width: 340px;
+  max-height: 68vh;
+  overflow: hidden;
   background: #fff;
-  border-radius: 10px;
-  z-index: 1050;
-  border: 1px solid rgba(11,19,30,0.06);
-  box-shadow: 0 20px 40px rgba(11,50,80,0.08);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(11,22,50,0.18);
+  z-index: 1100;
   display: none;
+  flex-direction: column;
+  border: 1px solid rgba(11,22,50,0.06);
 }
-
-.panel-header {
-  padding: 10px 12px;
-  border-bottom: 1px solid rgba(11,19,30,0.04);
-  background: linear-gradient(90deg,#f8fafc,#ffffff);
-  border-radius: 10px 10px 0 0;
+.users-panel-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(11,22,50,0.04);
+  background: linear-gradient(180deg,#fff,#fbfbfb);
 }
+.users-panel-body { padding: 8px; overflow: auto; }
+.users-panel-footer { padding: 8px 12px; border-top: 1px solid rgba(11,22,50,0.04); background:#fbfcff; }
 
-.panel-footer {
-  border-top: 1px solid rgba(11,19,30,0.04);
-  border-radius: 0 0 10px 10px;
-  background: #fafafa;
-}
-
-/* User row */
-.usuario-row {
+.list-group { margin: 0; padding: 0; list-style: none; }
+.list-group-item {
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:12px;
-  padding:10px;
-  border-radius:6px;
-  transition: background .12s;
+  padding:8px 10px;
+  border-radius:8px;
+  margin-bottom:8px;
+  background:#fff;
+  border:1px solid rgba(11,22,50,0.03);
 }
-.usuario-row + .usuario-row { margin-top:6px; }
-.usuario-row:hover { background: #f6fbff; }
+.user-info { display:flex; gap:10px; align-items:center; }
+.user-avatar {
+  width:36px;height:36px;border-radius:50%;background:linear-gradient(180deg,#e9f6ff,#eefaff);display:flex;align-items:center;justify-content:center;color:#036b6a;font-weight:700;
+}
+.user-meta { font-size:0.95rem; color:#102a33; }
+.user-role { font-size:0.85rem; color:#56646c; }
 
-.usuario-meta {
-  display:flex;
-  flex-direction:column;
-  min-width: 0;
-}
-.usuario-nombre {
+.role-toggle-btn {
+  min-width: 36px;
+  border-radius: 8px;
+  padding: 6px 8px;
   font-weight:700;
-  font-size:0.95rem;
-  color:#0b2733;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  border: none;
+  cursor:pointer;
 }
-.usuario-rol {
-  font-size:0.82rem;
-  color:#556977;
-}
+.role-toggle-admin { background:#0b7285; color:#fff; }
+.role-toggle-collab { background:#f3f4f6; color:#0b7285; border:1px solid rgba(11,22,50,0.06); }
 
-/* Toggle button small */
-.btn-role {
-  min-width: 110px;
-  white-space:nowrap;
-  font-weight:700;
-}
+.close-panel { border: none; background: transparent; font-size:20px; cursor:pointer; color:#666; }
 
-/* Disabled hint */
-.hint-disabled {
-  color: #8b94a2;
-  font-size: 0.85rem;
-  margin-top:8px;
-}
+.small-note { font-size:0.85rem; color:#697882; padding:8px; }
 
-/* Small screens */
-@media (max-width:420px){
-  .panel-usuarios { width: calc(100% - 36px); right: 18px; left: 18px; bottom: 86px; }
-  .fab { right: 18px; bottom: 18px; }
+/* small responsive tweak */
+@media (max-width: 420px) {
+  .users-panel { right: 10px; left: 10px; width: auto; bottom: 80px; }
 }
 </style>
 
 <script>
-/* Panel users logic
-   - Fetches /api/usuarios (array of users with id, nombre, rol) to list users.
-   - Fetches /whoami to know current user and `principal` flag.
-   - If current user is principal admin (whoami.principal === true), show role-change controls.
-   - Calls PATCH /api/usuario/<id>/rol with { rol: 'admin'|'colaborador' } to update role.
-   - Adjust endpoints to match your backend if different.
+/*
+  Comportamiento JS del panel de usuarios:
+
+  - Fetch /whoami para saber el usuario actual; se espera { username, rol, is_principal } (si is_principal true -> mostrar panel de edición)
+  - Fetch /api/usuarios para obtener array [{ id, username, full_name, rol }] (si no existe, intenta adaptar /api/empleados)
+  - Para cambiar rol: POST /api/usuario/<id>/toggle_role  { to: 'admin'|'colab' } -> devuelve JSON { ok:true, rol: 'admin' }
+  - Todos los fetch usan cache: no-store para evitar datos stale.
+
+  Nota: Si tu API usa nombres de endpoints o campos distintos, ajusta las URLs/propiedades en las funciones abajo.
 */
 
-(function () {
-  const fab = document.getElementById('fabUsuarios');
-  const panel = document.getElementById('panelUsuarios');
-  const closeBtn = document.getElementById('closePanel');
-  const listEl = document.getElementById('usuariosList');
-  const loading = document.getElementById('usuariosLoading');
-  const panelNotice = document.getElementById('panelNotice');
+(function(){
+  const fabToggle = document.getElementById('fabToggle');
+  const usersPanel = document.getElementById('usersPanel');
+  const usersPanelClose = document.getElementById('usersPanelClose');
+  const usersList = document.getElementById('usersList');
+  const usersLoading = document.getElementById('usersLoading');
+  const usersError = document.getElementById('usersError');
+  const topUsername = document.getElementById('topUsername');
 
-  let currentUser = null; // { username, rol, principal: true|false, id? }
-  let usersCache = [];
+  let currentUser = null;       // objeto WHOAMI
+  let isPrincipal = false;      // si el usuario actual es el admin "principal"
+  let usersCache = [];          // lista de usuarios cargada
 
-  function togglePanel(show) {
-    if (typeof show === 'undefined') show = panel.style.display !== 'block';
-    panel.style.display = show ? 'block' : 'none';
-    panel.setAttribute('aria-hidden', show ? 'false' : 'true');
-    if (show) refreshUsers();
-  }
+  function safeJson(res){ return res.ok ? res.json() : Promise.reject(res); }
 
-  fab.addEventListener('click', function () {
-    togglePanel();
-  });
-  closeBtn.addEventListener('click', function () {
-    togglePanel(false);
-  });
-
-  // Keyboard: ESC closes panel
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && panel.style.display === 'block') togglePanel(false);
-  });
-
-  async function whoami() {
+  async function whoami(){
     try {
       const r = await fetch('/whoami', { cache: 'no-store' });
-      if (!r.ok) return null;
+      if (!r.ok) return {};
       const j = await r.json();
-      return j;
-    } catch (e) {
+      currentUser = j || {};
+      topUsername.textContent = currentUser.username ? 'Sesión: ' + currentUser.username : '';
+      isPrincipal = !!currentUser.is_principal || (String(currentUser.username || '').toLowerCase() === 'admin' && !!currentUser.rol && currentUser.rol.toLowerCase()==='admin');
+      return currentUser;
+    } catch(e){
       console.warn('whoami error', e);
-      return null;
+      currentUser = {};
+      isPrincipal = false;
+      return {};
     }
   }
 
-  async function fetchUsuarios() {
+  async function fetchUsuarios(){
+    usersLoading.classList.remove('d-none');
+    usersError.classList.add('d-none');
+    usersList.classList.add('d-none');
+    usersList.innerHTML = '';
     try {
-      const r = await fetch('/api/usuarios', { cache: 'no-store' });
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      const j = await r.json();
-      if (!Array.isArray(j)) return [];
-      return j;
-    } catch (e) {
-      console.warn('fetch usuarios error', e);
-      return [];
-    }
-  }
-
-  function renderEmptyState() {
-    listEl.innerHTML = '<div class="p-3 text-center text-muted small">No se encontraron usuarios.</div>';
-    loading.style.display = 'none';
-    listEl.style.display = '';
-  }
-
-  function createUserRow(user, canToggle, isSelfPrincipal) {
-    const row = document.createElement('div');
-    row.className = 'usuario-row';
-
-    const meta = document.createElement('div');
-    meta.className = 'usuario-meta';
-    const name = document.createElement('div');
-    name.className = 'usuario-nombre';
-    name.textContent = user.nombre || user.nombre_completo || user.full_name || user.username || ('Usuario ' + (user.id || ''));
-    const role = document.createElement('div');
-    role.className = 'usuario-rol';
-    role.textContent = (user.rol || 'colaborador').toUpperCase();
-
-    meta.appendChild(name);
-    meta.appendChild(role);
-    row.appendChild(meta);
-
-    const controls = document.createElement('div');
-
-    // If user has id and we can toggle roles, show toggle
-    if (canToggle && user.id !== undefined && user.id !== null) {
-      const btn = document.createElement('button');
-      btn.className = 'btn btn-sm btn-role ' + ( (user.rol === 'admin') ? 'btn-outline-warning' : 'btn-outline-primary' );
-      btn.textContent = (user.rol === 'admin') ? 'Administrador' : 'Colaborador';
-      btn.setAttribute('data-user-id', user.id);
-      btn.disabled = false;
-
-      btn.addEventListener('click', async function () {
-        const targetRol = (user.rol === 'admin') ? 'colaborador' : 'admin';
-
-        // Confirm only when demoting an admin (safety)
-        if (user.rol === 'admin' && !confirm('Confirmar cambiar a colaborador a ' + (user.nombre || user.username || user.id) + '?')) return;
-
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
-
-        try {
-          // PATCH endpoint; change if your API expects PUT or POST
-          const res = await fetch('/api/usuario/' + encodeURIComponent(user.id) + '/rol', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ rol: targetRol })
-          });
-          if (!res.ok) throw new Error('HTTP ' + res.status);
-          const upd = await res.json();
-
-          // accept server response role or fallback to targetRol
-          user.rol = (upd && upd.rol) ? upd.rol : targetRol;
-
-          // update UI
-          role.textContent = user.rol.toUpperCase();
-          btn.className = 'btn btn-sm btn-role ' + ( (user.rol === 'admin') ? 'btn-outline-warning' : 'btn-outline-primary' );
-          btn.textContent = (user.rol === 'admin') ? 'Administrador' : 'Colaborador';
-        } catch (err) {
-          console.error('update role error', err);
-          alert('Error actualizando rol. Ver consola para detalles.');
-        } finally {
-          btn.disabled = false;
-        }
+      // intenta endpoint de usuarios
+      let res = await fetch('/api/usuarios', { cache: 'no-store' });
+      if (!res.ok) {
+        // si no existe, prueba /api/empleados (mapeamos campos)
+        res = await fetch('/api/empleados', { cache: 'no-store' });
+      }
+      const arr = await res.json();
+      if (!Array.isArray(arr)) throw new Error('Respuesta no es lista');
+      // normalizar: queremos { id, username, full_name, rol }
+      usersCache = arr.map(u => {
+        return {
+          id: u.id || u.ID || u.dpi || u.numero || (u.username || u.user || null),
+          username: u.username || u.user || u.Nombre || '',
+          full_name: u.full_name || u.fullname || ((u.Nombre || '') + (u.Apellidos ? ' ' + u.Apellidos : '')),
+          rol: (u.rol || u.role || u.rol_usuario || (u.rol === undefined ? '' : u.rol)) || (u.rol === 0 ? 'colaborador' : '') // fallback
+        };
       });
-
-      controls.appendChild(btn);
-    } else {
-      // show role badge only
-      const badge = document.createElement('span');
-      badge.className = 'badge badge-light';
-      badge.style.fontWeight = '700';
-      badge.textContent = (user.rol || 'colaborador').toUpperCase();
-      controls.appendChild(badge);
+      renderUsers();
+    } catch(err){
+      console.error('fetchUsuarios', err);
+      usersError.textContent = 'No se pudo cargar la lista de usuarios.';
+      usersError.classList.remove('d-none');
+    } finally {
+      usersLoading.classList.add('d-none');
     }
-
-    row.appendChild(controls);
-    return row;
   }
 
-  async function refreshUsers() {
-    loading.style.display = '';
-    listEl.style.display = 'none';
-    listEl.innerHTML = '';
-
-    // Ensure we know current user before rendering; principal property required
-    currentUser = await whoami();
-    // server should return { rol: 'admin'|'colaborador', username: 'x', principal: true|false }
-    const isPrincipal = !!(currentUser && currentUser.principal === true);
-
-    try {
-      usersCache = await fetchUsuarios();
-    } catch (e) {
-      usersCache = [];
-    }
-
-    loading.style.display = 'none';
-    if (!Array.isArray(usersCache) || usersCache.length === 0) {
-      renderEmptyState();
+  function renderUsers(){
+    usersList.innerHTML = '';
+    if (!usersCache || usersCache.length === 0){
+      usersList.classList.add('d-none');
+      usersError.textContent = 'No hay usuarios registrados.';
+      usersError.classList.remove('d-none');
       return;
     }
+    usersList.classList.remove('d-none');
+    usersError.classList.add('d-none');
 
-    // Render users sorted: admins first, then collaborators
-    usersCache.sort((a,b) => {
-      const ra = (a.rol === 'admin') ? 0 : 1;
-      const rb = (b.rol === 'admin') ? 0 : 1;
-      if (ra !== rb) return ra - rb;
-      const na = (a.nombre || a.full_name || a.username || '') .toLowerCase();
-      const nb = (b.nombre || b.full_name || b.username || '') .toLowerCase();
-      return na < nb ? -1 : na > nb ? 1 : 0;
+    usersCache.forEach(u => {
+      const li = document.createElement('li');
+      li.className = 'list-group-item';
+
+      const left = document.createElement('div');
+      left.className = 'user-info';
+
+      const avatar = document.createElement('div');
+      avatar.className = 'user-avatar';
+      avatar.textContent = (u.full_name || u.username || '').slice(0,1).toUpperCase();
+
+      const meta = document.createElement('div');
+      meta.className = 'user-meta';
+      const name = document.createElement('div');
+      name.textContent = u.full_name || u.username || u.id || '—';
+      const role = document.createElement('div');
+      role.className = 'user-role';
+      role.textContent = (u.rol || '').toLowerCase() === 'admin' ? 'Administrador' : 'Colaborador';
+
+      meta.appendChild(name);
+      meta.appendChild(role);
+      left.appendChild(avatar);
+      left.appendChild(meta);
+
+      li.appendChild(left);
+
+      // action area
+      const right = document.createElement('div');
+
+      // button to go to login as that user (if wanted) - link to login page with username pre-filled
+      // IMPORTANT: only show "Ingresar" (simulate login) if you want; here we provide a small login link that points to /login?user=<id>
+      const loginLink = document.createElement('a');
+      loginLink.href = '/login?u=' + encodeURIComponent(u.id || u.username || '');
+      loginLink.className = 'btn btn-sm btn-outline-secondary mr-2';
+      loginLink.textContent = 'Ingresar';
+      right.appendChild(loginLink);
+
+      // Only show role toggle UI if current user is principal
+      if (isPrincipal) {
+        const isAdmin = String((u.rol || '')).toLowerCase() === 'admin';
+        const btn = document.createElement('button');
+        btn.className = 'role-toggle-btn ' + (isAdmin ? 'role-toggle-admin' : 'role-toggle-collab');
+        btn.textContent = isAdmin ? 'Administrador' : 'Colaborador';
+        btn.title = isAdmin ? 'Cambiar a Colaborador' : 'Promover a Administrador';
+        btn.disabled = (String(u.id) === String(currentUser.id || currentUser.numero || currentUser.dpi || currentUser.username));
+        // IMPORTANT: principal should not be able to demote themselves here
+        btn.addEventListener('click', function(){
+          const targetRole = isAdmin ? 'colaborador' : 'admin';
+          if (!confirm('Confirma cambiar rol de \"' + (u.full_name||u.username) + '\" a ' + (targetRole==='admin'?'Administrador':'Colaborador') + '?')) return;
+          toggleUserRole(u, targetRole, btn, role);
+        });
+        right.appendChild(btn);
+      }
+
+      li.appendChild(right);
+      usersList.appendChild(li);
     });
-
-    listEl.innerHTML = '';
-    for (const u of usersCache) {
-      const canToggle = isPrincipal && (currentUser.username !== (u.username || u.nombre || u.id));
-      // Important: principal can change others' roles; avoid allowing principal to toggle their own principal status here.
-      const row = createUserRow(u, canToggle, isPrincipal);
-      listEl.appendChild(row);
-    }
-
-    // If user is not principal, show a hint and hide controls
-    if (!isPrincipal) {
-      panelNotice.textContent = 'No tienes permisos para cambiar roles desde este panel.';
-    } else {
-      panelNotice.textContent = 'Eres administrador principal. Puedes cambiar roles desde aquí.';
-    }
-
-    listEl.style.display = '';
   }
 
-  // Initial whoami check (silently) to determine if FAB should be shown at all
-  (async function initFabVisibility() {
-    const who = await whoami();
-    const showFab = !!who; // keep FAB visible to everyone who is logged in; hide if unauthenticated
-    // If you want to hide FAB from non-admins entirely, change condition to: (who && who.rol === 'admin')
-    if (!showFab) {
-      fab.style.display = 'none';
+  async function toggleUserRole(user, toRole, btnEl, roleLabelEl){
+    // UI feedback
+    const prevText = btnEl.textContent;
+    btnEl.textContent = '...';
+    btnEl.disabled = true;
+
+    try {
+      // assume endpoint POST /api/usuario/<id>/toggle_role  with body { to: 'admin'|'colaborador' }
+      // if your backend has different endpoint adjust here.
+      const id = encodeURIComponent(user.id || user.username);
+      const res = await fetch('/api/usuario/' + id + '/toggle_role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: toRole })
+      });
+
+      if (!res.ok) {
+        // if server returns 405 or not implemented, try alternate endpoint /api/usuarios/<id> (PATCH)
+        // fallback: PATCH /api/usuarios/<id> { rol: toRole }
+        try {
+          const fallback = await fetch('/api/usuarios/' + id, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rol: toRole })
+          });
+          if (!fallback.ok) throw new Error('No autorizado');
+          const j = await fallback.json();
+          applyRoleChange(user, j.rol || toRole, btnEl, roleLabelEl);
+          return;
+        } catch (e) {
+          throw new Error('No se pudo cambiar rol (endpoints probados).');
+        }
+      }
+
+      const j = await res.json();
+      const newRole = (j && j.rol) ? j.rol : toRole;
+      applyRoleChange(user, newRole, btnEl, roleLabelEl);
+
+    } catch (err) {
+      console.error('toggleUserRole', err);
+      alert('Error cambiando rol: ' + (err.message||err));
+      btnEl.textContent = prevText;
+      btnEl.disabled = false;
     }
-  })();
+  }
 
-  // Public: allow programmatic open from other code if needed
-  window.EmpaquetexUsuariosPanel = {
-    open: () => togglePanel(true),
-    close: () => togglePanel(false),
-    refresh: () => refreshUsers()
-  };
+  function applyRoleChange(user, newRole, btnEl, roleLabelEl){
+    // Update local cache
+    const idx = usersCache.findIndex(x => String(x.id) === String(user.id));
+    if (idx !== -1) usersCache[idx].rol = newRole;
 
-  // Close panel when clicking outside
-  document.addEventListener('click', function (e) {
-    if (!panel) return;
-    if (panel.style.display !== 'block') return;
-    const isClickInside = panel.contains(e.target) || fab.contains(e.target);
-    if (!isClickInside) togglePanel(false);
+    const isAdmin = String(newRole).toLowerCase() === 'admin';
+    btnEl.className = 'role-toggle-btn ' + (isAdmin ? 'role-toggle-admin' : 'role-toggle-collab');
+    btnEl.textContent = isAdmin ? 'Administrador' : 'Colaborador';
+    btnEl.title = isAdmin ? 'Cambiar a Colaborador' : 'Promover a Administrador';
+    roleLabelEl.textContent = isAdmin ? 'Administrador' : 'Colaborador';
+    btnEl.disabled = false;
+  }
+
+  // toggle panel visibility
+  function openPanel(){
+    usersPanel.style.display = 'flex';
+    usersPanel.setAttribute('aria-hidden','false');
+    fetchAndRender();
+  }
+  function closePanel(){
+    usersPanel.style.display = 'none';
+    usersPanel.setAttribute('aria-hidden','true');
+  }
+
+  fabToggle.addEventListener('click', async function(){
+    if (usersPanel.style.display === 'flex') closePanel();
+    else {
+      // ensure we have whoami first
+      await whoami();
+      // If not principal, still open panel but hide toggle buttons (server-defined requirement: only principal sees toggles)
+      openPanel();
+    }
   });
+  usersPanelClose.addEventListener('click', closePanel);
+
+  async function fetchAndRender(){
+    // whoami may be stale; refresh
+    await whoami();
+    await fetchUsuarios();
+  }
+
+  // close on outside click
+  document.addEventListener('click', function(e){
+    const inside = e.target.closest && (e.target.closest('#usersPanel') || e.target.closest('#fabUsers'));
+    if (!inside && usersPanel.style.display === 'flex'){
+      closePanel();
+    }
+  });
+
+  // init: whoami -> show small username
+  document.addEventListener('DOMContentLoaded', async function(){
+    await whoami();
+  });
+
 })();
 </script>
 {% endblock %}
