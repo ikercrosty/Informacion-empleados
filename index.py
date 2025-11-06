@@ -335,6 +335,40 @@ def api_usuarios_list():
         app.logger.exception("Error en /api/usuarios")
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/usuarios/rol', methods=['PATCH'])
+def api_usuarios_rol():
+    if (session.get('rol') or '').strip().lower() not in ('admin', 'superadmin'):
+        return jsonify({'mensaje': 'Permisos insuficientes'}), 403
+
+    data = request.get_json() or {}
+    usuario = (data.get('usuario') or data.get('username') or '').strip()
+    nuevo_rol = (data.get('rol') or data.get('role') or '').strip().lower()
+
+    if not usuario or not nuevo_rol:
+        return jsonify({'mensaje': 'usuario y rol son obligatorios'}), 400
+
+    # validar roles permitidos en servidor (coincidir con frontend)
+    ALLOWED_ROLES = ('admin', 'colaborador', 'superadmin')
+    if nuevo_rol not in ALLOWED_ROLES:
+        return jsonify({'mensaje': 'Rol no permitido'}), 400
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        # ajustar columna/nombre de tabla si tu esquema es distinto
+        cursor.execute("UPDATE Usuarios SET rol = %s WHERE Usuarios = %s OR `Correo Electronico` = %s", (nuevo_rol, usuario, usuario))
+        if cursor.rowcount == 0:
+            cursor.close()
+            conn.close()
+            return jsonify({'mensaje': 'Usuario no encontrado'}), 404
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'mensaje': 'Rol actualizado correctamente'}), 200
+    except Exception as e:
+        app.logger.exception("Error actualizando rol")
+        return jsonify({'mensaje': f'Error: {e}'}), 500
+
 
 
 # Devuelve todos los campos relevantes de un empleado por DPI

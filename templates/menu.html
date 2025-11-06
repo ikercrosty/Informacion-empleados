@@ -334,7 +334,8 @@ document.addEventListener('DOMContentLoaded', function () {
         // create role select so admin (current user) can change roles inline
         const roleSelect = document.createElement('select');
         roleSelect.className = 'rol-select form-control form-control-sm';
-        const roles = ['admin','colaborador','viewer']; // adjust allowed roles
+        const roles = ['admin','colaborador','superadmin']; 
+
         roles.forEach(r => {
           const opt = document.createElement('option');
           opt.value = r;
