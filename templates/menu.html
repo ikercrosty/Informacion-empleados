@@ -47,6 +47,47 @@
   </div>
 </section>
 
+<!-- BOTON DE ACCION FLOTANTE: Consultar tabla Usuarios -->
+<!-- Este bloque se agregó sin modificar nada del resto del código -->
+<button id="fabUsuarios" class="fab" title="Consultar Usuarios" aria-label="Consultar Usuarios">
+  <i class="fas fa-user-cog"></i>
+</button>
+
+<!-- Modal para mostrar lista de Usuarios (se abre con el FAB) -->
+<div class="modal fade" id="modalUsuarios" tabindex="-1" role="dialog" aria-labelledby="modalUsuariosLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalUsuariosLabel">Usuarios (tabla Usuarios)</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="usuariosLoading" class="text-center py-3">Cargando usuarios...</div>
+        <div id="usuariosError" class="alert alert-danger d-none" role="alert"></div>
+        <div class="table-responsive d-none" id="usuariosTableWrap">
+          <table class="table table-sm table-hover" id="usuariosTable">
+            <thead class="thead-light">
+              <tr>
+                <th>#</th>
+                <th>Usuario</th>
+                <th>Correo</th>
+                <th>Rol</th>
+                <th>Activo</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ESTILOS -->
 <style>
 /* Jumbotron */
@@ -117,5 +158,117 @@
   justify-content:center;
   margin: 0 auto;
 }
+
+/* Floating action button (FAB) */
+.fab {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(180deg,#1e88e5,#1565d8);
+  color: #fff;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(21,101,192,0.18);
+  cursor: pointer;
+  z-index: 1050;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.fab:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(21,101,192,0.22); }
+.fab:active { transform: translateY(-1px); }
+
+/* Modal table styling minor adjustments */
+#usuariosTable th, #usuariosTable td { vertical-align: middle; font-size: .95rem; }
+
+/* Small responsive tweak to avoid cover by mobile UI */
+@media (max-width: 480px) {
+  .fab { right: 14px; bottom: 14px; width: 52px; height: 52px; }
+}
 </style>
+
+<!-- SCRIPTS: comportamiento del FAB -> consulta tabla Usuarios (no modifica el resto) -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const fab = document.getElementById('fabUsuarios');
+  const modalEl = document.getElementById('modalUsuarios');
+  const usuariosLoading = document.getElementById('usuariosLoading');
+  const usuariosError = document.getElementById('usuariosError');
+  const usuariosTableWrap = document.getElementById('usuariosTableWrap');
+  const usuariosTableBody = document.querySelector('#usuariosTable tbody');
+
+  // Abrir modal y cargar datos
+  fab && fab.addEventListener('click', function () {
+    // usar Bootstrap modal si está disponible
+    if (typeof $ === 'function' && typeof $.fn.modal === 'function') {
+      $('#modalUsuarios').modal('show');
+      loadUsuarios();
+    } else {
+      // si no está jQuery/Bootstrap JS enlazado, indicar diálogo simple
+      loadUsuarios(true);
+    }
+  });
+
+  async function loadUsuarios(useAlertFallback = false) {
+    usuariosLoading.classList.remove('d-none');
+    usuariosError.classList.add('d-none');
+    usuariosTableWrap.classList.add('d-none');
+    usuariosTableBody.innerHTML = '';
+
+    try {
+      const res = await fetch('/api/usuarios', { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+
+      // data esperado: array de usuarios { username, email, role, active } (ajustable según API)
+      if (!Array.isArray(data) || data.length === 0) {
+        usuariosLoading.classList.add('d-none');
+        usuariosError.textContent = 'No se encontraron usuarios en la tabla Usuarios.';
+        usuariosError.classList.remove('d-none');
+        if (useAlertFallback) alert('No se encontraron usuarios en la tabla Usuarios.');
+        return;
+      }
+
+      data.forEach((u, i) => {
+        const tr = document.createElement('tr');
+        const username = u.username || u.usuario || u.name || u.user || '';
+        const email = u.email || u.correo || '';
+        const role = u.role || u.rol || u.privilegio || '';
+        const active = (u.active === false || u.activo === false) ? 'No' : 'Sí';
+        tr.innerHTML = `
+          <td>${i + 1}</td>
+          <td>${escapeHtml(username)}</td>
+          <td>${escapeHtml(email)}</td>
+          <td>${escapeHtml(role)}</td>
+          <td>${escapeHtml(active)}</td>
+        `;
+        usuariosTableBody.appendChild(tr);
+      });
+
+      usuariosLoading.classList.add('d-none');
+      usuariosTableWrap.classList.remove('d-none');
+    } catch (err) {
+      usuariosLoading.classList.add('d-none');
+      usuariosError.textContent = 'Error al cargar usuarios: ' + (err && err.message ? err.message : 'desconocido');
+      usuariosError.classList.remove('d-none');
+      if (useAlertFallback) alert('Error al cargar usuarios. Consulte la consola para más detalles.');
+      console.error('Error cargando /api/usuarios', err);
+    }
+  }
+
+  // escape simple para evitar XSS en tablas
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+});
+</script>
+
 {% endblock %}
