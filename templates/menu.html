@@ -128,13 +128,8 @@
 }
 
 /* Animaciones */
-.fade-in {
-  animation: fadeIn 1s ease-in-out;
-}
-.slide-up {
-  animation: slideUp 1s ease forwards;
-  opacity: 0;
-}
+.fade-in { animation: fadeIn 1s ease-in-out; }
+.slide-up { animation: slideUp 1s ease forwards; opacity: 0; }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-20px); }
   to { opacity: 1; transform: translateY(0); }
@@ -209,7 +204,7 @@
 .sr-only { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
 </style>
 
-<!-- SCRIPTS: comportamiento del FAB -> consulta tabla Usuarios -->
+<!-- SCRIPTS: comportamiento del FAB - consulta tabla Usuarios -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   const fab = document.getElementById('fabUsuarios');
@@ -234,17 +229,14 @@ document.addEventListener('DOMContentLoaded', function () {
     lastFabFocus = document.activeElement;
     if (typeof $ === 'function' && typeof $.fn.modal === 'function') {
       $('#modalUsuarios').modal({ backdrop: 'static', keyboard: false });
-      // Bootstrap will manage focus
     } else {
       modalEl.classList.add('show');
       modalEl.style.display = 'block';
       modalEl.setAttribute('aria-hidden', 'false');
-      // focus the close button
       setTimeout(() => {
         const close = modalEl.querySelector('#modalCloseBtn') || modalEl.querySelector('[data-dismiss="modal"]');
         if (close) close.focus();
       }, 60);
-      // close on ESC in fallback
       document.addEventListener('keydown', fallbackEscKey);
     }
   }
@@ -265,19 +257,15 @@ document.addEventListener('DOMContentLoaded', function () {
     if (e.key === 'Escape') hideModal();
   }
 
-  // Close buttons hookup for fallback
   if (modalCloseBtn) modalCloseBtn.addEventListener('click', hideModal);
   if (btnCerrarModal) btnCerrarModal.addEventListener('click', hideModal);
 
-  // FAB click: open modal and load datos
   fab && fab.addEventListener('click', function () {
-    // update aria-expanded
     fab.setAttribute('aria-expanded', 'true');
     showModal();
     loadUsuarios();
   });
 
-  // When modal hidden via Bootstrap, update aria-expanded
   if (typeof $ === 'function' && typeof $.fn.modal === 'function') {
     $('#modalUsuarios').on('hidden.bs.modal', function () {
       fab && fab.setAttribute('aria-expanded', 'false');
@@ -285,42 +273,33 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Retry button
   usuariosRetry && usuariosRetry.addEventListener('click', function () {
     usuariosRetry.classList.add('d-none');
     loadUsuarios();
   });
 
-  // Main loader with timeout, simple backoff and safe DOM updates
   async function loadUsuarios() {
-    if (loading) return; // prevent concurrent loads
+    if (loading) return;
     loading = true;
 
-    // reset UI
     usuariosError.classList.add('d-none');
     usuariosTableWrap.classList.add('d-none');
     usuariosEmpty.classList.add('d-none');
     usuariosLoading.classList.remove('d-none');
     usuariosTableBody.innerHTML = '';
 
-    // Prepare abort controller for timeout
     abortController && abortController.abort();
     abortController = new AbortController();
     const signal = abortController.signal;
 
-    // implement timeout
     const TIMEOUT_MS = 7000;
-    const timeoutId = setTimeout(() => {
-      abortController && abortController.abort();
-    }, TIMEOUT_MS);
+    const timeoutId = setTimeout(() => { abortController && abortController.abort(); }, TIMEOUT_MS);
 
     try {
       const res = await fetch('/api/usuarios', { cache: 'no-store', signal });
       clearTimeout(timeoutId);
 
-      if (!res.ok) {
-        throw new Error('HTTP ' + res.status);
-      }
+      if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
 
       if (!Array.isArray(data) || data.length === 0) {
@@ -331,7 +310,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
 
-      // populate table safely
       data.forEach((u, i) => {
         const tr = document.createElement('tr');
 
@@ -359,7 +337,6 @@ document.addEventListener('DOMContentLoaded', function () {
       usuariosLoading.classList.add('d-none');
       usuariosTableWrap.classList.add('d-none');
 
-      // Differentiate abort/timeout from other errors
       const isAbort = err && (err.name === 'AbortError' || err.message === 'The user aborted a request.');
       usuariosError.textContent = isAbort ? 'La solicitud tardó demasiado. Verifique la conexión y vuelva a intentar.' : 'Error al cargar usuarios: ' + (err && err.message ? err.message : 'desconocido');
       usuariosError.classList.remove('d-none');
@@ -371,7 +348,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // escape simple para evitar XSS en tablas
   function escapeHtml(str) {
     if (str === null || str === undefined) return '';
     return String(str)
@@ -381,7 +357,6 @@ document.addEventListener('DOMContentLoaded', function () {
       .replace(/>/g, '&gt;');
   }
 
-  // Accessibility: trap focus inside modal when opened (fallback only)
   if (! (typeof $ === 'function' && typeof $.fn.modal === 'function')) {
     modalEl && modalEl.addEventListener('keydown', function(e){
       if (e.key !== 'Tab') return;
@@ -389,17 +364,11 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!focusable || focusable.length === 0) return;
       const first = focusable[0];
       const last = focusable[focusable.length -1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     });
   }
 
-  // If modal is closed by backdrop (Bootstrap) ensure fab aria state updated
   if (typeof $ === 'function' && typeof $.fn.modal === 'function') {
     $('#modalUsuarios').on('hide.bs.modal', function () {
       fab && fab.setAttribute('aria-expanded', 'false');
