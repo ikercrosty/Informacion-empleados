@@ -271,14 +271,29 @@ def api_categories_compat():
 def api_usuarios_list():
     """
     Devuelve la lista de usuarios en forma compatible con el frontend.
-    Intenta una consulta "completa" y, si falla por columnas faltantes
-    (por ejemplo 'activo'), reintenta con un subconjunto seguro.
+    Comprueba si la columna 'activo' existe y adapta la consulta para evitar errores.
     """
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        # Primera intención: obtener campos habituales (si la BD los tiene)
+
+        # Verificar existencia de la columna 'activo' en la tabla Usuarios
         try:
+            cursor.execute("""
+                SELECT COUNT(*) AS cnt
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'Usuarios'
+                  AND COLUMN_NAME = 'activo'
+            """)
+            col_info = cursor.fetchone()
+            has_activo = bool(col_info and col_info.get("cnt"))
+        except Exception:
+            # En entornos donde information_schema no esté accesible, fallback a intentar la consulta directa
+            has_activo = False
+
+        # Ejecutar la consulta adecuada según la existencia de la columna
+        if has_activo:
             cursor.execute("""
                 SELECT `Usuarios` AS username,
                        `Correo Electronico` AS email,
@@ -288,37 +303,28 @@ def api_usuarios_list():
                 ORDER BY `Usuarios` ASC
             """)
             rows = cursor.fetchall()
-        except Exception as first_err:
-            # Si la primera consulta falla (p.ej. columna 'activo' no existe),
-            # reintentamos con un conjunto mínimo de columnas.
-            app.logger.warning("Consulta /api/usuarios falló (intentando fallback): %s", first_err)
-            try:
-                cursor.execute("""
-                    SELECT `Usuarios` AS username,
-                           `Correo Electronico` AS email,
-                           COALESCE(`rol`, '') AS role
-                    FROM `Usuarios`
-                    ORDER BY `Usuarios` ASC
-                """)
-                rows = cursor.fetchall()
-                # Añadir campo 'active' por compatibilidad (frontend espera algo)
-                for r in rows:
-                    r['active'] = True  # asumimos activo si no hay columna
-            except Exception as second_err:
-                # Si falla también, relanzamos para manejar en el outer try
-                app.logger.exception("Fallback /api/usuarios también falló")
-                raise second_err
-        finally:
-            cursor.close()
-            conn.close()
+        else:
+            cursor.execute("""
+                SELECT `Usuarios` AS username,
+                       `Correo Electronico` AS email,
+                       COALESCE(`rol`, '') AS role
+                FROM `Usuarios`
+                ORDER BY `Usuarios` ASC
+            """)
+            rows = cursor.fetchall()
+            # Añadir campo 'active' por compatibilidad (frontend espera algo)
+            for r in rows:
+                r['active'] = True
 
-        # Sanitizar: convertir None->'' y normalizar tipos
+        cursor.close()
+        conn.close()
+
+        # Sanitizar y normalizar cada fila
         def sanitize_row(r):
             out = {}
             out['username'] = (r.get('username') or r.get('Usuarios') or '') if isinstance(r, dict) else ''
             out['email'] = (r.get('email') or r.get('Correo Electronico') or '') if isinstance(r, dict) else ''
             out['role'] = (r.get('role') or r.get('rol') or '') if isinstance(r, dict) else ''
-            # active puede venir como 0/1, True/False, '1','0', 'si', etc.
             a = r.get('active', r.get('activo', True))
             if isinstance(a, (int, float)):
                 active_bool = bool(a)
@@ -334,6 +340,7 @@ def api_usuarios_list():
     except Exception as e:
         app.logger.exception("Error en /api/usuarios")
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/usuarios/rol', methods=['PATCH'])
 def api_usuarios_rol():
