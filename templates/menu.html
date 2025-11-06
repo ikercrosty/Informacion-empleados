@@ -218,9 +218,9 @@ document.addEventListener('DOMContentLoaded', function () {
   const modalCloseBtn = document.getElementById('modalCloseBtn');
   const btnCerrarModal = document.getElementById('btnCerrarModal');
 
-  // Si quieres dos admins "principales" fijos en frontend, pon sus usernames exactos aquí.
-  // Si no los quieres hardcodear, puedes eliminar esta comprobación y mostrar FAB a cualquier admin.
-  const PRINCIPAL_ADMINS = ['admin1', 'admin2']; // reemplaza por tus dos usuarios exactos o deja [] para no usarlo
+  // Si deseas mantener la restricción "solo dos admins concretos", deja la lista con dos usernames exactos.
+  // Para que el FAB aparezca para cualquier admin, deja PRINCIPAL_ADMINS vacío.
+  const PRINCIPAL_ADMINS = []; // Ej: ['admin1', 'admin2'] o [] para que cualquier admin lo vea
 
   let currentUser = null; // { usuario, rol }
   let loading = false;
@@ -240,14 +240,15 @@ document.addEventListener('DOMContentLoaded', function () {
   async function initFabVisibility(){
     currentUser = await fetchWhoami();
     if (!currentUser) { fab.classList.add('d-none'); return; }
-    // mostrar FAB si rol es admin o superadmin AND (si PRINCIPAL_ADMINS no está vacío) si es uno de los dos principales
+    // mostrar FAB si rol es admin o superadmin
     const isAdminRole = (currentUser.rol === 'admin' || currentUser.rol === 'superadmin');
     if (!isAdminRole) { fab.classList.add('d-none'); return; }
+
+    // Si PRINCIPAL_ADMINS tiene exactamente 2 elementos, respetamos esa lista; si no, mostramos FAB a cualquier admin
     if (Array.isArray(PRINCIPAL_ADMINS) && PRINCIPAL_ADMINS.length === 2) {
       if (PRINCIPAL_ADMINS.includes(currentUser.usuario)) fab.classList.remove('d-none');
       else fab.classList.add('d-none');
     } else {
-      // si no se definieron los dos admins principales, mostramos FAB a cualquier admin
       fab.classList.remove('d-none');
     }
   }
