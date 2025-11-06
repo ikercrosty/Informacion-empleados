@@ -218,84 +218,66 @@ document.addEventListener('DOMContentLoaded', function () {
   const modalCloseBtn = document.getElementById('modalCloseBtn');
   const btnCerrarModal = document.getElementById('btnCerrarModal');
 
+  // Si quieres dos admins "principales" fijos en frontend, pon sus usernames exactos aquí.
+  // Si no los quieres hardcodear, puedes eliminar esta comprobación y mostrar FAB a cualquier admin.
+  const PRINCIPAL_ADMINS = ['admin1', 'admin2']; // reemplaza por tus dos usuarios exactos o deja [] para no usarlo
+
+  let currentUser = null; // { usuario, rol }
   let loading = false;
   let abortController = null;
-  let currentUser = null; // { usuario, rol }
 
-  // fetch whoami and show FAB only for administrative roles (adjustable)
-  async function initFabVisibility() {
+  async function fetchWhoami(){
     try {
       const r = await fetch('/whoami', { cache: 'no-store' });
-      if (!r.ok) return;
+      if (!r.ok) return null;
       const j = await r.json();
-      currentUser = { usuario: j.usuario || '', rol: (j.rol || '').toLowerCase() };
-      const allowedRoles = ['admin','superadmin']; // only these roles see FAB
-      if (allowedRoles.includes(currentUser.rol)) {
-        fab.classList.remove('d-none');
-      } else {
-        fab.classList.add('d-none');
-      }
+      return { usuario: String(j.usuario || ''), rol: String(j.rol || '').toLowerCase() };
     } catch (e) {
-      // silent; keep FAB hidden by default
-      fab.classList.add('d-none');
+      return null;
     }
   }
 
-  // Helper: show modal (works with Bootstrap if available; fallback to aria-hidden)
+  async function initFabVisibility(){
+    currentUser = await fetchWhoami();
+    if (!currentUser) { fab.classList.add('d-none'); return; }
+    // mostrar FAB si rol es admin o superadmin AND (si PRINCIPAL_ADMINS no está vacío) si es uno de los dos principales
+    const isAdminRole = (currentUser.rol === 'admin' || currentUser.rol === 'superadmin');
+    if (!isAdminRole) { fab.classList.add('d-none'); return; }
+    if (Array.isArray(PRINCIPAL_ADMINS) && PRINCIPAL_ADMINS.length === 2) {
+      if (PRINCIPAL_ADMINS.includes(currentUser.usuario)) fab.classList.remove('d-none');
+      else fab.classList.add('d-none');
+    } else {
+      // si no se definieron los dos admins principales, mostramos FAB a cualquier admin
+      fab.classList.remove('d-none');
+    }
+  }
+
   function showModal() {
     if (typeof $ === 'function' && typeof $.fn.modal === 'function') {
       $('#modalUsuarios').modal({ backdrop: 'static', keyboard: false });
     } else {
-      modalEl.classList.add('show');
-      modalEl.style.display = 'block';
-      modalEl.setAttribute('aria-hidden', 'false');
-      setTimeout(() => {
-        const close = modalEl.querySelector('#modalCloseBtn') || modalEl.querySelector('[data-dismiss="modal"]');
-        if (close) close.focus();
-      }, 60);
-      document.addEventListener('keydown', fallbackEscKey);
+      modalEl.classList.add('show'); modalEl.style.display = 'block'; modalEl.setAttribute('aria-hidden','false');
+      document.addEventListener('keydown', fallbackEsc);
     }
   }
-
-  function hideModal() {
-    if (typeof $ === 'function' && typeof $.fn.modal === 'function') {
-      $('#modalUsuarios').modal('hide');
-    } else {
-      modalEl.classList.remove('show');
-      modalEl.style.display = 'none';
-      modalEl.setAttribute('aria-hidden', 'true');
-      document.removeEventListener('keydown', fallbackEscKey);
-    }
+  function hideModal(){
+    if (typeof $ === 'function' && typeof $.fn.modal === 'function') $('#modalUsuarios').modal('hide');
+    else { modalEl.classList.remove('show'); modalEl.style.display='none'; modalEl.setAttribute('aria-hidden','true'); document.removeEventListener('keydown', fallbackEsc); }
   }
-
-  function fallbackEscKey(e) {
-    if (e.key === 'Escape') hideModal();
-  }
+  function fallbackEsc(e){ if (e.key === 'Escape') hideModal(); }
 
   if (modalCloseBtn) modalCloseBtn.addEventListener('click', hideModal);
   if (btnCerrarModal) btnCerrarModal.addEventListener('click', hideModal);
 
-  fab && fab.addEventListener('click', function () {
-    fab.setAttribute('aria-expanded', 'true');
-    showModal();
-    loadUsuarios();
-  });
-
+  fab && fab.addEventListener('click', function () { fab.setAttribute('aria-expanded','true'); showModal(); loadUsuarios(); });
   if (typeof $ === 'function' && typeof $.fn.modal === 'function') {
-    $('#modalUsuarios').on('hidden.bs.modal', function () {
-      fab && fab.setAttribute('aria-expanded', 'false');
-    });
+    $('#modalUsuarios').on('hidden.bs.modal', function () { fab && fab.setAttribute('aria-expanded','false'); });
   }
+  usuariosRetry && usuariosRetry.addEventListener('click', function(){ usuariosRetry.classList.add('d-none'); loadUsuarios(); });
 
-  usuariosRetry && usuariosRetry.addEventListener('click', function () {
-    usuariosRetry.classList.add('d-none');
-    loadUsuarios();
-  });
-
-  async function loadUsuarios() {
+  async function loadUsuarios(){
     if (loading) return;
     loading = true;
-
     usuariosError.classList.add('d-none');
     usuariosTableWrap.classList.add('d-none');
     usuariosEmpty.classList.add('d-none');
@@ -305,18 +287,21 @@ document.addEventListener('DOMContentLoaded', function () {
     abortController && abortController.abort();
     abortController = new AbortController();
     const signal = abortController.signal;
-
-    const TIMEOUT_MS = 7000;
-    const timeoutId = setTimeout(() => { abortController && abortController.abort(); }, TIMEOUT_MS);
+    const TIMEOUT_MS = 8000;
+    const timeoutId = setTimeout(()=> abortController && abortController.abort(), TIMEOUT_MS);
 
     try {
       const res = await fetch('/api/usuarios', { cache: 'no-store', signal });
       clearTimeout(timeoutId);
-
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
+      const sessionName = currentUser ? String(currentUser.usuario) : null;
+      const filtered = Array.isArray(data) ? data.filter(u => {
+        const name = String(u.username || u.Usuarios || u.usuario || '');
+        return !(sessionName && name && name === sessionName);
+      }) : [];
 
-      if (!Array.isArray(data) || data.length === 0) {
+      if (!filtered.length) {
         usuariosLoading.classList.add('d-none');
         usuariosEmpty.classList.remove('d-none');
         usuariosRetry.classList.remove('d-none');
@@ -324,59 +309,30 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
 
-      data.forEach((u) => {
+      filtered.forEach((u) => {
+        const username = u.username || u.Usuarios || '';
+        const email = u.email || u['Correo Electronico'] || '';
+        const roleCurrent = (u.role || u.rol || '').toString().toLowerCase();
+
         const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${escapeHtml(username)}</td><td>${escapeHtml(email)}</td><td></td>`;
+        const select = document.createElement('select');
+        select.className = 'rol-select form-control form-control-sm';
+        const roles = ['admin','colaborador']; // solo tus dos roles reales
+        roles.forEach(r => {
+          const opt = document.createElement('option');
+          opt.value = r; opt.text = r.charAt(0).toUpperCase() + r.slice(1);
+          if (r === roleCurrent) opt.selected = true;
+          select.appendChild(opt);
+        });
 
-        const username = u.username || u.usuario || u.name || u.user || '';
-        const email = u.email || u.correo || '';
-        const role = u.role || u.rol || u.privilegio || '';
-
-        // dentro de loadUsuarios, para cada usuario 'u':
-const roleSelect = document.createElement('select');
-roleSelect.className = 'rol-select form-control form-control-sm';
-const roles = ['admin','colaborador']; // tus roles reales
-roles.forEach(r => {
-  const opt = document.createElement('option');
-  opt.value = r;
-  opt.text = r.charAt(0).toUpperCase() + r.slice(1);
-  if (r === String(role).toLowerCase()) opt.selected = true;
-  roleSelect.appendChild(opt);
-});
-if (!(currentUser && (currentUser.rol === 'admin' || currentUser.rol === 'superadmin'))) {
-  roleSelect.setAttribute('disabled', 'disabled');
-} else {
-  roleSelect.addEventListener('change', async function () {
-    const newRole = this.value;
-    const prev = role;
-    try {
-      const payload = { usuario: username, rol: newRole };
-      const r = await fetch('/api/usuarios/rol', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        cache: 'no-store'
-      });
-      if (!r.ok) {
-        throw new Error('HTTP ' + r.status);
-      }
-      // opcional: refrescar la fila o mostrar toast de éxito
-    } catch (err) {
-      this.value = prev || '';
-      alert('Error actualizando rol: ' + (err && err.message ? err.message : 'desconocido'));
-      console.error('Error actualizando rol', err);
-    }
-  });
-}
-
-        // only enable select if current user is admin (we kept FAB visible for admins, but check again)
+        // habilitar cambio solo si el usuario actual tiene rol admin/superadmin
         if (!(currentUser && (currentUser.rol === 'admin' || currentUser.rol === 'superadmin'))) {
-          roleSelect.setAttribute('disabled', 'disabled');
+          select.setAttribute('disabled','disabled');
         } else {
-          roleSelect.addEventListener('change', async function () {
+          select.addEventListener('change', async function () {
             const newRole = this.value;
-            // optimistic UI; keep old in case of error
-            const prev = role;
-            // attempt server update
+            const prev = roleCurrent;
             try {
               const payload = { usuario: username, rol: newRole };
               const r = await fetch('/api/usuarios/rol', {
@@ -386,24 +342,19 @@ if (!(currentUser && (currentUser.rol === 'admin' || currentUser.rol === 'supera
                 cache: 'no-store'
               });
               if (!r.ok) {
-                throw new Error('HTTP ' + r.status);
+                const text = await r.text().catch(()=>null);
+                throw new Error('HTTP ' + r.status + (text ? ' - ' + text : ''));
               }
-              // success — nothing else required
+              // opcional: mostrar mensaje de éxito
             } catch (err) {
-              // revert select and notify
-              this.value = prev || '';
-              alert('Error actualizando rol: ' + (err && err.message ? err.message : 'desconocido'));
-              console.error('Error actualizando rol', err);
+              this.value = prev;
+              alert('Error cambiando rol: ' + (err && err.message ? err.message : 'desconocido'));
+              console.error('Error cambiando rol', err);
             }
           });
         }
 
-        tr.innerHTML = `
-          <td>${escapeHtml(username)}</td>
-          <td>${escapeHtml(email)}</td>
-          <td></td>
-        `;
-        tr.cells[2].appendChild(roleSelect);
+        tr.cells[2].appendChild(select);
         usuariosTableBody.appendChild(tr);
       });
 
@@ -414,9 +365,8 @@ if (!(currentUser && (currentUser.rol === 'admin' || currentUser.rol === 'supera
       clearTimeout(timeoutId);
       usuariosLoading.classList.add('d-none');
       usuariosTableWrap.classList.add('d-none');
-
-      const isAbort = err && (err.name === 'AbortError' || err.message === 'The user aborted a request.');
-      usuariosError.textContent = isAbort ? 'La solicitud tardó demasiado. Verifique la conexión y vuelva a intentar.' : 'Error al cargar usuarios: ' + (err && err.message ? err.message : 'desconocido');
+      const isAbort = err && (err.name === 'AbortError');
+      usuariosError.textContent = isAbort ? 'La solicitud tardó demasiado.' : 'Error al cargar usuarios: ' + (err && err.message ? err.message : 'desconocido');
       usuariosError.classList.remove('d-none');
       usuariosRetry.classList.remove('d-none');
       console.error('Error cargando /api/usuarios', err);
@@ -426,30 +376,11 @@ if (!(currentUser && (currentUser.rol === 'admin' || currentUser.rol === 'supera
     }
   }
 
-  function escapeHtml(str) {
-    if (str === null || str === undefined) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/"/g, '&quot;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-  }
+  function escapeHtml(s){ if (s===null||s===undefined) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-  if (! (typeof $ === 'function' && typeof $.fn.modal === 'function')) {
-    modalEl && modalEl.addEventListener('keydown', function(e){
-      if (e.key !== 'Tab') return;
-      const focusable = modalEl.querySelectorAll('a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])');
-      if (!focusable || focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length -1];
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-    });
-  }
-
-  // init: decide FAB visibility
   initFabVisibility();
 });
 </script>
+
 
 {% endblock %}

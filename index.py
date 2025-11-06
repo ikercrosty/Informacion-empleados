@@ -267,18 +267,63 @@ def api_categories_compat():
 # NUEVO ENDPOINT: /api/usuarios
 # Devuelve lista de usuarios para la UI del FAB: username, email, role, active
 # -----------------------------
-@app.route('/api/usuarios/rol', methods=['PATCH'])
+# ---------------- API usuarios (reemplaza o crea en index.py) ----------------
+@app.route("/api/usuarios", methods=["GET"])
+def api_usuarios_list():
+    """
+    Devuelve lista de usuarios con campos mínimos: username, email, role.
+    No intenta leer columnas opcionales que puedan faltar (e.g., activo).
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT `Usuarios` AS username,
+                   `Correo Electronico` AS email,
+                   COALESCE(`rol`, '') AS role
+            FROM `Usuarios`
+            ORDER BY `Usuarios` ASC
+        """)
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        out = []
+        for r in rows:
+            username = (r.get("username") or r.get("Usuarios") or "")
+            email = (r.get("email") or r.get("Correo Electronico") or "")
+            role = (r.get("role") or r.get("rol") or "").strip().lower()
+            out.append({"username": username, "email": email, "role": role, "active": True})
+        return jsonify(out)
+    except Exception as e:
+        app.logger.exception("Error en /api/usuarios")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/usuarios/rol", methods=["PATCH"])
 def api_usuarios_rol():
+    """
+    Cambia rol. Acepta JSON con { usuario, correo, id, rol }.
+    Defiende contra tipos: convierte usuario a str si viene como int.
+    Solo roles permitidos: admin y colaborador.
+    Autorización: session['rol']=='admin' o 'superadmin'.
+    """
     current = (session.get('rol') or '').strip().lower()
     if current not in ('admin', 'superadmin'):
         return jsonify({'mensaje': 'Permisos insuficientes'}), 403
 
-    data = request.get_json() or {}
-    usuario = (data.get('usuario') or data.get('username') or '').strip()
-    nuevo_rol = (data.get('rol') or data.get('role') or '').strip().lower()
+    data = request.get_json(silent=True) or {}
+    # aceptar distintos identificadores; convertir números a str
+    usuario_raw = data.get('usuario') or data.get('username') or data.get('Usuarios') or data.get('id') or data.get('correo') or data.get('email')
+    # si recibimos None -> error; si recibimos int -> convertir a str
+    if usuario_raw is None:
+        return jsonify({'mensaje': 'Se requiere identificador usuario o correo'}), 400
+    usuario = str(usuario_raw).strip()
 
-    if not usuario or not nuevo_rol:
-        return jsonify({'mensaje': 'usuario y rol son obligatorios'}), 400
+    nuevo_rol_raw = data.get('rol') or data.get('role') or ''
+    nuevo_rol = str(nuevo_rol_raw).strip().lower()
+    if not nuevo_rol:
+        return jsonify({'mensaje': 'Se requiere rol'}), 400
 
     ALLOWED_ROLES = ('admin', 'colaborador')
     if nuevo_rol not in ALLOWED_ROLES:
@@ -287,8 +332,11 @@ def api_usuarios_rol():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("UPDATE Usuarios SET rol = %s WHERE Usuarios = %s OR `Correo Electronico` = %s", (nuevo_rol, usuario, usuario))
+        # intentamos actualizar por Usuarios (username) o por correo
+        cursor.execute("UPDATE `Usuarios` SET `rol` = %s WHERE `Usuarios` = %s OR `Correo Electronico` = %s", (nuevo_rol, usuario, usuario))
         if cursor.rowcount == 0:
+            # opcional: si usuario estaba almacenado como id numérico en otra columna, intentar con id
+            # cursor.execute("UPDATE `Usuarios` SET `rol` = %s WHERE id = %s", (nuevo_rol, usuario))
             cursor.close()
             conn.close()
             return jsonify({'mensaje': 'Usuario no encontrado'}), 404
@@ -299,8 +347,6 @@ def api_usuarios_rol():
     except Exception as e:
         app.logger.exception("Error actualizando rol")
         return jsonify({'mensaje': f'Error: {e}'}), 500
-
-
 
 # Devuelve todos los campos relevantes de un empleado por DPI
 @app.route("/api/empleado/<dpi>", methods=["GET", "PUT"])
