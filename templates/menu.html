@@ -297,9 +297,18 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       const sessionName = currentUser ? String(currentUser.usuario) : null;
+
+      // Excluir del listado:
+      //  - el usuario en sesión (no editarse a sí mismo)
+      //  - los "admins principales" definidos en PRINCIPAL_ADMINS (no deben aparecer en la lista)
       const filtered = Array.isArray(data) ? data.filter(u => {
         const name = String(u.username || u.Usuarios || u.usuario || '');
-        return !(sessionName && name && name === sessionName);
+        if (sessionName && name && name === sessionName) return false;
+        if (Array.isArray(PRINCIPAL_ADMINS) && PRINCIPAL_ADMINS.length >= 1) {
+          // Si PRINCIPAL_ADMINS contiene valores, excluimos cualquier usuario cuyo username coincida exactamente.
+          if (name && PRINCIPAL_ADMINS.includes(name)) return false;
+        }
+        return true;
       }) : [];
 
       if (!filtered.length) {
