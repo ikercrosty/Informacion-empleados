@@ -263,6 +263,46 @@ def api_categories_compat():
         return jsonify({"error": str(e)}), 500
 
 
+# -----------------------------
+# NUEVO ENDPOINT: /api/usuarios
+# Devuelve lista de usuarios para la UI del FAB: username, email, role, active
+# -----------------------------
+@app.route("/api/usuarios", methods=["GET"])
+def api_usuarios_list():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        # Selecciona campos usados por la UI; adapta nombres según tu tabla Usuarios
+        cursor.execute("""
+            SELECT
+                `Usuarios` AS username,
+                `Nombres` AS nombres,
+                `Correo Electronico` AS email,
+                `rol` AS role,
+                IFNULL(`activo`, 1) AS activo
+            FROM Usuarios
+            ORDER BY `Usuarios` ASC
+        """)
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        # sanitize and map to expected frontend shape
+        rows = sanitize_rows(rows)
+        out = []
+        for r in rows:
+            out.append({
+                "username": r.get("username") or r.get("nombres") or "",
+                "email": r.get("email") or "",
+                "role": (r.get("role") or "").strip(),
+                "active": True if str(r.get("activo")).strip() not in ("0", "false", "False", "") else False
+            })
+        return jsonify(out)
+    except Exception as e:
+        app.logger.exception("Error en /api/usuarios")
+        return jsonify({"error": str(e)}), 500
+
+
 # Devuelve todos los campos relevantes de un empleado por DPI
 @app.route("/api/empleado/<dpi>", methods=["GET", "PUT"])
 def api_empleado_get(dpi):
