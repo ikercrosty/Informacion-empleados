@@ -52,9 +52,9 @@
   <i class="fas fa-user-cog" aria-hidden="true"></i>
 </button>
 
-<!-- Modal para mostrar lista de Usuarios (tarjetas modernas en lugar de tabla) -->
+<!-- Modal (se muestra como panel sobre FAB gracias a CSS) -->
 <div class="modal fade" id="modalUsuarios" tabindex="-1" role="dialog" aria-labelledby="modalUsuariosLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+  <div class="modal-dialog modal-panel" role="document"> <!-- class modal-panel mejora el posicionamiento -->
     <div class="modal-content" role="document">
       <div class="modal-header align-items-center">
         <h5 class="modal-title" id="modalUsuariosLabel">Usuarios</h5>
@@ -67,15 +67,15 @@
       </div>
 
       <div class="modal-body" id="modalUsuariosBody">
-        <div id="usuariosLoading" class="usuarios-loading text-center py-4" aria-live="polite">
+        <div id="usuariosLoading" class="usuarios-loading text-center py-3" aria-live="polite">
           <div class="spinner"></div>
           <div class="mt-2">Cargando usuarios...</div>
         </div>
 
-        <div id="usuariosError" class="alert alert-danger d-none my-3" role="alert" aria-live="assertive"></div>
+        <div id="usuariosError" class="alert alert-danger d-none my-2" role="alert" aria-live="assertive"></div>
 
-        <!-- LISTA DE TARJETAS -->
-        <div class="users-grid d-none" id="usuariosCards" role="region" aria-label="Lista de usuarios">
+        <!-- PANEL DE TARJETAS pegado sobre el FAB -->
+        <div class="users-grid-panel d-none" id="usuariosCards" role="region" aria-label="Lista de usuarios">
           <!-- Las tarjetas se insertan aquí dinámicamente -->
         </div>
 
@@ -129,21 +129,48 @@
   justify-content: center;
   box-shadow: 0 14px 40px rgba(21,101,192,0.18);
   cursor: pointer;
-  z-index: 1050;
+  z-index: 1200;
   transition: transform .15s ease, box-shadow .15s ease;
   font-size: 1.15rem;
 }
 .fab:hover { transform: translateY(-4px); box-shadow: 0 20px 48px rgba(21,101,192,0.22); }
 
-/* Modal modern cards layout */
-.modal-header { border-bottom: none; padding: 1rem 1.25rem; }
-.modal-title { font-weight: 600; color: #102a43; }
-.modal-actions { margin-left: 12px; }
+/* Make the modal act like a compact panel above the FAB */
+.modal-dialog.modal-panel {
+  margin: 0;
+  position: fixed;
+  right: 22px;
+  bottom: 96px; /* sits above the FAB */
+  width: 360px;
+  max-width: calc(100% - 40px);
+  transform: translateY(6px);
+  z-index: 1150;
+}
+.modal.fade .modal-dialog.modal-panel {
+  transition: transform .18s ease, opacity .18s ease;
+}
+.modal.show .modal-dialog.modal-panel {
+  transform: translateY(0);
+}
 
-.usuarios-loading { display:flex; flex-direction:column; align-items:center; justify-content:center; }
+/* Modal content: compact, rounded, subtle shadow */
+.modal-content {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 12px 34px rgba(2,6,23,0.12);
+  border: 1px solid rgba(2,6,23,0.04);
+}
+
+/* Header / Footer tweaks */
+.modal-header { border-bottom: none; padding: .6rem .8rem; }
+.modal-footer { border-top: none; padding: .6rem .8rem; }
+.modal-title { font-weight: 600; color: #102a43; margin: 0; }
+
+/* Loading spinner */
+.usuarios-loading { display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 14px 0; }
 .spinner {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: 4px solid rgba(30,88,165,0.12);
   border-top-color: #1e88e5;
@@ -151,26 +178,27 @@
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Grid para tarjetas */
-.users-grid {
+/* Panel for users (compact cards) */
+.users-grid-panel {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 12px;
-  padding: 8px 4px;
-  max-height: 58vh;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  padding: 8px;
+  max-height: 48vh;
   overflow: auto;
 }
 
-/* Tarjeta de usuario */
+/* A single user card: wider, clearer typography and wrapping email */
 .user-card {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
   gap: 12px;
+  align-items: center;
   background: linear-gradient(180deg, #ffffff, #fbfdff);
   border-radius: 10px;
-  padding: 12px;
-  box-shadow: 0 6px 18px rgba(3,10,24,0.04);
-  border: 1px solid rgba(10,20,40,0.03);
+  padding: 10px;
+  box-shadow: none;
+  border: 1px solid rgba(10,20,40,0.04);
 }
 .user-avatar {
   width: 56px;
@@ -186,23 +214,27 @@
   flex-shrink:0;
   overflow:hidden;
 }
-.user-info { flex:1; min-width:0; }
-.user-name { font-weight:600; color:#102a43; margin:0; font-size:0.98rem; line-height:1.05; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.user-email { margin:0; font-size:0.85rem; color:#4b5563; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.user-info { min-width:0; }
+.user-name { font-weight:700; color:#102a43; margin:0; font-size:0.96rem; line-height:1.05; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.user-email { margin:0; font-size:0.82rem; color:#556070; overflow-wrap: anywhere; max-width: 220px; }
 
 /* Controls area */
 .user-controls { display:flex; gap:8px; align-items:center; margin-left:8px; }
-.rol-select { min-width:130px; padding: .28rem .4rem; border-radius: .35rem; border: 1px solid rgba(2,6,23,0.06); background:#fff; font-size: .88rem; }
+.rol-select { min-width:120px; padding: .28rem .4rem; border-radius: .35rem; border: 1px solid rgba(2,6,23,0.06); background:#fff; font-size: .88rem; }
 
-/* Empty and error states */
+/* Clear visible focus outlines for select but keep accessible ring */
+.rol-select:focus { outline: 3px solid rgba(30,88,165,0.12); }
+
+/* Error / empty states */
 #usuariosEmptyMessage { padding: 18px 0; }
 #usuariosError { margin-top: 8px; }
 
-/* Responsive tweaks */
-@media (max-width: 480px) {
+/* Responsive adjustments */
+@media (max-width: 520px) {
+  .modal-dialog.modal-panel { right: 12px; bottom: 80px; width: calc(100% - 24px); }
+  .user-email { max-width: 140px; font-size: 0.78rem; }
+  .rol-select { min-width: 100px; font-size: 0.82rem; }
   .fab { right: 14px; bottom: 14px; width: 56px; height: 56px; }
-  .users-grid { gap: 10px; }
-  .user-card { padding: 10px; }
 }
 </style>
 
@@ -326,7 +358,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const avatar = document.createElement('div');
         avatar.className = 'user-avatar';
-        // Si hay iniciales, mostrarlas; si no, icono
         const initials = (username || email || '').toString().trim().split(/\s+/).slice(0,2).map(s => s[0] ? s[0].toUpperCase() : '').join('');
         avatar.textContent = initials || 'U';
 
