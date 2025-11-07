@@ -21,10 +21,8 @@
         'Hacer doble click en una fila para poder "Editar".'
         </p>
         <p class="text-muted mb-1" style="font-size:0.65rem;">
-        'Siempre presionar el botón guardar para conservar los cambios.''
+        'Siempre presionar el botón guardar para conservar los cambios.'
         </p>
-
-
 
         <div class="d-flex flex-wrap gap-2 align-items-center mt-2">
           <div class="d-flex gap-2">
@@ -104,6 +102,116 @@
   }
   if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', ()=>tryRegister(20));
   else tryRegister(20);
+})();
+</script>
+
+<script>
+/*
+  He aplicado el mismo enfoque que en laboral.html:
+  - Bloqueo en fase capture para evitar que clicks simples seleccionen filas o carguen fotos.
+  - Solo dblclick realiza selección, carga de foto y (si procede) inicia edición o elimina con Shift.
+  - No se cambia lógica de negocio: solo se evita que handlers de click simples (de otras partes o librerías) actúen.
+*/
+(function(){
+  const TABLE_ID = 'tablaMedica';
+  const tabla = document.getElementById(TABLE_ID);
+
+  function clearSelection() {
+    if (!tabla) return;
+    tabla.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
+  }
+
+  // Install capture-phase click blocker so simple clicks won't trigger other handlers that select rows
+  let clickCaptureInstalled = false;
+  function installClickBlocker() {
+    if (!tabla || clickCaptureInstalled) return;
+    clickCaptureInstalled = true;
+
+    tabla.addEventListener('click', function captureBlock(ev) {
+      const tr = ev.target.closest('tr');
+      if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+      // Prevent any subsequent click handlers from running for simple clicks on table rows
+      ev.stopImmediatePropagation();
+    }, true);
+  }
+
+  function tryInstallClickBlocker(retries=20) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => installClickBlocker());
+    } else {
+      installClickBlocker();
+    }
+    if (!clickCaptureInstalled && retries>0) setTimeout(()=>tryInstallClickBlocker(retries-1), 100);
+  }
+  tryInstallClickBlocker(20);
+
+  // Elements related to photo panel (if present in pages that reuse this logic)
+  const fotoImg = document.getElementById('fotoEmpleado');
+  const formSubir = document.getElementById('formSubirFoto');
+  const formEliminar = document.getElementById('formEliminarFoto');
+  const inputDpiUpload = document.getElementById('inputDpiForUpload');
+  const inputDpiDelete = document.getElementById('inputDpiForDelete');
+
+  // dblclick selects row, sets DPI fields, loads photo and may start edit or delete with Shift
+  tabla?.addEventListener('dblclick', async function(ev){
+    const tr = ev.target.closest('tr');
+    if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+
+    clearSelection();
+    tr.classList.add('selected');
+
+    const dpi = (tr.cells[0] && tr.cells[0].innerText || '').trim();
+    if (inputDpiUpload) inputDpiUpload.value = dpi || '';
+    if (inputDpiDelete) inputDpiDelete.value = dpi || '';
+
+    // Load photo if photo panel exists
+    if (dpi && fotoImg) {
+      try {
+        const res = await fetch(`/api/foto/${encodeURIComponent(dpi)}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error('no-photo');
+        const j = await res.json().catch(()=>null);
+        if (j && j.url) {
+          fotoImg.src = `${j.url}?t=${Date.now()}`;
+          if (formSubir) formSubir.style.display = 'none';
+          if (formEliminar) formEliminar.style.display = 'block';
+        } else {
+          fotoImg.src = fotoImg.dataset?.default || fotoImg.src;
+          if (formSubir) formSubir.style.display = 'block';
+          if (formEliminar) formEliminar.style.display = 'none';
+        }
+      } catch (e) {
+        if (fotoImg) fotoImg.src = fotoImg.dataset?.default || fotoImg.src;
+        if (formSubir) formSubir.style.display = 'block';
+        if (formEliminar) formEliminar.style.display = 'none';
+      }
+    }
+
+    // If Shift + dblclick => attempt delete (preserve existing delete logic if implemented)
+    if (ev.shiftKey) {
+      try {
+        if (typeof window.eliminarFilaSeleccionada === 'function') {
+          await window.eliminarFilaSeleccionada(tr);
+        } else if (typeof window.eliminarEmpleado === 'function') {
+          await window.eliminarEmpleado(tr);
+        }
+      } catch (_) { /* noop */ }
+      return;
+    }
+
+    // Otherwise try to start edit (preserve existing iniciarEdicion if present)
+    try {
+      if (typeof window.iniciarEdicion === 'function') {
+        try { window.iniciarEdicion(tr); } catch (e) { window.iniciarEdicion(); }
+      }
+    } catch (_) { /* no-op */ }
+  });
+
+  // If the table can be re-rendered by other code, re-install the capture blocker shortly after mutations
+  const obs = new MutationObserver(() => { tryInstallClickBlocker(3); });
+  if (tabla) obs.observe(tabla, { childList: true, subtree: true, attributes: true });
+
+  window.addEventListener('beforeunload', () => { try { obs.disconnect(); } catch(_){} });
+
 })();
 </script>
 {% endblock %}
