@@ -98,4 +98,138 @@
   else tryRegister(20);
 })();
 </script>
+
+<script>
+/*
+  Cambio requerido:
+  - Evitar que clicks simples seleccionen filas o carguen datos (si otras librerías añaden handlers click).
+  - Forzar que SOLO dblclick realice selección y, de ser necesario, inicie edición.
+  - No cambiar ninguna otra lógica de negocio.
+*/
+(function(){
+  // Helpers y referencias mínimas
+  const TABLE_ID = 'tablaEmergencia';
+  const tabla = document.getElementById(TABLE_ID);
+
+  function clearSelection() {
+    if (!tabla) return;
+    tabla.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
+  }
+
+  // Bloqueo robusto de clicks simples en la tabla:
+  // 1) Evitamos comportamiento por defecto de cualquier listener que dependa del evento 'click'
+  //    atacando el evento en capture y deteniendo su propagación hacia handlers posteriores.
+  // 2) No interferimos con otros eventos (contextmenu, dblclick): solo clicks simples.
+  // 3) Permitimos que dblclick funcione (no stopPropagation en dblclick).
+  let clickCaptureInstalled = false;
+  function installClickBlocker() {
+    if (!tabla || clickCaptureInstalled) return;
+    clickCaptureInstalled = true;
+
+    // Handler en fase capture que evita que listeners registrados después reciban el click.
+    tabla.addEventListener('click', function captureBlock(ev) {
+      // Solo bloquear clicks simples sobre filas dentro del tbody
+      const tr = ev.target.closest('tr');
+      if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+      // Evitar que otros handlers ejecuten selección/fetch de foto, etc.
+      ev.stopImmediatePropagation();
+      // No hacemos preventDefault porque no queremos romper interacciones accesibles
+      // (por ejemplo selección por teclado). Solo evitamos que handlers JS se ejecuten.
+      // Nota: si alguna librería usa capture también, este handler se ejecutará en capture
+      // y podrá detener la propagación a capture inferiores y a bubble.
+    }, true);
+  }
+
+  // Instalar el bloqueo en cuanto exista la tabla
+  function tryInstallClickBlocker(retries=20) {
+    if (tabla) installClickBlocker();
+    else if (retries>0) setTimeout(()=>tryInstallClickBlocker(retries-1), 100);
+  }
+  tryInstallClickBlocker(20);
+
+  // Implementamos selección y acción en dblclick (único punto de entrada)
+  tabla?.addEventListener('dblclick', async function(ev){
+    const tr = ev.target.closest('tr');
+    if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+
+    clearSelection();
+    tr.classList.add('selected');
+
+    // Extraer valores de la fila según columnas esperadas
+    const dpi = (tr.cells[0] && tr.cells[0].innerText || '').trim();
+
+    // Si la página tiene alguna lógica de edición local (iniciarEdicion), respetarla
+    if (typeof window.iniciarEdicion === 'function') {
+      try { window.iniciarEdicion(tr); }
+      catch (e) {
+        try { window.iniciarEdicion(); } catch (_) { /* no-op */ }
+      }
+    }
+
+    // Si existe un handler global para cargar foto (o panel), llamarlo usando el DPI
+    // Mantenemos la misma idea que en otras vistas: intentar cargar foto vía /api/foto/{dpi}
+    // pero solo si la aplicación expone funciones relacionadas (no forzamos nada).
+    try {
+      if (!dpi) return;
+      // Si hay un handler específico (por ejemplo window.cargarFotoEmpleado), usarlo.
+      if (typeof window.cargarFotoEmpleado === 'function') {
+        try { await window.cargarFotoEmpleado(dpi); } catch(_) {}
+        return;
+      }
+      // Si no, intentar una petición fetch mínima para pre-cargar URL de foto si el endpoint existe.
+      // Esto es opcional: no hacemos nada si falla (evitamos errores visibles).
+      const fotoImg = document.getElementById('fotoEmpleado');
+      const formSubir = document.getElementById('formSubirFoto');
+      const formEliminar = document.getElementById('formEliminarFoto');
+      const inputDpiUpload = document.getElementById('inputDpiForUpload');
+      const inputDpiDelete = document.getElementById('inputDpiForDelete');
+
+      if (inputDpiUpload) inputDpiUpload.value = dpi;
+      if (inputDpiDelete) inputDpiDelete.value = dpi;
+
+      if (!fotoImg) return;
+      // Intentar fetch; si falla, dejamos la imagen por defecto y los formularios acorde.
+      const res = await fetch(`/api/foto/${encodeURIComponent(dpi)}`, { cache: 'no-store' });
+      if (!res.ok) {
+        // no-photo: mostrar subir form
+        if (fotoImg) fotoImg.src = fotoImg.dataset?.default || fotoImg.src;
+        if (formSubir) formSubir.style.display = 'block';
+        if (formEliminar) formEliminar.style.display = 'none';
+        return;
+      }
+      const j = await res.json().catch(()=>null);
+      if (j && j.url) {
+        fotoImg.src = `${j.url}?t=${Date.now()}`;
+        if (formSubir) formSubir.style.display = 'none';
+        if (formEliminar) formEliminar.style.display = 'block';
+      } else {
+        if (fotoImg) fotoImg.src = fotoImg.dataset?.default || fotoImg.src;
+        if (formSubir) formSubir.style.display = 'block';
+        if (formEliminar) formEliminar.style.display = 'none';
+      }
+    } catch (e) {
+      // silencioso: no rompemos la experiencia por un fallo en carga de imagen
+      // puedes añadir aquí un console.warn si lo deseas
+    }
+  });
+
+  // Aseguramos que cualquier handler que se base en 'click' del DOM no reciba eventos
+  // (por ejemplo, si otras partes del app vuelven a añadir listeners). Reinstalamos si se reemplaza la tabla.
+  const obs = new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      if (m.type === 'childList' || m.type === 'attributes') {
+        // si la tabla se re-renderiza, re-instalar el bloqueador
+        tryInstallClickBlocker(3);
+      }
+    }
+  });
+  if (tabla) obs.observe(tabla, { childList: true, subtree: true, attributes: true });
+
+  // Limpieza ligera si la página se descarga
+  window.addEventListener('beforeunload', () => {
+    try { obs.disconnect(); } catch(_) {}
+  });
+
+})();
+</script>
 {% endblock %}
