@@ -1160,6 +1160,46 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // do not force extra save here; autosave runs on edits/add/delete
 });
+
+// Prevent selection/focus/click on sueldo inputs unless admin-edit mode active
+(function installSueldoInteractionGuard() {
+  function guardInput(inp) {
+    if (!inp) return;
+    // prevent mouse/pointer selection for non-admin-editable state
+    inp.addEventListener('mousedown', (e) => {
+      if (!inp.classList.contains('sueldo-admin-edit')) e.preventDefault();
+    }, { passive: false });
+
+    // prevent keyboard focus
+    inp.addEventListener('focus', (e) => {
+      if (!inp.classList.contains('sueldo-admin-edit')) inp.blur();
+    }, true);
+
+    // also prevent selection via touchstart
+    inp.addEventListener('touchstart', (e) => {
+      if (!inp.classList.contains('sueldo-admin-edit')) e.preventDefault();
+    }, { passive: false });
+  }
+
+  // Initialize guards for existing inputs
+  document.querySelectorAll('input.sueldo').forEach(guardInput);
+
+  // Keep guard for future rows (MutationObserver simple)
+  const tbody = document.querySelector('#planillaTable tbody');
+  if (tbody) {
+    const mo = new MutationObserver((mut) => {
+      for (const m of mut) {
+        m.addedNodes && m.addedNodes.forEach(n => {
+          if (n.nodeType === 1) {
+            n.querySelectorAll && n.querySelectorAll('input.sueldo').forEach(guardInput);
+          }
+        });
+      }
+    });
+    mo.observe(tbody, { childList: true, subtree: true });
+  }
+})();
+
 </script>
 
 <style>
@@ -1323,6 +1363,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     outline: 2px dashed #f59e0b;
     background: #fff7ed;
   }
+  /* Make sueldo inputs not selectable and hide caret when not admin-editable */
+input.sueldo {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  caret-color: transparent;
+  cursor: default;
+}
+
+/* When admin enables edition (sueldo-admin-edit) restore normal behavior */
+input.sueldo.sueldo-admin-edit {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+  caret-color: auto;
+  cursor: text;
+}
+
+/* Avoid visible focus ring when not editable; keep accessible ring for admin-edit */
+input.sueldo:focus:not(.sueldo-admin-edit) {
+  outline: none;
+}
+
 
   #planillaTable td.total-devengado,
   #planillaTable td.igss,
