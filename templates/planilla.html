@@ -301,9 +301,14 @@ function restoreTable(data) {
         sueldoInput.setAttribute('readonly','readonly');
         tr.dataset.sueldoLocked = '1';
         sueldoInput.setAttribute('data-prev', Number(r.sueldo || 0).toFixed(2));
+        // add non-selectable class + tabindex for full blocking
+        sueldoInput.classList.add('sueldo-locked');
+        sueldoInput.setAttribute('tabindex','-1');
       } else {
         tr.dataset.sueldoLocked = '0';
         sueldoInput.setAttribute('data-prev', Number(r.sueldo || 0).toFixed(2));
+        sueldoInput.classList.remove('sueldo-locked');
+        sueldoInput.removeAttribute('tabindex');
       }
     }
     tr.dataset._hextras = Number(r.hextras||0);
@@ -368,6 +373,9 @@ async function initSueldoEditControl() {
           if (inp) {
             inp.removeAttribute('readonly');
             inp.classList.add('sueldo-admin-edit');
+            // remove the locked-class and restore tab focus for admin editing
+            inp.classList.remove('sueldo-locked');
+            inp.removeAttribute('tabindex');
           }
         }
       });
@@ -388,9 +396,14 @@ async function initSueldoEditControl() {
             inp.setAttribute('readonly','readonly');
             tr.dataset.sueldoLocked = '1';
             inp.setAttribute('data-prev', Number(n).toFixed(2));
+            // add locked class + remove tabindex to fully block selection
+            inp.classList.add('sueldo-locked');
+            inp.setAttribute('tabindex','-1');
           } else {
             tr.dataset.sueldoLocked = '0';
             inp.setAttribute('data-prev', Number(n).toFixed(2));
+            inp.classList.remove('sueldo-locked');
+            inp.removeAttribute('tabindex');
           }
         }
       });
@@ -448,8 +461,14 @@ document.addEventListener('blur', (e) => {
       if (tr) tr.dataset.sueldoLocked = '1';
       // remove admin-edit marker if present
       e.target.classList.remove('sueldo-admin-edit');
+      // ensure the input cannot be focused or selected by non-admin: add class + remove tabindex
+      e.target.classList.add('sueldo-locked');
+      e.target.setAttribute('tabindex','-1');
     } else {
       if (tr) tr.dataset.sueldoLocked = '0';
+      // ensure unlocked inputs are focusable
+      e.target.classList.remove('sueldo-locked');
+      e.target.removeAttribute('tabindex');
     }
     if (tr) recalcRow(tr);
     recalcTotals();
@@ -830,6 +849,8 @@ function addEmployeeRowIfMissing(emp) {
 
   // mark sueldo unlocked initially for imported rows with 0
   tr.dataset.sueldoLocked = '0';
+  // ensure no locked-class on imported row with 0
+  if (sueldoInput) { sueldoInput.classList.remove('sueldo-locked'); sueldoInput.removeAttribute('tabindex'); }
 
   tbody.appendChild(tr);
   recalcRow(tr);
