@@ -455,8 +455,8 @@
     NUEVA LÓGICA (no altera la lógica existente):
     - Queremos que "Guardar" esté habilitado siempre que exista alguna casilla habilitada para editar.
     - Detectamos 3 señales de "edición activa" típicas:
-      1) Celdas con attribute contenteditable="true"
-      2) Inputs/selects/textareas dentro de la tabla que no estén disabled
+      1) Elementos con attribute contenteditable (salvo contenteditable="false")
+      2) Inputs/selects/textareas dentro de la tabla body que no estén disabled ni readonly
       3) Mutaciones en la tabla que activen lo anterior (por ejemplo registrarTabla activa contenteditable)
     - La función updateGuardarState() centraliza la regla y habilita/deshabilita el botón.
     - Se añade un MutationObserver y handlers de evento input/focus para respuesta inmediata.
@@ -464,15 +464,19 @@
 
   function hasEditableCell() {
     if (!tabla) return false;
-    // 1) contenteditable cells
-    const contentEditable = tabla.querySelector('[contenteditable="true"]');
+
+    // 1) any element that has contenteditable and it's not explicitly "false"
+    const contentEditable = tabla.querySelector('[contenteditable]:not([contenteditable="false"])');
     if (contentEditable) return true;
-    // 2) enabled form controls inside the table body
-    const enabledControl = tabla.querySelector('tbody input:not([disabled]), tbody select:not([disabled]), tbody textarea:not([disabled])');
+
+    // 2) enabled form controls inside the table body that are not disabled and not readonly
+    const enabledControl = tabla.querySelector('tbody input:not([disabled]):not([readonly]), tbody select:not([disabled]):not([readonly]), tbody textarea:not([disabled]):not([readonly])');
     if (enabledControl) return true;
+
     // 3) data-editable attribute (some table libs use custom flags)
     const customEditable = tabla.querySelector('[data-editable="true"], [data-editable]');
     if (customEditable) return true;
+
     return false;
   }
 
@@ -480,11 +484,20 @@
     if (!btnGuardar) return;
     try {
       const editable = hasEditableCell();
+
       // enable only if editable AND user role allows saving
       const allowedRole = ['admin','colaborador'].includes(CURRENT_ROLE);
+
+      // IMPORTANT: user requested "once a casilla is enabled for editing, the Save button must always be enabled".
+      // We respect role-based restrictions: the button will be enabled only if the current role is allowed AND an editable area exists.
       btnGuardar.disabled = !(editable && allowedRole);
-      // visual cue: aria-disabled
+
+      // Always ensure ARIA state matches
       btnGuardar.setAttribute('aria-disabled', btnGuardar.disabled ? 'true' : 'false');
+
+      // Also add a small visual cue (bootstrap class) so disabled state is clear
+      if (btnGuardar.disabled) btnGuardar.classList.add('disabled');
+      else btnGuardar.classList.remove('disabled');
     } catch (e) {
       // keep default state on error
     }
@@ -506,7 +519,7 @@
       let relevant = false;
       for (const m of mutations) {
         if (m.type === 'attributes') {
-          if (m.attributeName === 'contenteditable' || m.attributeName === 'disabled' || m.attributeName === 'data-editable') {
+          if (m.attributeName === 'contenteditable' || m.attributeName === 'disabled' || m.attributeName === 'data-editable' || m.attributeName === 'readonly') {
             relevant = true; break;
           }
         } else if (m.type === 'childList') {
@@ -517,7 +530,7 @@
       if (relevant) updateGuardarState();
     });
 
-    mo.observe(tabla, { attributes: true, subtree: true, attributeFilter: ['contenteditable','disabled','data-editable'], childList: true });
+    mo.observe(tabla, { attributes: true, subtree: true, attributeFilter: ['contenteditable','disabled','data-editable','readonly'], childList: true });
 
     // Also enable rapid response: listen to focus/input events inside table
     tabla.addEventListener('focusin', (e) => {
