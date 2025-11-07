@@ -158,6 +158,10 @@
         });
       }
 
+      // Now replace click behavior: block any single-click selection added elsewhere
+      // and implement our dblclick-based selection + photo load + edit start.
+      installClickBlockAndDblHandler();
+
       return;
     }
 
@@ -167,6 +171,115 @@
       return;
     }
     setTimeout(() => tryRegister(retries - 1), 100);
+  }
+
+  function installClickBlockAndDblHandler() {
+    const tabla = document.getElementById(TABLE_ID);
+    if (!tabla) return;
+
+    // Prevent any single-click from selecting rows or triggering handlers added elsewhere.
+    // Use capture phase to intercept clicks before other listeners. We call stopImmediatePropagation
+    // on the captured event to minimize other handlers being invoked.
+    // Note: dblclick will still fire after two clicks.
+    const clickBlocker = (e) => {
+      // Ignore clicks that are not within tbody rows
+      const tr = e.target && e.target.closest && e.target.closest('tr');
+      if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+      // Prevent single-click effects
+      try {
+        e.stopImmediatePropagation();
+      } catch (err) {
+        e.stopPropagation();
+      }
+      e.preventDefault();
+    };
+    tabla.addEventListener('click', clickBlocker, true);
+
+    // Helper utilities for photo panel (mirrors expected behavior from main app)
+    const fotoEmpleado = document.getElementById('fotoEmpleado');
+    const formSubir = document.getElementById('formSubirFoto');
+    const formEliminar = document.getElementById('formEliminarFoto');
+    const inputDpiUpload = document.getElementById('inputDpiForUpload');
+    const inputDpiDelete = document.getElementById('inputDpiForDelete');
+
+    function clearPhotoPanel() {
+      if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
+      if (formSubir) formSubir.style.display = 'none';
+      if (formEliminar) formEliminar.style.display = 'none';
+      if (inputDpiUpload) inputDpiUpload.value = '';
+      if (inputDpiDelete) inputDpiDelete.value = '';
+    }
+
+    async function loadPhotoForDpi(dpi) {
+      if (!dpi) {
+        clearPhotoPanel();
+        return;
+      }
+      if (inputDpiUpload) inputDpiUpload.value = dpi;
+      if (inputDpiDelete) inputDpiDelete.value = dpi;
+      try {
+        const res = await fetch(`/api/foto/${encodeURIComponent(dpi)}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error('no-photo');
+        const j = await res.json();
+        if (j && j.url) {
+          if (fotoEmpleado) fotoEmpleado.src = `${j.url}?t=${Date.now()}`;
+          if (formSubir) formSubir.style.display = 'none';
+          if (formEliminar) formEliminar.style.display = 'block';
+        } else {
+          if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
+          if (formSubir) formSubir.style.display = 'block';
+          if (formEliminar) formEliminar.style.display = 'none';
+        }
+      } catch (e) {
+        if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
+        if (formSubir) formSubir.style.display = 'block';
+        if (formEliminar) formEliminar.style.display = 'none';
+      }
+    }
+
+    function clearSelection() {
+      tabla.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
+    }
+
+    // dblclick handler: select row + load photo + (optionally) start edit or delete with shift
+    tabla.addEventListener('dblclick', async (ev) => {
+      const tr = ev.target.closest && ev.target.closest('tr');
+      if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+
+      // Select visually
+      clearSelection();
+      tr.classList.add('selected');
+
+      // DPI handling for photo panel
+      const dpi = (tr.cells[0] && tr.cells[0].innerText || '').trim();
+      if (!dpi) { clearPhotoPanel(); return; }
+      if (inputDpiUpload) inputDpiUpload.value = dpi;
+      if (inputDpiDelete) inputDpiDelete.value = dpi;
+
+      // Load photo (same behavior that single-click had before)
+      await loadPhotoForDpi(dpi);
+
+      // If shiftKey pressed => attempt delete (if your app supports it via dblclick+shift)
+      if (ev.shiftKey) {
+        // Delegate to global delete function if exists, otherwise show flash
+        if (typeof window.eliminarFilaSeleccionada === 'function') {
+          try { await window.eliminarFilaSeleccionada(tr); } catch (e) { flash('Error eliminando fila', 'danger'); }
+        } else {
+          flash('Shift+dblclick: eliminar fila (admin) [implementa eliminarFilaSeleccionada]', 'info');
+        }
+        return;
+      }
+
+      // Otherwise try to start edit (only if function exists)
+      const be = document.getElementById('btnEditar');
+      if (be) be.disabled = false;
+
+      if (typeof window.iniciarEdicion === 'function') {
+        try { window.iniciarEdicion(tr); } catch (e) { try { window.iniciarEdicion(); } catch (err) { flash('Editar: acción iniciada', 'info'); } }
+      } else {
+        flash('Editar: acción iniciada', 'info');
+      }
+    });
   }
 
   if (document.readyState === 'loading') {
