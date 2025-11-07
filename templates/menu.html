@@ -52,43 +52,39 @@
   <i class="fas fa-user-cog" aria-hidden="true"></i>
 </button>
 
-<!-- Modal para mostrar lista de Usuarios (se abre con el FAB) -->
+<!-- Modal para mostrar lista de Usuarios (tarjetas modernas en lugar de tabla) -->
 <div class="modal fade" id="modalUsuarios" tabindex="-1" role="dialog" aria-labelledby="modalUsuariosLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
     <div class="modal-content" role="document">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalUsuariosLabel">Usuarios (tabla Usuarios)</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar" id="modalCloseBtn">
-          <span aria-hidden="true">&times;</span>
-        </button>
+      <div class="modal-header align-items-center">
+        <h5 class="modal-title" id="modalUsuariosLabel">Usuarios</h5>
+        <div class="modal-actions d-flex align-items-center">
+          <button type="button" class="btn btn-sm btn-outline-secondary mr-2 d-none" id="usuariosRetry">Reintentar</button>
+          <button type="button" class="close ml-0" data-dismiss="modal" aria-label="Cerrar" id="modalCloseBtn">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
       </div>
+
       <div class="modal-body" id="modalUsuariosBody">
-        <div id="usuariosLoading" class="text-center py-3" aria-live="polite">
-          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-          <span class="sr-only">Cargando usuarios...</span>
+        <div id="usuariosLoading" class="usuarios-loading text-center py-4" aria-live="polite">
+          <div class="spinner"></div>
           <div class="mt-2">Cargando usuarios...</div>
         </div>
-        <div id="usuariosError" class="alert alert-danger d-none" role="alert" aria-live="assertive"></div>
 
-        <div class="table-responsive d-none" id="usuariosTableWrap" role="region" aria-label="Tabla de usuarios">
-          <table class="table table-sm table-hover" id="usuariosTable">
-            <thead class="thead-light">
-              <tr>
-                <th scope="col">Usuario</th>
-                <th scope="col">Correo</th>
-                <th scope="col">Rol</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+        <div id="usuariosError" class="alert alert-danger d-none my-3" role="alert" aria-live="assertive"></div>
+
+        <!-- LISTA DE TARJETAS -->
+        <div class="users-grid d-none" id="usuariosCards" role="region" aria-label="Lista de usuarios">
+          <!-- Las tarjetas se insertan aquí dinámicamente -->
         </div>
 
         <div class="text-center d-none" id="usuariosEmptyMessage" aria-live="polite">
-          <p class="text-muted">No se encontraron usuarios.</p>
+          <p class="text-muted mb-0">No se encontraron usuarios.</p>
         </div>
       </div>
+
       <div class="modal-footer">
-        <button id="usuariosRetry" type="button" class="btn btn-outline-primary d-none">Reintentar</button>
         <button type="button" class="btn btn-secondary" data-dismiss="modal" id="btnCerrarModal">Cerrar</button>
       </div>
     </div>
@@ -100,68 +96,30 @@
 /* Jumbotron */
 .jumbotron-welcome {
   position: relative;
-  background-color: #f5f7fa;
+  background: linear-gradient(180deg,#f6f9ff,#f5f7fa);
   padding: 3rem 1rem 4rem;
   margin-bottom: 0;
   border-radius: 0 0 30px 30px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 30px rgba(2,6,23,0.06);
   overflow: hidden;
 }
-.jumbotron-welcome h1,
-.jumbotron-welcome p {
-  color: #212529;
-}
-.jumbotron-welcome .wave {
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  width: 100%;
-  height: auto;
-}
+.jumbotron-welcome h1, .jumbotron-welcome p { color: #0f1724; }
 
-/* Reducir espacio entre jumbotron y tarjetas */
-.welcome-actions {
-  padding-top: 1rem;
-  padding-bottom: 2rem;
-}
+/* Actions */
+.action-card { border-radius: 12px; padding: 1.6rem; transition: transform .18s ease, box-shadow .18s ease; }
+.action-card:hover { transform: translateY(-6px); box-shadow: 0 18px 40px rgba(2,6,23,0.06); }
 
-/* Animaciones */
-.fade-in { animation: fadeIn 1s ease-in-out; }
-.slide-up { animation: slideUp 1s ease forwards; opacity: 0; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+/* Icons */
+.icon-clipboard { background: linear-gradient(180deg,#ffb74d,#ff9800); }
+.icon-id { background: linear-gradient(180deg,#42a5f5,#1e88e5); }
 
-/* Iconos */
-.icon-clipboard {
-  background: #ff9800;
-  color: #fff;
-  border-radius: 50%;
-  width: 70px;
-  height: 70px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  margin: 0 auto;
-}
-.icon-id {
-  background: #1e88e5;
-  color: #fff;
-  border-radius: 50%;
-  width: 70px;
-  height: 70px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  margin: 0 auto;
-}
-
-/* Floating action button (FAB) */
+/* FAB */
 .fab {
   position: fixed;
   right: 22px;
   bottom: 22px;
-  width: 56px;
-  height: 56px;
+  width: 62px;
+  height: 62px;
   border-radius: 50%;
   background: linear-gradient(180deg,#1e88e5,#1565d8);
   color: #fff;
@@ -169,58 +127,101 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(21,101,192,0.18);
+  box-shadow: 0 14px 40px rgba(21,101,192,0.18);
   cursor: pointer;
   z-index: 1050;
   transition: transform .15s ease, box-shadow .15s ease;
+  font-size: 1.15rem;
 }
-.fab:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(21,101,192,0.22); }
-.fab:active { transform: translateY(-1px); }
-.fab:focus { outline: 3px solid rgba(21,101,192,0.18); }
+.fab:hover { transform: translateY(-4px); box-shadow: 0 20px 48px rgba(21,101,192,0.22); }
 
-/* Modal table styling minor adjustments */
-#usuariosTable th, #usuariosTable td { vertical-align: middle; font-size: .95rem; }
+/* Modal modern cards layout */
+.modal-header { border-bottom: none; padding: 1rem 1.25rem; }
+.modal-title { font-weight: 600; color: #102a43; }
+.modal-actions { margin-left: 12px; }
 
-/* Small responsive tweak to avoid cover by mobile UI */
+.usuarios-loading { display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.spinner {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 4px solid rgba(30,88,165,0.12);
+  border-top-color: #1e88e5;
+  animation: spin .9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Grid para tarjetas */
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+  padding: 8px 4px;
+  max-height: 58vh;
+  overflow: auto;
+}
+
+/* Tarjeta de usuario */
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(180deg, #ffffff, #fbfdff);
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 6px 18px rgba(3,10,24,0.04);
+  border: 1px solid rgba(10,20,40,0.03);
+}
+.user-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  background: linear-gradient(180deg,#eef7ff,#dfefff);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  color:#0f1724;
+  font-size:1rem;
+  flex-shrink:0;
+  overflow:hidden;
+}
+.user-info { flex:1; min-width:0; }
+.user-name { font-weight:600; color:#102a43; margin:0; font-size:0.98rem; line-height:1.05; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.user-email { margin:0; font-size:0.85rem; color:#4b5563; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* Controls area */
+.user-controls { display:flex; gap:8px; align-items:center; margin-left:8px; }
+.rol-select { min-width:130px; padding: .28rem .4rem; border-radius: .35rem; border: 1px solid rgba(2,6,23,0.06); background:#fff; font-size: .88rem; }
+
+/* Empty and error states */
+#usuariosEmptyMessage { padding: 18px 0; }
+#usuariosError { margin-top: 8px; }
+
+/* Responsive tweaks */
 @media (max-width: 480px) {
-  .fab { right: 14px; bottom: 14px; width: 52px; height: 52px; }
-}
-
-/* Spinner center */
-#usuariosLoading { display: flex; flex-direction: column; align-items: center; justify-content: center; }
-
-/* Hide table wrap when empty */
-#usuariosTableWrap { max-height: 50vh; overflow: auto; }
-
-/* Visually hide element but keep for screen readers */
-.sr-only { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
-
-/* Small select styling inside table */
-.rol-select {
-  min-width: 140px;
-  padding: .25rem .4rem;
-  border-radius: .25rem;
-  border: 1px solid rgba(0,0,0,0.08);
+  .fab { right: 14px; bottom: 14px; width: 56px; height: 56px; }
+  .users-grid { gap: 10px; }
+  .user-card { padding: 10px; }
 }
 </style>
 
-<!-- SCRIPTS: comportamiento del FAB - consulta tabla Usuarios y edición de rol -->
+<!-- SCRIPTS: comportamiento del FAB - consulta tabla Usuarios y edición de rol
+     NOTA: lógica sin cambios importantes, solo DOM insertion adaptado a tarjetas -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   const fab = document.getElementById('fabUsuarios');
   const modalEl = document.getElementById('modalUsuarios');
   const usuariosLoading = document.getElementById('usuariosLoading');
   const usuariosError = document.getElementById('usuariosError');
-  const usuariosTableWrap = document.getElementById('usuariosTableWrap');
-  const usuariosTableBody = document.querySelector('#usuariosTable tbody');
+  const usuariosCards = document.getElementById('usuariosCards');
   const usuariosEmpty = document.getElementById('usuariosEmptyMessage');
   const usuariosRetry = document.getElementById('usuariosRetry');
   const modalCloseBtn = document.getElementById('modalCloseBtn');
   const btnCerrarModal = document.getElementById('btnCerrarModal');
 
-  // Si deseas mantener la restricción "solo dos admins concretos", deja la lista con dos usernames exactos.
-  // Para que el FAB aparezca para cualquier admin, deja PRINCIPAL_ADMINS vacío.
-  const PRINCIPAL_ADMINS = ['1','2']; // Ej: ['admin1', 'admin2'] o [] para que cualquier admin lo vea
+  // Mantén la misma configuración de PRINCIPAL_ADMINS para no tocar lógica de visibilidad
+  const PRINCIPAL_ADMINS = ['1','2']; // Ej: ['admin1','admin2'] o [] para que cualquier admin lo vea
 
   let currentUser = null; // { usuario, rol }
   let loading = false;
@@ -240,11 +241,9 @@ document.addEventListener('DOMContentLoaded', function () {
   async function initFabVisibility(){
     currentUser = await fetchWhoami();
     if (!currentUser) { fab.classList.add('d-none'); return; }
-    // mostrar FAB si rol es admin o superadmin
     const isAdminRole = (currentUser.rol === 'admin' || currentUser.rol === 'superadmin');
     if (!isAdminRole) { fab.classList.add('d-none'); return; }
 
-    // Si PRINCIPAL_ADMINS tiene exactamente 2 elementos, respetamos esa lista; si no, mostramos FAB a cualquier admin
     if (Array.isArray(PRINCIPAL_ADMINS) && PRINCIPAL_ADMINS.length === 2) {
       if (PRINCIPAL_ADMINS.includes(currentUser.usuario)) fab.classList.remove('d-none');
       else fab.classList.add('d-none');
@@ -280,10 +279,10 @@ document.addEventListener('DOMContentLoaded', function () {
     if (loading) return;
     loading = true;
     usuariosError.classList.add('d-none');
-    usuariosTableWrap.classList.add('d-none');
+    usuariosCards.classList.add('d-none');
     usuariosEmpty.classList.add('d-none');
     usuariosLoading.classList.remove('d-none');
-    usuariosTableBody.innerHTML = '';
+    usuariosCards.innerHTML = '';
 
     abortController && abortController.abort();
     abortController = new AbortController();
@@ -298,14 +297,10 @@ document.addEventListener('DOMContentLoaded', function () {
       const data = await res.json();
       const sessionName = currentUser ? String(currentUser.usuario) : null;
 
-      // Excluir del listado:
-      //  - el usuario en sesión (no editarse a sí mismo)
-      //  - los "admins principales" definidos en PRINCIPAL_ADMINS (no deben aparecer en la lista)
       const filtered = Array.isArray(data) ? data.filter(u => {
         const name = String(u.username || u.Usuarios || u.usuario || '');
         if (sessionName && name && name === sessionName) return false;
         if (Array.isArray(PRINCIPAL_ADMINS) && PRINCIPAL_ADMINS.length >= 1) {
-          // Si PRINCIPAL_ADMINS contiene valores, excluimos cualquier usuario cuyo username coincida exactamente.
           if (name && PRINCIPAL_ADMINS.includes(name)) return false;
         }
         return true;
@@ -319,16 +314,39 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
 
-      filtered.forEach((u) => {
+      // Crear tarjetas visuales por usuario (no alterar la lógica de cambios de rol)
+      filtered.forEach((u, idx) => {
         const username = u.username || u.Usuarios || '';
         const email = u.email || u['Correo Electronico'] || '';
         const roleCurrent = (u.role || u.rol || '').toString().toLowerCase();
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${escapeHtml(username)}</td><td>${escapeHtml(email)}</td><td></td>`;
+        const card = document.createElement('div');
+        card.className = 'user-card';
+        card.setAttribute('data-username', username);
+
+        const avatar = document.createElement('div');
+        avatar.className = 'user-avatar';
+        // Si hay iniciales, mostrarlas; si no, icono
+        const initials = (username || email || '').toString().trim().split(/\s+/).slice(0,2).map(s => s[0] ? s[0].toUpperCase() : '').join('');
+        avatar.textContent = initials || 'U';
+
+        const info = document.createElement('div');
+        info.className = 'user-info';
+        const nameEl = document.createElement('p');
+        nameEl.className = 'user-name';
+        nameEl.textContent = username || '(sin usuario)';
+        const emailEl = document.createElement('p');
+        emailEl.className = 'user-email';
+        emailEl.textContent = email || '';
+        info.appendChild(nameEl);
+        info.appendChild(emailEl);
+
+        const controls = document.createElement('div');
+        controls.className = 'user-controls';
+
         const select = document.createElement('select');
         select.className = 'rol-select form-control form-control-sm';
-        const roles = ['admin','colaborador']; // solo tus dos roles reales
+        const roles = ['admin','colaborador'];
         roles.forEach(r => {
           const opt = document.createElement('option');
           opt.value = r; opt.text = r.charAt(0).toUpperCase() + r.slice(1);
@@ -336,7 +354,6 @@ document.addEventListener('DOMContentLoaded', function () {
           select.appendChild(opt);
         });
 
-        // habilitar cambio solo si el usuario actual tiene rol admin/superadmin
         if (!(currentUser && (currentUser.rol === 'admin' || currentUser.rol === 'superadmin'))) {
           select.setAttribute('disabled','disabled');
         } else {
@@ -355,7 +372,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const text = await r.text().catch(()=>null);
                 throw new Error('HTTP ' + r.status + (text ? ' - ' + text : ''));
               }
-              // opcional: mostrar mensaje de éxito
             } catch (err) {
               this.value = prev;
               alert('Error cambiando rol: ' + (err && err.message ? err.message : 'desconocido'));
@@ -364,17 +380,22 @@ document.addEventListener('DOMContentLoaded', function () {
           });
         }
 
-        tr.cells[2].appendChild(select);
-        usuariosTableBody.appendChild(tr);
+        controls.appendChild(select);
+
+        card.appendChild(avatar);
+        card.appendChild(info);
+        card.appendChild(controls);
+
+        usuariosCards.appendChild(card);
       });
 
       usuariosLoading.classList.add('d-none');
-      usuariosTableWrap.classList.remove('d-none');
+      usuariosCards.classList.remove('d-none');
       usuariosRetry.classList.add('d-none');
     } catch (err) {
       clearTimeout(timeoutId);
       usuariosLoading.classList.add('d-none');
-      usuariosTableWrap.classList.add('d-none');
+      usuariosCards.classList.add('d-none');
       const isAbort = err && (err.name === 'AbortError');
       usuariosError.textContent = isAbort ? 'La solicitud tardó demasiado.' : 'Error al cargar usuarios: ' + (err && err.message ? err.message : 'desconocido');
       usuariosError.classList.remove('d-none');
@@ -386,11 +407,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  function escapeHtml(s){ if (s===null||s===undefined) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
   initFabVisibility();
 });
 </script>
-
 
 {% endblock %}
