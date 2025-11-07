@@ -7,3 +7,8 @@ __pycache__/
 .venv-prod/ 
 .venv-prod/ 
 .venv-prod/ 
+.venv-prod/ 
+build/ 
+dist/ 
+*.pyc 
+__pycache__/ 
