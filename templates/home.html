@@ -159,8 +159,8 @@
   - El rol editor puede usar Agregar, Editar, Guardar y Cancelar
   - Solo admin puede eliminar (fotos y empleados)
   - Mantener botones visibles; JS valida permisos y muestra mensajes
-  - Cambio clave: la selección de fila se hará con doble click (igual que Editar).
-    Los clics simples ya no seleccionan ni cambian el panel de foto.
+  - Cambiado: la selección de fila se realiza ahora con doble click (dblclick).
+    El click simple ya no selecciona la fila ni carga la foto.
 */
 (function(){
   const CURRENT_ROLE = ("{{ rol or '' }}").toLowerCase();
@@ -319,49 +319,41 @@
     tabla.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
   }
 
-  // IMPORTANT: Single-click should not select a row any more.
-  // Keep click handler inert (no selection/photo fetch) to avoid the issue described.
-  // Double-click will handle selection + photo fetch + edit trigger.
-
-  // Remove any existing click listeners by not attaching them (we don't attach a click listener here).
-
+  // NOTE: removed single-click selection. Selection and photo-load are now handled on double-click.
+  // dblclick: select row + load photo. If shiftKey -> delete; else -> start edit (if allowed)
   tabla?.addEventListener('dblclick', async (ev) => {
     const tr = ev.target.closest('tr');
     if (!tr || tr.parentElement.tagName !== 'TBODY') return;
 
-    // On dblclick we both select and (if allowed) enter edit mode.
     clearSelection();
     tr.classList.add('selected');
 
-    // Update photo panel for this selected row
     const dpi = (tr.cells[0] && tr.cells[0].innerText || '').trim();
-    if (!dpi) {
-      clearPhotoPanel();
-    } else {
-      if (inputDpiUpload) inputDpiUpload.value = dpi;
-      if (inputDpiDelete) inputDpiDelete.value = dpi;
+    if (!dpi) { clearPhotoPanel(); return; }
+    if (inputDpiUpload) inputDpiUpload.value = dpi;
+    if (inputDpiDelete) inputDpiDelete.value = dpi;
 
-      try {
-        const res = await fetch(`/api/foto/${encodeURIComponent(dpi)}`, { cache: 'no-store' });
-        if (!res.ok) throw new Error('no-photo');
-        const j = await res.json();
-        if (j && j.url) {
-          if (fotoEmpleado) fotoEmpleado.src = `${j.url}?t=${Date.now()}`;
-          if (formSubir) formSubir.style.display = 'none';
-          if (formEliminar) formEliminar.style.display = 'block';
-        } else {
-          if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
-          if (formSubir) formSubir.style.display = 'block';
-          if (formEliminar) formEliminar.style.display = 'none';
-        }
-      } catch (e) {
+    // Load photo for the selected row (same behavior as single-click had)
+    try {
+      const res = await fetch(`/api/foto/${encodeURIComponent(dpi)}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error('no-photo');
+      const j = await res.json();
+      if (j && j.url) {
+        if (fotoEmpleado) fotoEmpleado.src = `${j.url}?t=${Date.now()}`;
+        if (formSubir) formSubir.style.display = 'none';
+        if (formEliminar) formEliminar.style.display = 'block';
+      } else {
         if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
         if (formSubir) formSubir.style.display = 'block';
         if (formEliminar) formEliminar.style.display = 'none';
       }
+    } catch (e) {
+      if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
+      if (formSubir) formSubir.style.display = 'block';
+      if (formEliminar) formEliminar.style.display = 'none';
     }
 
-    // If shiftKey on dblclick => delete (admin-only)
+    // If user held Shift while double-clicking => delete (admin only)
     if (ev.shiftKey) {
       if (CURRENT_ROLE !== 'admin') {
         flash('Permisos insuficientes para eliminar empleados', 'warning');
@@ -371,7 +363,7 @@
       return;
     }
 
-    // Otherwise treat dblclick as "editar" trigger (if role allows)
+    // Otherwise, attempt to start editing (only allowed for admin/colaborador)
     if (!['admin','colaborador'].includes(CURRENT_ROLE)) {
       flash('Permisos insuficientes para editar registros', 'warning');
       return;
@@ -383,17 +375,7 @@
     }
   });
 
-  // Provide keyboard accessibility: allow Enter on a focused row to act like dblclick (optional choice)
-  tabla?.addEventListener('keydown', (ev) => {
-    // Only process when focused element is inside a table row and Enter is pressed
-    if (ev.key !== 'Enter') return;
-    const tr = ev.target.closest('tr');
-    if (!tr || tr.parentElement.tagName !== 'TBODY') return;
-    // emulate dblclick behavior without requiring actual mouse dblclick
-    const dbl = new MouseEvent('dblclick', { bubbles: true, cancelable: true });
-    tr.dispatchEvent(dbl);
-  });
-
+  // Keep the rest of handlers (upload/delete photo) unchanged
   document.getElementById('btnSubirFoto')?.addEventListener('click', async () => {
     const dpi = inputDpiUpload && inputDpiUpload.value && inputDpiUpload.value.trim();
     if (!dpi) return flash('Selecciona una fila con DPI antes de subir foto', 'danger');
