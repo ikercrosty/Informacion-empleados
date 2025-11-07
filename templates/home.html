@@ -159,6 +159,8 @@
   - El rol editor puede usar Agregar, Editar, Guardar y Cancelar
   - Solo admin puede eliminar (fotos y empleados)
   - Mantener botones visibles; JS valida permisos y muestra mensajes
+  - Cambio clave: la selección de fila se hará con doble click (igual que Editar).
+    Los clics simples ya no seleccionan ni cambian el panel de foto.
 */
 (function(){
   const CURRENT_ROLE = ("{{ rol or '' }}").toLowerCase();
@@ -317,61 +319,79 @@
     tabla.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
   }
 
-  tabla?.addEventListener('click', async (ev) => {
-    const tr = ev.target.closest('tr');
-    if (!tr || tr.parentElement.tagName !== 'TBODY') return;
-    clearSelection();
-    tr.classList.add('selected');
+  // IMPORTANT: Single-click should not select a row any more.
+  // Keep click handler inert (no selection/photo fetch) to avoid the issue described.
+  // Double-click will handle selection + photo fetch + edit trigger.
 
-    const dpi = (tr.cells[0] && tr.cells[0].innerText || '').trim();
-    if (!dpi) { clearPhotoPanel(); return; }
-    if (inputDpiUpload) inputDpiUpload.value = dpi;
-    if (inputDpiDelete) inputDpiDelete.value = dpi;
-
-    try {
-      const res = await fetch(`/api/foto/${encodeURIComponent(dpi)}`, { cache: 'no-store' });
-      if (!res.ok) throw new Error('no-photo');
-      const j = await res.json();
-      if (j && j.url) {
-        if (fotoEmpleado) fotoEmpleado.src = `${j.url}?t=${Date.now()}`;
-        if (formSubir) formSubir.style.display = 'none';
-        if (formEliminar) formEliminar.style.display = 'block';
-      } else {
-        if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
-        if (formSubir) formSubir.style.display = 'block';
-        if (formEliminar) formEliminar.style.display = 'none';
-      }
-    } catch (e) {
-      if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
-      if (formSubir) formSubir.style.display = 'block';
-      if (formEliminar) formEliminar.style.display = 'none';
-    }
-  });
+  // Remove any existing click listeners by not attaching them (we don't attach a click listener here).
 
   tabla?.addEventListener('dblclick', async (ev) => {
     const tr = ev.target.closest('tr');
     if (!tr || tr.parentElement.tagName !== 'TBODY') return;
 
+    // On dblclick we both select and (if allowed) enter edit mode.
     clearSelection();
     tr.classList.add('selected');
 
+    // Update photo panel for this selected row
+    const dpi = (tr.cells[0] && tr.cells[0].innerText || '').trim();
+    if (!dpi) {
+      clearPhotoPanel();
+    } else {
+      if (inputDpiUpload) inputDpiUpload.value = dpi;
+      if (inputDpiDelete) inputDpiDelete.value = dpi;
+
+      try {
+        const res = await fetch(`/api/foto/${encodeURIComponent(dpi)}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error('no-photo');
+        const j = await res.json();
+        if (j && j.url) {
+          if (fotoEmpleado) fotoEmpleado.src = `${j.url}?t=${Date.now()}`;
+          if (formSubir) formSubir.style.display = 'none';
+          if (formEliminar) formEliminar.style.display = 'block';
+        } else {
+          if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
+          if (formSubir) formSubir.style.display = 'block';
+          if (formEliminar) formEliminar.style.display = 'none';
+        }
+      } catch (e) {
+        if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
+        if (formSubir) formSubir.style.display = 'block';
+        if (formEliminar) formEliminar.style.display = 'none';
+      }
+    }
+
+    // If shiftKey on dblclick => delete (admin-only)
     if (ev.shiftKey) {
       if (CURRENT_ROLE !== 'admin') {
         flash('Permisos insuficientes para eliminar empleados', 'warning');
         return;
       }
       await eliminarFilaSeleccionada(tr);
-    } else {
-      if (!['admin','colaborador'].includes(CURRENT_ROLE)) {
-        flash('Permisos insuficientes para editar registros', 'warning');
-        return;
-      }
-      if (typeof window.iniciarEdicion === 'function') {
-        try { window.iniciarEdicion(tr); } catch (e) { if (typeof window.iniciarEdicion === 'function') window.iniciarEdicion(); }
-      } else {
-        flash('Editar: acción iniciada', 'info');
-      }
+      return;
     }
+
+    // Otherwise treat dblclick as "editar" trigger (if role allows)
+    if (!['admin','colaborador'].includes(CURRENT_ROLE)) {
+      flash('Permisos insuficientes para editar registros', 'warning');
+      return;
+    }
+    if (typeof window.iniciarEdicion === 'function') {
+      try { window.iniciarEdicion(tr); } catch (e) { if (typeof window.iniciarEdicion === 'function') window.iniciarEdicion(); }
+    } else {
+      flash('Editar: acción iniciada', 'info');
+    }
+  });
+
+  // Provide keyboard accessibility: allow Enter on a focused row to act like dblclick (optional choice)
+  tabla?.addEventListener('keydown', (ev) => {
+    // Only process when focused element is inside a table row and Enter is pressed
+    if (ev.key !== 'Enter') return;
+    const tr = ev.target.closest('tr');
+    if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+    // emulate dblclick behavior without requiring actual mouse dblclick
+    const dbl = new MouseEvent('dblclick', { bubbles: true, cancelable: true });
+    tr.dispatchEvent(dbl);
   });
 
   document.getElementById('btnSubirFoto')?.addEventListener('click', async () => {
