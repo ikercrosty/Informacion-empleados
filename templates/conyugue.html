@@ -101,5 +101,222 @@
   else tryRegister(20);
 })();
 </script>
-{% endblock %}
 
+<script>
+(function(){
+  const metaEndpoint = document.getElementById('tablaConyugue')?.dataset?.endpoint || '/guardar_conyugue';
+  const CURRENT_ROLE = ("{{ session.get('rol','')|default('') }}").toLowerCase();
+
+  function flash(msg, type='info') {
+    const id = '__home_flash';
+    const prev = document.getElementById(id);
+    if (prev) prev.remove();
+    const d = document.createElement('div');
+    d.id = id;
+    d.className = `alert alert-${type} py-1 px-2 small position-fixed`;
+    d.style.top = '12px';
+    d.style.right = '12px';
+    d.style.zIndex = 9999;
+    d.innerText = msg;
+    document.body.appendChild(d);
+    setTimeout(()=> d.remove(), 2200);
+  }
+
+  (function installFetchGuard(){
+    const orig = window.fetch;
+    window.fetch = async function(input, init){
+      try {
+        const url = (typeof input === 'string') ? input : (input && input.url) || '';
+        const method = (init && init.method) ? init.method.toUpperCase() : 'GET';
+
+        let bodyObj = null;
+        if (init && init.body) {
+          if (typeof init.body === 'string') {
+            try { bodyObj = JSON.parse(init.body); } catch(e){}
+          } else if (init.body instanceof FormData) {
+            bodyObj = {};
+            for (const [k,v] of init.body.entries()) bodyObj[k]=v;
+          } else if (init.body instanceof URLSearchParams) {
+            bodyObj = {};
+            for (const [k,v] of init.body.entries()) bodyObj[k]=v;
+          }
+        }
+
+        if (url.includes('/guardar_empleado')) {
+          if (!['admin','colaborador'].includes(CURRENT_ROLE)) {
+            const isNew = Boolean(bodyObj && (bodyObj.nuevo === true || bodyObj.nuevo === 'true' || bodyObj.nuevo === '1' || bodyObj.nuevo === 1));
+            if (!isNew) {
+              flash('Permisos insuficientes para editar registros','warning');
+              return new Response(JSON.stringify({ mensaje: 'Permisos insuficientes (cliente)' }), { status: 403, headers: { 'Content-Type': 'application/json' }});
+            }
+          }
+        }
+
+        if (url.includes('/eliminar_foto')) {
+          if (CURRENT_ROLE !== 'admin') {
+            flash('Permisos insuficientes para eliminar foto','warning');
+            return new Response(JSON.stringify({ error: 'Permisos insuficientes (cliente)' }), { status: 403, headers: { 'Content-Type': 'application/json' }});
+          }
+        }
+
+        if (method === 'PUT' && url.match(/\/api\/empleado\/[^\/]+$/)) {
+          if (CURRENT_ROLE !== 'admin') {
+            flash('Permisos insuficientes para modificar empleado (cliente)','warning');
+            return new Response(JSON.stringify({ mensaje: 'Permisos insuficientes (cliente)' }), { status: 403, headers: { 'Content-Type': 'application/json' }});
+          }
+        }
+      } catch (e) {
+        // ignore guard errors
+      }
+      return orig.apply(this, arguments);
+    };
+  })();
+
+  // Buttons
+  document.getElementById('btnAgregar')?.addEventListener('click', (ev) => {
+    flash('Agregar: abre formulario (UX)', 'info');
+    if (typeof window.iniciarAgregar === 'function') window.iniciarAgregar();
+  });
+
+  document.getElementById('btnEditar')?.addEventListener('click', (ev) => {
+    if (!['admin','colaborador'].includes(CURRENT_ROLE)) {
+      flash('Permisos insuficientes para editar registros','warning');
+      return;
+    }
+    if (typeof window.iniciarEdicion === 'function') window.iniciarEdicion();
+    else flash('Editar: acción iniciada', 'info');
+  });
+
+  document.getElementById('btnGuardar')?.addEventListener('click', async (ev) => {
+    if (!['admin','colaborador'].includes(CURRENT_ROLE)) {
+      flash('Permisos insuficientes para guardar cambios','warning');
+      return;
+    }
+    if (typeof window.guardarCambios === 'function') {
+      try { await window.guardarCambios(); } catch (e) { flash('Error al guardar', 'danger'); }
+    } else {
+      flash('Guardar: acción ejecutada (implementa window.guardarCambios)', 'info');
+    }
+  });
+
+  document.getElementById('btnCancelar')?.addEventListener('click', (ev) => {
+    if (typeof window.cancelarEdicion === 'function') window.cancelarEdicion();
+    else flash('Cancelar: acción ejecutada', 'info');
+  });
+
+  // Photo panel elements (kept for compatibility if you add photo features later)
+  const TABLE_ID = 'tablaConyugue';
+  const tabla = document.getElementById(TABLE_ID);
+  const fotoEmpleado = null; // no photo panel in this view; kept as null to avoid accidental use
+
+  function clearSelection() {
+    tabla.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
+  }
+
+  function clearPhotoPanel() {
+    // placeholder: template does not expose photo elements here (consistent with original conyugue view)
+  }
+
+  async function eliminarFilaSeleccionada(tr) {
+    if (!tr) {
+      flash('Debes seleccionar una fila antes de eliminar', 'warning');
+      return;
+    }
+    const dpi = (tr.cells[0] && tr.cells[0].innerText || '').trim();
+    if (!dpi) { flash('No se pudo obtener el DPI de la fila seleccionada', 'danger'); return; }
+    if (!confirm(`¿Estás seguro de eliminar el registro con DPI ${dpi}? Esta acción no se puede deshacer.`)) return;
+    try {
+      const res = await fetch('/eliminar_empleado', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dpi })
+      });
+      const j = await res.json().catch(()=>({}));
+      if (res.ok) {
+        flash(j.mensaje || 'Empleado eliminado', 'success');
+        tr.remove();
+      } else {
+        flash(j.mensaje || j.error || 'Error al eliminar', 'danger');
+      }
+    } catch (err) {
+      flash('Error al eliminar: ' + (err.message || err), 'danger');
+    }
+  }
+
+  // If there's a server-controlled "Eliminar" button show in other templates, keep basic wiring
+  const btnEliminar = document.getElementById('btnEliminar');
+  if (btnEliminar) {
+    btnEliminar.addEventListener('click', async () => {
+      if (CURRENT_ROLE !== 'admin') { flash('Permisos insuficientes para eliminar empleados','warning'); return; }
+      const tr = tabla.querySelector('tbody tr.selected') || tabla.querySelector('tbody tr');
+      await eliminarFilaSeleccionada(tr);
+    });
+  }
+
+  // BLOCK single click selection completely for this table:
+  // Some other libs or code may add click handlers; to ensure no simple click selects or loads photo,
+  // we stop propagation and prevent selection on single-click events at this scope.
+  tabla?.addEventListener('click', function(ev){
+    // Only intercept clicks originating inside tbody rows to avoid breaking header interactions
+    const tr = ev.target.closest('tr');
+    if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+    // Prevent other click handlers from running (this is the "bloqueo de click en captura")
+    ev.stopImmediatePropagation();
+    ev.preventDefault();
+    // Do not select on single click; no UI change here
+  }, true); // use capture to preempt other registered listeners
+
+  // dblclick: select row and (if needed) start edit / deletion. This restores the original behavior but only on dblclick.
+  tabla?.addEventListener('dblclick', async (ev) => {
+    const tr = ev.target.closest('tr');
+    if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+
+    clearSelection();
+    tr.classList.add('selected');
+
+    // If there's a photo panel in other contexts, keep compatibility: attempt to set DPI fields if present
+    const dpiCell = (tr.cells[0] && tr.cells[0].innerText || '').trim();
+    if (!dpiCell) { clearPhotoPanel(); return; }
+
+    // If shiftKey on dblclick => delete (only admin)
+    if (ev.shiftKey) {
+      if (CURRENT_ROLE !== 'admin') {
+        flash('Permisos insuficientes para eliminar empleados','warning');
+        return;
+      }
+      await eliminarFilaSeleccionada(tr);
+      return;
+    }
+
+    // Otherwise, attempt to start editing (admin/colaborador)
+    if (!['admin','colaborador'].includes(CURRENT_ROLE)) {
+      flash('Permisos insuficientes para editar registros','warning');
+      return;
+    }
+    if (typeof window.iniciarEdicion === 'function') {
+      try { window.iniciarEdicion(tr); } catch (e) { try { window.iniciarEdicion(); } catch(_){} }
+    } else {
+      flash('Editar: acción iniciada', 'info');
+    }
+  });
+
+  // keep compatibility for tryRegister if registrarTabla sets up editable cells elsewhere
+  function tryRegister(retries = 20){
+    if (window.registrarTabla && typeof window.registrarTabla === 'function') {
+      window.registrarTabla('tablaConyugue', 8, '/guardar_conyugue', [
+        "Numero de DPI","Nombre","Apellidos",
+        "Nombres del conyugue","Apellidos del conyugue",
+        "Direccion del conyugue","Numero de telefono del conyugue","Correo electronico del conyugue"
+      ], [0,1,2]);
+      return;
+    }
+    if (retries <= 0) return;
+    setTimeout(()=>tryRegister(retries-1), 100);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ()=>tryRegister(20));
+  else tryRegister(20);
+
+})();
+</script>
+{% endblock %}
