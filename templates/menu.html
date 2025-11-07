@@ -93,17 +93,68 @@
 
 <!-- ESTILOS -->
 <style>
-/* Jumbotron */
+/* Jumbotron - diseño actualizado y optimizado para reemplazo directo */
 .jumbotron-welcome {
   position: relative;
-  background: linear-gradient(180deg,#f6f9ff,#f5f7fa);
-  padding: 3rem 1rem 4rem;
+  background: linear-gradient(180deg, #eef6ff 0%, #f7fbff 60%);
+  padding: 3.6rem 1rem 4.4rem;
   margin-bottom: 0;
   border-radius: 0 0 30px 30px;
-  box-shadow: 0 8px 30px rgba(2,6,23,0.06);
+  box-shadow: 0 12px 36px rgba(6, 24, 45, 0.06);
   overflow: hidden;
+  color: #0f1724;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
 }
-.jumbotron-welcome h1, .jumbotron-welcome p { color: #0f1724; }
+
+/* Contenido central dentro del jumbotron */
+.jumbotron-welcome .container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+.jumbotron-welcome h1 {
+  font-weight: 700;
+  color: #0b2540;
+  margin-bottom: .35rem;
+  font-size: 2.15rem;
+  letter-spacing: -0.02em;
+}
+.jumbotron-welcome p.lead {
+  color: #405266;
+  font-size: 1.02rem;
+  margin-bottom: 0;
+  max-width: 820px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Decorative wave placement */
+.jumbotron-welcome .wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  transform: translateZ(0);
+  opacity: 0.98;
+}
+
+/* Subtle accent shape (non-intrusive decorative blob) */
+.jumbotron-welcome::after {
+  content: "";
+  position: absolute;
+  right: -10%;
+  top: 8%;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle at 30% 30%, rgba(30,88,165,0.10), rgba(30,88,165,0.03) 40%, transparent 60%);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate3d(0,0,0);
+}
 
 /* Actions */
 .action-card { border-radius: 12px; padding: 1.6rem; transition: transform .18s ease, box-shadow .18s ease; }
