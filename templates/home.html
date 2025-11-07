@@ -159,6 +159,7 @@
   - El rol editor puede usar Agregar, Editar, Guardar y Cancelar
   - Solo admin puede eliminar (fotos y empleados)
   - Mantener botones visibles; JS valida permisos y muestra mensajes
+  - Ajuste adicional: cuando HAYA cualquier casilla habilitada para editar, el botón Guardar debe estar habilitado siempre
 */
 (function(){
   const CURRENT_ROLE = ("{{ rol or '' }}").toLowerCase();
@@ -267,6 +268,7 @@
   const inputDpiUpload = document.getElementById('inputDpiForUpload');
   const inputDpiDelete = document.getElementById('inputDpiForDelete');
   const fileFoto = document.getElementById('fileFoto');
+  const btnGuardar = document.getElementById('btnGuardar');
 
   function clearPhotoPanel() {
     if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
@@ -438,6 +440,8 @@
         "Religión","Correo Electronico","Puesto de trabajo","Tipo de contrato",
         "Jornada laboral","Duración del trabajo","Fecha de inicio laboral","Dias Laborales"
       ], []);
+      // registrarTabla probablemente controle la edición; después de registrar, activamos el monitor
+      installSaveButtonMonitor();
       return;
     }
     if (retries <= 0) return;
@@ -446,6 +450,95 @@
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ()=>tryRegister(20));
   else tryRegister(20);
+
+  /*
+    NUEVA LÓGICA (no altera la lógica existente):
+    - Queremos que "Guardar" esté habilitado siempre que exista alguna casilla habilitada para editar.
+    - Detectamos 3 señales de "edición activa" típicas:
+      1) Celdas con attribute contenteditable="true"
+      2) Inputs/selects/textareas dentro de la tabla que no estén disabled
+      3) Mutaciones en la tabla que activen lo anterior (por ejemplo registrarTabla activa contenteditable)
+    - La función updateGuardarState() centraliza la regla y habilita/deshabilita el botón.
+    - Se añade un MutationObserver y handlers de evento input/focus para respuesta inmediata.
+  */
+
+  function hasEditableCell() {
+    if (!tabla) return false;
+    // 1) contenteditable cells
+    const contentEditable = tabla.querySelector('[contenteditable="true"]');
+    if (contentEditable) return true;
+    // 2) enabled form controls inside the table body
+    const enabledControl = tabla.querySelector('tbody input:not([disabled]), tbody select:not([disabled]), tbody textarea:not([disabled])');
+    if (enabledControl) return true;
+    // 3) data-editable attribute (some table libs use custom flags)
+    const customEditable = tabla.querySelector('[data-editable="true"], [data-editable]');
+    if (customEditable) return true;
+    return false;
+  }
+
+  function updateGuardarState() {
+    if (!btnGuardar) return;
+    try {
+      const editable = hasEditableCell();
+      // enable only if editable AND user role allows saving
+      const allowedRole = ['admin','colaborador'].includes(CURRENT_ROLE);
+      btnGuardar.disabled = !(editable && allowedRole);
+      // visual cue: aria-disabled
+      btnGuardar.setAttribute('aria-disabled', btnGuardar.disabled ? 'true' : 'false');
+    } catch (e) {
+      // keep default state on error
+    }
+  }
+
+  // install mutation observer on the table to watch for edits enabled
+  let observerInstalled = false;
+  function installSaveButtonMonitor() {
+    if (!tabla || observerInstalled) {
+      updateGuardarState();
+      return;
+    }
+    observerInstalled = true;
+    // Initial check
+    updateGuardarState();
+
+    // Observe attribute changes and subtree changes
+    const mo = new MutationObserver((mutations) => {
+      let relevant = false;
+      for (const m of mutations) {
+        if (m.type === 'attributes') {
+          if (m.attributeName === 'contenteditable' || m.attributeName === 'disabled' || m.attributeName === 'data-editable') {
+            relevant = true; break;
+          }
+        } else if (m.type === 'childList') {
+          // child added/removed might include editable controls
+          if (m.addedNodes.length || m.removedNodes.length) { relevant = true; break; }
+        }
+      }
+      if (relevant) updateGuardarState();
+    });
+
+    mo.observe(tabla, { attributes: true, subtree: true, attributeFilter: ['contenteditable','disabled','data-editable'], childList: true });
+
+    // Also enable rapid response: listen to focus/input events inside table
+    tabla.addEventListener('focusin', (e) => {
+      // if user focuses an editable area, enable save
+      setTimeout(updateGuardarState, 0);
+    }, true);
+
+    tabla.addEventListener('input', (e) => {
+      setTimeout(updateGuardarState, 0);
+    }, true);
+
+    // In some table libs, editing mode is toggled by clicking "Editar" — watch that button too
+    document.getElementById('btnEditar')?.addEventListener('click', () => {
+      // small delay to allow registrarTabla or iniciarEdicion to set contenteditable
+      setTimeout(updateGuardarState, 150);
+    });
+
+    // Also ensure update when cancelar/agregar actions run
+    document.getElementById('btnCancelar')?.addEventListener('click', () => setTimeout(updateGuardarState, 100));
+    document.getElementById('btnAgregar')?.addEventListener('click', () => setTimeout(updateGuardarState, 100));
+  }
 
 })();
 </script>
