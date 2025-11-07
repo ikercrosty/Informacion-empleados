@@ -156,11 +156,9 @@
 <script>
 /*
   Cambios solicitados:
-  - El rol editor puede usar Agregar, Editar, Guardar y Cancelar
-  - Solo admin puede eliminar (fotos y empleados)
-  - Mantener botones visibles; JS valida permisos y muestra mensajes
-  - Cambiado: la selección de fila se realiza ahora con doble click (dblclick).
-    El click simple ya no selecciona la fila ni carga la foto.
+  - Selección y carga de foto SÓLO por doble click.
+  - Bloqueo de cualquier listener de click simple (captura) para evitar que otras partes activen selección con un click.
+  - No se modifica otra lógica de negocio.
 */
 (function(){
   const CURRENT_ROLE = ("{{ rol or '' }}").toLowerCase();
@@ -240,8 +238,14 @@
       flash('Permisos insuficientes para editar registros', 'warning');
       return;
     }
-    if (typeof window.iniciarEdicion === 'function') window.iniciarEdicion();
-    else flash('Editar: acción iniciada', 'info');
+    // btnEditar should operate only on a selected row; if your registrarTabla previously edited on single click,
+    // that behavior is now prevented by the click-capture blocker. BtnEditar calls iniciarEdicion() as before.
+    if (typeof window.iniciarEdicion === 'function') {
+      // prefer to pass the selected row if exists
+      const tabla = document.getElementById('tablaEmpleados');
+      const seleccionado = tabla && tabla.querySelector('tbody tr.selected');
+      try { if (seleccionado) window.iniciarEdicion(seleccionado); else window.iniciarEdicion(); } catch(e){ try{ window.iniciarEdicion(); }catch(_){} }
+    } else flash('Editar: acción iniciada', 'info');
   });
 
   document.getElementById('btnGuardar')?.addEventListener('click', async (ev) => {
@@ -319,21 +323,33 @@
     tabla.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
   }
 
-  // NOTE: removed single-click selection. Selection and photo-load are now handled on double-click.
-  // dblclick: select row + load photo. If shiftKey -> delete; else -> start edit (if allowed)
-  tabla?.addEventListener('dblclick', async (ev) => {
-    const tr = ev.target.closest('tr');
-    if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+  // --- BLOCK ALL single-click selection handlers (capture phase) ---
+  // This prevents third-party scripts or earlier listeners from acting on a single click.
+  // We only stop click events originating inside table body rows.
+  if (tabla) {
+    tabla.addEventListener('click', function(e){
+      // If a dblclick is occurring, clicks still fire; do not block clicks that are part of a dblclick sequence.
+      // We detect dblclick by checking e.detail: for browsers, detail==1 first click, detail==2 second click.
+      // We allow the browser to process dblclick (we won't call stopImmediatePropagation when detail>1).
+      if (e.detail && e.detail >= 2) return;
+      const tr = e.target.closest('tr');
+      if (tr && tr.parentElement && tr.parentElement.tagName === 'TBODY') {
+        // prevent other click handlers from selecting rows on single click
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        return;
+      }
+    }, true); // use capture to intercept early
+  }
 
-    clearSelection();
-    tr.classList.add('selected');
-
+  // Helper: load foto for a row
+  async function cargarFotoParaFila(tr) {
+    if (!tr) { clearPhotoPanel(); return; }
     const dpi = (tr.cells[0] && tr.cells[0].innerText || '').trim();
     if (!dpi) { clearPhotoPanel(); return; }
     if (inputDpiUpload) inputDpiUpload.value = dpi;
     if (inputDpiDelete) inputDpiDelete.value = dpi;
 
-    // Load photo for the selected row (same behavior as single-click had)
     try {
       const res = await fetch(`/api/foto/${encodeURIComponent(dpi)}`, { cache: 'no-store' });
       if (!res.ok) throw new Error('no-photo');
@@ -352,30 +368,43 @@
       if (formSubir) formSubir.style.display = 'block';
       if (formEliminar) formEliminar.style.display = 'none';
     }
+  }
 
-    // If user held Shift while double-clicking => delete (admin only)
-    if (ev.shiftKey) {
-      if (CURRENT_ROLE !== 'admin') {
-        flash('Permisos insuficientes para eliminar empleados', 'warning');
+  // dblclick: select row + load photo + optionally start edit or delete (shift+dblclick)
+  if (tabla) {
+    tabla.addEventListener('dblclick', async (ev) => {
+      const tr = ev.target.closest('tr');
+      if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+
+      clearSelection();
+      tr.classList.add('selected');
+
+      await cargarFotoParaFila(tr);
+
+      // shift + dblclick => delete (admin)
+      if (ev.shiftKey) {
+        if (CURRENT_ROLE !== 'admin') {
+          flash('Permisos insuficientes para eliminar empleados', 'warning');
+          return;
+        }
+        await eliminarFilaSeleccionada(tr);
         return;
       }
-      await eliminarFilaSeleccionada(tr);
-      return;
-    }
 
-    // Otherwise, attempt to start editing (only allowed for admin/colaborador)
-    if (!['admin','colaborador'].includes(CURRENT_ROLE)) {
-      flash('Permisos insuficientes para editar registros', 'warning');
-      return;
-    }
-    if (typeof window.iniciarEdicion === 'function') {
-      try { window.iniciarEdicion(tr); } catch (e) { if (typeof window.iniciarEdicion === 'function') window.iniciarEdicion(); }
-    } else {
-      flash('Editar: acción iniciada', 'info');
-    }
-  });
+      // dblclick triggers editing (if allowed)
+      if (!['admin','colaborador'].includes(CURRENT_ROLE)) {
+        flash('Permisos insuficientes para editar registros', 'warning');
+        return;
+      }
+      if (typeof window.iniciarEdicion === 'function') {
+        try { window.iniciarEdicion(tr); } catch (e) { try { window.iniciarEdicion(); } catch(_){} }
+      } else {
+        flash('Editar: acción iniciada', 'info');
+      }
+    });
+  }
 
-  // Keep the rest of handlers (upload/delete photo) unchanged
+  // Keep upload/delete photo handlers unchanged
   document.getElementById('btnSubirFoto')?.addEventListener('click', async () => {
     const dpi = inputDpiUpload && inputDpiUpload.value && inputDpiUpload.value.trim();
     if (!dpi) return flash('Selecciona una fila con DPI antes de subir foto', 'danger');
