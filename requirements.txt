@@ -12,3 +12,4 @@ typing_extensions==4.7.1
 waitress==2.1.2
 Werkzeug==2.2.3
 zipp==3.15.0
+gunicorn==23.0.0
