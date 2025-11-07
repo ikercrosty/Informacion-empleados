@@ -10,5 +10,6 @@ __pycache__/
 .venv-prod/ 
 build/ 
 dist/ 
+.env
 *.pyc 
 __pycache__/ 
