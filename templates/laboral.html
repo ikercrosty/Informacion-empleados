@@ -9,10 +9,10 @@
           Referencias Laborales
         </h1>
         <p class="text-muted mb-2" style="font-size:01.20rem;">
-Historial y referencias laborales de los empleados
-<br>
-<br>
-<br>
+          Historial y referencias laborales de los empleados
+        <br>
+        <br>
+        <br>
         </p>
         <p class="text-muted mb-1" style="font-size:0.65rem;">
         'Presionar "Agrega" para poder agregar un nuevo empleado.'
@@ -21,7 +21,7 @@ Historial y referencias laborales de los empleados
         'Hacer doble click en una fila para poder "Editar".'
         </p>
         <p class="text-muted mb-1" style="font-size:0.65rem;">
-        'Siempre presionar el botón guardar para conservar los cambios.''
+        'Siempre presionar el botón guardar para conservar los cambios.'
         </p>
 
         <div class="d-flex flex-wrap gap-2 align-items-center mt-2">
@@ -102,6 +102,107 @@ Historial y referencias laborales de los empleados
   }
   if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', ()=>tryRegister(20));
   else tryRegister(20);
+})();
+</script>
+
+<script>
+/*
+  Cambios aplicados:
+  - Bloqueo robusto de clicks simples (handler en fase capture) para evitar que otras librerías
+    o partes del código sigan reaccionando al evento 'click' sobre filas.
+  - Selección, carga de foto e inicio de edición quedan EXCLUSIVAMENTE en dblclick.
+  - No se alteró la lógica de negocio: solo se previenen efectos por click simple.
+*/
+(function(){
+  const TABLE_ID = 'tablaLaboral';
+  const tabla = document.getElementById(TABLE_ID);
+
+  function clearSelection() {
+    if (!tabla) return;
+    tabla.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
+  }
+
+  // Instalamos un handler en fase capture para bloquear propagation de clicks simples sobre filas
+  let clickCaptureInstalled = false;
+  function installClickBlocker() {
+    if (!tabla || clickCaptureInstalled) return;
+    clickCaptureInstalled = true;
+
+    tabla.addEventListener('click', function captureBlock(ev) {
+      const tr = ev.target.closest('tr');
+      if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+      // Detener ejecución de handlers añadidos después de este punto
+      ev.stopImmediatePropagation();
+    }, true);
+  }
+
+  function tryInstallClickBlocker(retries=20) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => installClickBlocker());
+    } else {
+      installClickBlocker();
+    }
+    if (!clickCaptureInstalled && retries>0) setTimeout(()=>tryInstallClickBlocker(retries-1), 100);
+  }
+  tryInstallClickBlocker(20);
+
+  // Handlers en dblclick: seleccionar fila, preparar DPI y (si procede) iniciar edición o cargar foto
+  tabla?.addEventListener('dblclick', async function(ev){
+    const tr = ev.target.closest('tr');
+    if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+
+    clearSelection();
+    tr.classList.add('selected');
+
+    // Obtener DPI de la fila
+    const dpi = (tr.cells[0] && tr.cells[0].innerText || '').trim();
+
+    // Actualizar inputs ocultos o paneles si existen (compatibilidad con otras vistas)
+    const fotoImg = document.getElementById('fotoEmpleado');
+    const formSubir = document.getElementById('formSubirFoto');
+    const formEliminar = document.getElementById('formEliminarFoto');
+    const inputDpiUpload = document.getElementById('inputDpiForUpload');
+    const inputDpiDelete = document.getElementById('inputDpiForDelete');
+
+    if (inputDpiUpload) inputDpiUpload.value = dpi || '';
+    if (inputDpiDelete) inputDpiDelete.value = dpi || '';
+
+    // Cargar foto si hay elemento fotoEmpleado y endpoint disponible
+    if (dpi && fotoImg) {
+      try {
+        const res = await fetch(`/api/foto/${encodeURIComponent(dpi)}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error('no-photo');
+        const j = await res.json().catch(()=>null);
+        if (j && j.url) {
+          fotoImg.src = `${j.url}?t=${Date.now()}`;
+          if (formSubir) formSubir.style.display = 'none';
+          if (formEliminar) formEliminar.style.display = 'block';
+        } else {
+          fotoImg.src = fotoImg.dataset?.default || fotoImg.src;
+          if (formSubir) formSubir.style.display = 'block';
+          if (formEliminar) formEliminar.style.display = 'none';
+        }
+      } catch (e) {
+        if (fotoImg) fotoImg.src = fotoImg.dataset?.default || fotoImg.src;
+        if (formSubir) formSubir.style.display = 'block';
+        if (formEliminar) formEliminar.style.display = 'none';
+      }
+    }
+
+    // Intentar iniciar edición si existe la función (mantenemos comportamiento original)
+    try {
+      if (typeof window.iniciarEdicion === 'function') {
+        try { window.iniciarEdicion(tr); } catch (e) { window.iniciarEdicion(); }
+      }
+    } catch (_) { /* no-op */ }
+  });
+
+  // Si la tabla se re-renderiza, re-instalar el bloqueador
+  const obs = new MutationObserver(() => { tryInstallClickBlocker(3); });
+  if (tabla) obs.observe(tabla, { childList: true, subtree: true, attributes: true });
+
+  window.addEventListener('beforeunload', () => { try { obs.disconnect(); } catch(_){} });
+
 })();
 </script>
 {% endblock %}
