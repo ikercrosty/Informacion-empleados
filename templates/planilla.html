@@ -140,26 +140,6 @@ const SERVER_SYNC_KEY = STORAGE_KEY + '_server_meta';
 function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
 function formatNum(n){ return Number(n).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); }
 function withQ(n){ return 'Q ' + formatNum(n); }
-// --- Helpers: lock / unlock sueldo inputs ---
-function lockSueldoInput(inp) {
-  if (!inp) return;
-  inp.classList.add('sueldo-locked');
-  inp.setAttribute('readonly', 'readonly');
-  inp.setAttribute('tabindex', '-1');
-  inp.setAttribute('aria-disabled', 'true');
-  const tr = inp.closest('tr');
-  if (tr) tr.dataset.sueldoLocked = '1';
-}
-function unlockSueldoInput(inp) {
-  if (!inp) return;
-  inp.classList.remove('sueldo-locked');
-  inp.removeAttribute('readonly');
-  inp.removeAttribute('tabindex');
-  inp.removeAttribute('aria-disabled');
-  const tr = inp.closest('tr');
-  if (tr) tr.dataset.sueldoLocked = '0';
-}
-
 
 function computeHorasMontoMensual(sueldo, dias, horas) {
   if (!dias || dias <= 0) return 0;
@@ -315,21 +295,17 @@ function restoreTable(data) {
       <td><input class="form-control observaciones" type="text" value="${escapeHtml(r.observ||'')}"></td>
     `;
     // If sueldo > 0, lock it (require admin to unlock)
-// If sueldo > 0, lock it (require admin to unlock)
-const sueldoInput = tr.querySelector('input.sueldo');
-const sueldoNum = Number(r.sueldo || 0);
-if (sueldoInput) {
-  if (sueldoNum > 0) {
-    // bloquear completamente (sin selección ni foco)
-    lockSueldoInput(sueldoInput);
-    sueldoInput.setAttribute('data-prev', sueldoNum.toFixed(2));
-  } else {
-    // desbloqueado por defecto
-    unlockSueldoInput(sueldoInput);
-    sueldoInput.setAttribute('data-prev', (0).toFixed(2));
-  }
-}
-
+    const sueldoInput = tr.querySelector('input.sueldo');
+    if (sueldoInput) {
+      if (Number(r.sueldo || 0) > 0) {
+        sueldoInput.setAttribute('readonly','readonly');
+        tr.dataset.sueldoLocked = '1';
+        sueldoInput.setAttribute('data-prev', Number(r.sueldo || 0).toFixed(2));
+      } else {
+        tr.dataset.sueldoLocked = '0';
+        sueldoInput.setAttribute('data-prev', Number(r.sueldo || 0).toFixed(2));
+      }
+    }
     tr.dataset._hextras = Number(r.hextras||0);
     tr.dataset._isrValue = Number(r.isr||0);
     tbody.appendChild(tr);
@@ -542,29 +518,13 @@ function createRowHtml(index) {
 
 document.addEventListener('blur', (e) => {
   if (!e.target.classList) return;
-  if (e.target.classList.contains('sueldo')) {
-    // aplicar mitad si corresponde
-    try { applyHalfToSueldoInput(e.target); } catch (err) { /* ignore if not present */ }
-
-    const tr = e.target.closest('tr');
-    const n = parseFloat(e.target.value) || 0;
-    e.target.setAttribute('data-prev', Number(n).toFixed(2));
-
-    if (n > 0) {
-      // bloquear completamente (sin selección ni foco)
-      lockSueldoInput(e.target);
-      e.target.classList.remove('sueldo-admin-edit');
-    } else {
-      // desbloquear para edición
-      unlockSueldoInput(e.target);
+  if (e.target.classList.contains('nombre')) {
+    const val = (e.target.value || '').trim();
+    if (val !== '') {
+      e.target.setAttribute('readonly', 'readonly');
     }
-
-    if (tr) recalcRow(tr);
-    recalcTotals();
-    try { saveToLocalAndServer(); } catch (err) { console.warn('save error', err); }
   }
 }, true);
-
 
 function enforceFixedFieldsOnAllRows() {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
@@ -589,13 +549,6 @@ document.getElementById('addRow').addEventListener('click', () => {
   tr.dataset.new = "true"; // mark as user-created
   tr.innerHTML = createRowHtml(newIndex);
   tbody.appendChild(tr);
-  // Ensure new row sueldo is unlocked explicitly
-const sueldoInp = tr.querySelector('input.sueldo');
-if (sueldoInp) {
-  unlockSueldoInput(sueldoInp);
-  sueldoInp.setAttribute('data-prev', Number(0).toFixed(2));
-}
-
 
   const nombreInp = tr.querySelector('input.nombre');
   if (nombreInp) nombreInp.removeAttribute('readonly');
@@ -1192,16 +1145,6 @@ document.getElementById('btnGuardarPlanilla').addEventListener('click', async ()
 
 /* ------------------ Initialization ------------------ */
 document.addEventListener('DOMContentLoaded', async () => {
-// Normalizar bloqueo/desbloqueo según valores actuales y reaplicar guardInput
-document.querySelectorAll('input.sueldo').forEach(inp => {
-  const n = parseFloat(inp.value) || 0;
-  if (n > 0) lockSueldoInput(inp);
-  else unlockSueldoInput(inp);
-  // si tienes guardInput para listeners, reaplicar
-  if (typeof guardInput === 'function') guardInput(inp);
-});
-
-
   const restored = loadFromLocal();
 
   initBonosYDias();
@@ -1210,61 +1153,52 @@ document.querySelectorAll('input.sueldo').forEach(inp => {
   // Initialize sueldo locking UI and button based on user role
   await initSueldoEditControl();
 
-// activar edición admin: desbloquear temporalmente los sueldos bloqueados
-document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
-  if (tr.dataset.sueldoLocked === '1') {
-    const inp = tr.querySelector('input.sueldo');
-    if (inp) {
-      inp.classList.add('sueldo-admin-edit');
-      unlockSueldoInput(inp); // permite selección y foco temporalmente
-    }
-  }
-});
-btn.textContent = 'Finalizar edición sueldos';
-btn.dataset.editing = '1';
-btn.classList.remove('btn-warning');
-btn.classList.add('btn-danger');
-// activar edición admin: desbloquear temporalmente los sueldos bloqueados
-document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
-  if (tr.dataset.sueldoLocked === '1') {
-    const inp = tr.querySelector('input.sueldo');
-    if (inp) {
-      inp.classList.add('sueldo-admin-edit');
-      unlockSueldoInput(inp); // permite selección y foco temporalmente
-    }
-  }
-});
-btn.textContent = 'Finalizar edición sueldos';
-btn.dataset.editing = '1';
-btn.classList.remove('btn-warning');
-btn.classList.add('btn-danger');
+  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
+  recalcTotals();
 
-// finalizar edición admin: volver a bloquear según valor
-document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
-  const inp = tr.querySelector('input.sueldo');
-  if (inp && inp.classList.contains('sueldo-admin-edit')) {
-    inp.classList.remove('sueldo-admin-edit');
-    const n = parseFloat(inp.value) || 0;
-    if (n > 0) {
-      lockSueldoInput(inp);
-      inp.setAttribute('data-prev', Number(n).toFixed(2));
-    } else {
-      unlockSueldoInput(inp);
-      inp.setAttribute('data-prev', Number(n).toFixed(2));
-    }
-  }
-});
-btn.textContent = 'Editar sueldos';
-btn.dataset.editing = '0';
-btn.classList.remove('btn-danger');
-btn.classList.add('btn-warning');
-recalcTotals();
-try { saveToLocalAndServer(); } catch (e) { console.warn('save error', e); }
-
+  populateFromEmployeesIfEmpty();
 
   // do not force extra save here; autosave runs on edits/add/delete
 });
 
+// Prevent selection/focus/click on sueldo inputs unless admin-edit mode active
+(function installSueldoInteractionGuard() {
+  function guardInput(inp) {
+    if (!inp) return;
+    // prevent mouse/pointer selection for non-admin-editable state
+    inp.addEventListener('mousedown', (e) => {
+      if (!inp.classList.contains('sueldo-admin-edit')) e.preventDefault();
+    }, { passive: false });
+
+    // prevent keyboard focus
+    inp.addEventListener('focus', (e) => {
+      if (!inp.classList.contains('sueldo-admin-edit')) inp.blur();
+    }, true);
+
+    // also prevent selection via touchstart
+    inp.addEventListener('touchstart', (e) => {
+      if (!inp.classList.contains('sueldo-admin-edit')) e.preventDefault();
+    }, { passive: false });
+  }
+
+  // Initialize guards for existing inputs
+  document.querySelectorAll('input.sueldo').forEach(guardInput);
+
+  // Keep guard for future rows (MutationObserver simple)
+  const tbody = document.querySelector('#planillaTable tbody');
+  if (tbody) {
+    const mo = new MutationObserver((mut) => {
+      for (const m of mut) {
+        m.addedNodes && m.addedNodes.forEach(n => {
+          if (n.nodeType === 1) {
+            n.querySelectorAll && n.querySelectorAll('input.sueldo').forEach(guardInput);
+          }
+        });
+      }
+    });
+    mo.observe(tbody, { childList: true, subtree: true });
+  }
+})();
 
 </script>
 
@@ -1541,30 +1475,6 @@ table.table tbody tr:first-child td {
 }
 #planillaTable tfoot tr td:last-child {
   border-right: none;
-  /* evita selección y cualquier interacción visual cuando está bloqueado */
-.sueldo-locked {
-  pointer-events: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  outline: none !important;
-}
-
-.sueldo-locked {
-  pointer-events: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  outline: none !important;
-}
-
-/* cuando el admin habilita edición temporal, se usa esta clase */
-.sueldo-admin-edit {
-  pointer-events: auto !important;
-  user-select: text !important;
-}
 }
 </style>
 
