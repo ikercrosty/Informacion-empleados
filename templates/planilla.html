@@ -1174,6 +1174,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Prevent selection/focus/click on sueldo inputs unless admin-edit mode active
 (function installSueldoInteractionGuard() {
   function guardInput(inp) {
+ 
+    // prevent keyboard focus
+    inp.addEventListener('focus', (e) => {
+      if (!inp.classList.contains('sueldo-admin-edit')) inp.blur();
+    }, true);
+
+    // also prevent selection via touchstart
+    inp.addEventListener('touchstart', (e) => {
+      if (!inp.classList.contains('sueldo-admin-edit')) e.preventDefault();
+    }, { passive: false });
+  }
+
+  // Initialize guards for existing inputs
+  document.querySelectorAll('input.sueldo').forEach(guardInput);
+
+  // Keep guard for future rows (MutationObserver simple)
   const tbody = document.querySelector('#planillaTable tbody');
   if (tbody) {
     const mo = new MutationObserver((mut) => {
@@ -1187,7 +1203,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     mo.observe(tbody, { childList: true, subtree: true });
   }
-}
 })();
 
 </script>
