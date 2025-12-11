@@ -294,18 +294,22 @@ function restoreTable(data) {
       <td><input class="form-control medio-pago" type="text" value="${escapeHtml(r.medioPago||'')}"></td>
       <td><input class="form-control observaciones" type="text" value="${escapeHtml(r.observ||'')}"></td>
     `;
+  
     // If sueldo > 0, lock it (require admin to unlock)
-    const sueldoInput = tr.querySelector('input.sueldo');
-    if (sueldoInput) {
-      if (Number(r.sueldo || 0) > 0) {
-        sueldoInput.setAttribute('readonly','readonly');
-        tr.dataset.sueldoLocked = '1';
-        sueldoInput.setAttribute('data-prev', Number(r.sueldo || 0).toFixed(2));
-      } else {
-        tr.dataset.sueldoLocked = '0';
-        sueldoInput.setAttribute('data-prev', Number(r.sueldo || 0).toFixed(2));
-      }
-    }
+const sueldoInput = tr.querySelector('input.sueldo');
+const sueldoNum = Number(r.sueldo || 0);
+if (sueldoInput) {
+  if (sueldoNum > 0) {
+    // bloquear completamente (sin selección ni foco)
+    lockSueldoInput(sueldoInput);
+    sueldoInput.setAttribute('data-prev', sueldoNum.toFixed(2));
+  } else {
+    // desbloqueado por defecto
+    unlockSueldoInput(sueldoInput);
+    sueldoInput.setAttribute('data-prev', (0).toFixed(2));
+  }
+}
+
     tr.dataset._hextras = Number(r.hextras||0);
     tr.dataset._isrValue = Number(r.isr||0);
     tbody.appendChild(tr);
@@ -436,26 +440,28 @@ document.addEventListener('input', (e) => {
 document.addEventListener('blur', (e) => {
   if (!e.target.classList) return;
   if (e.target.classList.contains('sueldo')) {
-    // apply half exactly once per blur via the centralized function below
-    applyHalfToSueldoInput(e.target);
+    // aplicar mitad si corresponde
+    try { applyHalfToSueldoInput(e.target); } catch (err) { /* ignore if not present */ }
+
     const tr = e.target.closest('tr');
     const n = parseFloat(e.target.value) || 0;
-    // store previous value for potential revert when non-admin tries to edit
     e.target.setAttribute('data-prev', Number(n).toFixed(2));
+
     if (n > 0) {
-      // lock for non-admins
-      e.target.setAttribute('readonly','readonly');
-      if (tr) tr.dataset.sueldoLocked = '1';
-      // remove admin-edit marker if present
+      // bloquear completamente (sin selección ni foco)
+      lockSueldoInput(e.target);
       e.target.classList.remove('sueldo-admin-edit');
     } else {
-      if (tr) tr.dataset.sueldoLocked = '0';
+      // desbloquear para edición
+      unlockSueldoInput(e.target);
     }
+
     if (tr) recalcRow(tr);
     recalcTotals();
     try { saveToLocalAndServer(); } catch (err) { console.warn('save error', err); }
   }
 }, true);
+
 
 function initBonosYDias() {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
@@ -549,6 +555,13 @@ document.getElementById('addRow').addEventListener('click', () => {
   tr.dataset.new = "true"; // mark as user-created
   tr.innerHTML = createRowHtml(newIndex);
   tbody.appendChild(tr);
+  // Ensure new row sueldo is unlocked explicitly
+const sueldoInp = tr.querySelector('input.sueldo');
+if (sueldoInp) {
+  unlockSueldoInput(sueldoInp);
+  sueldoInp.setAttribute('data-prev', Number(0).toFixed(2));
+}
+
 
   const nombreInp = tr.querySelector('input.nombre');
   if (nombreInp) nombreInp.removeAttribute('readonly');
@@ -1145,6 +1158,7 @@ document.getElementById('btnGuardarPlanilla').addEventListener('click', async ()
 
 /* ------------------ Initialization ------------------ */
 document.addEventListener('DOMContentLoaded', async () => {
+
   const restored = loadFromLocal();
 
   initBonosYDias();
@@ -1152,16 +1166,79 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Initialize sueldo locking UI and button based on user role
   await initSueldoEditControl();
+// --- Activar edición admin: desbloquear temporalmente los sueldos bloqueados ---
+document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
+  if (tr.dataset.sueldoLocked === '1') {
+    const inp = tr.querySelector('input.sueldo');
+    if (inp) {
+      // marcar como edición admin y permitir interacción temporalmente
+      inp.classList.add('sueldo-admin-edit');
+      unlockSueldoInput(inp); // permite selección y foco temporalmente
+    }
+  }
+});
 
-  document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
-  recalcTotals();
+// actualizar estado del botón y apariencia
+btn.textContent = 'Finalizar edición sueldos';
+btn.dataset.editing = '1';
+btn.classList.remove('btn-warning');
+btn.classList.add('btn-danger');
+
+// finalizar edición admin: volver a bloquear según valor
+document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
+  const inp = tr.querySelector('input.sueldo');
+  if (inp && inp.classList.contains('sueldo-admin-edit')) {
+    inp.classList.remove('sueldo-admin-edit');
+    const n = parseFloat(inp.value) || 0;
+    if (n > 0) {
+      lockSueldoInput(inp);
+      inp.setAttribute('data-prev', Number(n).toFixed(2));
+    } else {
+      unlockSueldoInput(inp);
+      inp.setAttribute('data-prev', Number(n).toFixed(2));
+    }
+  }
+});
+btn.textContent = 'Editar sueldos';
+btn.dataset.editing = '0';
+btn.classList.remove('btn-danger');
+btn.classList.add('btn-warning');
+recalcTotals();
+try { saveToLocalAndServer(); } catch (e) { console.warn('save error', e); }
+
 
   populateFromEmployeesIfEmpty();
 
   // do not force extra save here; autosave runs on edits/add/delete
 });
+// Normalizar bloqueo/desbloqueo según valores actuales y reaplicar guardInput
+document.querySelectorAll('input.sueldo').forEach(inp => {
+  const n = parseFloat(inp.value) || 0;
+  if (n > 0) lockSueldoInput(inp);
+  else unlockSueldoInput(inp);
+  if (typeof guardInput === 'function') guardInput(inp);
+});
 
-// Prevent selection/focus/click on sueldo inputs unless admin-edit mode active
+
+// --- Helpers: lock / unlock sueldo inputs ---
+function lockSueldoInput(inp) {
+  if (!inp) return;
+  inp.classList.add('sueldo-locked');
+  inp.setAttribute('readonly', 'readonly');
+  inp.setAttribute('tabindex', '-1');
+  inp.setAttribute('aria-disabled', 'true');
+  const tr = inp.closest('tr');
+  if (tr) tr.dataset.sueldoLocked = '1';
+}
+function unlockSueldoInput(inp) {
+  if (!inp) return;
+  inp.classList.remove('sueldo-locked');
+  inp.removeAttribute('readonly');
+  inp.removeAttribute('tabindex');
+  inp.removeAttribute('aria-disabled');
+  const tr = inp.closest('tr');
+  if (tr) tr.dataset.sueldoLocked = '0';
+}
 
 </script>
 
@@ -1439,6 +1516,20 @@ table.table tbody tr:first-child td {
 #planillaTable tfoot tr td:last-child {
   border-right: none;
 }
+  .sueldo-locked {
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  outline: none !important;
+}
+.sueldo-admin-edit {
+  pointer-events: auto !important;
+  user-select: text !important;
+}
+
+
 </style>
 
 {% endblock %}
