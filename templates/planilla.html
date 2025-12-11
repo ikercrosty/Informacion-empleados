@@ -1036,6 +1036,7 @@ function startServerPolling() {
   pollHandle = setInterval(pollServerPlanilla, POLL_INTERVAL_MS);
 }
 
+
 /* ------------------ populate behavior on load (unchanged) ------------------ */
 
 async function populateFromEmployeesIfEmpty() {
@@ -1170,6 +1171,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // do not force extra save here; autosave runs on edits/add/delete
 });
+// Bloquea un input sueldo: quita foco/tab y aplica clase que impide selección
+function lockSueldoInput(inp) {
+  if (!inp) return;
+  inp.classList.add('sueldo-locked');
+  inp.setAttribute('readonly', 'readonly');   // mantiene la semántica de bloqueo
+  inp.setAttribute('tabindex', '-1');         // lo saca del tab order
+  // opcional: aria-disabled para accesibilidad
+  inp.setAttribute('aria-disabled', 'true');
+  // marcar la fila
+  const tr = inp.closest('tr');
+  if (tr) tr.dataset.sueldoLocked = '1';
+}
+
+// Desbloquea un input sueldo (para edición)
+function unlockSueldoInput(inp) {
+  if (!inp) return;
+  inp.classList.remove('sueldo-locked');
+  inp.removeAttribute('readonly');            // si quieres mantener readonly, ajusta según tu lógica
+  inp.removeAttribute('tabindex');            // vuelve a permitir tab
+  inp.removeAttribute('aria-disabled');
+  const tr = inp.closest('tr');
+  if (tr) tr.dataset.sueldoLocked = '0';
+}
+
 
 
 </script>
@@ -1447,6 +1472,22 @@ table.table tbody tr:first-child td {
 }
 #planillaTable tfoot tr td:last-child {
   border-right: none;
+  /* evita selección y cualquier interacción visual cuando está bloqueado */
+.sueldo-locked {
+  pointer-events: none;        /* impide clicks/taps */
+  user-select: none;           /* impide selección de texto */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  outline: none !important;    /* evita outline al recibir foco accidental */
+}
+
+/* cuando el admin habilita edición temporal, se usa esta clase */
+.sueldo-admin-edit {
+  pointer-events: auto !important;
+  user-select: text !important;
+}
+
 }
 </style>
 
