@@ -344,56 +344,81 @@ async function whoamiRole() {
 }
 
 async function initSueldoEditControl() {
-  const role = await whoamiRole();
+  // Mostrar el botón siempre (todos lo ven)
   const btn = document.getElementById('btnEditarSueldo');
   if (!btn) return;
-  if (role === 'admin') {
-    btn.style.display = '';
-    btn.dataset.admin = '1';
-  } else {
-    btn.style.display = 'none';
+
+  // Inicializar estado: no en modo edición
+  btn.dataset.editing = '0';
+  btn.textContent = 'Editar sueldos';
+  btn.classList.remove('btn-danger');
+  btn.classList.add('btn-warning');
+  btn.style.display = ''; // visible para todos
+
+  // Opcional: marcar dataset.admin según rol (útil para info interna)
+  try {
+    const r = await fetch('/whoami', { cache: 'no-store' });
+    if (r.ok) {
+      const j = await r.json();
+      const role = (j && j.rol) ? String(j.rol).toLowerCase() : '';
+      btn.dataset.admin = (role === 'admin') ? '1' : '0';
+    } else {
+      btn.dataset.admin = '0';
+    }
+  } catch (e) {
     btn.dataset.admin = '0';
   }
 
-  // Admin toggles "edit mode" for locked sueldo fields
+  // Click handler: siempre visible, pero solo admin puede activar edición
   btn.addEventListener('click', async () => {
-    // double-check role server-side
-    const roleNow = await whoamiRole();
+    // Verificar rol en el servidor al momento del click
+    let roleNow = '';
+    try {
+      const r2 = await fetch('/whoami', { cache: 'no-store' });
+      if (r2.ok) {
+        const j2 = await r2.json();
+        roleNow = (j2 && j2.rol) ? String(j2.rol).toLowerCase() : '';
+      }
+    } catch (err) {
+      roleNow = '';
+    }
+
+    // Si no es admin, mostrar mensaje y no permitir editar
     if (roleNow !== 'admin') {
       alert('Permisos insuficientes. Solo administradores pueden editar sueldos.');
       return;
     }
+
+    // Si es admin, alternar modo edición
     const editing = btn.dataset.editing === '1';
     if (!editing) {
-      // enable locked sueldo inputs for admin to edit
+      // activar edición admin: desbloquear temporalmente los sueldos bloqueados
       document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
         if (tr.dataset.sueldoLocked === '1') {
           const inp = tr.querySelector('input.sueldo');
           if (inp) {
-            inp.removeAttribute('readonly');
             inp.classList.add('sueldo-admin-edit');
+            // permitir interacción temporalmente
+            try { unlockSueldoInput(inp); } catch (e) { inp.removeAttribute('readonly'); }
           }
         }
       });
       btn.textContent = 'Finalizar edición sueldos';
       btn.dataset.editing = '1';
-      // visually indicate we are in admin-edit mode
       btn.classList.remove('btn-warning');
       btn.classList.add('btn-danger');
     } else {
-      // end admin editing mode: remove admin-edit markers; inputs will re-lock on blur or we force-lock now
+      // finalizar edición admin: volver a bloquear según valor
       document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
         const inp = tr.querySelector('input.sueldo');
         if (inp && inp.classList.contains('sueldo-admin-edit')) {
           inp.classList.remove('sueldo-admin-edit');
-          // If value is set, re-lock; else keep unlocked
           const n = parseFloat(inp.value) || 0;
           if (n > 0) {
-            inp.setAttribute('readonly','readonly');
-            tr.dataset.sueldoLocked = '1';
+            try { lockSueldoInput(inp); } catch (e) { inp.setAttribute('readonly','readonly'); tr.dataset.sueldoLocked = '1'; }
             inp.setAttribute('data-prev', Number(n).toFixed(2));
           } else {
-            tr.dataset.sueldoLocked = '0';
+            try { unlockSueldoInput(inp); } catch (e) { inp.removeAttribute('readonly'); tr.dataset.sueldoLocked = '0'; }
             inp.setAttribute('data-prev', Number(n).toFixed(2));
           }
         }
@@ -403,10 +428,11 @@ async function initSueldoEditControl() {
       btn.classList.remove('btn-danger');
       btn.classList.add('btn-warning');
       recalcTotals();
-      saveToLocalAndServer();
+      try { saveToLocalAndServer(); } catch (e) { console.warn('save error', e); }
     }
   });
 }
+
 
 /* ------------------ IMPORTANT: autosave enabled so edits sync to server for all devices
    Input handler recalculates rows and totals and calls saveToLocalAndServer() so changes persist to server.
