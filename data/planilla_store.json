@@ -1,0 +1,81 @@
+{
+  "rows": [
+    {
+      "nombre": "Bryan Anibal Châvez Român",
+      "sueldo": 0,
+      "bono": 125,
+      "dias": 15,
+      "comisiones": 12000,
+      "horas": 0,
+      "otras": 0,
+      "medioPago": "",
+      "observ": "",
+      "hextras": 0,
+      "isr": 0,
+      "dpi": "3702153110116"
+    },
+    {
+      "nombre": "Miguel Alfredo González Agustín",
+      "sueldo": 0,
+      "bono": 125,
+      "dias": 15,
+      "comisiones": 0,
+      "horas": 0,
+      "otras": 0,
+      "medioPago": "",
+      "observ": "",
+      "hextras": 0,
+      "isr": 0,
+      "dpi": "2622 10517 0116"
+    },
+    {
+      "nombre": "Edna Anabely Maristela Velásquez Maldonado",
+      "sueldo": 0,
+      "bono": 125,
+      "dias": 15,
+      "comisiones": 0,
+      "horas": 0,
+      "otras": 0,
+      "medioPago": "",
+      "observ": "",
+      "hextras": 0,
+      "isr": 0,
+      "dpi": "2561 41916 1225"
+    },
+    {
+      "nombre": "Igdalia Alida Octavi Velasquez Maldonado",
+      "sueldo": 0,
+      "bono": 125,
+      "dias": 15,
+      "comisiones": 0,
+      "horas": 0,
+      "otras": 0,
+      "medioPago": "",
+      "observ": "",
+      "hextras": 0,
+      "isr": 0,
+      "dpi": "1832 34138 1225"
+    },
+    {
+      "nombre": "José Leonel Del Cid Méndez",
+      "sueldo": 0,
+      "bono": 125,
+      "dias": 15,
+      "comisiones": 0,
+      "horas": 0,
+      "otras": 0,
+      "medioPago": "",
+      "observ": "",
+      "hextras": 0,
+      "isr": 0,
+      "dpi": "2290 00525 0116"
+    }
+  ],
+  "meta": {
+    "saved_at": "2025-11-28T22:00:17.704Z",
+    "planillaName": "Planilla ",
+    "emisionDate": "",
+    "client_saved_at": "2025-11-28T22:00:17.704Z",
+    "server_saved_at": "2025-11-28T22:00:17.554270"
+  }
+}
