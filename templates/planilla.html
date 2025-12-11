@@ -128,6 +128,8 @@
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
 <script>
+
+
 /* ------------------ Fiscal constants and helpers (unchanged) ------------------ */
 const IGSS_RATE = 0.0483;
 const GASTOS_PERSONALES_ANUAL = 48000;
@@ -161,6 +163,26 @@ function computeISRMonthlyFromRow(sueldo, bono, comisiones, hextrasMensual) {
   const isrAnual = round2(baseCalculo * ISR_ANNUAL_RATE);
   const isrMensual = round2(isrAnual / 12);
   return isrMensual;
+}
+
+  // Helpers para bloquear/desbloquear inputs sueldo
+function lockSueldoInput(inp) {
+  if (!inp) return;
+  inp.classList.add('sueldo-locked');
+  inp.setAttribute('readonly', 'readonly');
+  inp.setAttribute('tabindex', '-1');
+  inp.setAttribute('aria-disabled', 'true');
+  const tr = inp.closest('tr');
+  if (tr) tr.dataset.sueldoLocked = '1';
+}
+function unlockSueldoInput(inp) {
+  if (!inp) return;
+  inp.classList.remove('sueldo-locked');
+  inp.removeAttribute('readonly');
+  inp.removeAttribute('tabindex');
+  inp.removeAttribute('aria-disabled');
+  const tr = inp.closest('tr');
+  if (tr) tr.dataset.sueldoLocked = '0';
 }
 
 /* ------------------ Row calculations (unchanged) ------------------ */
@@ -317,6 +339,24 @@ if (sueldoInput) {
   document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
   recalcTotals();
 }
+// Normalizar bloqueo/desbloqueo según valores actuales y reaplicar guardInput si existe
+document.querySelectorAll('input.sueldo').forEach(inp => {
+  const n = parseFloat(inp.value) || 0;
+  // Asegurarse que no quede modo admin por defecto
+  inp.classList.remove('sueldo-admin-edit');
+
+  if (n > 0) {
+    lockSueldoInput(inp);
+    inp.setAttribute('data-prev', Number(n).toFixed(2));
+  } else {
+    unlockSueldoInput(inp);
+    inp.setAttribute('data-prev', Number(0).toFixed(2));
+  }
+
+  // reaplicar listeners de guardInput si existe esa función
+  if (typeof guardInput === 'function') guardInput(inp);
+});
+
 
 /* ------------------ Utilities and UI handlers (unchanged behavior) ------------------ */
 function escapeHtml(str) {
@@ -345,11 +385,7 @@ async function whoamiRole() {
 
 async function initSueldoEditControl() {
   const btn = document.getElementById('btnEditarSueldo');
-  if (!btn) {
-    // Si no existe el botón en el DOM, no hacemos nada
-    console.warn('initSueldoEditControl: btnEditarSueldo no encontrado');
-    return;
-  }
+  if (!btn) return;
 
   // Estado inicial: no en modo edición
   btn.dataset.editing = '0';
@@ -358,7 +394,7 @@ async function initSueldoEditControl() {
   btn.classList.add('btn-warning');
   btn.style.display = ''; // visible para todos
 
-  // Intento de marcar flag admin (opcional, solo informativo)
+  // marcar flag admin informativo (no activa edición)
   try {
     const r = await fetch('/whoami', { cache: 'no-store' });
     if (r.ok) {
@@ -374,7 +410,6 @@ async function initSueldoEditControl() {
 
   // Click handler: visible para todos, pero solo admin puede activar edición
   btn.addEventListener('click', async () => {
-    // Verificar rol en el servidor al momento del click
     let roleNow = '';
     try {
       const r2 = await fetch('/whoami', { cache: 'no-store' });
@@ -386,22 +421,19 @@ async function initSueldoEditControl() {
       roleNow = '';
     }
 
-    // Si no es admin, mostrar mensaje y no permitir editar
     if (roleNow !== 'admin') {
       alert('Permisos insuficientes. Solo administradores pueden editar sueldos.');
       return;
     }
 
-    // Si es admin, alternar modo edición
     const editing = btn.dataset.editing === '1';
     if (!editing) {
-      // activar edición admin: desbloquear temporalmente los sueldos bloqueados
       document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
         if (tr.dataset.sueldoLocked === '1') {
           const inp = tr.querySelector('input.sueldo');
           if (inp) {
             inp.classList.add('sueldo-admin-edit');
-            try { unlockSueldoInput(inp); } catch (e) { inp.removeAttribute('readonly'); }
+            unlockSueldoInput(inp);
           }
         }
       });
@@ -410,19 +442,14 @@ async function initSueldoEditControl() {
       btn.classList.remove('btn-warning');
       btn.classList.add('btn-danger');
     } else {
-      // finalizar edición admin: volver a bloquear según valor
       document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
         const inp = tr.querySelector('input.sueldo');
         if (inp && inp.classList.contains('sueldo-admin-edit')) {
           inp.classList.remove('sueldo-admin-edit');
           const n = parseFloat(inp.value) || 0;
-          if (n > 0) {
-            try { lockSueldoInput(inp); } catch (e) { inp.setAttribute('readonly','readonly'); tr.dataset.sueldoLocked = '1'; }
-            inp.setAttribute('data-prev', Number(n).toFixed(2));
-          } else {
-            try { unlockSueldoInput(inp); } catch (e) { inp.removeAttribute('readonly'); tr.dataset.sueldoLocked = '0'; }
-            inp.setAttribute('data-prev', Number(n).toFixed(2));
-          }
+          if (n > 0) lockSueldoInput(inp);
+          else unlockSueldoInput(inp);
+          inp.setAttribute('data-prev', Number(n).toFixed(2));
         }
       });
       btn.textContent = 'Editar sueldos';
@@ -434,6 +461,7 @@ async function initSueldoEditControl() {
     }
   });
 }
+
 
 
 /* ------------------ IMPORTANT: autosave enabled so edits sync to server for all devices
@@ -586,9 +614,11 @@ document.getElementById('addRow').addEventListener('click', () => {
   // Ensure new row sueldo is unlocked explicitly
 const sueldoInp = tr.querySelector('input.sueldo');
 if (sueldoInp) {
+  // nueva fila: desbloqueada por defecto
   unlockSueldoInput(sueldoInp);
   sueldoInp.setAttribute('data-prev', Number(0).toFixed(2));
 }
+
 
 
   const nombreInp = tr.querySelector('input.nombre');
@@ -1206,11 +1236,17 @@ document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
   }
 });
 
-// actualizar estado del botón y apariencia
-btn.textContent = 'Finalizar edición sueldos';
-btn.dataset.editing = '1';
-btn.classList.remove('btn-warning');
-btn.classList.add('btn-danger');
+document.addEventListener('DOMContentLoaded', () => {
+const btn = document.getElementById('btnEditarSueldo');
+if (btn) {
+  btn.textContent = 'Finalizar edición sueldos';
+  btn.dataset.editing = '1';
+  btn.classList.remove('btn-warning');
+  btn.classList.add('btn-danger');
+} else {
+  console.warn('btnEditarSueldo no encontrado en el DOM en este momento');
+}
+});
 
 // finalizar edición admin: volver a bloquear según valor
 document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
@@ -1544,7 +1580,7 @@ table.table tbody tr:first-child td {
 #planillaTable tfoot tr td:last-child {
   border-right: none;
 }
-  .sueldo-locked {
+.sueldo-locked {
   pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
