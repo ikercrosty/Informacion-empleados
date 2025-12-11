@@ -1171,28 +1171,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   // do not force extra save here; autosave runs on edits/add/delete
 });
 
-// Prevent selection/focus/click on sueldo inputs unless admin-edit mode active
-(function installSueldoInteractionGuard() {
-
-
-  // Initialize guards for existing inputs
-  document.querySelectorAll('input.sueldo').forEach(guardInput);
-
-  // Keep guard for future rows (MutationObserver simple)
-  const tbody = document.querySelector('#planillaTable tbody');
-  if (tbody) {
-    const mo = new MutationObserver((mut) => {
-      for (const m of mut) {
-        m.addedNodes && m.addedNodes.forEach(n => {
-          if (n.nodeType === 1) {
-            n.querySelectorAll && n.querySelectorAll('input.sueldo').forEach(guardInput);
-          }
-        });
-      }
-    });
-    mo.observe(tbody, { childList: true, subtree: true });
-  }
-})();
 
 </script>
 
