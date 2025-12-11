@@ -1036,7 +1036,6 @@ function startServerPolling() {
   pollHandle = setInterval(pollServerPlanilla, POLL_INTERVAL_MS);
 }
 
-
 /* ------------------ populate behavior on load (unchanged) ------------------ */
 
 async function populateFromEmployeesIfEmpty() {
@@ -1171,34 +1170,186 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // do not force extra save here; autosave runs on edits/add/delete
 });
-// Bloquea un input sueldo: quita foco/tab y aplica clase que impide selección
+
+
+</script>
+
+<script>
+// --- Helpers: lock / unlock sueldo inputs ---
 function lockSueldoInput(inp) {
   if (!inp) return;
   inp.classList.add('sueldo-locked');
-  inp.setAttribute('readonly', 'readonly');   // mantiene la semántica de bloqueo
-  inp.setAttribute('tabindex', '-1');         // lo saca del tab order
-  // opcional: aria-disabled para accesibilidad
+  inp.setAttribute('readonly', 'readonly');
+  inp.setAttribute('tabindex', '-1');
   inp.setAttribute('aria-disabled', 'true');
-  // marcar la fila
   const tr = inp.closest('tr');
   if (tr) tr.dataset.sueldoLocked = '1';
 }
-
-// Desbloquea un input sueldo (para edición)
 function unlockSueldoInput(inp) {
   if (!inp) return;
   inp.classList.remove('sueldo-locked');
-  inp.removeAttribute('readonly');            // si quieres mantener readonly, ajusta según tu lógica
-  inp.removeAttribute('tabindex');            // vuelve a permitir tab
+  inp.removeAttribute('readonly');
+  inp.removeAttribute('tabindex');
   inp.removeAttribute('aria-disabled');
   const tr = inp.closest('tr');
   if (tr) tr.dataset.sueldoLocked = '0';
 }
 
+// --- 2A) Reemplaza tu función guardInput por esta versión ---
+// (esta versión solo bloquea interacción si la fila está marcada como locked)
+function guardInput(inp) {
+  if (!inp) return;
+  const tr = inp.closest('tr');
 
+  inp.addEventListener('mousedown', (e) => {
+    const locked = tr && tr.dataset.sueldoLocked === '1';
+    if (locked && !inp.classList.contains('sueldo-admin-edit')) {
+      e.preventDefault();
+    }
+  }, { passive: false });
 
+  inp.addEventListener('focus', (e) => {
+    const locked = tr && tr.dataset.sueldoLocked === '1';
+    if (locked && !inp.classList.contains('sueldo-admin-edit')) {
+      inp.blur();
+    }
+  }, true);
+
+  inp.addEventListener('touchstart', (e) => {
+    const locked = tr && tr.dataset.sueldoLocked === '1';
+    if (locked && !inp.classList.contains('sueldo-admin-edit')) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+}
+
+// --- 2B) Reemplaza tu blur handler por este (asegura lock/unlock correcto) ---
+document.addEventListener('blur', (e) => {
+  if (!e.target.classList) return;
+  if (e.target.classList.contains('sueldo')) {
+    // aplicar mitad si corresponde
+    try { applyHalfToSueldoInput(e.target); } catch (err) { /* si no existe, ignora */ }
+
+    const tr = e.target.closest('tr');
+    const n = parseFloat(e.target.value) || 0;
+    e.target.setAttribute('data-prev', Number(n).toFixed(2));
+
+    if (n > 0) {
+      // bloquear completamente (sin selección ni foco)
+      lockSueldoInput(e.target);
+      e.target.classList.remove('sueldo-admin-edit');
+    } else {
+      // desbloquear para edición
+      unlockSueldoInput(e.target);
+    }
+
+    if (tr) recalcRow(tr);
+    recalcTotals();
+    try { saveToLocalAndServer(); } catch (err) { console.warn('save error', err); }
+  }
+}, true);
+
+// --- 2C) Reemplaza la parte de restoreTable donde manejas sueldoInput ---
+// Busca en tu restoreTable el bloque que hace: "const sueldoInput = tr.querySelector('input.sueldo');"
+// y reemplázalo por este fragmento:
+
+/*
+const sueldoInput = tr.querySelector('input.sueldo');
+const sueldoNum = Number(r.sueldo || 0);
+if (sueldoInput) {
+  if (sueldoNum > 0) {
+    // bloquear completamente
+    lockSueldoInput(sueldoInput);
+    sueldoInput.setAttribute('data-prev', sueldoNum.toFixed(2));
+  } else {
+    // desbloqueado por defecto
+    unlockSueldoInput(sueldoInput);
+    sueldoInput.setAttribute('data-prev', (0).toFixed(2));
+  }
+}
+*/
+
+// --- 2D) Reemplaza la parte de addRow tras tbody.appendChild(tr); ---
+// Añade este fragmento justo después de appendChild(tr) en tu handler addRow:
+
+/*
+const sueldoInp = tr.querySelector('input.sueldo');
+if (sueldoInp) {
+  // nueva fila: desbloqueada por defecto
+  unlockSueldoInput(sueldoInp);
+  sueldoInp.setAttribute('data-prev', Number(0).toFixed(2));
+}
+*/
+
+// --- 2E) Ajustes en initSueldoEditControl (modo admin) ---
+// Reemplaza la sección donde habilitas edición admin por este bloque.
+// Dentro de la rama que activa edición (cuando !editing):
+
+/*
+document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
+  if (tr.dataset.sueldoLocked === '1') {
+    const inp = tr.querySelector('input.sueldo');
+    if (inp) {
+      // permitir edición temporalmente
+      inp.classList.add('sueldo-admin-edit');
+      unlockSueldoInput(inp); // permite selección y foco
+    }
+  }
+});
+btn.textContent = 'Finalizar edición sueldos';
+btn.dataset.editing = '1';
+btn.classList.remove('btn-warning');
+btn.classList.add('btn-danger');
+*/
+
+// Y en la rama que finaliza edición (cuando editing === '1'), reemplaza por:
+
+/*
+document.querySelectorAll('#planillaTable tbody tr').forEach(tr => {
+  const inp = tr.querySelector('input.sueldo');
+  if (inp && inp.classList.contains('sueldo-admin-edit')) {
+    inp.classList.remove('sueldo-admin-edit');
+    const n = parseFloat(inp.value) || 0;
+    if (n > 0) {
+      lockSueldoInput(inp);
+      inp.setAttribute('data-prev', Number(n).toFixed(2));
+    } else {
+      unlockSueldoInput(inp);
+      inp.setAttribute('data-prev', Number(n).toFixed(2));
+    }
+  }
+});
+btn.textContent = 'Editar sueldos';
+btn.dataset.editing = '0';
+btn.classList.remove('btn-danger');
+btn.classList.add('btn-warning');
+recalcTotals();
+try { saveToLocalAndServer(); } catch (e) { console.warn('save error', e); }
+*/
+
+// --- 2F) Normalizar estado al cargar (llamar después de restoreTable) ---
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      restoreTable(parsed);
+    }
+  } catch (e) { console.warn('restore error', e); }
+
+  // Normalizar bloqueo/desbloqueo según valores actuales
+  document.querySelectorAll('input.sueldo').forEach(inp => {
+    const n = parseFloat(inp.value) || 0;
+    if (n > 0) lockSueldoInput(inp);
+    else unlockSueldoInput(inp);
+    // reaplicar guardInput para asegurar listeners correctos
+    guardInput(inp);
+  });
+
+  initBonosYDias();
+  initSueldoEditControl();
+});
 </script>
-
 <style>
   :root{
     --bg-grad-start: #f3f6ff;
@@ -1474,12 +1625,12 @@ table.table tbody tr:first-child td {
   border-right: none;
   /* evita selección y cualquier interacción visual cuando está bloqueado */
 .sueldo-locked {
-  pointer-events: none;        /* impide clicks/taps */
-  user-select: none;           /* impide selección de texto */
+  pointer-events: none;
+  user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
-  outline: none !important;    /* evita outline al recibir foco accidental */
+  outline: none !important;
 }
 
 /* cuando el admin habilita edición temporal, se usa esta clase */
@@ -1487,7 +1638,6 @@ table.table tbody tr:first-child td {
   pointer-events: auto !important;
   user-select: text !important;
 }
-
 }
 </style>
 
