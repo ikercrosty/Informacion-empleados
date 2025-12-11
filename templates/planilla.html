@@ -344,18 +344,21 @@ async function whoamiRole() {
 }
 
 async function initSueldoEditControl() {
-  // Mostrar el botón siempre (todos lo ven)
   const btn = document.getElementById('btnEditarSueldo');
-  if (!btn) return;
+  if (!btn) {
+    // Si no existe el botón en el DOM, no hacemos nada
+    console.warn('initSueldoEditControl: btnEditarSueldo no encontrado');
+    return;
+  }
 
-  // Inicializar estado: no en modo edición
+  // Estado inicial: no en modo edición
   btn.dataset.editing = '0';
   btn.textContent = 'Editar sueldos';
   btn.classList.remove('btn-danger');
   btn.classList.add('btn-warning');
   btn.style.display = ''; // visible para todos
 
-  // Opcional: marcar dataset.admin según rol (útil para info interna)
+  // Intento de marcar flag admin (opcional, solo informativo)
   try {
     const r = await fetch('/whoami', { cache: 'no-store' });
     if (r.ok) {
@@ -369,7 +372,7 @@ async function initSueldoEditControl() {
     btn.dataset.admin = '0';
   }
 
-  // Click handler: siempre visible, pero solo admin puede activar edición
+  // Click handler: visible para todos, pero solo admin puede activar edición
   btn.addEventListener('click', async () => {
     // Verificar rol en el servidor al momento del click
     let roleNow = '';
@@ -398,7 +401,6 @@ async function initSueldoEditControl() {
           const inp = tr.querySelector('input.sueldo');
           if (inp) {
             inp.classList.add('sueldo-admin-edit');
-            // permitir interacción temporalmente
             try { unlockSueldoInput(inp); } catch (e) { inp.removeAttribute('readonly'); }
           }
         }
