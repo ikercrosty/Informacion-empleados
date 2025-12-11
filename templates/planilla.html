@@ -1174,12 +1174,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Prevent selection/focus/click on sueldo inputs unless admin-edit mode active
 (function installSueldoInteractionGuard() {
   function guardInput(inp) {
- 
-    // prevent keyboard focus
-    inp.addEventListener('focus', (e) => {
-      if (!inp.classList.contains('sueldo-admin-edit')) inp.blur();
-    }, true);
-
+  
     // also prevent selection via touchstart
     inp.addEventListener('touchstart', (e) => {
       if (!inp.classList.contains('sueldo-admin-edit')) e.preventDefault();
