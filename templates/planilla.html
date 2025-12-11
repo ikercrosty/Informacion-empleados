@@ -1145,6 +1145,16 @@ document.getElementById('btnGuardarPlanilla').addEventListener('click', async ()
 
 /* ------------------ Initialization ------------------ */
 document.addEventListener('DOMContentLoaded', async () => {
+  document.querySelectorAll('input.sueldo').forEach(inp=>{
+  const clone = inp.cloneNode(true);
+  clone.value = inp.value;
+  // conservar atributos importantes
+  clone.className = inp.className;
+  clone.setAttribute('step', inp.getAttribute('step') || '0.01');
+  clone.setAttribute('type', inp.getAttribute('type') || 'number');
+  inp.parentNode.replaceChild(clone, inp);
+});
+
   const restored = loadFromLocal();
 
   initBonosYDias();
