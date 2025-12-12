@@ -222,7 +222,7 @@
           }
         }
       } catch (e) {
-        // ignore guard errors
+        
       }
       return orig.apply(this, arguments);
     };
@@ -238,10 +238,7 @@
       flash('Permisos insuficientes para editar registros', 'warning');
       return;
     }
-    // btnEditar should operate only on a selected row; if your registrarTabla previously edited on single click,
-    // that behavior is now prevented by the click-capture blocker. BtnEditar calls iniciarEdicion() as before.
     if (typeof window.iniciarEdicion === 'function') {
-      // prefer to pass the selected row if exists
       const tabla = document.getElementById('tablaEmpleados');
       const seleccionado = tabla && tabla.querySelector('tbody tr.selected');
       try { if (seleccionado) window.iniciarEdicion(seleccionado); else window.iniciarEdicion(); } catch(e){ try{ window.iniciarEdicion(); }catch(_){} }
@@ -323,26 +320,18 @@
     tabla.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
   }
 
-  // --- BLOCK ALL single-click selection handlers (capture phase) ---
-  // This prevents third-party scripts or earlier listeners from acting on a single click.
-  // We only stop click events originating inside table body rows.
   if (tabla) {
     tabla.addEventListener('click', function(e){
-      // If a dblclick is occurring, clicks still fire; do not block clicks that are part of a dblclick sequence.
-      // We detect dblclick by checking e.detail: for browsers, detail==1 first click, detail==2 second click.
-      // We allow the browser to process dblclick (we won't call stopImmediatePropagation when detail>1).
       if (e.detail && e.detail >= 2) return;
       const tr = e.target.closest('tr');
       if (tr && tr.parentElement && tr.parentElement.tagName === 'TBODY') {
-        // prevent other click handlers from selecting rows on single click
         e.stopImmediatePropagation();
         e.preventDefault();
         return;
       }
-    }, true); // use capture to intercept early
+    }, true); 
   }
 
-  // Helper: load foto for a row
   async function cargarFotoParaFila(tr) {
     if (!tr) { clearPhotoPanel(); return; }
     const dpi = (tr.cells[0] && tr.cells[0].innerText || '').trim();
@@ -370,7 +359,6 @@
     }
   }
 
-  // dblclick: select row + load photo + optionally start edit or delete (shift+dblclick)
   if (tabla) {
     tabla.addEventListener('dblclick', async (ev) => {
       const tr = ev.target.closest('tr');
@@ -381,7 +369,6 @@
 
       await cargarFotoParaFila(tr);
 
-      // shift + dblclick => delete (admin)
       if (ev.shiftKey) {
         if (CURRENT_ROLE !== 'admin') {
           flash('Permisos insuficientes para eliminar empleados', 'warning');
@@ -391,7 +378,6 @@
         return;
       }
 
-      // dblclick triggers editing (if allowed)
       if (!['admin','colaborador'].includes(CURRENT_ROLE)) {
         flash('Permisos insuficientes para editar registros', 'warning');
         return;
@@ -404,7 +390,6 @@
     });
   }
 
-  // Keep upload/delete photo handlers unchanged
   document.getElementById('btnSubirFoto')?.addEventListener('click', async () => {
     const dpi = inputDpiUpload && inputDpiUpload.value && inputDpiUpload.value.trim();
     if (!dpi) return flash('Selecciona una fila con DPI antes de subir foto', 'danger');

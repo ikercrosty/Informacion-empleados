@@ -10,6 +10,7 @@ import sys
 import json
 from pathlib import Path
 
+
 app = Flask(__name__)
 app.secret_key = "clave-secreta"
 app.config["SESSION_PERMANENT"] = False
