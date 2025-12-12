@@ -11,8 +11,9 @@ import json
 from pathlib import Path
 import os
 import json
-from supabase import create_client
 import os
+from PIL import Image, ExifTags
+from supabase import create_client
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
@@ -1098,9 +1099,10 @@ def api_foto(dpi):
         return jsonify({"foto": None, "url": None, "error": str(e)}), 500
 
 
+# --- Endpoint subir foto ---
 @app.route("/subir_foto", methods=["POST"])
 def subir_foto():
-    dpi = request.form.get("dpi")
+    dpi = (request.form.get("dpi") or "").strip()
     if not dpi:
         return jsonify({"error": "Debe seleccionar un empleado (DPI)"}), 400
 
@@ -1114,13 +1116,12 @@ def subir_foto():
     if not allowed_file(file.filename):
         return jsonify({"error": "Tipo de archivo no permitido"}), 400
 
-    # Procesar imagen
+    # Procesar imagen con PIL
     try:
         image = Image.open(file.stream)
 
-        # Corregir orientación
+        # Corregir orientación si existe EXIF
         try:
-            from PIL import ExifTags
             exif = image._getexif()
             if exif:
                 orientation_key = next((k for k, v in ExifTags.TAGS.items() if v == "Orientation"), None)
@@ -1132,7 +1133,7 @@ def subir_foto():
                         image = image.rotate(270, expand=True)
                     elif orientation == 8:
                         image = image.rotate(90, expand=True)
-        except:
+        except Exception:
             pass
 
         if image.mode in ("RGBA", "P", "LA"):
@@ -1145,66 +1146,91 @@ def subir_foto():
     except Exception as e:
         return jsonify({"error": f"Error procesando imagen: {e}"}), 500
 
-    # Nombre final
+    # Nombre de archivo único
     ts = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
     filename = f"{dpi}_{ts}.jpg"
 
-    # Subir a Supabase Storage
+    # Subir a Supabase (bytes)
     try:
         supabase.storage.from_(SUPABASE_BUCKET).upload(
             path=f"empleados/{filename}",
             file=buffer.getvalue(),
             file_options={"content-type": "image/jpeg"}
         )
-
         foto_url = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET}/empleados/{filename}"
-
     except Exception as e:
         return jsonify({"error": f"Error subiendo a Supabase: {e}"}), 500
 
-    # Guardar URL en BD
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("UPDATE empleados_info SET `foto`=%s WHERE `Numero de DPI`=%s", (foto_url, dpi))
-    conn.commit()
-    cursor.close()
-    conn.close()
+    # Guardar URL en BD y verificar
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE empleados_info SET foto=%s WHERE `Numero de DPI`=%s",
+            (foto_url, dpi)
+        )
+        conn.commit()
+        rows_affected = cursor.rowcount
 
-    return jsonify({"url": foto_url})
+        # Leer fila para confirmar
+        cursor.execute("SELECT `Numero de DPI`, foto FROM empleados_info WHERE `Numero de DPI`=%s", (dpi,))
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
 
+        if rows_affected == 0:
+            return jsonify({
+                "error": "No se actualizó la fila. Verifica que el DPI exista y coincida exactamente.",
+                "dpi": dpi,
+                "db_row": row
+            }), 500
+
+    except Exception as e:
+        return jsonify({"error": f"Error guardando URL en BD: {e}"}), 500
+
+    return jsonify({"url": foto_url, "db_foto": row.get("foto") if isinstance(row, dict) else row[0]})
+# --- Endpoint eliminar foto ---
 @app.route("/eliminar_foto", methods=["POST"])
 def eliminar_foto():
-    dpi = request.form.get("dpi") or (request.get_json() or {}).get("dpi")
+    dpi = (request.form.get("dpi") or (request.get_json() or {}).get("dpi") or "").strip()
     if not dpi:
         return jsonify({"error": "Debe seleccionar un empleado (DPI)"}), 400
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT `foto` FROM empleados_info WHERE `Numero de DPI`=%s", (dpi,))
-    row = cursor.fetchone()
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT foto FROM empleados_info WHERE `Numero de DPI`=%s", (dpi,))
+        row = cursor.fetchone()
 
-    if not row or not row.get("foto"):
+        if not row or not row.get("foto"):
+            cursor.close()
+            conn.close()
+            return jsonify({"ok": False, "message": "No existe foto para ese empleado"}), 200
+
+        foto_url = row.get("foto")
+        filename = foto_url.split("/")[-1]
+
+        # Eliminar del bucket (si existe)
+        try:
+            supabase.storage.from_(SUPABASE_BUCKET).remove([f"empleados/{filename}"])
+        except Exception:
+            # No detener si falla la eliminación remota
+            pass
+
+        # Limpiar campo en BD
+        cursor.execute("UPDATE empleados_info SET foto=NULL WHERE `Numero de DPI`=%s", (dpi,))
+        conn.commit()
         cursor.close()
         conn.close()
-        return jsonify({"ok": False, "message": "No existe foto para ese empleado"}), 200
 
-    foto_url = row["foto"]
-    filename = foto_url.split("/")[-1]
-
-    try:
-        supabase.storage.from_(SUPABASE_BUCKET).remove([f"empleados/{filename}"])
-    except:
-        pass
-
-    cursor.execute("UPDATE empleados_info SET `foto`=NULL WHERE `Numero de DPI`=%s", (dpi,))
-    conn.commit()
-    cursor.close()
-    conn.close()
+    except Exception as e:
+        return jsonify({"error": f"Error eliminando foto: {e}"}), 500
 
     return jsonify({"ok": True})
 
-
-
+# --- Ejecutar app (solo si corres localmente) ---
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
 
 # ------------------ NUEVOS ENDPOINTS PARA SINCRONIZAR LA PLANILLA ------------------
 
