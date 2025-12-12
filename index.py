@@ -11,20 +11,15 @@ import json
 from pathlib import Path
 import os
 import json
-import firebase_admin
-from firebase_admin import credentials, storage
+from supabase import create_client
+import os
 
-# Cargar credenciales desde variable de entorno
-cred_info = json.loads(os.environ.get("FIREBASE_CREDENTIALS_JSON"))
-cred = credentials.Certificate(cred_info)
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+SUPABASE_BUCKET = os.environ.get("SUPABASE_BUCKET")
 
-# Inicializar Firebase con el bucket
-firebase_admin.initialize_app(cred, {
-    "storageBucket": os.environ.get("FIREBASE_BUCKET")
-})
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# Acceso al bucket
-bucket = storage.bucket()
 
 
 
@@ -1113,18 +1108,18 @@ def subir_foto():
     if "foto" not in request.files:
         return jsonify({"error": "No se seleccionó archivo"}), 400
 
-    file = request.files.get("foto")
-    if not file or file.filename.strip() == "":
+    file = request.files["foto"]
+    if file.filename.strip() == "":
         return jsonify({"error": "Archivo vacío"}), 400
 
     if not allowed_file(file.filename):
         return jsonify({"error": "Tipo de archivo no permitido"}), 400
 
-    # Procesar imagen (rotación + compresión)
+    # Procesar imagen
     try:
         image = Image.open(file.stream)
 
-        # Corregir orientación EXIF
+        # Corregir orientación
         try:
             from PIL import ExifTags
             exif = image._getexif()
@@ -1155,14 +1150,19 @@ def subir_foto():
     ts = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
     filename = f"{dpi}_{ts}.jpg"
 
-    # Subir a Firebase Storage
+    # Subir a Supabase Storage
     try:
-        blob = bucket.blob(f"empleados/{filename}")
-        blob.upload_from_file(buffer, content_type="image/jpeg")
-        blob.make_public()  # URL pública
-        foto_url = blob.public_url
+        supabase.storage.from_(SUPABASE_BUCKET).upload(
+            path=f"empleados/{filename}",
+            file=buffer,
+            file_options={"content-type": "image/jpeg"}
+        )
+
+        # URL pública
+        foto_url = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET}/empleados/{filename}"
+
     except Exception as e:
-        return jsonify({"error": f"Error subiendo a Firebase: {e}"}), 500
+        return jsonify({"error": f"Error subiendo a Supabase: {e}"}), 500
 
     # Guardar URL en BD
     conn = get_db_connection()
@@ -1173,7 +1173,6 @@ def subir_foto():
     conn.close()
 
     return jsonify({"url": foto_url})
-
 @app.route("/eliminar_foto", methods=["POST"])
 def eliminar_foto():
     dpi = request.form.get("dpi") or (request.get_json() or {}).get("dpi")
@@ -1191,12 +1190,10 @@ def eliminar_foto():
         return jsonify({"ok": False, "message": "No existe foto para ese empleado"}), 200
 
     foto_url = row["foto"]
+    filename = foto_url.split("/")[-1]
 
-    # Extraer nombre del archivo desde la URL
     try:
-        filename = foto_url.split("/")[-1]
-        blob = bucket.blob(f"empleados/{filename}")
-        blob.delete()
+        supabase.storage.from_(SUPABASE_BUCKET).remove([f"empleados/{filename}"])
     except:
         pass
 
