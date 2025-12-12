@@ -12,7 +12,6 @@ from pathlib import Path
 import os
 import json
 from supabase import create_client
-import tempfile
 import os
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
@@ -1150,16 +1149,12 @@ def subir_foto():
     ts = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
     filename = f"{dpi}_{ts}.jpg"
 
-    # Crear archivo temporal para subirlo
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
-        tmp.write(buffer.getvalue())
-        tmp_path = tmp.name
-
-    # Subir a Supabase
+    # Subir a Supabase Storage
     try:
-        supabase.storage.from_(SUPABASE_BUCKET).upload_file(
-            file=tmp_path,
-            path=f"empleados/{filename}"
+        supabase.storage.from_(SUPABASE_BUCKET).upload(
+            path=f"empleados/{filename}",
+            file=buffer.getvalue(),
+            file_options={"content-type": "image/jpeg"}
         )
 
         foto_url = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET}/empleados/{filename}"
@@ -1207,6 +1202,7 @@ def eliminar_foto():
     conn.close()
 
     return jsonify({"ok": True})
+
 
 
 
