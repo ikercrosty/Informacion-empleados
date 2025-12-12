@@ -1100,6 +1100,7 @@ def api_foto(dpi):
 
 
 # --- Endpoint subir foto ---
+# ---------------- Endpoint subir foto ----------------
 @app.route("/subir_foto", methods=["POST"])
 def subir_foto():
     dpi = (request.form.get("dpi") or "").strip()
@@ -1113,14 +1114,14 @@ def subir_foto():
     if file.filename.strip() == "":
         return jsonify({"error": "Archivo vacío"}), 400
 
-    if not allowed_file(file.filename):
+    # Validar extensión
+    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else ""
+    if ext not in ALLOWED_EXT:
         return jsonify({"error": "Tipo de archivo no permitido"}), 400
 
-    # Procesar imagen con PIL
+    # Procesar imagen (PIL) y convertir a JPEG
     try:
         image = Image.open(file.stream)
-
-        # Corregir orientación si existe EXIF
         try:
             exif = image._getexif()
             if exif:
@@ -1142,15 +1143,14 @@ def subir_foto():
         buffer = BytesIO()
         image.save(buffer, format="JPEG", quality=85, optimize=True)
         buffer.seek(0)
-
     except Exception as e:
         return jsonify({"error": f"Error procesando imagen: {e}"}), 500
 
-    # Nombre de archivo único
+    # Nombre único
     ts = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
     filename = f"{dpi}_{ts}.jpg"
 
-    # Subir a Supabase (bytes)
+    # Subir a Supabase
     try:
         supabase.storage.from_(SUPABASE_BUCKET).upload(
             path=f"empleados/{filename}",
@@ -1172,7 +1172,6 @@ def subir_foto():
         conn.commit()
         rows_affected = cursor.rowcount
 
-        # Leer fila para confirmar
         cursor.execute("SELECT `Numero de DPI`, foto FROM empleados_info WHERE `Numero de DPI`=%s", (dpi,))
         row = cursor.fetchone()
         cursor.close()
@@ -1189,7 +1188,8 @@ def subir_foto():
         return jsonify({"error": f"Error guardando URL en BD: {e}"}), 500
 
     return jsonify({"url": foto_url, "db_foto": row.get("foto") if isinstance(row, dict) else row[0]})
-# --- Endpoint eliminar foto ---
+
+# ---------------- Endpoint eliminar foto ----------------
 @app.route("/eliminar_foto", methods=["POST"])
 def eliminar_foto():
     dpi = (request.form.get("dpi") or (request.get_json() or {}).get("dpi") or "").strip()
@@ -1210,11 +1210,10 @@ def eliminar_foto():
         foto_url = row.get("foto")
         filename = foto_url.split("/")[-1]
 
-        # Eliminar del bucket (si existe)
+        # Eliminar del bucket (no detener si falla)
         try:
             supabase.storage.from_(SUPABASE_BUCKET).remove([f"empleados/{filename}"])
         except Exception:
-            # No detener si falla la eliminación remota
             pass
 
         # Limpiar campo en BD
@@ -1227,6 +1226,7 @@ def eliminar_foto():
         return jsonify({"error": f"Error eliminando foto: {e}"}), 500
 
     return jsonify({"ok": True})
+
 
 # --- Ejecutar app (solo si corres localmente) ---
 if __name__ == "__main__":
