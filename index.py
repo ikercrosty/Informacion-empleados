@@ -9,6 +9,23 @@ from PIL import Image
 import sys
 import json
 from pathlib import Path
+import os
+import json
+import firebase_admin
+from firebase_admin import credentials, storage
+
+# Cargar credenciales desde variable de entorno
+cred_info = json.loads(os.environ.get("FIREBASE_CREDENTIALS_JSON"))
+cred = credentials.Certificate(cred_info)
+
+# Inicializar Firebase con el bucket
+firebase_admin.initialize_app(cred, {
+    "storageBucket": os.environ.get("FIREBASE_BUCKET")
+})
+
+# Acceso al bucket
+bucket = storage.bucket()
+
 
 
 app = Flask(__name__)
@@ -1089,14 +1106,6 @@ def api_foto(dpi):
 
 @app.route("/subir_foto", methods=["POST"])
 def subir_foto():
-    try:
-        print("=== LLEGA A SUBIR_FOTO ===", file=sys.stderr)
-        print("request.path:", request.path, " request.endpoint:", request.endpoint, file=sys.stderr)
-        print("request.method:", request.method, " content-length:", request.content_length, file=sys.stderr)
-        print("form keys:", list(request.form.keys()), " files keys:", list(request.files.keys()), file=sys.stderr)
-    except Exception:
-        pass
-
     dpi = request.form.get("dpi")
     if not dpi:
         return jsonify({"error": "Debe seleccionar un empleado (DPI)"}), 400
@@ -1111,17 +1120,15 @@ def subir_foto():
     if not allowed_file(file.filename):
         return jsonify({"error": "Tipo de archivo no permitido"}), 400
 
-    orig_name = secure_filename(file.filename)
-    ts = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
-    final_name = f"{dpi}_{ts}.jpg"
-    save_path = os.path.join(app.config["UPLOAD_FOLDER"], final_name)
-
+    # Procesar imagen (rotación + compresión)
     try:
         image = Image.open(file.stream)
+
+        # Corregir orientación EXIF
         try:
             from PIL import ExifTags
             exif = image._getexif()
-            if exif is not None:
+            if exif:
                 orientation_key = next((k for k, v in ExifTags.TAGS.items() if v == "Orientation"), None)
                 if orientation_key and orientation_key in exif:
                     orientation = exif[orientation_key]
@@ -1131,42 +1138,41 @@ def subir_foto():
                         image = image.rotate(270, expand=True)
                     elif orientation == 8:
                         image = image.rotate(90, expand=True)
-        except Exception:
+        except:
             pass
 
         if image.mode in ("RGBA", "P", "LA"):
             image = image.convert("RGB")
+
         buffer = BytesIO()
         image.save(buffer, format="JPEG", quality=85, optimize=True)
-        img_bytes = buffer.getvalue()
+        buffer.seek(0)
 
-        with open(save_path, "wb") as f:
-            f.write(img_bytes)
-
-        try:
-            for fname in os.listdir(app.config["UPLOAD_FOLDER"]):
-                if fname.startswith(f"{dpi}_") and fname != final_name:
-                    try:
-                        os.remove(os.path.join(app.config["UPLOAD_FOLDER"], fname))
-                    except Exception:
-                        pass
-        except Exception:
-            pass
-
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("UPDATE empleados_info SET `foto`=%s WHERE `Numero de DPI`=%s", (final_name, dpi))
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        print(f"Foto guardada: {final_name}", file=sys.stderr)
-        img_url = url_for('static', filename=f"fotos/{final_name}")
-        return jsonify({"url": img_url})
     except Exception as e:
-        print("ERROR en subir_foto:", e, file=sys.stderr)
-        return jsonify({"error": f"Error al procesar/guardar la foto: {e}"}), 500
+        return jsonify({"error": f"Error procesando imagen: {e}"}), 500
 
+    # Nombre final
+    ts = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
+    filename = f"{dpi}_{ts}.jpg"
+
+    # Subir a Firebase Storage
+    try:
+        blob = bucket.blob(f"empleados/{filename}")
+        blob.upload_from_file(buffer, content_type="image/jpeg")
+        blob.make_public()  # URL pública
+        foto_url = blob.public_url
+    except Exception as e:
+        return jsonify({"error": f"Error subiendo a Firebase: {e}"}), 500
+
+    # Guardar URL en BD
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE empleados_info SET `foto`=%s WHERE `Numero de DPI`=%s", (foto_url, dpi))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return jsonify({"url": foto_url})
 
 @app.route("/eliminar_foto", methods=["POST"])
 def eliminar_foto():
@@ -1174,38 +1180,32 @@ def eliminar_foto():
     if not dpi:
         return jsonify({"error": "Debe seleccionar un empleado (DPI)"}), 400
 
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT `foto` FROM empleados_info WHERE `Numero de DPI`=%s", (dpi,))
+    row = cursor.fetchone()
+
+    if not row or not row.get("foto"):
+        cursor.close()
+        conn.close()
+        return jsonify({"ok": False, "message": "No existe foto para ese empleado"}), 200
+
+    foto_url = row["foto"]
+
+    # Extraer nombre del archivo desde la URL
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT `foto` FROM empleados_info WHERE `Numero de DPI`=%s", (dpi,))
-        row = cursor.fetchone()
+        filename = foto_url.split("/")[-1]
+        blob = bucket.blob(f"empleados/{filename}")
+        blob.delete()
+    except:
+        pass
 
-        if row and row.get("foto"):
-            filename = row["foto"]
-            filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-            if os.path.exists(filepath):
-                try:
-                    os.remove(filepath)
-                except Exception:
-                    pass
-            cursor.execute("UPDATE empleados_info SET `foto`=NULL WHERE `Numero de DPI`=%s", (dpi,))
-            conn.commit()
-            cursor.close()
-            conn.close()
-            return jsonify({"ok": True})
-        else:
-            cursor.close()
-            conn.close()
-            return jsonify({"ok": False, "message": "No existe foto para ese empleado"}), 200
-    except Exception as e:
-        return jsonify({"error": f"Error al eliminar foto: {e}"}), 500
+    cursor.execute("UPDATE empleados_info SET `foto`=NULL WHERE `Numero de DPI`=%s", (dpi,))
+    conn.commit()
+    cursor.close()
+    conn.close()
 
-
-# New lightweight endpoint: devuelve el rol actual (útil para frontend)
-@app.route("/whoami")
-def whoami():
-    # retorna el rol actual en sesión; frontend puede usarlo para habilitar/deshabilitar UI
-    return jsonify({"usuario": session.get("usuario"), "rol": (session.get("rol") or "").strip().lower()})
+    return jsonify({"ok": True})
 
 
 # ------------------ NUEVOS ENDPOINTS PARA SINCRONIZAR LA PLANILLA ------------------
