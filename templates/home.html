@@ -327,16 +327,56 @@
   }
 
   if (tabla) {
-    tabla.addEventListener('click', function(e){
-      if (e.detail && e.detail >= 2) return;
-      const tr = e.target.closest('tr');
-      if (tr && tr.parentElement && tr.parentElement.tagName === 'TBODY') {
-        e.stopImmediatePropagation();
-        e.preventDefault();
+  // Click simple: seleccionar fila y cargar foto
+  tabla.addEventListener('click', function (e) {
+    const tr = e.target.closest('tr');
+    if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+
+    // Evitar que la doble pulsación dispare dos veces
+    if (e.detail && e.detail >= 2) return;
+
+    // Marcar selección visual
+    clearSelection();
+    tr.classList.add('selected');
+
+    // Cargar la foto asociada a la fila seleccionada
+    cargarFotoParaFila(tr);
+  });
+
+  // Mantener doble click para editar / acciones especiales
+  tabla.addEventListener('dblclick', async (ev) => {
+    const tr = ev.target.closest('tr');
+    if (!tr || tr.parentElement.tagName !== 'TBODY') return;
+
+    // ya está seleccionada por el click simple, pero aseguramos la clase
+    clearSelection();
+    tr.classList.add('selected');
+
+    // Cargar foto (por si no se cargó)
+    await cargarFotoParaFila(tr);
+
+    // comportamiento existente: editar o eliminar con shift
+    if (ev.shiftKey) {
+      if (CURRENT_ROLE !== 'admin') {
+        flash('Permisos insuficientes para eliminar empleados', 'warning');
         return;
       }
-    }, true); 
-  }
+      await eliminarFilaSeleccionada(tr);
+      return;
+    }
+
+    if (!['admin','colaborador'].includes(CURRENT_ROLE)) {
+      flash('Permisos insuficientes para editar registros', 'warning');
+      return;
+    }
+    if (typeof window.iniciarEdicion === 'function') {
+      try { window.iniciarEdicion(tr); } catch (e) { try { window.iniciarEdicion(); } catch(_){} }
+    } else {
+      flash('Editar: acción iniciada', 'info');
+    }
+  });
+}
+
 
 async function cargarFotoParaFila(tr) {
   if (!tr) { clearPhotoPanel(); return; }
@@ -500,6 +540,19 @@ document.getElementById('btnSubirFoto')?.addEventListener('click', async () => {
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ()=>tryRegister(20));
   else tryRegister(20);
+
+  // Al cargar la página, seleccionar la primera fila y mostrar su foto
+document.addEventListener('DOMContentLoaded', () => {
+  const first = document.querySelector('#tablaEmpleados tbody tr');
+  if (first) {
+    clearSelection();
+    first.classList.add('selected');
+    cargarFotoParaFila(first);
+  } else {
+    // No hay filas: mostrar imagen por defecto
+    clearPhotoPanel();
+  }
+});
 
 })();
 </script>
