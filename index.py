@@ -12,6 +12,7 @@ from pathlib import Path
 import os
 import json
 from supabase import create_client
+import tempfile
 import os
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
@@ -19,7 +20,6 @@ SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 SUPABASE_BUCKET = os.environ.get("SUPABASE_BUCKET")
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-
 
 
 
@@ -1150,15 +1150,18 @@ def subir_foto():
     ts = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
     filename = f"{dpi}_{ts}.jpg"
 
-    # Subir a Supabase Storage
+    # Crear archivo temporal para subirlo
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
+        tmp.write(buffer.getvalue())
+        tmp_path = tmp.name
+
+    # Subir a Supabase
     try:
-        supabase.storage.from_(SUPABASE_BUCKET).upload(
-            path=f"empleados/{filename}",
-            file=buffer,
-            file_options={"content-type": "image/jpeg"}
+        supabase.storage.from_(SUPABASE_BUCKET).upload_file(
+            file=tmp_path,
+            path=f"empleados/{filename}"
         )
 
-        # URL pública
         foto_url = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET}/empleados/{filename}"
 
     except Exception as e:
@@ -1173,6 +1176,7 @@ def subir_foto():
     conn.close()
 
     return jsonify({"url": foto_url})
+
 @app.route("/eliminar_foto", methods=["POST"])
 def eliminar_foto():
     dpi = request.form.get("dpi") or (request.get_json() or {}).get("dpi")
@@ -1203,6 +1207,7 @@ def eliminar_foto():
     conn.close()
 
     return jsonify({"ok": True})
+
 
 
 # ------------------ NUEVOS ENDPOINTS PARA SINCRONIZAR LA PLANILLA ------------------
