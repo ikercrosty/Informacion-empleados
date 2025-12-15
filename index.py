@@ -362,8 +362,13 @@ def api_usuarios_rol():
         return jsonify({'mensaje': f'Error: {e}'}), 500
 
 # Devuelve todos los campos relevantes de un empleado por DPI
+# ---------------------------------------------------------
+# API: Obtener o actualizar un empleado por DPI
+# ---------------------------------------------------------
 @app.route("/api/empleado/<dpi>", methods=["GET", "PUT"])
 def api_empleado_get(dpi):
+
+    # ---------------- GET: devolver datos del empleado ----------------
     if request.method == "GET":
         try:
             conn = get_db_connection()
@@ -377,80 +382,84 @@ def api_empleado_get(dpi):
             row = cursor.fetchone()
             cursor.close()
             conn.close()
+
             if not row:
                 return jsonify({"error": "Empleado no encontrado"}), 404
-            # sanitize single row
+
+            # Reemplazar None por ""
             row = {k: ("" if v is None else v) for k, v in row.items()}
+
             return jsonify(row)
+
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
-    # PUT: actualizar empleado (compatibilidad)
+    # ---------------- PUT: actualizar empleado ----------------
     if request.method == "PUT":
         data = request.get_json() or {}
-        # Accept potential new DPI value and original DPI marker
-        new_dpi = data.get("Numero de DPI") or data.get("dpi") or data.get("nuevo_dpi")
-        original_dpi = data.get("original_dpi") or data.get("dpi_original") or data.get("old_dpi") or dpi
 
-        # Fallback: ensure we have a key to search by
-        if not original_dpi:
-            original_dpi = dpi
+        new_dpi = data.get("Numero de DPI") or data.get("dpi") or dpi
+        original_dpi = dpi
 
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
-            nombre = data.get("Nombre") or data.get("nombre")
-            apellidos = data.get("Apellidos") or data.get("apellidos")
-            apellidos_casada = data.get("Apellidos de casada") or data.get("apellidos_casada")
-            estado_civil = data.get("Estado Civil") or data.get("estado_civil")
-            nacionalidad = data.get("Nacionalidad") or data.get("nacionalidad")
-            departamento = data.get("Departamento") or data.get("departamento")
-            fecha_nacimiento = data.get("Fecha de nacimiento") or data.get("fecha_nacimiento")
-            lugar_nacimiento = data.get("Lugar de nacimiento") or data.get("lugar_nacimiento")
-            iggs = data.get("Numero de Afiliación del IGGS") or data.get("iggs")
-            direccion = data.get("Dirección del Domicilio") or data.get("direccion")
-            telefono = data.get("Numero de Telefono") or data.get("telefono")
-            religion = data.get("Religión") or data.get("religion")
-            correo = data.get("Correo Electronico") or data.get("correo")
-            puesto = data.get("Puesto de trabajo") or data.get("puesto")
-            contrato = data.get("Tipo de contrato") or data.get("contrato")
-            jornada = data.get("Jornada laboral") or data.get("jornada")
-            duracion = data.get("Duración del trabajo") or data.get("duracion")
-            inicio = data.get("Fecha de inicio laboral") or data.get("inicio")
-            dias = data.get("Dias Laborales") or data.get("dias")
 
-            # If no explicit new_dpi given, keep same as original
-            if not new_dpi:
-                new_dpi = original_dpi
-
-            # Perform UPDATE including Numero de DPI in SET and using original_dpi in WHERE
             cursor.execute("""
                 UPDATE empleados_info
                 SET `Numero de DPI`=%s,
-                    `Nombre`=%s, `Apellidos`=%s, `Apellidos de casada`=%s, `Estado Civil`=%s,
-                    `Nacionalidad`=%s, `Departamento`=%s, `Fecha de nacimiento`=%s,
-                    `Lugar de nacimiento`=%s, `Numero de Afiliación del IGGS`=%s,
-                    `Dirección del Domicilio`=%s, `Numero de Telefono`=%s, `Religión`=%s,
-                    `Correo Electronico`=%s, `Puesto de trabajo`=%s, `Tipo de contrato`=%s,
-                    `Jornada laboral`=%s, `Duración del trabajo`=%s, `Fecha de inicio laboral`=%s,
+                    `Nombre`=%s,
+                    `Apellidos`=%s,
+                    `Apellidos de casada`=%s,
+                    `Estado Civil`=%s,
+                    `Nacionalidad`=%s,
+                    `Departamento`=%s,
+                    `Fecha de nacimiento`=%s,
+                    `Lugar de nacimiento`=%s,
+                    `Numero de Afiliación del IGGS`=%s,
+                    `Dirección del Domicilio`=%s,
+                    `Numero de Telefono`=%s,
+                    `Religión`=%s,
+                    `Correo Electronico`=%s,
+                    `Puesto de trabajo`=%s,
+                    `Tipo de contrato`=%s,
+                    `Jornada laboral`=%s,
+                    `Duración del trabajo`=%s,
+                    `Fecha de inicio laboral`=%s,
                     `Dias Laborales`=%s
                 WHERE `Numero de DPI`=%s
             """, (
-                new_dpi, nombre, apellidos, apellidos_casada, estado_civil,
-                nacionalidad, departamento, fecha_nacimiento,
-                lugar_nacimiento, iggs,
-                direccion, telefono, religion,
-                correo, puesto, contrato,
-                jornada, duracion, inicio,
-                dias, original_dpi
+                new_dpi,
+                data.get("Nombre"),
+                data.get("Apellidos"),
+                data.get("Apellidos de casada"),
+                data.get("Estado Civil"),
+                data.get("Nacionalidad"),
+                data.get("Departamento"),
+                data.get("Fecha de nacimiento"),
+                data.get("Lugar de nacimiento"),
+                data.get("Numero de Afiliación del IGGS"),
+                data.get("Dirección del Domicilio"),
+                data.get("Numero de Telefono"),
+                data.get("Religión"),
+                data.get("Correo Electronico"),
+                data.get("Puesto de trabajo"),
+                data.get("Tipo de contrato"),
+                data.get("Jornada laboral"),
+                data.get("Duración del trabajo"),
+                data.get("Fecha de inicio laboral"),
+                data.get("Dias Laborales"),
+                original_dpi
             ))
+
             conn.commit()
             cursor.close()
             conn.close()
+
             return jsonify({"mensaje": "Empleado actualizado correctamente"})
+
         except Exception as e:
             return jsonify({"mensaje": f"Error: {e}"}), 500
-
 
 @app.route("/about")
 def about():

@@ -380,44 +380,36 @@
 
 async function cargarFotoParaFila(tr) {
   if (!tr) { clearPhotoPanel(); return; }
+
   const dpi = (tr.cells[0] && tr.cells[0].innerText || '').trim();
   if (!dpi) { clearPhotoPanel(); return; }
+
   if (inputDpiUpload) inputDpiUpload.value = dpi;
   if (inputDpiDelete) inputDpiDelete.value = dpi;
 
   try {
-    // Intentar endpoint específico de foto primero (si existe en tu backend)
-    let res = await fetch(`/api/foto/${encodeURIComponent(dpi)}`, { cache: 'no-store' });
-    if (res.ok) {
-      const j = await res.json();
-      if (j && j.url) {
-        if (fotoEmpleado) fotoEmpleado.src = `${j.url}?t=${Date.now()}`;
-        if (formSubir) formSubir.style.display = 'none';
-        if (formEliminar) formEliminar.style.display = 'block';
-        return;
-      }
+    const res = await fetch(`/api/empleado/${encodeURIComponent(dpi)}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('no-employee');
+
+    const emp = await res.json();
+
+    if (emp && emp.foto) {
+      fotoEmpleado.src = `${emp.foto}?t=${Date.now()}`;
+      formSubir.style.display = 'none';
+      formEliminar.style.display = 'block';
+    } else {
+      fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
+      formSubir.style.display = 'block';
+      formEliminar.style.display = 'none';
     }
 
-    // Si no hay /api/foto o no devuelve url, pedir la ficha completa del empleado
-    res = await fetch(`/api/empleado/${encodeURIComponent(dpi)}`, { cache: 'no-store' });
-    if (!res.ok) throw new Error('no-employee');
-    const emp = await res.json();
-    if (emp && emp.foto) {
-      if (fotoEmpleado) fotoEmpleado.src = `${emp.foto}?t=${Date.now()}`;
-      if (formSubir) formSubir.style.display = 'none';
-      if (formEliminar) formEliminar.style.display = 'block';
-    } else {
-      if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
-      if (formSubir) formSubir.style.display = 'block';
-      if (formEliminar) formEliminar.style.display = 'none';
-    }
   } catch (e) {
-    // Fallback visual
-    if (fotoEmpleado) fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
-    if (formSubir) formSubir.style.display = 'block';
-    if (formEliminar) formEliminar.style.display = 'none';
+    fotoEmpleado.src = "{{ url_for('static', filename='imagenes/default.jpg') }}";
+    formSubir.style.display = 'block';
+    formEliminar.style.display = 'none';
   }
 }
+
 
 
   if (tabla) {
@@ -495,6 +487,7 @@ document.getElementById('btnSubirFoto')?.addEventListener('click', async () => {
 });
 
 
+
   document.getElementById('btnEliminarFoto')?.addEventListener('click', async () => {
     const dpi = inputDpiDelete && inputDpiDelete.value && inputDpiDelete.value.trim();
     if (!dpi) return flash('No hay DPI seleccionado', 'danger');
@@ -549,7 +542,8 @@ document.addEventListener('DOMContentLoaded', () => {
     first.classList.add('selected');
     cargarFotoParaFila(first);
   } else {
-
+    // No hay filas: mostrar imagen por defecto
+    clearPhotoPanel();
   }
 });
 
