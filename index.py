@@ -169,6 +169,16 @@ def home():
 
 
 # ---------------- API lista / creación ----------------
+@app.route("/planilla.json")
+def api_planilla():
+    try:
+        with open(PLANILLA_STORE_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return jsonify(data)
+    except Exception:
+        return jsonify({"rows": [], "meta": {}})
+
+
 @app.route("/api/empleados", methods=["GET", "POST"])
 def api_empleados_list():
     if request.method == "GET":

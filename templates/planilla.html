@@ -687,19 +687,22 @@ async function cargarEmpleadosDesdeServidor() {
     console.warn('Error al cargar empleados desde el servidor:', err);
   }
 }
-document.addEventListener('DOMContentLoaded', () => {
-  const localData = localStorage.getItem(STORAGE_KEY);
-  if (localData) {
-    try {
-      restoreTable(JSON.parse(localData));
-    } catch (e) {
-      console.warn('Error restaurando desde localStorage', e);
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const res = await fetch('/planilla.json', { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      restoreTable(data);
+    } else {
+      // Si no hay archivo, cargar empleados desde la BD
       cargarEmpleadosDesdeServidor();
     }
-  } else {
+  } catch (e) {
+    console.warn('Error al cargar planilla del servidor', e);
     cargarEmpleadosDesdeServidor();
   }
 });
+
 
 
 
@@ -1261,20 +1264,21 @@ function showSavedToast(serverOk) {
   }, 3500);
 }
 
-document.getElementById('btnGuardarPlanilla').addEventListener('click', async () => {
-  try {
-    // Ensure calculations up-to-date
-    document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
-    recalcTotals();
-
-    // Save locally + try server sync (function already saves locally as first step)
-    await saveToLocalAndServer();
-    showSavedToast(true);
-  } catch (e) {
-    console.warn('Error al guardar planilla:', e);
-    showSavedToast(false);
+const data = serializeTable();
+fetch('/guardar_planilla', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(data)
+})
+.then(r => r.json())
+.then(j => {
+  if (j.ok) {
+    flash('Planilla guardada correctamente', 'success');
+  } else {
+    flash('Error al guardar: ' + (j.message || 'Desconocido'), 'danger');
   }
 });
+
 
 /* ------------------ Initialization ------------------ */
 document.addEventListener('DOMContentLoaded', async () => {
