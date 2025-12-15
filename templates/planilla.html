@@ -1276,18 +1276,21 @@ function showSavedToast(serverOk) {
   }, 3500);
 }
 
-const data = serializeTable();
-fetch('/guardar_planilla', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(data)
-})
-.then(r => r.json())
-.then(j => {
-  if (j.ok) {
-    flash('Planilla guardada correctamente', 'success');
-  } else {
-    flash('Error al guardar: ' + (j.message || 'Desconocido'), 'danger');
+document.getElementById('btnGuardarPlanilla')?.addEventListener('click', async () => {
+  try {
+    const data = serializeTable();
+    const res = await fetch('/guardar_planilla', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (res.ok) {
+      alert('Planilla guardada correctamente');
+    } else {
+      alert('Error al guardar en el servidor');
+    }
+  } catch (err) {
+    alert('Error al guardar: ' + (err.message || err));
   }
 });
 
