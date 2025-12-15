@@ -640,6 +640,68 @@ if (sueldoInp) {
   // autosave for everyone
   saveToLocalAndServer();
 });
+async function cargarEmpleadosDesdeServidor() {
+  try {
+    const res = await fetch('/api/empleados', { cache: 'no-store' });
+    if (!res.ok) throw new Error('No se pudo obtener empleados');
+    const empleados = await res.json();
+    if (!Array.isArray(empleados)) return;
+
+    const tbody = document.querySelector('#planillaTable tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    empleados.forEach((emp, i) => {
+      const idx = i + 1;
+      const tr = document.createElement('tr');
+      tr.dataset.row = idx;
+      tr.dataset.dpi = emp.dpi || '';
+
+      tr.innerHTML = `
+        <td>${idx}</td>
+        <td class="align-middle"><input class="form-control form-control-sm nombre" type="text" value="${emp.full_name || ''}" readonly></td>
+        <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell sueldo" type="number" step="0.01" value="0.00"></div></td>
+        <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control bono" type="number" step="0.01" value="125.00" readonly></div></td>
+        <td><input class="form-control form-control-sm num-cell dias" type="number" step="1" min="0" value="15"></td>
+        <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell comisiones" type="number" step="0.01" value="0.00"></div></td>
+        <td><input class="form-control form-control-sm num-cell horas" type="number" step="1" min="0" value="0"></td>
+        <td class="text-end hextras">Q 0.00</td>
+        <td class="text-end total-devengado">Q 0.00</td>
+        <td class="text-end igss">Q 0.00</td>
+        <td class="text-end isr-cell"></td>
+        <td><div class="money-inline"><span class="money-prefix">Q</span><input class="form-control num-cell otras" type="number" step="0.01" value="0.00"></div></td>
+        <td class="text-end total-deducciones">Q 0.00</td>
+        <td class="text-end liquido">Q 0.00</td>
+        <td><input class="form-control medio-pago" type="text" value=""></td>
+        <td><input class="form-control observaciones" type="text" value=""></td>
+      `;
+
+      tbody.appendChild(tr);
+    });
+
+    document.querySelectorAll('#planillaTable tbody tr').forEach(tr => recalcRow(tr));
+    recalcTotals();
+
+  } catch (err) {
+    console.warn('Error al cargar empleados desde el servidor:', err);
+  }
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const localData = localStorage.getItem(STORAGE_KEY);
+  if (localData) {
+    try {
+      restoreTable(JSON.parse(localData));
+    } catch (e) {
+      console.warn('Error restaurando desde localStorage', e);
+      cargarEmpleadosDesdeServidor();
+    }
+  } else {
+    cargarEmpleadosDesdeServidor();
+  }
+});
+
+
 
 async function canCurrentUserDelete() {
   try {
