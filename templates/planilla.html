@@ -690,15 +690,27 @@ async function cargarEmpleadosDesdeServidor() {
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     const res = await fetch('/planilla.json', { cache: 'no-store' });
+
     if (res.ok) {
       const data = await res.json();
+
+      // Si la planilla guardada está vacía, cargar empleados desde BD
+      if (!data.rows || data.rows.length === 0) {
+        console.warn("Planilla vacía, cargando empleados desde BD...");
+        cargarEmpleadosDesdeServidor();
+        return;
+      }
+
+      // Si tiene datos, restaurar
       restoreTable(data);
-    } else {
-      // Si no hay archivo, cargar empleados desde la BD
-      cargarEmpleadosDesdeServidor();
+      return;
     }
+
+    // Si no existe planilla.json, cargar empleados desde BD
+    cargarEmpleadosDesdeServidor();
+
   } catch (e) {
-    console.warn('Error al cargar planilla del servidor', e);
+    console.warn("Error cargando planilla, cargando empleados desde BD...", e);
     cargarEmpleadosDesdeServidor();
   }
 });
